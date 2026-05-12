@@ -58,10 +58,12 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
     private let storage = LSPSemanticTokenStorage()
     private let lspManager: LSPManager
     private let filePath: String
-    private var providerID: Int?
-    private var container: StyledRangeContainer?
     private var textView: CodeEditorView?
     private var isSetup = false
+
+    /// Called when full or delta token responses update local storage.
+    /// The controller uses this to invalidate and repaint visible ranges.
+    var onTokensUpdated: (@MainActor (IndexSet) -> Void)?
 
     // MARK: - Initialization
 
@@ -87,6 +89,7 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
                 let tokens = try await client?.requestSemanticTokens(uri: uri)
                 if let tokens {
                     self.storage.applyFull(tokens)
+                    self.notifyTokensUpdated()
                 }
             } catch {
                 // Non-fatal — server may not support semantic tokens.
@@ -190,12 +193,14 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
                     )
                     if let delta {
                         self.storage.applyDelta(delta)
+                        self.notifyTokensUpdated()
                     }
                 } else {
                     // Full refresh.
                     let tokens = try await client?.requestSemanticTokens(uri: uri)
                     if let tokens {
                         self.storage.applyFull(tokens)
+                        self.notifyTokensUpdated()
                     }
                 }
             } catch {
@@ -211,6 +216,12 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
             return .identifier
         }
         return lspTokenTypes[lspIndex]
+    }
+
+    private func notifyTokensUpdated() {
+        let length = textView?.textStorage?.length ?? 0
+        guard length > 0 else { return }
+        onTokensUpdated?(IndexSet(integersIn: 0..<length))
     }
 
     /// Converts a (0-based line, 0-based character, length) triplet

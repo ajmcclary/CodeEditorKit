@@ -47,6 +47,20 @@ final class LSPIntegrationTests: XCTestCase {
     }
 
     @MainActor
+    func testContentCoordinatorPositionHandlesMultilineRangeEnd() {
+        let source = "one\ntwo\nthree"
+        let replacedRange = NSRange(location: 2, length: 6) // "e\ntwo\n"
+
+        let end = LSPContentCoordinator.position(
+            for: replacedRange.location + replacedRange.length,
+            in: source
+        )
+
+        XCTAssertEqual(end.line, 2)
+        XCTAssertEqual(end.character, 0)
+    }
+
+    @MainActor
     func testDefaultLanguageServerConfigurations() async {
         guard let manager = lspManager else {
             XCTFail("LSP Manager not initialized")

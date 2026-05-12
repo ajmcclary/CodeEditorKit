@@ -953,15 +953,16 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         textView.lineGeometryStore.build(from: textView.textStorage!)
         XCTAssertEqual(textView.lineGeometryStore.lineCount, 3)
 
-        // Create the handler (normally done in setupTextView)
+        // Simulate a text edit: insert "extra\n" at the beginning
+        let storage = textView.textStorage!
+        storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: "extra\n")
+
+        // Create the handler after mutating storage so this direct-call test
+        // does not also receive the automatic TextEditEventHub notification.
         let handler = LineGeometryEditHandler(
             geometryStore: textView.lineGeometryStore,
             textView: textView
         )
-
-        // Simulate a text edit: insert "extra\n" at the beginning
-        let storage = textView.textStorage!
-        storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: "extra\n")
 
         // Fire the edit event
         let event = TextEditEvent(
@@ -1017,20 +1018,20 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         textView.lineGeometryEditHandler = nil
 
         textView.lineGeometryStore.build(from: textView.textStorage!)
-        let handler = LineGeometryEditHandler(
-            geometryStore: textView.lineGeometryStore,
-            textView: textView
-        )
-
         // Edit 1: insert "X" at position 0
         let storage = textView.textStorage!
         storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: "X")
+        var handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
+        )
         handler.textStorageDidApplyEdit(TextEditEvent(
             editedRange: NSRange(location: 0, length: 0),
             changeInLength: 1,
             documentLength: storage.length,
             editedCharacters: true
         ))
+        handler.detach()
         assertStoreMatchesReference(for: storage.string)
 
         // Edit 2: delete the newline after "b"
@@ -1039,28 +1040,38 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         let bLineRange = nsString.lineRange(for: NSRange(location: 4, length: 0))
         let newlineLoc = NSMaxRange(bLineRange) - 1
         storage.replaceCharacters(in: NSRange(location: newlineLoc, length: 1), with: "")
+        handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
+        )
         handler.textStorageDidApplyEdit(TextEditEvent(
             editedRange: NSRange(location: newlineLoc, length: 1),
             changeInLength: -1,
             documentLength: storage.length,
             editedCharacters: true
         ))
+        handler.detach()
         assertStoreMatchesReference(for: storage.string)
 
         // Edit 3: replace all content
+        let oldLength = storage.length
+        let replacement = "new\ncontent\nhere"
         storage.replaceCharacters(
-            in: NSRange(location: 0, length: storage.length),
-            with: "new\ncontent\nhere"
+            in: NSRange(location: 0, length: oldLength),
+            with: replacement
+        )
+        handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
         )
         handler.textStorageDidApplyEdit(TextEditEvent(
-            editedRange: NSRange(location: 0, length: storage.length - 14),
-            changeInLength: 14 - (storage.length - 14),
+            editedRange: NSRange(location: 0, length: oldLength),
+            changeInLength: (replacement as NSString).length - oldLength,
             documentLength: storage.length,
             editedCharacters: true
         ))
-        assertStoreMatchesReference(for: storage.string)
-
         handler.detach()
+        assertStoreMatchesReference(for: storage.string)
     }
 
     func testEditHandlerDetachStopsObserving() {

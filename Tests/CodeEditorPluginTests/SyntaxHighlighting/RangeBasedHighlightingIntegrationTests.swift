@@ -18,6 +18,7 @@ private final class MockRangeHighlightProvider: RangeHighlightProviding {
 
     var setupCalled = false
     var editCalls: [(range: NSRange, delta: Int)] = []
+    var willEditCalls: [NSRange] = []
     var highlightResults: [NSRange: [HighlightedToken]] = [:]
     var nextInvalidation = IndexSet()
     var shouldThrow = false
@@ -25,6 +26,14 @@ private final class MockRangeHighlightProvider: RangeHighlightProviding {
 
     func setUp(textView _: CodeEditorView, language _: Language) {
         setupCalled = true
+    }
+
+    func willApplyEdit(textView _: CodeEditorView, range: NSRange) {
+        willEditCalls.append(range)
+    }
+
+    func willApplyEdit(textView _: CodeEditorView, source _: String, range: NSRange) {
+        willEditCalls.append(range)
     }
 
     func applyEdit(textView _: CodeEditorView, range: NSRange, delta: Int) async -> IndexSet {
@@ -364,6 +373,76 @@ struct RangeBasedHighlightingWiringTests {
         textView.applyConfiguration()
 
         #expect(textView.rangeBasedHighlightingStyleDataSourceForTesting != nil)
+    }
+
+    @Test("supplemental provider registered after initialization receives edits")
+    @MainActor
+    func supplementalProviderReceivesEdits() async throws {
+        let textView = CodeEditorView()
+        #if canImport(AppKit)
+        textView.string = "let value = 1"
+        #else
+        textView.text = "let value = 1"
+        #endif
+
+        let primary = MockRangeHighlightProvider()
+        let supplemental = MockRangeHighlightProvider()
+        let controller = RangeBasedHighlightingController(
+            textView: textView,
+            language: .swift,
+            externalProvider: primary
+        )
+        defer { controller.detach() }
+
+        controller.registerSupplementalProvider(supplemental, priority: -1)
+        controller.textStorageDidApplyEdit(TextEditEvent(
+            editedRange: NSRange(location: 0, length: 0),
+            changeInLength: 1,
+            documentLength: textView.textStorage?.length ?? 0,
+            editedCharacters: true
+        ))
+
+        try await Task.sleep(for: .milliseconds(20))
+
+        #expect(primary.editCalls.count == 1)
+        #expect(supplemental.editCalls.count == 1)
+        #expect(primary.willEditCalls.count == 1)
+        #expect(supplemental.willEditCalls.count == 1)
+    }
+
+    @Test("unregistered supplemental provider stops receiving edits")
+    @MainActor
+    func unregisteredSupplementalProviderStopsReceivingEdits() async throws {
+        let textView = CodeEditorView()
+        #if canImport(AppKit)
+        textView.string = "let value = 1"
+        #else
+        textView.text = "let value = 1"
+        #endif
+
+        let primary = MockRangeHighlightProvider()
+        let supplemental = MockRangeHighlightProvider()
+        let controller = RangeBasedHighlightingController(
+            textView: textView,
+            language: .swift,
+            externalProvider: primary
+        )
+        defer { controller.detach() }
+
+        controller.registerSupplementalProvider(supplemental, priority: -1)
+        controller.unregisterSupplementalProvider(supplemental)
+        controller.textStorageDidApplyEdit(TextEditEvent(
+            editedRange: NSRange(location: 0, length: 0),
+            changeInLength: 1,
+            documentLength: textView.textStorage?.length ?? 0,
+            editedCharacters: true
+        ))
+
+        try await Task.sleep(for: .milliseconds(20))
+
+        #expect(primary.editCalls.count == 1)
+        #expect(supplemental.editCalls.isEmpty)
+        #expect(supplemental.willEditCalls.isEmpty)
     }
 }
 

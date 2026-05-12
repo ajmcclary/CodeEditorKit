@@ -2,6 +2,10 @@
 import Foundation
 import Testing
 
+#if canImport(AppKit)
+import AppKit
+#endif
+
 // MARK: - Test observer
 
 @MainActor
@@ -10,6 +14,26 @@ private final class TestObserver: TextEditEventObserving {
 
     func textStorageDidApplyEdit(_ event: TextEditEvent) {
         receivedEvents.append(event)
+    }
+}
+
+@MainActor
+private final class TestWillObserver: WillEditEventObserving {
+    var receivedEvents: [WillEditEvent] = []
+
+    func textStorageWillApplyEdit(_ event: WillEditEvent) {
+        receivedEvents.append(event)
+    }
+}
+
+@MainActor
+private final class RejectingDelegate: CodeEditorViewDelegate {
+    func textView(
+        _: CodeEditorView,
+        shouldChangeTextIn _: NSTextRange,
+        replacementString _: String?
+    ) -> Bool {
+        false
     }
 }
 
@@ -130,4 +154,28 @@ struct TextEditEventHubTests {
         hub.publish(event)
         #expect(observer.receivedEvents.count == 1)
     }
+
+    #if canImport(AppKit)
+    @Test("rejected shouldChangeText does not publish will-edit event")
+    @MainActor
+    func rejectedEditDoesNotPublishWillEdit() throws {
+        let textView = CodeEditorView(frame: .zero)
+        textView.string = "abc"
+
+        let observer = TestWillObserver()
+        textView.textEditEventHub.addWillEditObserver(observer)
+
+        let delegate = RejectingDelegate()
+        textView.textDelegate = delegate
+
+        let allowed = textView.delegateProxy.textView(
+            textView,
+            shouldChangeTextIn: NSRange(location: 0, length: 1),
+            replacementString: "x"
+        )
+
+        #expect(allowed == false)
+        #expect(observer.receivedEvents.isEmpty)
+    }
+    #endif
 }

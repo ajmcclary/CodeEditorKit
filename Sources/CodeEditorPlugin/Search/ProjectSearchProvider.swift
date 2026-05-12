@@ -88,12 +88,31 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         }
     }
 
+    /// Re-index with file extension filtering applied.
+    public func indexFiles(urls: [URL], extensions: [String]) async throws {
+        let extSet = Set(extensions.map { $0.lowercased() })
+        indexedFiles = urls.filter { url in
+            var isDir: ObjCBool = false
+            guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir),
+                  !isDir.boolValue else { return false }
+            if extSet.isEmpty { return true }
+            return extSet.contains(url.pathExtension.lowercased())
+        }
+    }
+
     public func search(query: String, options: ProjectSearchOptions) async throws -> [ProjectSearchResult] {
         cancelSearch()
-        let files = indexedFiles
+        let files: [URL]
+        if options.fileExtensions.isEmpty {
+            files = indexedFiles
+        } else {
+            let extSet = Set(options.fileExtensions.map { $0.lowercased() })
+            files = indexedFiles.filter { extSet.contains($0.pathExtension.lowercased()) }
+        }
         let opts = options
 
         let task = Task.detached(priority: .userInitiated) { () -> [ProjectSearchResult] in
+            // swiftlint:disable:next prefer_self_in_static_references
             PortableProjectSearchAdapter.performSearch(
                 query: query,
                 options: opts,
@@ -116,12 +135,12 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         let predicate = makePredicate(query: query, options: options)
 
         for fileURL in files {
-            guard results.count < maxResults else { break }
+            guard !Task.isCancelled, results.count < maxResults else { break }
             guard let content = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
 
             let lines = content.components(separatedBy: "\n")
             for (idx, line) in lines.enumerated() {
-                guard results.count < maxResults else { break }
+                guard !Task.isCancelled, results.count < maxResults else { break }
                 guard predicate(line) else { continue }
 
                 let column = computeColumn(query: query, options: options, line: line)

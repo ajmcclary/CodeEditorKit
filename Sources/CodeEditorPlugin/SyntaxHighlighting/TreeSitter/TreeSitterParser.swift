@@ -2,14 +2,20 @@ import Foundation
 
 // MARK: - Tree-Sitter Parser
 
-/// A parser implementation conforming to `TreeSitterParserProtocol` that
-/// supports incremental edits, timeout handling, and injection layers.
+/// A parser implementation conforming to `TreeSitterParserProtocol`.
 ///
-/// When the `CAN_IMPORT_TREE_SITTER` compile-time flag is set and a
-/// `SwiftTreeSitter` module is available, this parser delegates to the
-/// real C tree-sitter library for full incremental parsing. Without the
-/// flag it uses the regex highlighter with bounded invalidation (edit
-/// range + surrounding context) instead of full-document invalidation.
+/// **Current backend**: `RegexSyntaxHighlighter` with bounded incremental
+/// invalidation (±4096 chars around edits). This is architecturally ready
+/// for a real C tree-sitter library — `CAN_IMPORT_TREE_SITTER` flag and
+/// `SwiftTreeSitter` import path are reserved — but **no C tree-sitter
+/// dependency is linked yet**. The plan's "Phase 3 complete" refers to
+/// the parser architecture (incremental edit pipeline, actor isolation,
+/// byte/UTF-16 translation, timeout thresholds), not to a finished C
+/// FFI integration.
+///
+/// To add real tree-sitter: add `swift-tree-sitter` to `Package.swift`,
+/// set `CAN_IMPORT_TREE_SITTER`, and replace the regex `highlightTokens`
+/// call with `TSParser` + `TSQuery` operations.
 ///
 /// Parser state is isolated behind an actor so queries and edits can
 /// proceed concurrently without data races.

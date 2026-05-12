@@ -20,6 +20,12 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     /// attributes. Created alongside this controller and detached together.
     internal let applier: RangeAttributeApplier
 
+    /// Supplemental providers, such as LSP semantic tokens, keyed by object
+    /// identity so they can be registered after the controller is created.
+    private var supplementalProviders: [ObjectIdentifier: any RangeHighlightProviding] = [:]
+    private var supplementalProviderStates: [ObjectIdentifier: HighlightProviderState] = [:]
+    private var supplementalProviderIDs: [ObjectIdentifier: Int] = [:]
+
     /// Primary initializer.
     ///
     /// - Parameters:
@@ -73,13 +79,17 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         self.previousSourceSnapshot = Self.sourceString(from: textView)
 
         provider.setUp(textView: textView, language: language)
-        let state = providerState
-        visibleRangeProvider.onVisibleSetChange = { [weak state] visible in
-            state?.updateVisibleSet(visible)
+        visibleRangeProvider.onVisibleSetChange = { [weak self] visible in
+            guard let self else { return }
+            self.providerState.updateVisibleSet(visible)
+            for state in self.supplementalProviderStates.values {
+                state.updateVisibleSet(visible)
+            }
         }
         providerState.onRangeHighlighted = { [weak self] range in
             self?.applier.applyAttributes(for: range)
         }
+
         textView.textEditEventHub.addObserver(self)
         providerState.updateVisibleSet(visibleRangeProvider.visibleIndices)
     }
@@ -88,12 +98,75 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         language
     }
 
+    /// Registers an additional highlight provider in the shared style
+    /// container. Lower numeric priority wins over higher numeric priority.
+    internal func registerSupplementalProvider(_ supplementalProvider: any RangeHighlightProviding, priority: Int) {
+        guard let textView else { return }
+        let identity = ObjectIdentifier(supplementalProvider)
+        guard supplementalProviderStates[identity] == nil else { return }
+        supplementalProviders[identity] = supplementalProvider
+
+        let documentLength: Int
+        #if canImport(AppKit)
+        documentLength = textView.textStorage?.length ?? 0
+        #else
+        documentLength = textView.textStorage.length
+        #endif
+
+        let providerID = container.registerProvider(priority: priority)
+        supplementalProviderIDs[identity] = providerID
+        let state = HighlightProviderState(
+            provider: supplementalProvider,
+            providerID: providerID,
+            container: container,
+            textView: textView,
+            documentLength: documentLength
+        )
+        supplementalProvider.setUp(textView: textView, language: language)
+        state.onRangeHighlighted = { [weak self] range in
+            self?.applier.applyAttributes(for: range)
+        }
+        supplementalProviderStates[identity] = state
+        state.updateVisibleSet(visibleRangeProvider.visibleIndices)
+    }
+
+    /// Removes a supplemental provider and its stored highlight runs.
+    internal func unregisterSupplementalProvider(_ supplementalProvider: any RangeHighlightProviding) {
+        let identity = ObjectIdentifier(supplementalProvider)
+        supplementalProviderStates.removeValue(forKey: identity)?.cancel()
+        supplementalProviders.removeValue(forKey: identity)
+        if let providerID = supplementalProviderIDs.removeValue(forKey: identity) {
+            container.removeProvider(id: providerID)
+        }
+    }
+
+    /// Invalidates and re-queries a supplemental provider after its backing
+    /// data changes outside the normal text-edit path, e.g. after LSP semantic
+    /// tokens refresh from the server.
+    internal func invalidateSupplementalProvider(
+        _ supplementalProvider: any RangeHighlightProviding,
+        indices: IndexSet
+    ) {
+        let identity = ObjectIdentifier(supplementalProvider)
+        guard let state = supplementalProviderStates[identity] else { return }
+        state.invalidate(indices)
+        Task {
+            await state.highlightInvalidRanges()
+        }
+    }
+
     internal func refreshVisibleRange() {
         visibleRangeProvider.updateVisibleSet()
     }
 
     internal func detach() {
         providerState.cancel()
+        for state in supplementalProviderStates.values {
+            state.cancel()
+        }
+        supplementalProviderStates.removeAll()
+        supplementalProviders.removeAll()
+        supplementalProviderIDs.removeAll()
         visibleRangeProvider.stopObserving()
         applier.detach()
         textView?.textEditEventHub.removeObserver(self)
@@ -115,6 +188,17 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         } else {
             provider.willApplyEdit(textView: textView, range: event.editedRange)
         }
+        for supplementalProvider in supplementalProviders.values {
+            if let previousSourceSnapshot {
+                supplementalProvider.willApplyEdit(
+                    textView: textView,
+                    source: previousSourceSnapshot,
+                    range: event.editedRange
+                )
+            } else {
+                supplementalProvider.willApplyEdit(textView: textView, range: event.editedRange)
+            }
+        }
         container.storageUpdated(
             editedRange: event.editedRange,
             changeInLength: event.changeInLength
@@ -127,6 +211,12 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
             range: event.editedRange,
             delta: event.changeInLength
         )
+        for state in supplementalProviderStates.values {
+            state.storageDidUpdate(
+                range: event.editedRange,
+                delta: event.changeInLength
+            )
+        }
     }
 
     private static func sourceString(from textView: CodeEditorView) -> String {

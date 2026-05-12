@@ -645,9 +645,9 @@ public struct SemanticTokensDelta: Codable, Sendable {
 
 /// A single delta edit to a semantic-token array.
 public struct SemanticTokensEdit: Codable, Sendable {
-    /// Start offset in the old token array.
+    /// Start offset in the old raw UInt32 token-data array.
     public let start: UInt32
-    /// Number of tokens to delete from the old array.
+    /// Number of UInt32 entries to delete from the old raw token-data array.
     public let deleteCount: UInt32
     /// Replacement token data (empty = deletion only).
     public let data: [UInt32]

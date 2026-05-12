@@ -55,17 +55,16 @@ final class LSPSemanticTokenStorage {
         resultId = delta.resultId
 
         for edit in delta.edits.reversed() {
-            let start = Int(edit.start)
+            let startIdx = Int(edit.start)
             let deleteCount = Int(edit.deleteCount)
             let insertData = edit.data
 
-            // Validate bounds
-            guard start <= data.count else { continue }
-            let clampedDelete = min(deleteCount, data.count - start)
+            // Validate bounds — start and deleteCount index into the
+            // raw UInt32 array, NOT into tokens (5 ints per token).
+            guard startIdx <= data.count else { continue }
+            let clampedDelete = min(deleteCount, data.count - startIdx)
 
-            // Replace: remove `clampedDelete` tokens (×5 ints each) then insert new data
-            let startIdx = start * 5
-            let endIdx = startIdx + clampedDelete * 5
+            let endIdx = startIdx + clampedDelete
             data.replaceSubrange(startIdx..<min(endIdx, data.count), with: insertData)
         }
     }

@@ -111,7 +111,7 @@ internal final class RangeAttributeApplier: TextEditEventObserving {
     }
 
     /// Applies `color` to `range` in `textStorage`, skipping ranges that
-    /// already have the same color to avoid unnecessary mutation.
+    /// already uniformly have the same color to avoid unnecessary mutation.
     private func applyColor(
         _ color: PlatformColor?,
         to range: NSRange,
@@ -122,18 +122,24 @@ internal final class RangeAttributeApplier: TextEditEventObserving {
             return
         }
 
-        // Skip-equal: only apply if the existing attribute differs.
-        // `NSTextStorage.attribute(_:at:effectiveRange:)` checks a single
-        // position; for simplicity we check the first character of the run.
-        // A full segment-wise comparison would be more precise but adds
-        // overhead that rarely pays off in practice.
+        // Skip-equal: check the full run, not just the first character.
+        // Uses `enumerateAttribute` to walk the range and verify every
+        // character already has the target color. If a mid-range edit
+        // cleared part of an existing token, the first character might
+        // still be correct while the rest is wrong.
         if range.length > 0 {
-            let existing = textStorage.attribute(
+            var allMatch = true
+            textStorage.enumerateAttribute(
                 attributeKey,
-                at: range.location,
-                effectiveRange: nil
-            ) as? PlatformColor
-            if existing == color { return }
+                in: range,
+                options: []
+            ) { value, _, stop in
+                if (value as? PlatformColor) != color {
+                    allMatch = false
+                    stop.pointee = true
+                }
+            }
+            if allMatch { return }
         }
 
         textStorage.addAttribute(attributeKey, value: color, range: range)

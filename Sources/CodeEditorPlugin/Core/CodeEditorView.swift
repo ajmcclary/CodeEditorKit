@@ -195,6 +195,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// notifications with ~250 ms debounce. Created by `setupLSPIntegration()`
     /// when a document path and language are available.
     internal var lspContentCoordinator: LSPContentCoordinator?
+
+    /// LSP semantic-token provider retained by the editor so it can be
+    /// registered when the range-based highlighting controller is created.
+    internal var lspSemanticTokenProvider: LSPSemanticTokenProvider?
     #endif
 
     /// Code folding engine for managing foldable regions and fold states

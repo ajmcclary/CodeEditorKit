@@ -31,6 +31,7 @@ final class LSPContentCoordinator {
         let preEditRange: NSRange
         let replacementText: String
         let startPosition: Position
+        let endPosition: Position
     }
 
     // MARK: - Dependencies
@@ -95,15 +96,20 @@ final class LSPContentCoordinator {
         // `shouldChangeText` fires before the mutation, so `textStorage.string`
         // is still the pre-edit document.
         let fullSource = textView?.textStorage?.string ?? ""
-        let startPos = computeStartPosition(
+        let startPos = Self.position(
             for: event.preEditRange.location,
+            in: fullSource
+        )
+        let endPos = Self.position(
+            for: event.preEditRange.location + event.preEditRange.length,
             in: fullSource
         )
         pendingEdits.append(
             PendingEdit(
                 preEditRange: event.preEditRange,
                 replacementText: event.replacementText,
-                startPosition: startPos
+                startPosition: startPos,
+                endPosition: endPos
             )
         )
     }
@@ -117,13 +123,9 @@ final class LSPContentCoordinator {
 
             let change: TextDocumentContentChangeEvent
             if syncKind == .incremental {
-                let endPosition = Position(
-                    line: edit.startPosition.line,
-                    character: edit.startPosition.character + edit.preEditRange.length
-                )
                 change = TextDocumentContentChangeEvent(
                     text: edit.replacementText,
-                    range: LSPRange(start: edit.startPosition, end: endPosition),
+                    range: LSPRange(start: edit.startPosition, end: edit.endPosition),
                     rangeLength: edit.preEditRange.length
                 )
             } else {
@@ -190,10 +192,7 @@ final class LSPContentCoordinator {
     /// Converts a UTF-16 offset into an LSP `Position` by scanning the
     /// full document source. Returns `(0, 0)` when the offset is out of
     /// bounds or the source is empty.
-    private func computeStartPosition(
-        for utf16Offset: Int,
-        in fullSource: String
-    ) -> Position {
+    internal static func position(for utf16Offset: Int, in fullSource: String) -> Position {
         guard utf16Offset >= 0, !fullSource.isEmpty else {
             return Position(line: 0, character: 0)
         }

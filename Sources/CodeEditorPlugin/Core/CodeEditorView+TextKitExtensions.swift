@@ -288,8 +288,9 @@ extension CodeEditorView {
     ///
     /// 1. Checks if editing is enabled in configuration
     /// 2. Converts TextKit2 `NSTextRange` to `NSRange` for compatibility
-    /// 3. Publishes `WillEditEvent` to `textEditEventHub` will-edit observers
-    /// 4. Calls the delegate's `shouldChangeText` method
+    /// 3. Calls the delegate's `shouldChangeText` method
+    /// 4. Publishes `WillEditEvent` to will-edit observers after validation
+    ///    succeeds
     ///
     /// ## Parameters
     ///
@@ -305,21 +306,38 @@ extension CodeEditorView {
 
         let textKitBridge = TextKitBridge(textView: self)
         if let nsRange = textKitBridge.nsRangeFromTextRange(textRange) {
-            // Publish pre-edit event for will-edit observers.
-            publishWillEditEvent(range: nsRange, replacementText: replacementString ?? "")
-
+            let allowed: Bool
             #if canImport(AppKit)
-            return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
+            if let proxy = delegate as? CodeEditorViewDelegateProxy,
+               proxy === delegateProxy {
+                allowed = proxy.source?.textView(
+                    self,
+                    shouldChangeTextIn: textRange,
+                    replacementString: replacementString
+                ) ?? true
+            } else {
+                allowed = delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
+            }
             #else
-            return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementText: replacementString ?? "") ?? true
+            allowed = delegateProxy.source?.textView(
+                self,
+                shouldChangeTextIn: textRange,
+                replacementString: replacementString
+            ) ?? true
             #endif
+
+            guard allowed else { return false }
+
+            // Publish pre-edit event only after validation succeeds.
+            publishWillEditEvent(range: nsRange, replacementText: replacementString ?? "")
+            return true
         }
         return true
     }
 
     /// Constructs and publishes a `WillEditEvent` to the event hub's
     /// will-edit observer set.
-    private func publishWillEditEvent(range: NSRange, replacementText: String) {
+    internal func publishWillEditEvent(range: NSRange, replacementText: String) {
         #if canImport(AppKit)
         let source = textStorage?.string ?? ""
         #else

@@ -132,20 +132,39 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
     }
 
     func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
-        // Convert NSRange to NSTextRange for CodeEditorView compatibility
         guard let codeEditorView = textView as? CodeEditorView else {
             return true
         }
-
-        // Try to convert NSRange to NSTextRange
-        if let textLayoutManager = codeEditorView.textLayoutManager,
-           let textContentManager = textLayoutManager.textContentManager,
-           let textRange = NSTextRange(affectedCharRange, provider: textContentManager) {
-            // Forward to the CodeEditorView delegate method with proper NSTextRange
-            return source?.textView(codeEditorView, shouldChangeTextIn: textRange, replacementString: replacementString) ?? true
+        guard codeEditorView.configuration.behavior.isEditable else {
+            return false
         }
 
-        // Fallback: allow the change if we can't convert the range
+        let allowed: Bool
+        let textRange: NSTextRange?
+        if let textLayoutManager = codeEditorView.textLayoutManager,
+           let textContentManager = textLayoutManager.textContentManager {
+            textRange = NSTextRange(affectedCharRange, provider: textContentManager)
+        } else {
+            textRange = NSTextRange(affectedCharRange)
+        }
+        if let textRange {
+            allowed = source?.textView(
+                codeEditorView,
+                shouldChangeTextIn: textRange,
+                replacementString: replacementString
+            ) ?? true
+        } else {
+            allowed = true
+        }
+
+        guard allowed else { return false }
+
+        // Publish WillEditEvent after validation succeeds so rejected edits
+        // do not leave stale pending transactions in downstream observers.
+        codeEditorView.publishWillEditEvent(
+            range: affectedCharRange,
+            replacementText: replacementString ?? ""
+        )
         return true
     }
     #elseif canImport(UIKit)
@@ -158,17 +177,30 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
     }
 
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        // Convert NSRange to NSTextRange for CodeEditorView compatibility
         guard let codeEditorView = textView as? CodeEditorView else {
             return true
         }
-
-        // UITextView doesn't have TextKit2 support, so we'll create a simple NSTextRange
-        if let textRange = NSTextRange(range) {
-            return source?.textView(codeEditorView, shouldChangeTextIn: textRange, replacementString: text) ?? true
+        guard codeEditorView.configuration.behavior.isEditable else {
+            return false
         }
 
-        // Fallback: allow the change if we can't convert the range
+        let allowed: Bool
+        if let textRange = NSTextRange(range) {
+            allowed = source?.textView(
+                codeEditorView,
+                shouldChangeTextIn: textRange,
+                replacementString: text
+            ) ?? true
+        } else {
+            allowed = true
+        }
+
+        guard allowed else { return false }
+
+        codeEditorView.publishWillEditEvent(
+            range: range,
+            replacementText: text
+        )
         return true
     }
     #endif

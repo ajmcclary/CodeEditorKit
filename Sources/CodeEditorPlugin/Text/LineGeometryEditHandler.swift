@@ -44,11 +44,19 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             return
         }
 
-        // Compute the affected line range from the edit.
+        // Compute the affected pre-edit line range from the edit.
+        let preEditLineCount = geometryStore.lineCount
         let oldLineStart = geometryStore.lineIndex(forUtf16Offset: event.editedRange.location)
         let oldLineEnd = geometryStore.lineIndex(
             forUtf16Offset: max(0, event.editedRange.location + event.editedRange.length - 1)
         )
+        var removalEnd = oldLineEnd
+        if event.editedRange.length > 0, removalEnd + 1 < preEditLineCount {
+            let nextLineStart = geometryStore.utf16Offset(forLineIndex: removalEnd + 1)
+            if event.editedRange.location + event.editedRange.length >= nextLineStart {
+                removalEnd += 1
+            }
+        }
 
         // Build new geometries for the affected region from the text storage.
         // swiftlint:disable:next legacy_objc_type
@@ -75,16 +83,20 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             searchPos = lineStart
         }
 
-        // Determine how many lines to scan: the affected line count plus
-        // new lines introduced or removed.
-        let oldAffectedCount = oldLineEnd - oldLineStart + 1
-        let newEndOffset = event.editedRange.location + event.editedRange.length + event.changeInLength
-        let newLineEnd = geometryStore.lineIndex(forUtf16Offset: max(0, newEndOffset - 1))
-        let scanToLine = max(newLineEnd, oldLineEnd) + 1 // one extra for safety
+        let oldAffectedCount = removalEnd - oldLineStart + 1
+        let scanEnd: Int
+        if removalEnd + 1 < preEditLineCount {
+            let oldBoundary = geometryStore.utf16Offset(forLineIndex: removalEnd + 1)
+            scanEnd = min(length, max(searchPos, oldBoundary + event.changeInLength))
+        } else {
+            scanEnd = length
+        }
 
-        // Enumerate lines starting from searchPos
+        // Enumerate replacement lines in the post-edit text. The scan end is
+        // the shifted start offset of the first unaffected old line, so lines
+        // outside the affected region stay in the tree.
         var pos = searchPos
-        while pos < length {
+        while pos < length, pos < scanEnd {
             var lineStart = 0
             var lineEnd = 0
             var contentsEnd = 0
@@ -105,19 +117,26 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
 
             lineIndex += 1
             pos = lineEnd
-            if lineIndex > scanToLine || pos >= length { break }
-
-            // If we've scanned past the edit region and hit the next old
-            // line that already exists, we can stop.
-            if lineIndex > oldLineEnd && pos >= newEndOffset {
-                break
-            }
+            if pos >= length { break }
+        }
+        if length == 0 {
+            newGeometries.append(LineGeometry(
+                utf16Length: 0,
+                lineEndingLength: 0,
+                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? 17.0
+            ))
+        } else if scanEnd == length, newGeometries.last?.lineEndingLength ?? 0 > 0 {
+            newGeometries.append(LineGeometry(
+                utf16Length: 0,
+                lineEndingLength: 0,
+                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? 17.0
+            ))
         }
 
         // Apply the incremental edit.
         if oldAffectedCount > 0 {
             // First remove the old lines, then insert the new ones
-            geometryStore.removeLines(in: oldLineStart...oldLineEnd)
+            geometryStore.removeLines(in: oldLineStart...removalEnd)
         }
 
         if !newGeometries.isEmpty {

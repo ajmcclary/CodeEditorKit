@@ -129,13 +129,35 @@ extension CodeEditorView {
     internal func setupLSPIntegration(filePath: String, languageId: String) {
         // Detach any previous coordinator first.
         lspContentCoordinator?.detach()
+        if let lspSemanticTokenProvider {
+            rangeBasedHighlightingController?.unregisterSupplementalProvider(lspSemanticTokenProvider)
+            lspSemanticTokenProvider.onTokensUpdated = nil
+        }
 
-        lspContentCoordinator = LSPContentCoordinator(
+        let coordinator = LSPContentCoordinator(
             textView: self,
             lspManager: lspManager,
             filePath: filePath,
             languageId: languageId
         )
+        lspContentCoordinator = coordinator
+
+        // Create semantic token provider and wire post-batch refresh.
+        let stp = LSPSemanticTokenProvider(
+            lspManager: lspManager,
+            filePath: filePath
+        )
+        lspSemanticTokenProvider = stp
+        stp.onTokensUpdated = { [weak self, weak stp] indices in
+            guard let self, let stp else { return }
+            self.rangeBasedHighlightingController?.invalidateSupplementalProvider(stp, indices: indices)
+        }
+        coordinator.onBatchFlushed = { [weak self] in
+            guard let self, let stp = self.lspSemanticTokenProvider else { return }
+            stp.refreshAfterBatch(textView: self)
+        }
+
+        registerSemanticTokenProviderIfAvailable()
     }
     #endif
 }
