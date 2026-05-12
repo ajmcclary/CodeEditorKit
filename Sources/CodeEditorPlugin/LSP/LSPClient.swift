@@ -328,6 +328,58 @@ public final class LSPClient: ObservableObject {
         return try LSPLanguageFeatures.parseDocumentSymbolResponse(response)
     }
 
+    // MARK: - Semantic Tokens
+
+    /// Request full semantic tokens for a document.
+    public func requestSemanticTokens(uri: String) async throws -> SemanticTokens? {
+        guard connectionState == .initialized else { return nil }
+
+        let params = SemanticTokensParams(
+            textDocument: TextDocumentIdentifier(uri: uri)
+        )
+        let response = try await sendRequest(
+            method: "textDocument/semanticTokens/full",
+            params: params
+        )
+        return try response.decode(as: SemanticTokens.self)
+    }
+
+    /// Request semantic-token delta since a previous result.
+    public func requestSemanticTokensDelta(
+        uri: String,
+        previousResultId: String
+    ) async throws -> SemanticTokensDelta? {
+        guard connectionState == .initialized else { return nil }
+
+        let params = SemanticTokensDeltaParams(
+            textDocument: TextDocumentIdentifier(uri: uri),
+            previousResultId: previousResultId
+        )
+        let response = try await sendRequest(
+            method: "textDocument/semanticTokens/full/delta",
+            params: params
+        )
+        return try response.decode(as: SemanticTokensDelta.self)
+    }
+
+    /// Request semantic tokens for a specific range.
+    public func requestSemanticTokensRange(
+        uri: String,
+        range: LSPRange
+    ) async throws -> SemanticTokens? {
+        guard connectionState == .initialized else { return nil }
+
+        let params = SemanticTokensRangeParams(
+            textDocument: TextDocumentIdentifier(uri: uri),
+            range: range
+        )
+        let response = try await sendRequest(
+            method: "textDocument/semanticTokens/range",
+            params: params
+        )
+        return try response.decode(as: SemanticTokens.self)
+    }
+
     // MARK: - Message Handler Setup
 
     /// Sets up the message handler callbacks for processing LSP messages.

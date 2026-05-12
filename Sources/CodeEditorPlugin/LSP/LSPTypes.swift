@@ -604,3 +604,88 @@ public struct WorkspaceFolder: Codable, Sendable {
         self.name = name
     }
 }
+
+// MARK: - Semantic Tokens
+
+/// The token types and modifiers advertised by the server.
+public struct SemanticTokensLegend: Codable, Sendable {
+    public let tokenTypes: [String]
+    public let tokenModifiers: [String]
+
+    public init(tokenTypes: [String], tokenModifiers: [String]) {
+        self.tokenTypes = tokenTypes
+        self.tokenModifiers = tokenModifiers
+    }
+}
+
+/// Full semantic-token response: compact `data` array of u32 values
+/// plus an optional result ID for delta requests.
+public struct SemanticTokens: Codable, Sendable {
+    /// 5-tuple per token: deltaLine, deltaStartChar, length, tokenType, tokenModifiers
+    public let data: [UInt32]
+    /// Server-managed result ID for delta requests.
+    public let resultId: String?
+
+    public init(data: [UInt32], resultId: String? = nil) {
+        self.data = data
+        self.resultId = resultId
+    }
+}
+
+/// Delta semantic-token response: edits to a previous result.
+public struct SemanticTokensDelta: Codable, Sendable {
+    public let resultId: String?
+    public let edits: [SemanticTokensEdit]
+
+    public init(edits: [SemanticTokensEdit], resultId: String? = nil) {
+        self.edits = edits
+        self.resultId = resultId
+    }
+}
+
+/// A single delta edit to a semantic-token array.
+public struct SemanticTokensEdit: Codable, Sendable {
+    /// Start offset in the old token array.
+    public let start: UInt32
+    /// Number of tokens to delete from the old array.
+    public let deleteCount: UInt32
+    /// Replacement token data (empty = deletion only).
+    public let data: [UInt32]
+
+    public init(start: UInt32, deleteCount: UInt32, data: [UInt32] = []) {
+        self.start = start
+        self.deleteCount = deleteCount
+        self.data = data
+    }
+}
+
+/// Parameters for `textDocument/semanticTokens/full`.
+public struct SemanticTokensParams: Codable, Sendable {
+    public let textDocument: TextDocumentIdentifier
+
+    public init(textDocument: TextDocumentIdentifier) {
+        self.textDocument = textDocument
+    }
+}
+
+/// Parameters for `textDocument/semanticTokens/full/delta`.
+public struct SemanticTokensDeltaParams: Codable, Sendable {
+    public let textDocument: TextDocumentIdentifier
+    public let previousResultId: String
+
+    public init(textDocument: TextDocumentIdentifier, previousResultId: String) {
+        self.textDocument = textDocument
+        self.previousResultId = previousResultId
+    }
+}
+
+/// Parameters for `textDocument/semanticTokens/range`.
+public struct SemanticTokensRangeParams: Codable, Sendable {
+    public let textDocument: TextDocumentIdentifier
+    public let range: LSPRange
+
+    public init(textDocument: TextDocumentIdentifier, range: LSPRange) {
+        self.textDocument = textDocument
+        self.range = range
+    }
+}
