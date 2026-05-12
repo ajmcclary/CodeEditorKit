@@ -698,12 +698,16 @@ public final class LineGeometryStore {
     }
 
     /// Remove a range of lines. O(m log n) for m removed lines.
+    /// Safe to call on an empty store — no-op when `lineCount == 0` or
+    /// when `range` lies entirely outside `[0, lineCount)`.
     public func removeLines(in range: ClosedRange<Int>) {
-        let clamped = range.clamped(to: 0...(lineCount - 1))
-        guard clamped.lowerBound <= clamped.upperBound else { return }
+        guard lineCount > 0 else { return }
+        let lower = max(0, range.lowerBound)
+        let upper = min(lineCount - 1, range.upperBound)
+        guard lower <= upper else { return }
 
         // Remove from highest to lowest to preserve indices.
-        for lineIdx in (clamped.lowerBound...clamped.upperBound).reversed() {
+        for lineIdx in (lower...upper).reversed() {
             removeNode(atLineIndex: lineIdx)
         }
     }

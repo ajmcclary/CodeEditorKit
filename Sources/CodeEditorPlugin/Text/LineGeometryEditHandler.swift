@@ -46,6 +46,16 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
 
         // Compute the affected pre-edit line range from the edit.
         let preEditLineCount = geometryStore.lineCount
+
+        // The incremental algorithm assumes at least one line exists in the
+        // store. If the store was reset (memory pressure, transient nil
+        // textStorage during setup) but the text view now has content, fall
+        // back to a full rebuild instead of computing offsets against an
+        // empty tree.
+        guard preEditLineCount > 0 else {
+            textView.rebuildLineGeometryStoreFromCurrentTextStorage()
+            return
+        }
         let oldLineStart = geometryStore.lineIndex(forUtf16Offset: event.editedRange.location)
         let oldLineEnd = geometryStore.lineIndex(
             forUtf16Offset: max(0, event.editedRange.location + event.editedRange.length - 1)

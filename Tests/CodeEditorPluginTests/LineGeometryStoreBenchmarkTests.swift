@@ -1098,6 +1098,69 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         XCTAssertEqual(textView.lineGeometryStore.totalUtf16Length, 4)
     }
 
+    /// Regression: `removeLines(in:)` constructed `0...(lineCount - 1)` before
+    /// guarding `lineCount`, crashing with "Range requires lowerBound <=
+    /// upperBound" when called on an empty store.
+    func testRemoveLinesOnEmptyStoreIsNoOp() {
+        let store = LineGeometryStore()
+        XCTAssertEqual(store.lineCount, 0)
+
+        // Must not crash.
+        store.removeLines(in: 0...0)
+        store.removeLines(in: 0...10)
+        store.removeLines(in: 5...5)
+
+        XCTAssertEqual(store.lineCount, 0)
+    }
+
+    /// Regression: when the geometry store is empty (e.g. after a memory
+    /// pressure `reset()`) and the user types into the editor, the edit
+    /// handler must not call `removeLines(in: 0...0)` against `lineCount == 0`.
+    /// It should instead fall back to a full rebuild from the text storage.
+    func testEditHandlerWithEmptyStoreFallsBackToRebuild() {
+        let textView = CodeEditorView(frame: .zero)
+        #if canImport(AppKit)
+        textView.string = "hello"
+        #else
+        textView.text = "hello"
+        #endif
+
+        textView.lineGeometryEditHandler?.detach()
+        textView.lineGeometryEditHandler = nil
+
+        // Force the inconsistent state seen in production: store empty but
+        // storage has content.
+        textView.lineGeometryStore.reset()
+        XCTAssertEqual(textView.lineGeometryStore.lineCount, 0)
+
+        // Mutate the storage first so the auto-observer in the new handler
+        // does not also fire on the same edit (follows the pattern used in
+        // testEditHandlerRebuildsAfterCharacterEdit).
+        let storage = textView.textStorage!
+        storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: "\n")
+
+        let handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
+        )
+
+        let event = TextEditEvent(
+            editedRange: NSRange(location: 0, length: 0),
+            changeInLength: 1,
+            documentLength: storage.length,
+            editedCharacters: true
+        )
+
+        // Must not crash. With the fallback, the handler does a full rebuild
+        // from the post-edit storage ("\nhello" → 2 lines).
+        handler.textStorageDidApplyEdit(event)
+
+        XCTAssertEqual(textView.lineGeometryStore.lineCount, 2)
+        assertStoreMatchesReference(for: storage.string)
+
+        handler.detach()
+    }
+
     func testEditHandlerRegisteredViaSetup() {
         // Verify that a properly set up CodeEditorView has the handler
         let textView = CodeEditorView(frame: .zero)
