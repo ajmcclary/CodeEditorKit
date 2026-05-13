@@ -300,6 +300,7 @@ public struct CodeEditor: View {
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, environment.configuration)
+        .environment(\.editorEventBus, editorController?.editorEventBus)
         .onAppear {
             // Start monitoring if using default memory monitor
             if environment.memoryMonitor == nil && environment.runtimeDependencies == nil {

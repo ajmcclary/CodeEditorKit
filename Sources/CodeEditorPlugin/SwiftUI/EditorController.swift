@@ -73,6 +73,15 @@ public final class EditorController {
         memoizedTemporaryAttributesStore = store
         return store
     }
+
+    /// Internal event bus carrying hover and ⌘-click events from the wrapped
+    /// NSTextView. Surfaced into the SwiftUI environment by `CodeEditor` so
+    /// the `.onTextHover` and `.onCommandClick` modifiers can subscribe.
+    @ObservationIgnored
+    let editorEventBus = EditorEventBus()
+
+    @ObservationIgnored
+    private var eventBusInstaller: EditorEventBusInstaller?
     #endif
 
     // MARK: - Observable state
@@ -111,6 +120,13 @@ public final class EditorController {
                 }
             }
             isAttached = true
+            #if canImport(AppKit)
+            // Install hover/⌘-click monitoring on the wrapped text view.
+            eventBusInstaller?.uninstall()
+            let installer = EditorEventBusInstaller(bus: editorEventBus, textView: view)
+            installer.install()
+            eventBusInstaller = installer
+            #endif
         } else {
             symbolSubscription?.cancel()
             symbolSubscription = nil
@@ -118,6 +134,10 @@ public final class EditorController {
             matchCount = 0
             currentMatchIndex = -1
             isAttached = false
+            #if canImport(AppKit)
+            eventBusInstaller?.uninstall()
+            eventBusInstaller = nil
+            #endif
         }
     }
 
