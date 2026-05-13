@@ -17,7 +17,14 @@ struct InspectorSidebar: View {
             content: {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        LSPStatusPanel(workspaceRoot: appState.workspaceRoot)
+                        LSPInspectorPanel(
+                            state: appState.lsp.state,
+                            counts: appState.lsp.diagnosticCounts,
+                            serverPath: appState.lsp.resolvedServerPath,
+                            lastError: appState.lsp.lastError,
+                            isSwiftActive: appState.documents.activeLanguage == .swift,
+                            onToggle: handleToggle
+                        )
                         AnnotationsInspectorPanel(
                             hub: appState.annotationsHub,
                             controller: appState.editorController
@@ -54,6 +61,28 @@ struct InspectorSidebar: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(string, forType: .string)
+    }
+
+    private func handleToggle() {
+        Task {
+            switch appState.lsp.state {
+            case .off, .failed:
+                await appState.lsp.start(workspaceRoot: appState.workspaceRoot)
+                // Open every Swift tab into the freshly started session.
+                if case .running = appState.lsp.state {
+                    for tab in appState.documents.tabs where tab.language == .swift {
+                        let text = appState.documents.textBinding(for: tab.id).wrappedValue
+                        await appState.lsp.openTab(id: tab.id, text: text, language: .swift)
+                    }
+                }
+
+            case .running:
+                await appState.lsp.stop()
+
+            default:
+                break
+            }
+        }
     }
 }
 #endif
