@@ -10,6 +10,8 @@ import UIKit
 /// Performance tests for syntax highlighting with large files
 @MainActor
 final class SyntaxHighlightingPerformanceTests: XCTestCase {
+    nonisolated(unsafe) private var retainedViewsUntilRunLoopDrain: [CodeEditorView] = []
+
     // swiftlint:disable:next unneeded_override
     override func setUp() {
         super.setUp()
@@ -22,6 +24,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         autoreleasepool {
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
         }
+        retainedViewsUntilRunLoopDrain.removeAll()
     }
     // MARK: - Test Data Generation
 
@@ -425,12 +428,11 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         // This test provides a benchmark using XCTest's measure
         // Only test with 1000 lines to avoid multiple metric recordings
         let code = generateSwiftCode(lines: 100)  // Reduced from 1000
+        let testView = CodeEditorView()
+        retainedViewsUntilRunLoopDrain = [testView]
+        testView.language = .swift
 
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
-            let testView = CodeEditorView()
-            // testView uses its own internal memoryMonitor
-            testView.language = .swift
-
             #if canImport(AppKit)
             testView.string = code
             #else
