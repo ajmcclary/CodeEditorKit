@@ -8,7 +8,6 @@ import XCTest
 
 @MainActor
 final class PerformanceInspectorPanelSnapshotTests: XCTestCase {
-
     func testStoppedState() {
         let view = panel(
             state: .stopped,
