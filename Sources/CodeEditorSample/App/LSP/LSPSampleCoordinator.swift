@@ -47,9 +47,8 @@ final class LSPSampleCoordinator {
         state = .starting
 
         guard let serverURL = await serverResolver() else {
-            state = .failed(message:
-                "sourcekit-lsp not found. Install Xcode or run xcode-select."
-            )
+            let message = "sourcekit-lsp not found. Install Xcode or run xcode-select."
+            state = .failed(message: message)
             resolvedServerPath = nil
             return
         }
