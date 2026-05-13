@@ -487,29 +487,44 @@ public struct OperationInfo {
 
 /// Analysis of collected metrics for a specific metric type.
 public struct MetricAnalysis {
-    let count: Int
-    let averageDuration: TimeInterval
-    let maxDuration: TimeInterval
-    let minDuration: TimeInterval
-    let successRate: Double
-    let p95Duration: TimeInterval
-    let memoryImpact: Int64
+    /// Number of metric samples included in the analysis.
+    public let count: Int
+    /// Mean duration of the sampled operations in seconds.
+    public let averageDuration: TimeInterval
+    /// Longest recorded duration in seconds.
+    public let maxDuration: TimeInterval
+    /// Shortest recorded duration in seconds.
+    public let minDuration: TimeInterval
+    /// Proportion of successful operations (`0...1`).
+    public let successRate: Double
+    /// 95th percentile duration in seconds.
+    public let p95Duration: TimeInterval
+    /// Sum of memory deltas across samples in bytes.
+    public let memoryImpact: Int64
 }
 
 /// Comprehensive performance insights and analysis.
 public struct UnifiedPerformanceInsights {
-    var metricAnalyses: [PerformanceMetricType: MetricAnalysis] = [:]
-    var issues: [PerformanceIssue] = []
-    var recommendations: [PerformanceRecommendation] = []
-    var overallHealth: Double = 100.0
+    /// Per-metric-type analysis derived from recent samples.
+    public var metricAnalyses: [PerformanceMetricType: MetricAnalysis] = [:]
+    /// Detected performance issues, ordered by severity.
+    public var issues: [PerformanceIssue] = []
+    /// Suggested mitigations for the detected issues.
+    public var recommendations: [PerformanceRecommendation] = []
+    /// Composite health score (`0...100`, higher is better).
+    public var overallHealth: Double = 100.0
 }
 
 /// Represents a performance issue that needs attention.
 public struct PerformanceIssue {
-    let type: PerformanceMetricType
-    let severity: PerformanceIssueSeverity
-    let description: String
-    let metric: String
+    /// Metric type the issue applies to.
+    public let type: PerformanceMetricType
+    /// Severity of the issue.
+    public let severity: PerformanceIssueSeverity
+    /// Human-readable description of the issue.
+    public let description: String
+    /// Identifier of the metric that triggered the issue.
+    public let metric: String
 }
 
 /// Severity levels for performance issues.
@@ -524,10 +539,14 @@ public enum PerformanceIssueSeverity {
 
 /// A recommendation for improving performance.
 public struct PerformanceRecommendation {
-    let title: String
-    let description: String
-    let action: RecommendationAction
-    let priority: RecommendationPriority
+    /// Short title of the recommendation.
+    public let title: String
+    /// Detailed explanation of the recommendation.
+    public let description: String
+    /// Suggested concrete action.
+    public let action: RecommendationAction
+    /// Priority of the recommendation.
+    public let priority: RecommendationPriority
 }
 
 /// Actions that can be taken to address performance recommendations.
