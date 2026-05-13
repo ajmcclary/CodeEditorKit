@@ -30,5 +30,12 @@ extension EditorController {
     public func clearAllTemporaryAttributes() {
         temporaryAttributesStore?.clearAll()
     }
+
+    /// UTF-16 length of the currently-attached document, or zero when the
+    /// controller is unattached. Useful for clamping ranges before calling
+    /// `applyTemporaryAttributes(_:to:)` against the active buffer.
+    public var currentDocumentLength: Int {
+        codeEditorView?.textStorage?.length ?? 0
+    }
 }
 #endif

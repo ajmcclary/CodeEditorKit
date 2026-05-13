@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import CodeEditorPlugin
+import Combine
 import Foundation
 import Observation
 
@@ -21,6 +22,7 @@ final class LSPSampleCoordinator {
     private(set) var state: State = .off
     private(set) var resolvedServerPath: URL?
     private(set) var lastError: String?
+    private(set) var diagnosticCounts: DiagnosticsBridge.Counts = .zero
 
     @ObservationIgnored
     private let memoryMonitor: MemoryMonitor
@@ -31,12 +33,40 @@ final class LSPSampleCoordinator {
     @ObservationIgnored
     private(set) var manager: LSPManager?
 
+    @ObservationIgnored
+    private var mirror: DocumentMirror?
+
+    @ObservationIgnored
+    private var bridge: DiagnosticsBridge?
+
+    @ObservationIgnored
+    private weak var controller: EditorController?
+
+    @ObservationIgnored
+    private weak var hub: AnnotationsHub?
+
+    @ObservationIgnored
+    private var activeURI: (@MainActor () -> String?)?
+
     init(
         memoryMonitor: MemoryMonitor,
         serverResolver: @escaping @Sendable () async -> URL? = LSPSampleCoordinator.defaultResolver
     ) {
         self.memoryMonitor = memoryMonitor
         self.serverResolver = serverResolver
+    }
+
+    /// Connect the coordinator to the host's editor controller, annotations
+    /// hub, and the closure that returns the current document URI. Called
+    /// once by `AppState` after all three are constructed.
+    func attach(
+        controller: EditorController,
+        hub: AnnotationsHub,
+        activeURI: @escaping @MainActor () -> String?
+    ) {
+        self.controller = controller
+        self.hub = hub
+        self.activeURI = activeURI
     }
 
     /// Resolve sourcekit-lsp, register it with `LSPManager`, then start. Sets
@@ -76,15 +106,126 @@ final class LSPSampleCoordinator {
 
         let caps = ServerCapabilitiesSummary(manager.client(for: "swift")?.serverCapabilities)
         state = .running(capabilities: caps)
+
+        // Mirror Swift documents to disk so sourcekit-lsp has real file URIs.
+        let mirrorRoot = workspaceRoot ?? FileManager.default.temporaryDirectory
+            .appendingPathComponent("CodeEditorSample-LSP")
+        try? FileManager.default.createDirectory(
+            at: mirrorRoot, withIntermediateDirectories: true
+        )
+        let mirror = DocumentMirror(rootDirectory: mirrorRoot)
+        mirror.cleanupStaleShadows()
+        self.mirror = mirror
+
+        // Bridge diagnostics into the gutter + temporary attributes overlay.
+        if let client = manager.client(for: "swift"),
+           let hub,
+           let controller,
+           let activeURI {
+            let bridge = DiagnosticsBridge(
+                diagnosticsPublisher: client.$diagnostics.eraseToAnyPublisher(),
+                hub: hub,
+                applyDecoration: { [weak controller] attributes, range in
+                    controller?.applyTemporaryAttributes(attributes, to: range)
+                },
+                clearAllDecorations: { [weak controller] in
+                    controller?.clearAllTemporaryAttributes()
+                },
+                activeURI: activeURI
+            ) { [weak controller] in
+                controller?.currentDocumentLength ?? 0
+            }
+            bridge.start()
+            self.bridge = bridge
+        }
     }
 
     /// Stop the language server and reset state. Safe to call when already
     /// `.off`.
     func stop() async {
         guard state != .off else { return }
+        bridge?.stop()
+        bridge = nil
+        mirror = nil
         manager?.stopLanguageServer(for: "swift")
         manager = nil
+        diagnosticCounts = .zero
         state = .off
+    }
+
+    // MARK: - Document lifecycle
+
+    /// Open a Swift tab into the LSP session: write a shadow file via the
+    /// mirror and send `textDocument/didOpen`. Returns the shadow URL on
+    /// success, nil if LSP isn't running or `language != .swift`.
+    @discardableResult
+    func openTab(id: UUID, text: String, language: Language) async -> URL? {
+        guard language == .swift,
+              let manager,
+              let mirror,
+              case .running = state else {
+            return nil
+        }
+        guard let url = try? mirror.openTab(id: id, text: text, fileExtension: "swift") else {
+            return nil
+        }
+        try? await manager.openDocument(filePath: url.path, content: text, languageId: "swift")
+        return url
+    }
+
+    /// Forward a buffer change. Debounced inside the mirror; the manager
+    /// receives a full-sync `textDocument/didChange` after the quiet period.
+    func handleTextChange(id: UUID, newText: String) {
+        guard let mirror,
+              let url = mirror.url(for: id) else { return }
+        mirror.handleTextChange(id: id, newText: newText)
+        Task { [weak self] in
+            try? await self?.manager?.updateDocument(filePath: url.path, content: newText)
+        }
+    }
+
+    /// Tear down a tab from the LSP session and delete its shadow file.
+    func closeTab(id: UUID) {
+        guard let mirror,
+              let url = mirror.url(for: id) else { return }
+        Task { [weak self] in
+            try? await self?.manager?.closeDocument(filePath: url.path)
+            await MainActor.run { mirror.closeTab(id: id) }
+        }
+    }
+
+    /// Shadow URL for a tab, if open.
+    func mirrorURL(for id: UUID) -> URL? {
+        mirror?.url(for: id)
+    }
+
+    // MARK: - Language features
+
+    /// Request hover content for the given position in the named tab.
+    /// Returns nil if LSP isn't running, the document isn't open, or the
+    /// server has no information for the position.
+    func requestHover(at position: SourcePosition, in tabID: UUID) async -> Hover? {
+        guard let manager,
+              let mirror,
+              let url = mirror.url(for: tabID) else { return nil }
+        return try? await manager.requestHover(
+            filePath: url.path,
+            line: position.line,
+            character: position.character
+        )
+    }
+
+    /// Request definition locations for the given position. Returns an empty
+    /// array on miss or when LSP isn't running.
+    func requestDefinition(at position: SourcePosition, in tabID: UUID) async -> [Location] {
+        guard let manager,
+              let mirror,
+              let url = mirror.url(for: tabID) else { return [] }
+        return (try? await manager.requestDefinition(
+            filePath: url.path,
+            line: position.line,
+            character: position.character
+        )) ?? []
     }
 
     /// Default `xcrun --find sourcekit-lsp` lookup. Replaced in tests via
