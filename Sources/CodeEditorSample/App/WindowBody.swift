@@ -59,6 +59,22 @@ struct WindowBody: View {
                     becomeFirstResponder: .yes,
                     workspaceRoot: appState.workspaceRoot
                 )
+                #if canImport(AppKit)
+                .onTextHover { position in
+                    await appState.lsp.handleHover(at: position, in: activeID)
+                }
+                .onCommandClick { position in
+                    Task {
+                        await appState.lsp.jumpToDefinition(at: position, in: activeID)
+                    }
+                }
+                .popover(item: Binding(
+                    get: { appState.lsp.hoverSession.displayed },
+                    set: { appState.lsp.hoverSession.displayed = $0 }
+                )) { display in
+                    LSPHoverPopover(markdown: display.markdown)
+                }
+                #endif
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .safeAreaInset(edge: .top, spacing: 0) {
                     if appState.findOverlayVisible {

@@ -232,6 +232,31 @@ final class LSPSampleCoordinator {
         )) ?? []
     }
 
+    /// Stub for the definition-jump path. Filled out in Task 18.
+    func jumpToDefinition(at position: SourcePosition, in tabID: UUID) async {
+        _ = await requestDefinition(at: position, in: tabID)
+        // Resolution logic added in the definition-jump task.
+    }
+
+    /// Single entry point used by the `.onTextHover` modifier. Dismisses when
+    /// the pointer leaves text or the server isn't running; otherwise asks
+    /// for hover content and posts to the popover.
+    func handleHover(at position: SourcePosition?, in tabID: UUID) async {
+        guard case .running = state else {
+            hoverSession.dismiss()
+            return
+        }
+        guard let position else {
+            hoverSession.dismiss()
+            return
+        }
+        if let hover = await requestHover(at: position, in: tabID) {
+            hoverSession.show(markdown: hover.contents.markdownString)
+        } else {
+            hoverSession.dismiss()
+        }
+    }
+
     /// Default `xcrun --find sourcekit-lsp` lookup. Replaced in tests via
     /// `StubProcessResolver`.
     static let defaultResolver: @Sendable () async -> URL? = {
