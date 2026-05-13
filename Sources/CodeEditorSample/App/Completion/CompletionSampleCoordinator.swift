@@ -1,0 +1,135 @@
+#if canImport(AppKit)
+import AppKit
+import CodeEditorPlugin
+import Foundation
+import Observation
+
+/// Owns the sample's Completion Inspector lifecycle. Registers every
+/// built-in language provider plus the demo provider with the attached
+/// `EditorController`, wraps each in a `TelemetryCompletionProvider` so
+/// the inspector sees every fire, and snapshots controller-level stats on
+/// a 1Hz timer.
+@MainActor
+@Observable
+final class CompletionSampleCoordinator {
+    struct RegisteredProviderSummary: Identifiable, Sendable, Hashable {
+        var id: String { providerId }
+        let providerId: String
+        let languages: [Language]      // empty == "all"
+        let triggerCharacters: [String]
+        let supportsSnippets: Bool
+    }
+
+    struct Snapshot: Sendable {
+        var registeredProviders: [RegisteredProviderSummary]
+        var recentActivity: [CompletionActivityEntry]     // newest-first, max 20
+        var lastActivity: CompletionActivityEntry?
+        var requests: Int
+        var cacheHitRate: Double
+        var avgProcessingMs: Double
+
+        static let empty = Self(
+            registeredProviders: [],
+            recentActivity: [],
+            lastActivity: nil,
+            requests: 0,
+            cacheHitRate: 0,
+            avgProcessingMs: 0
+        )
+    }
+
+    /// Bounded ring size for the recent-activity buffer.
+    private static let ringCapacity = 20
+
+    // MARK: - Observable surface
+
+    private(set) var snapshot: Snapshot = .empty
+
+    // MARK: - Non-observable internals
+
+    @ObservationIgnored
+    private weak var controller: EditorController?
+
+    @ObservationIgnored
+    private var refreshTimer: Timer?
+
+    @ObservationIgnored
+    private var ring: [CompletionActivityEntry] = []
+
+    // MARK: - Lifecycle
+
+    func attach(controller: EditorController) {
+        self.controller = controller
+
+        for provider in BuiltInLanguageProviders.all() {
+            controller.registerCompletionProvider(
+                TelemetryCompletionProvider(wrapping: provider) { [weak self] entry in
+                    Task { @MainActor [weak self] in self?.record(entry) }
+                }
+            )
+        }
+        controller.registerCompletionProvider(
+            TelemetryCompletionProvider(wrapping: DemoCompletionProvider()) { [weak self] entry in
+                Task { @MainActor [weak self] in self?.record(entry) }
+            }
+        )
+
+        startRefresh()
+        refresh()
+    }
+
+    func detach() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+        controller = nil
+    }
+
+    func resetActivity() {
+        ring.removeAll()
+        snapshot.recentActivity = []
+        snapshot.lastActivity = nil
+    }
+
+    func fireAtCursor() {
+        controller?.requestCompletion(triggerKind: .manual)
+    }
+
+    // MARK: - Telemetry
+
+    func record(_ entry: CompletionActivityEntry) {
+        ring.append(entry)
+        if ring.count > Self.ringCapacity {
+            ring.removeFirst(ring.count - Self.ringCapacity)
+        }
+        snapshot.recentActivity = ring.reversed()
+        snapshot.lastActivity = ring.last
+    }
+
+    // MARK: - Refresh
+
+    func refresh() {
+        let controller = self.controller
+        let stats = controller?.completionStatistics
+        snapshot.registeredProviders = (controller?.registeredCompletionProviders ?? [])
+            .map { provider in
+                RegisteredProviderSummary(
+                    providerId: provider.id,
+                    languages: provider.supportedLanguages,
+                    triggerCharacters: provider.triggerCharacters,
+                    supportsSnippets: provider.supportsSnippets
+                )
+            }
+            .sorted { $0.providerId < $1.providerId }
+        snapshot.requests = stats?.totalRequests ?? 0
+        snapshot.cacheHitRate = stats?.cacheHitRate ?? 0
+        snapshot.avgProcessingMs = (stats?.averageProcessingTime ?? 0) * 1_000
+    }
+
+    private func startRefresh() {
+        refreshTimer?.invalidate()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.refresh() }
+        }
+    }
+}
+#endif
