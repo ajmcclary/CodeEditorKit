@@ -4,7 +4,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 ## Missing capabilities (framework features the sample doesn't demonstrate)
 
-**LSP — entirely stubbed.** `Sources/CodeEditorPlugin/LSP/` ships `LSPManager`, `LSPClient`, `LSPCompletionProvider`, `ProcessTransport`, `WebSocketTransport`, full diagnostic/hover/definition/symbol params, `LSPServerConfiguration` (local + remote), retry config, and capability negotiation. The sample only sets `workspaceRoot` via `WorkspaceKnobsSection.swift`. There is no actual server attached, no diagnostics surfaced, no hover/definition action, no inline error squiggle.
+**LSP — ✅ complete (2026-05-13).** The sample now attaches `sourcekit-lsp` end-to-end via `LSPSampleCoordinator` (`Sources/CodeEditorSample/App/LSP/`). Diagnostics flow into the gutter through `AnnotationsHub.replaceDiagnosticAnnotations` and paint inline wavy red underlines via a new `CodeEditorView`-public `applyTemporaryAttributes(_:to:)` API on `EditorController`. Hover and ⌘-click definition are wired through new framework modifiers `.onTextHover` / `.onCommandClick` plus a `SourcePosition` public type and an internal `EditorEventBus` installed by `EditorController.attach(to:)`. The old binary-availability `LSPStatusPanel` is replaced with `LSPInspectorPanel` showing live state, capability checklist, severity counts, and resolved server path. macOS-only via `#if canImport(AppKit)` (iOS sample unchanged). Spec: `docs/superpowers/specs/2026-05-13-sample-app-lsp-integration-design.md`; plan: `docs/superpowers/plans/2026-05-13-sample-app-lsp-integration.md`.
 
 **Code completion — protocol is hidden.** `CompletionManager`, the `CompletionProvider` protocol, `SmartCompletionEngine`, `CompletionDebouncer`, and the ready-made language member completions (Swift/JS/TS/Python/Go/Rust/C++/Java/Ruby/PHP/YAML/Markdown/JSON) are never wired to a UI. A toggle exists in `BehaviorKnobsSection.swift` but no panel shows what completions look like or how to register a custom provider.
 
@@ -36,13 +36,13 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 | New surface | Where it goes | What it demos |
 |---|---|---|
-| `LSPInspectorPanel` | Inspector sidebar | Spawn a local server via `ProcessTransport`, show capabilities + live diagnostics |
+| ~~`LSPInspectorPanel`~~ ✅ | Inspector sidebar | Spawn a local server via `ProcessTransport`, show capabilities + live diagnostics |
 | `PerformanceInspectorPanel` | Inspector sidebar | FPS, memory, highlight times, adaptive-mode state |
 | `EventLogPanel` | Inspector sidebar | Tail of `EditorEvent` stream with filtering |
 | `WorkspaceFileTreeSidebar` | New left-rail above settings, or as a Switcher tab | Tree from `workspaceRoot` via `FileSystemActor` |
 | `ProjectSearchSidebar` | New left section | Cross-file find using `PortableProjectSearchAdapter` |
 | `BreadcrumbBar` between tabs and editor | `WindowBody.swift` | `EditorBreadcrumbView` |
-| `DiagnosticsGutterDemo` | Wire `AnnotationsDataSource` to LSP `Diagnostic` | Live error/warning badges |
+| ~~`DiagnosticsGutterDemo`~~ ✅ | Wire `AnnotationsDataSource` to LSP `Diagnostic` | Live error/warning badges (included in LSP work) |
 | `CompletionDemoOverlay` | Behavior knobs | Register a custom `CompletionProvider`, show fired items |
 | `ThemeImporter` | Switchers | Load Zed JSON from disk |
 | `DesignTokenGallery` | Settings tab | Swatches/typography ramp showing `CodeEditorDesignTokens` |
@@ -71,4 +71,4 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 ## Recommended next step
 
-The biggest single demo gap is **LSP + diagnostics + completion + performance HUD**, because those are the four headline features a framework consumer evaluates first. Start with a `PerformanceInspectorPanel` (low risk, no external dependencies) or sketch the LSP wiring (higher value but needs a real server binary to be useful).
+LSP is now wired (✅ 2026-05-13). The next headline gap is **performance HUD + event stream**, because together they let an evaluator see the framework's runtime behavior at a glance. Start with a `PerformanceInspectorPanel` (low risk, no external dependencies) — it can sit next to `LSPInspectorPanel` in the right-rail inspector and surface FPS, memory, highlight times, and adaptive-mode state from the existing `PerformanceMonitor` / `MemoryMonitor` / `UnifiedPerformanceSystem` types. Follow with `EventLogPanel` tailing `UnifiedEventSystem` — same sidebar slot, similar wiring pattern to `LSPInspectorPanel`.
