@@ -1,0 +1,15 @@
+// Sample Kotlin script for syntax highlighting.
+fun greet(name: String, times: Int = 1): String {
+    val lines = mutableListOf<String>()
+    for (i in 0 until times) {
+        lines.add("Hello, $name! (${i + 1})")
+    }
+    return lines.joinToString("\n")
+}
+
+fun main() {
+    val names = listOf("Ada", "Grace", "Linus")
+    for (name in names) {
+        println(greet(name, 2))
+    }
+}

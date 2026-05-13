@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Greets each named person twice.
+
+set -euo pipefail
+
+greet() {
+    local name="$1"
+    local times="${2:-1}"
+    for ((i = 1; i <= times; i++)); do
+        echo "Hello, ${name}! (${i})"
+    done
+}
+
+names=("Ada" "Grace" "Linus")
+for name in "${names[@]}"; do
+    greet "$name" 2
+done

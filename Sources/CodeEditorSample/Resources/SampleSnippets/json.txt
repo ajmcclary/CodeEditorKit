@@ -1,0 +1,16 @@
+{
+    "$schema": "https://example.com/schema.json",
+    "name": "code-editor-sample",
+    "version": "1.2.0",
+    "active": true,
+    "people": [
+        { "name": "Ada", "role": "founder" },
+        { "name": "Grace", "role": "engineer" },
+        { "name": "Linus", "role": "maintainer" }
+    ],
+    "settings": {
+        "theme": "LCARS Dark",
+        "tabWidth": 4,
+        "wrapLines": false
+    }
+}

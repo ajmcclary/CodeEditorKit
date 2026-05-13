@@ -1,0 +1,20 @@
+import java.util.List;
+
+public class Greeting {
+    /** Greets the named person and returns the rendered string. */
+    public static String greet(String name, int times) {
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < times; i++) {
+            out.append("Hello, ").append(name)
+               .append("! (").append(i + 1).append(")\n");
+        }
+        return out.toString();
+    }
+
+    public static void main(String[] args) {
+        List<String> names = List.of("Ada", "Grace", "Linus");
+        for (String name : names) {
+            System.out.print(greet(name, 2));
+        }
+    }
+}

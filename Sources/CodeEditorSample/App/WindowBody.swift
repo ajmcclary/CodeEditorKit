@@ -44,18 +44,25 @@ struct WindowBody: View {
     @ViewBuilder
     private var editorPane: some View {
         if let activeID = appState.documents.activeTabID {
-            ZStack(alignment: .top) {
-                CodeEditor(text: appState.documents.textBinding(for: activeID))
-                    .editorController(appState.editorController)
-                    .codeLanguage(appState.documents.activeLanguage ?? .plainText)
-                    .codeWorkspaceRoot(appState.workspaceRoot)
-                    .environment(\.codeEditorConfiguration, appState.configuration)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                if appState.findOverlayVisible {
-                    FindReplaceOverlay(appState: appState)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+            CodeEditor(text: appState.documents.textBinding(for: activeID))
+                .onTextChange { newText in
+                    appState.documents.markDirty(activeID, newText: newText)
                 }
-            }
+                .editorController(appState.editorController)
+                .editorInteractionState(appState.documents.interactionBinding(for: activeID))
+                .codeEditorEnvironment(
+                    language: appState.documents.activeLanguage ?? .plainText,
+                    configuration: appState.configuration,
+                    becomeFirstResponder: .yes,
+                    workspaceRoot: appState.workspaceRoot
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if appState.findOverlayVisible {
+                        FindReplaceOverlay(appState: appState)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                }
         } else {
             emptyState
         }

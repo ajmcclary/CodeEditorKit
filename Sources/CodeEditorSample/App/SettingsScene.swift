@@ -52,7 +52,6 @@ struct SettingsScene: View {
         }
         .navigationSplitViewStyle(.balanced)
         .codeTheme(appState.theme)
-        .environment(\.codeEditorConfiguration, appState.configuration)
         .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
         .frame(minWidth: 760, idealWidth: 880, minHeight: 540, idealHeight: 660)
     }

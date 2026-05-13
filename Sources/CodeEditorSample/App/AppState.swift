@@ -51,6 +51,12 @@ final class AppState {
     /// Whether the "Go to Symbol…" sheet is presented.
     var gotoSymbolSheetVisible: Bool = false
 
+    /// Whether the command palette overlay is visible. Owned here (not
+    /// as `@State` on `RootWindow`) so the scene-level `.commands`
+    /// shortcut can flip it without coordinating through a separate
+    /// FocusedValue channel.
+    var paletteVisible: Bool = false
+
     init() {
         let hub = AnnotationsHub()
         self.annotationsHub = hub

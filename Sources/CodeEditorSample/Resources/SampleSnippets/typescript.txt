@@ -1,0 +1,13 @@
+// Greets the named person and returns the rendered string.
+function greet(name: string, times: number = 1): string {
+    const lines: string[] = [];
+    for (let i = 0; i < times; i++) {
+        lines.push(`Hello, ${name}! (${i + 1})`);
+    }
+    return lines.join("\n");
+}
+
+const names: readonly string[] = ["Ada", "Grace", "Linus"];
+for (const name of names) {
+    console.log(greet(name, 2));
+}

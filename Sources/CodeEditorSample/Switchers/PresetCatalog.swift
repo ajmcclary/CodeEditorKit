@@ -32,4 +32,16 @@ enum PresetCatalog {
 
     /// Default on launch.
     static let `default`: ConfigurationPreset = all.first { $0.id == "default" } ?? all[0]
+
+    /// Merge a preset's user-facing knobs into `current` without
+    /// overwriting the user-tuned performance section. Display, behavior,
+    /// and layout come from the preset; performance survives. The preset
+    /// "feels" applied while the user's machine-tuned settings stay put.
+    /// For a wholesale replace use `preset.configuration` directly.
+    static func apply(_ preset: ConfigurationPreset, onto current: EditorConfiguration) -> EditorConfiguration {
+        current
+            .with(display: preset.configuration.display)
+            .with(behavior: preset.configuration.behavior)
+            .with(layout: preset.configuration.layout)
+    }
 }

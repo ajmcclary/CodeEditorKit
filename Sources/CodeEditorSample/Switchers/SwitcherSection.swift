@@ -83,7 +83,13 @@ struct SwitcherSection: View {
                 PresetCatalog.all.first { $0.configuration == configuration }
                     ?? PresetCatalog.default
             },
-            set: { newValue in configuration = newValue.configuration }
+            set: { newValue in
+                // Non-destructive apply: keep the user's tuned performance
+                // section; pull display/behavior/layout from the preset.
+                // Pair with the palette "Reset to preset" entry for the
+                // wholesale-replace variant.
+                configuration = PresetCatalog.apply(newValue, onto: configuration)
+            }
         )
     }
 }

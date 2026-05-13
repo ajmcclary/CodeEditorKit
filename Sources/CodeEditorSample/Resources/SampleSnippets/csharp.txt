@@ -1,0 +1,28 @@
+using System;
+using System.Collections.Generic;
+
+namespace Greeting
+{
+    public static class Program
+    {
+        /// <summary>Greets the named person and returns the rendered string.</summary>
+        public static string Greet(string name, int times = 1)
+        {
+            var lines = new List<string>();
+            for (int i = 0; i < times; i++)
+            {
+                lines.Add($"Hello, {name}! ({i + 1})");
+            }
+            return string.Join("\n", lines);
+        }
+
+        public static void Main()
+        {
+            var names = new[] { "Ada", "Grace", "Linus" };
+            foreach (var name in names)
+            {
+                Console.WriteLine(Greet(name, 2));
+            }
+        }
+    }
+}

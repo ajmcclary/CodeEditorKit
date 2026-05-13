@@ -24,18 +24,39 @@ enum CommandPaletteCatalog {
         }
 
         for language in LanguageCatalog.all {
-            let item = CommandPaletteItem(title: "Language: \(language.name)", kind: .setting)
-            actions[item.id] = {
+            // "Language: X" preserves the buffer — switches highlighter only.
+            let setLanguage = CommandPaletteItem(title: "Language: \(language.name)", kind: .setting)
+            actions[setLanguage.id] = {
                 guard let id = appState.documents.activeTabID else { return }
                 appState.documents.setLanguage(language, of: id)
             }
-            items.append(item)
+            items.append(setLanguage)
+
+            // "Sample: X" is destructive — replaces the buffer with the
+            // canonical demo snippet for that language.
+            let resetSample = CommandPaletteItem(title: "Sample: \(language.name)", kind: .setting)
+            actions[resetSample.id] = {
+                guard let id = appState.documents.activeTabID else { return }
+                appState.documents.resetToSample(language, of: id)
+            }
+            items.append(resetSample)
         }
 
         for preset in PresetCatalog.all {
-            let item = CommandPaletteItem(title: "Preset: \(preset.name)", kind: .setting)
-            actions[item.id] = { appState.configuration = preset.configuration }
-            items.append(item)
+            // "Preset: X" merges display/behavior/layout onto the current
+            // configuration, preserving the user's tuned performance knobs.
+            let apply = CommandPaletteItem(title: "Preset: \(preset.name)", kind: .setting)
+            actions[apply.id] = {
+                appState.configuration = PresetCatalog.apply(preset, onto: appState.configuration)
+            }
+            items.append(apply)
+
+            // "Reset to preset: X" is the destructive wholesale-replace
+            // variant — kept separate so the merge above stays safe to
+            // explore without clobbering the user's tuning.
+            let reset = CommandPaletteItem(title: "Reset to preset: \(preset.name)", kind: .setting)
+            actions[reset.id] = { appState.configuration = preset.configuration }
+            items.append(reset)
         }
 
         appendDocumentActions(into: &items, actions: &actions, appState: appState)
@@ -98,9 +119,12 @@ enum CommandPaletteCatalog {
         actions: inout [CommandPaletteItem.ID: () -> Void],
         appState: AppState
     ) {
-        let find = CommandPaletteItem(title: "Find…", kind: .action, shortcut: "⌘F")
-        actions[find.id] = { appState.findOverlayVisible = true }
-        items.append(find)
+        // Single entry covers both Find and Replace — the overlay exposes
+        // both rows, so two palette entries that both just toggle it on
+        // were redundant.
+        let openOverlay = CommandPaletteItem(title: "Find / Replace…", kind: .action, shortcut: "⌘F")
+        actions[openOverlay.id] = { appState.findOverlayVisible = true }
+        items.append(openOverlay)
 
         let findNext = CommandPaletteItem(title: "Find Next", kind: .action)
         actions[findNext.id] = { _ = appState.editorController.findNext() }
@@ -109,10 +133,6 @@ enum CommandPaletteCatalog {
         let findPrev = CommandPaletteItem(title: "Find Previous", kind: .action)
         actions[findPrev.id] = { _ = appState.editorController.findPrevious() }
         items.append(findPrev)
-
-        let replace = CommandPaletteItem(title: "Replace…", kind: .action, shortcut: "⌘⌥F")
-        actions[replace.id] = { appState.findOverlayVisible = true }
-        items.append(replace)
     }
 
     @MainActor

@@ -1,0 +1,24 @@
+/* Demo card component — uses CSS variables for theme tokens. */
+:root {
+    --bg-elevated: #14181f;
+    --fg-base: #f2e7d8;
+    --accent: #ff9933;
+    --radius: 8px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-elevated);
+    color: var(--fg-base);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 153, 51, 0.12);
+}
+
+.card__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+}

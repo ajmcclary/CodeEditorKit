@@ -1,0 +1,13 @@
+# Greets the named person and returns the rendered string.
+def greet(name, times: 1)
+  lines = []
+  times.times do |i|
+    lines << "Hello, \#{name}! (\#{i + 1})"
+  end
+  lines.join("\n")
+end
+
+names = ["Ada", "Grace", "Linus"]
+names.each do |name|
+  puts greet(name, times: 2)
+end

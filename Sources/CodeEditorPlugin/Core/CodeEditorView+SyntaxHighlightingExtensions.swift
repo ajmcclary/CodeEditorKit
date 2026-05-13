@@ -19,23 +19,15 @@ extension CodeEditorView {
             return
         }
 
-        // Publish a canonical edit event for all observers.
+        // Snapshot edit state synchronously — these accessors are safe inside the
+        // didProcessEditingNotification callback. Anything that **reacts** to the
+        // edit (publishes events, enumerates layout fragments, re-enters
+        // beginEditing) must run AFTER the NSTextContentStorage transaction
+        // closes; see the deferred dispatch below.
         let editedMask = textStorage.editedMask
         let editedRange = textStorage.editedRange
-        if editedRange.location != NSNotFound {
-            let changeInLength = textStorage.changeInLength
-            let oldLength = max(0, editedRange.length - changeInLength)
-            let event = TextEditEvent(
-                editedRange: NSRange(location: editedRange.location, length: oldLength),
-                changeInLength: changeInLength,
-                documentLength: textStorage.length,
-                editedCharacters: editedMask.contains(.editedCharacters)
-            )
-            textEditEventHub.publish(event)
-        }
-
-        // Note: Line geometry store is kept in sync by LineGeometryEditHandler
-        // via TextEditEventHub — no manual invalidation needed.
+        let changeInLength = textStorage.changeInLength
+        let documentLength = textStorage.length
 
         // Gutter invalidation (perf C1).
         //
@@ -54,7 +46,6 @@ extension CodeEditorView {
             guard editedMask.contains(.editedCharacters), editedRange.location != NSNotFound else {
                 return false
             }
-            let changeInLength = textStorage.changeInLength
             if changeInLength <= 0 {
                 return true
             }
@@ -75,38 +66,53 @@ extension CodeEditorView {
             #endif
         }
 
-        // Apply syntax highlighting to the edited range if enabled.
-        // Only trigger for character edits — attribute-only edits are
-        // produced by the range attribute applier and must not re-enter
-        // the highlighting pipeline (prevents loops and double-apply).
+        // Defer all observer fan-out one runloop hop so it runs after the
+        // outer `NSTextContentStorage.performEditingTransaction` closes.
+        //
+        // Why: inside that transaction, NSTextContentStorage is still
+        // considered "in-edit"; any sync consumer that calls
+        // `enumerateTextLayoutFragments`, `enumerateTextElements`, or
+        // recursively opens a `beginEditing`/`endEditing` transaction
+        // trips `NSTextContentStorageBreakOnEnumerateWhileEditing`.
+        // Concrete tripwires:
+        //   - `RangeBasedHighlightingController.textStorageDidApplyEdit`
+        //     flows into `VisibleRangeProvider` which enumerates layout
+        //     fragments via `TextKitBridge.visibleRange`.
+        //   - `RangeAttributeApplier.textStorageDidApplyEdit` opens a
+        //     nested `beginEditing`/`endEditing` on the same storage.
+        //   - Accessibility clients enumerate text elements in response to
+        //     `notifyAccessibilityTextDidChange`.
+        // Apply syntax highlighting eagerly — `applySyntaxHighlighting(in:)`
+        // itself debounces via `Task.sleep`, so it never re-enters the
+        // current transaction.
         if editedMask.contains(.editedCharacters),
-           configuration.display.isSyntaxHighlightingEnabled {
-            let editedRange = textStorage.editedRange
-            if editedRange.location != NSNotFound {
-                applySyntaxHighlighting(in: editedRange)
-            }
+           configuration.display.isSyntaxHighlightingEnabled,
+           editedRange.location != NSNotFound {
+            applySyntaxHighlighting(in: editedRange)
         }
 
-        // On iOS, ensure text remains visible after edits
+        guard editedRange.location != NSNotFound else { return }
 
-        // Publish text changed event
-        if editedRange.location != NSNotFound {
+        let oldLength = max(0, editedRange.length - changeInLength)
+        let event = TextEditEvent(
+            editedRange: NSRange(location: editedRange.location, length: oldLength),
+            changeInLength: changeInLength,
+            documentLength: documentLength,
+            editedCharacters: editedMask.contains(.editedCharacters)
+        )
+        let shouldCheckCompletion = isCodeCompletionEnabled
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.textEditEventHub.publish(event)
             #if canImport(AppKit)
-            eventPublisher.publishSync(.textDidChange(string))
+            self.eventPublisher.publishSync(.textDidChange(self.string))
             #else
-            eventPublisher.publishSync(.textDidChange(text ?? ""))
+            self.eventPublisher.publishSync(.textDidChange(self.text ?? ""))
             #endif
-
-            // Update accessibility for text changes
-            notifyAccessibilityTextDidChange()
-
-            // Check for completion triggering
-            if isCodeCompletionEnabled {
-                checkForCompletionTrigger(at: editedRange)
+            self.notifyAccessibilityTextDidChange()
+            if shouldCheckCompletion {
+                self.checkForCompletionTrigger(at: editedRange)
             }
-
-            // LSP document context can be updated here when integrated
-            // updateLSPDocumentContext()
         }
     }
 

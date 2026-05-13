@@ -1,0 +1,14 @@
+-- Sample Lua script for syntax highlighting.
+local function greet(name, times)
+    times = times or 1
+    local lines = {}
+    for i = 1, times do
+        lines[i] = "Hello, " .. name .. "! (" .. i .. ")"
+    end
+    return table.concat(lines, "\n")
+end
+
+local names = {"Ada", "Grace", "Linus"}
+for _, name in ipairs(names) do
+    print(greet(name, 2))
+end

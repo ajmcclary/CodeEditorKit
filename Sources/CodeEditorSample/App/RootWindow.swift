@@ -13,7 +13,6 @@ struct RootWindow: View {
 
     @State private var settingsVisible: Bool = true
     @State private var inspectorVisible: Bool = true
-    @State private var paletteVisible: Bool = false
 
     var body: some View {
         @Bindable var documents = appState.documents
@@ -36,9 +35,9 @@ struct RootWindow: View {
                 EditorStatusBar()
             }
 
-            if paletteVisible {
+            if appState.paletteVisible {
                 EditorCommandPalette(
-                    isPresented: $paletteVisible,
+                    isPresented: $appState.paletteVisible,
                     items: items,
                     onSelect: dispatch
                 )
@@ -48,16 +47,7 @@ struct RootWindow: View {
             }
         }
         .codeTheme(appState.theme)
-        .environment(\.codeEditorConfiguration, appState.configuration)
         .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
-        .background(togglePaletteShortcut)
-    }
-
-    private var togglePaletteShortcut: some View {
-        Button("Toggle Palette") { paletteVisible.toggle() }
-            .keyboardShortcut("p", modifiers: [.command, .shift])
-            .opacity(0)
-            .frame(width: 0, height: 0)
     }
 }
 #endif

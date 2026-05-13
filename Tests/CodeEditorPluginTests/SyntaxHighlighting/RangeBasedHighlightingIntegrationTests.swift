@@ -384,6 +384,13 @@ struct RangeBasedHighlightingWiringTests {
         #else
         textView.text = "let value = 1"
         #endif
+        // CodeEditorView defers its post-edit fan-out one runloop hop so it
+        // doesn't trip NSTextContentStorageBreakOnEnumerateWhileEditing
+        // (see CodeEditorView+SyntaxHighlightingExtensions.swift). Drain the
+        // deferred publish from the initial text seed before constructing
+        // the controller so its observers only see the synthetic edit
+        // dispatched below.
+        try await Task.sleep(for: .milliseconds(1))
 
         let primary = MockRangeHighlightProvider()
         let supplemental = MockRangeHighlightProvider()
@@ -419,6 +426,9 @@ struct RangeBasedHighlightingWiringTests {
         #else
         textView.text = "let value = 1"
         #endif
+        // Drain the deferred publish before constructing the controller —
+        // see comment on `supplementalProviderReceivesEdits` above.
+        try await Task.sleep(for: .milliseconds(1))
 
         let primary = MockRangeHighlightProvider()
         let supplemental = MockRangeHighlightProvider()

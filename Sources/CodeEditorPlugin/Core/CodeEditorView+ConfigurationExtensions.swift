@@ -93,17 +93,33 @@ extension CodeEditorView {
 
     @objc
     internal func handleTextViewDidChangeSelection(_ notification: Notification) {
-        updateSelectedLineHighlight()
-
-        // Forward to delegate
+        // Forward to the host's delegate synchronously — Apple's NSTextView
+        // contract is that `textViewDidChangeSelection` runs in the same
+        // turn as the selection change, and callers that override it expect
+        // that timing.
         delegateProxy.textViewDidChangeSelection(notification)
 
-        // Post our own notification
-        let selectionNotification = Notification(name: Self.codeEditorViewDidChangeSelectionNotification, object: self)
-        NotificationCenter.default.post(selectionNotification)
-
-        // Publish selection changed event
-        eventPublisher.publishSync(.textSelectionDidChange(selectedRange))
+        // Defer everything that may enumerate the TextKit2 layout or text
+        // content storage. AppKit re-emits selection change notifications
+        // from inside `NSTextStorage.endEditing` whenever a replace moves
+        // the caret (see backtrace in
+        // CodeEditorView+SyntaxHighlightingExtensions.swift), so any sync
+        // call into `enumerateTextLayoutFragments` here trips
+        // `NSTextContentStorageBreakOnEnumerateWhileEditing`.
+        // - updateSelectedLineHighlight → calculateLineRect → enumerateTextLayoutFragments
+        // - NotificationCenter.post + eventPublisher.publishSync may invoke
+        //   observers that also enumerate.
+        let currentSelection = selectedRange
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.updateSelectedLineHighlight()
+            let selectionNotification = Notification(
+                name: Self.codeEditorViewDidChangeSelectionNotification,
+                object: self
+            )
+            NotificationCenter.default.post(selectionNotification)
+            self.eventPublisher.publishSync(.textSelectionDidChange(currentSelection))
+        }
     }
 
     internal func updateSelectedLineHighlight() {

@@ -23,7 +23,6 @@ struct IOSRootView: View {
                 .toolbar { toolbar(documents: appState.documents) }
         }
         .codeTheme(appState.theme)
-        .environment(\.codeEditorConfiguration, appState.configuration)
         .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
     }
 
@@ -80,10 +79,17 @@ struct IOSRootView: View {
     private var editor: some View {
         if let activeID = appState.documents.activeTabID {
             CodeEditor(text: appState.documents.textBinding(for: activeID))
+                .onTextChange { newText in
+                    appState.documents.markDirty(activeID, newText: newText)
+                }
                 .editorController(appState.editorController)
-                .codeLanguage(appState.documents.activeLanguage ?? .plainText)
-                .codeWorkspaceRoot(appState.workspaceRoot)
-                .environment(\.codeEditorConfiguration, appState.configuration)
+                .editorInteractionState(appState.documents.interactionBinding(for: activeID))
+                .codeEditorEnvironment(
+                    language: appState.documents.activeLanguage ?? .plainText,
+                    configuration: appState.configuration,
+                    becomeFirstResponder: .yes,
+                    workspaceRoot: appState.workspaceRoot
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ContentUnavailableView(

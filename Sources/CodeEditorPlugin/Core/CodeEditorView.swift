@@ -156,17 +156,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
     }
 
-    #if canImport(AppKit)
-    /// Retains the TextKit2 content manager backing the AppKit text network.
-    private var textKit2ContentStorage: NSTextContentStorage?
-
-    /// Retains the TextKit2 layout manager backing the AppKit text network.
-    private var textKit2LayoutManager: NSTextLayoutManager?
-
-    override public var textLayoutManager: NSTextLayoutManager? {
-        textKit2LayoutManager ?? super.textLayoutManager
-    }
-    #endif
+    // Note: We intentionally do **not** stand up a custom NSTextContentStorage/
+    // NSTextLayoutManager network here, nor override `textLayoutManager`.
+    // NSTextView constructs its own TextKit 2 network when initialized via
+    // `super.init(frame:)`, and key-input plumbing (NSTextInputContext →
+    // `insertText:replacementRange:` → `shouldChangeTextIn` delegate) only
+    // wires through that internally-owned network. A previous refactor
+    // (fc96866) replaced it with a hand-rolled network; the result was that
+    // `keyDown` still fired but `shouldChangeTextIn` never did, so the
+    // editor accepted clicks and selections but rejected typed input. If
+    // you ever need access to the live managers, read them via the standard
+    // accessors (`self.textLayoutManager`, `self.textContentStorage`).
 
     /// Explicit feature dependencies used by view models and live editor behavior.
     internal var featureDependencies: EditorFeatureRuntimeDependencies {
@@ -421,19 +421,21 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     #if canImport(AppKit)
     override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
-        let textKit2Network = Self.makeTextKit2Network(frame: frameRect, textContainer: container)
-        super.init(frame: frameRect, textContainer: textKit2Network.textContainer)
-        textKit2ContentStorage = textKit2Network.contentStorage
-        textKit2LayoutManager = textKit2Network.layoutManager
+        super.init(frame: frameRect, textContainer: container)
         setupTextView()
     }
 
     override public init(frame frameRect: NSRect) {
         Self.logger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
-        let textKit2Network = Self.makeTextKit2Network(frame: frameRect, textContainer: nil)
-        super.init(frame: frameRect, textContainer: textKit2Network.textContainer)
-        textKit2ContentStorage = textKit2Network.contentStorage
-        textKit2LayoutManager = textKit2Network.layoutManager
+        // Default NSTextView initialization — NSTextView constructs its own
+        // TextKit 2 network (NSTextContentStorage + NSTextLayoutManager +
+        // NSTextContainer) and wires it into the text-input pipeline so
+        // `interpretKeyEvents` → `insertText:` → `shouldChangeTextIn` flows
+        // through correctly. A previous refactor (fc96866) tried to construct
+        // the network manually and pass the container to `super.init`, which
+        // detached input handling from NSTextView's internal references — the
+        // editor accepted clicks (selection worked) but rejected typing.
+        super.init(frame: frameRect)
         setupTextView()
     }
 
@@ -461,26 +463,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         if let memoryMonitor {
             self.memoryMonitor = memoryMonitor
         }
-    }
-
-    private static func makeTextKit2Network(
-        frame frameRect: NSRect,
-        textContainer providedContainer: NSTextContainer?
-    ) -> (
-        textContainer: NSTextContainer,
-        contentStorage: NSTextContentStorage,
-        layoutManager: NSTextLayoutManager
-    ) {
-        let contentStorage = NSTextContentStorage()
-        contentStorage.textStorage = NSTextStorage()
-
-        let layoutManager = NSTextLayoutManager()
-        contentStorage.addTextLayoutManager(layoutManager)
-
-        let textContainer = providedContainer ?? NSTextContainer(size: frameRect.size)
-        layoutManager.textContainer = textContainer
-
-        return (textContainer, contentStorage, layoutManager)
     }
     #else
     override public init(frame frameRect: CGRect, textContainer container: NSTextContainer?) {

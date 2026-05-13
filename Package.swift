@@ -118,6 +118,9 @@ let package = Package(
                 "CodeEditorPlugin",
                 "CodeEditorUI"
             ],
+            resources: [
+                .process("Resources/SampleSnippets")
+            ],
             swiftSettings: swiftSettings
         ),
         .testTarget(

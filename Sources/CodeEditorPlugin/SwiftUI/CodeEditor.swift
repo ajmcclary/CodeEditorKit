@@ -132,10 +132,6 @@ public struct CodeEditor: View {
 
     @Binding private var text: String
 
-    // Search
-    @State private var searchText = ""
-    @State private var isSearching = false
-
     // Environment - Using consolidated environment
     @Environment(\.codeEditorEnvironment) private var environment
 
@@ -296,7 +292,11 @@ public struct CodeEditor: View {
             onTextChange: handleTextChange,
             onSelectionChange: handleSelectionChange
         )
-        .searchable(text: $searchText)
+        // No `.searchable(...)` here on purpose. The old wrapper added a
+        // toolbar search field that competes for first responder on macOS,
+        // which made the editor appear read-only at launch even with a
+        // valid `becomeFirstResponder: .yes` request. Hosts that want
+        // searchable chrome can layer it outside the editor.
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, environment.configuration)

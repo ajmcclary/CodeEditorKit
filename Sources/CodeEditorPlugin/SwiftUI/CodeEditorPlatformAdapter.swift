@@ -55,8 +55,18 @@ struct AppKitCodeEditorPlatformAdapter: CodeEditorPlatformAdapter {
 
     func requestFocus(for view: PlatformView) {
         guard let containerView = view as? CodeEditorContainerView else { return }
+        // The view may not yet be in a window when we're invoked (SwiftUI's
+        // `sizeThatFits` / first `updateNSView` can run before the view is
+        // attached). Poll on the main actor — bounded — until the window
+        // arrives, then promote the inner text view to first responder.
         Task { @MainActor in
-            containerView.window?.makeFirstResponder(containerView.textView)
+            for _ in 0..<10 {
+                if let window = containerView.window {
+                    window.makeFirstResponder(containerView.textView)
+                    return
+                }
+                try? await Task.sleep(for: .milliseconds(16))
+            }
         }
     }
 

@@ -1,0 +1,24 @@
+# Sample Document
+
+A small Markdown document for **syntax highlighting**.
+
+## Features
+
+- Bold and *italic* emphasis
+- [Inline links](https://example.com)
+- `inline code` snippets
+- Fenced code blocks:
+
+```swift
+func greet(_ name: String) -> String {
+    "Hello, \(name)!"
+}
+```
+
+> Blockquotes for emphasis.
+
+| Name  | Role        |
+| ----- | ----------- |
+| Ada   | Founder     |
+| Grace | Engineer    |
+| Linus | Maintainer  |
