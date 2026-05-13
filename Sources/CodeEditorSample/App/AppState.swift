@@ -58,6 +58,17 @@ final class AppState {
     var paletteVisible: Bool = false
 
     #if canImport(AppKit)
+    /// Shared `MemoryMonitor` instance fed into both `lsp` and `performance`
+    /// coordinators so the panel readouts and LSP coordination agree on a
+    /// single source of memory truth.
+    let memoryMonitor = MemoryMonitor()
+
+    /// Shared `UnifiedPerformanceSystem` instance: installed on
+    /// `configuration.performance.unifiedPerformanceSystem` so the framework's
+    /// syntax highlighter records into it, and polled by `performance` for
+    /// the `Last highlight` / `Highlight p95` panel readouts.
+    let unifiedPerformanceSystem = UnifiedPerformanceSystem()
+
     /// Sample-side LSP coordinator. Owns the `LSPManager`, document
     /// mirroring, and the diagnostics bridge. macOS-only (process spawning
     /// is unavailable on iOS, so the LSP demo doesn't ship on that
@@ -66,6 +77,11 @@ final class AppState {
     /// (splitting AppState into feature-scoped models); the LSP wiring
     /// uses the existing god-object pattern for now.
     let lsp: LSPSampleCoordinator
+
+    /// Sample-side Performance Inspector coordinator. Owns the framework
+    /// monitors and snapshots them on a 1Hz timer for
+    /// `PerformanceInspectorPanel`. macOS-only.
+    let performance: PerformanceSampleCoordinator
     #endif
 
     init() {
@@ -74,7 +90,7 @@ final class AppState {
         hub.controller = editorController
         editorController.setAnnotationsDataSource(hub)
         #if canImport(AppKit)
-        let coordinator = LSPSampleCoordinator(memoryMonitor: MemoryMonitor())
+        let coordinator = LSPSampleCoordinator(memoryMonitor: memoryMonitor)
         self.lsp = coordinator
         let documentsRef = documents
         coordinator.attach(
@@ -94,6 +110,17 @@ final class AppState {
         coordinator.onRequestScroll = { [weak controllerRef] line in
             controllerRef?.gotoLine(line)
         }
+
+        // Performance Inspector wiring. Assign `performance` BEFORE mutating
+        // `configuration` so the @Observable macro doesn't trip on an
+        // uninitialized stored property when writing through `self`.
+        let perfCoordinator = PerformanceSampleCoordinator(
+            memoryMonitor: memoryMonitor,
+            unifiedPerformanceSystem: unifiedPerformanceSystem
+        )
+        perfCoordinator.attach(controller: editorController)
+        self.performance = perfCoordinator
+        self.configuration.performance.unifiedPerformanceSystem = unifiedPerformanceSystem
         #endif
     }
 }
