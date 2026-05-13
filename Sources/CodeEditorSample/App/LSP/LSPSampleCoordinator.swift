@@ -24,6 +24,10 @@ final class LSPSampleCoordinator {
     private(set) var lastError: String?
     private(set) var diagnosticCounts: DiagnosticsBridge.Counts = .zero
 
+    /// Hover popover state — bound by `WindowBody.popover(item:)`. Coordinator
+    /// owns it so dismissals during state-change tear down cleanly.
+    let hoverSession = HoverSession()
+
     @ObservationIgnored
     private let memoryMonitor: MemoryMonitor
 
