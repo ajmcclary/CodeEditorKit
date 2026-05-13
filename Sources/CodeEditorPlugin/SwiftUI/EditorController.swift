@@ -57,6 +57,24 @@ public final class EditorController {
     @ObservationIgnored
     private var symbolSubscription: AnyCancellable?
 
+    #if canImport(AppKit)
+    @ObservationIgnored
+    private var memoizedTemporaryAttributesStore: TemporaryAttributesStore?
+
+    /// Lazily-built store keyed on the currently-attached view's text storage.
+    /// Rebuilt automatically when the attached view (and thus storage) changes.
+    var temporaryAttributesStore: TemporaryAttributesStore? {
+        guard let storage = codeEditorView?.textStorage else { return nil }
+        if let existing = memoizedTemporaryAttributesStore,
+           existing.textStorage === storage {
+            return existing
+        }
+        let store = TemporaryAttributesStore(textStorage: storage)
+        memoizedTemporaryAttributesStore = store
+        return store
+    }
+    #endif
+
     // MARK: - Observable state
 
     /// Whether a `CodeEditorView` is currently attached. False until the

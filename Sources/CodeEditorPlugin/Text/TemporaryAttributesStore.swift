@@ -13,7 +13,7 @@ final class TemporaryAttributesStore {
         let keys: Set<NSAttributedString.Key>
     }
 
-    private weak var textStorage: NSTextStorage?
+    weak var textStorage: NSTextStorage?
     private var applied: [Applied] = []
 
     init(textStorage: NSTextStorage) {
