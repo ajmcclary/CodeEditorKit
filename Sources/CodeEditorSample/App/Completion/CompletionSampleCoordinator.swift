@@ -58,6 +58,10 @@ final class CompletionSampleCoordinator {
 
     // MARK: - Lifecycle
 
+    /// Attaches the coordinator to an editor controller and registers every
+    /// built-in language provider plus the demo provider. Does NOT start
+    /// the polling timer — call `start()` from the panel's `.onAppear`,
+    /// mirroring `PerformanceSampleCoordinator`.
     func attach(controller: EditorController) {
         self.controller = controller
 
@@ -74,13 +78,32 @@ final class CompletionSampleCoordinator {
             }
         )
 
-        startRefresh()
         refresh()
     }
 
-    func detach() {
+    /// Starts the 1Hz snapshot refresh. Idempotent — calling start when
+    /// already running is a no-op.
+    func start() {
+        guard refreshTimer == nil else { return }
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard self != nil else {
+                timer.invalidate()
+                return
+            }
+            Task { @MainActor [weak self] in self?.refresh() }
+        }
+    }
+
+    /// Stops the 1Hz refresh and clears the controller reference. Tests
+    /// should call this to keep run-loop-retained Timers from outliving
+    /// the test under `swift test --parallel`.
+    func stop() {
         refreshTimer?.invalidate()
         refreshTimer = nil
+    }
+
+    func detach() {
+        stop()
         controller = nil
     }
 
@@ -125,11 +148,5 @@ final class CompletionSampleCoordinator {
         snapshot.avgProcessingMs = (stats?.averageProcessingTime ?? 0) * 1_000
     }
 
-    private func startRefresh() {
-        refreshTimer?.invalidate()
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in self?.refresh() }
-        }
-    }
 }
 #endif

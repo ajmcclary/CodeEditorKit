@@ -82,6 +82,12 @@ final class AppState {
     /// monitors and snapshots them on a 1Hz timer for
     /// `PerformanceInspectorPanel`. macOS-only.
     let performance: PerformanceSampleCoordinator
+
+    /// Sample-side Completion Inspector coordinator. Registers built-in
+    /// language providers (eight) plus a demo provider on attach, decorates
+    /// each with telemetry, and snapshots controller stats on a 1Hz timer
+    /// for `CompletionInspectorPanel`. macOS-only.
+    let completion: CompletionSampleCoordinator
     #endif
 
     init() {
@@ -120,7 +126,15 @@ final class AppState {
         )
         perfCoordinator.attach(controller: editorController)
         self.performance = perfCoordinator
+
+        let completionCoordinator = CompletionSampleCoordinator()
+        self.completion = completionCoordinator
+
+        // Both observable coordinators must be assigned before mutating
+        // `configuration` through `self`; otherwise the @Observable macro
+        // trips on an uninitialized stored property.
         self.configuration.performance.unifiedPerformanceSystem = unifiedPerformanceSystem
+        completionCoordinator.attach(controller: editorController)
         #endif
     }
 }
