@@ -4,13 +4,38 @@ Learn about the custom environment keys provided by CodeEditorPlugin for advance
 
 ## Overview
 
-CodeEditorPlugin provides several custom environment keys that allow you to configure code editors throughout your SwiftUI view hierarchy. These keys enable powerful composition patterns and make it easy to apply consistent settings across multiple editors.
+CodeEditorPlugin provides a consolidated `CodeEditorEnvironment` value plus direct environment projections for common settings. The direct keys remain supported for compatibility and convenience; internally they read and write the consolidated environment value.
 
 ## Available Environment Keys
 
+### `codeEditorEnvironment`
+
+The consolidated environment value for editor language, theme, configuration, focus, memory monitoring, and event-system injection.
+
+```swift
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .codeEditorEnvironment(
+                    language: .swift,
+                    theme: .dark,
+                    configuration: .minimal,
+                    becomeFirstResponder: .yes
+                )
+        }
+    }
+}
+```
+
+**Type**: `CodeEditorEnvironment`<br>
+**Default**: `CodeEditorEnvironment.default`
+
+> **Related Modifier**: Use `.codeEditorEnvironment(...)` when configuring several editor defaults together.
+
 ### `codeEditorConfiguration`
 
-The main configuration key that controls all aspects of the editor's behavior and appearance.
+The configuration projection that controls all aspects of the editor's behavior and appearance.
 
 ```swift
 struct MyApp: App {
@@ -24,7 +49,7 @@ struct MyApp: App {
 ```
 
 **Type**: `EditorConfiguration`  
-**Default**: `EditorConfiguration.default`
+**Default**: `EditorConfiguration()`
 
 > **Related Modifier**: Use SwiftUI's `.environment(\.codeEditorConfiguration, ...)` directly, or the consolidated `.codeEditorEnvironment(...)` helper.
 
@@ -47,7 +72,7 @@ struct CodeView: View {
 **Type**: `Language`  
 **Default**: `.plainText`
 
-> **Related Modifier**: Use `CodeEditor/codeLanguage(_:)` for setting the language on individual editors.
+> **Related Modifier**: Use `.codeLanguage(_:)` for setting the language on individual editors.
 
 ### `codeEditorTheme`
 
@@ -58,7 +83,7 @@ struct ThemedEditor: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-CodeEditor(text: .constant(""))
+        CodeEditor(text: .constant(""))
             .environment(\.codeEditorTheme, colorScheme == .dark ? .dark : .default)
     }
 }
@@ -67,7 +92,7 @@ CodeEditor(text: .constant(""))
 **Type**: `Theme`  
 **Default**: `.default`
 
-> **Related Modifier**: Use `CodeEditor/codeTheme(_:)` for setting the theme on individual editors.
+> **Related Modifier**: Use `.codeTheme(_:)` for setting the theme on individual editors.
 
 ### `codeEditorMemoryMonitor`
 
@@ -90,7 +115,7 @@ struct MultiEditorView: View {
 **Type**: `MemoryMonitor?`  
 **Default**: `nil` (each editor creates its own monitor)
 
-> **Related Modifier**: Use `CodeEditor/memoryMonitor(_:)` for setting a custom memory monitor.
+> **Related Modifier**: Use `.memoryMonitor(_:)` for setting a custom memory monitor.
 
 ### `codeEditorBecomeFirstResponder`
 
@@ -137,7 +162,7 @@ struct MultiEditorView: View {
 **Type**: `UnifiedEventSystem?`  
 **Default**: `nil` (no shared system is injected unless you provide one)
 
-> **Related Modifier**: Use `CodeEditor/eventSystem(_:)` for setting a custom event system on individual editors.
+> **Related Modifier**: Use `.eventSystem(_:)` for setting a custom event system on individual editors.
 
 ## Usage Patterns
 
@@ -209,5 +234,5 @@ CodeEditor(text: $code)
 
 ## See Also
 
-- [Configuration-System](../Configuration/system.md)
-- [SwiftUI-Integration](integration.md)
+- [Configuration system](../Configuration/system.md)
+- [SwiftUI integration](integration.md)

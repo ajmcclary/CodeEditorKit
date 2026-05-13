@@ -1,5 +1,7 @@
 # Editor Visual Restyle Implementation Plan
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Re-derive every editor-internal rendering surface from the new `Theme` and `Tokens.*` namespaces; add four token bridges, a hierarchical syntax-color resolver, indent guides, fold chevrons, and a frosted-glass completion popover. Public API is unchanged.

@@ -1,5 +1,7 @@
 # Theme Rewrite Implementation Plan
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the package's three theme-shaped types with a single Zed v0.2.0-compatible JSON-loadable `Theme`, ship the user's Zed Trek family (20 variants) as the only bundled JSON, and make `LCARS Dark` the library default.

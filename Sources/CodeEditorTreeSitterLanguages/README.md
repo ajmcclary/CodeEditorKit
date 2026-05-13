@@ -74,7 +74,7 @@ TreeSitter/
 
 - **Binary size**: Grammar binaries are large (33 MB+ as an XCFramework). The core editor stays lean at ~2 MB.
 - **Build time**: Tree-sitter grammars are C code that must be compiled per architecture. Separating them avoids slowing down core editor builds.
-- **Optional**: Not every consumer needs Tree-sitter. Regex highlighting covers all 26 languages with correct token production.
+- **Optional**: Not every consumer needs Tree-sitter. Regex highlighting covers the 25 concrete language catalog plus plain text with correct token production.
 - **Update cadence**: Grammar updates happen on the Tree-sitter community schedule, not the editor's release cadence.
 
 ## Public integration status

@@ -4,7 +4,7 @@ Understand the modern, feature-based architecture that powers CodeEditorPlugin.
 
 ## Overview
 
-CodeEditorPlugin uses a clean, modern architecture optimized for performance, maintainability, and extensibility. Built with Swift 6's actor system, it provides thread-safe operations while maintaining a responsive UI. Recent major refactoring (2025) includes enhanced platform abstractions using `#if canImport()` patterns, a unified wrapper system for cross-platform support, and comprehensive architectural improvements.
+CodeEditorPlugin uses a clean, modern architecture optimized for performance, maintainability, and extensibility. Built with Swift 6's actor system, it provides thread-safe operations while maintaining a responsive UI. The current architecture includes enhanced platform abstractions using `#if canImport()` patterns, a unified wrapper system for native macOS and iOS / iPadOS support, and comprehensive architectural improvements.
 
 ## Feature-Based Organization
 
@@ -15,7 +15,7 @@ The codebase is organized by feature rather than by type, providing several bene
 - **Faster Development**: No jumping between directories to understand a feature
 - **Better Testability**: Feature isolation makes testing straightforward
 
-### Directory Structure (Reorganized 2025)
+### Directory Structure
 
 ```
 Sources/CodeEditorPlugin/
@@ -42,8 +42,8 @@ Sources/CodeEditorPlugin/
 
 (Long-form prose docs live in the top-level [`docs/`](../README.md) folder, not inside `Sources/`.)
 
-**Key Changes (January 2025)**:
-- **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing merged into unified `Text/` directory (34 files)
+**Key Changes**:
+- **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing live in the unified `Text/` directory (53 Swift files)
   - Combines all text manipulation, layout fragments, and async processing
   - Improves code discoverability by grouping related functionality
 - **Merged Small Directories**: 
@@ -180,7 +180,7 @@ config.layout.tabWidth = 4
 - Added CrossPlatformCoordinator for unified input handling
 
 ### Quality Achievements
-- **115 `*Tests.swift` files** across 4 test targets covering the major editor, configuration, platform, and language paths
+- **116 `*Tests.swift` files** across 4 test targets covering the major editor, configuration, platform, and language paths
 - **Zero SwiftLint violations** across 453 Swift files in the main target and 513 Swift files under `Sources/`
 - **Enhanced cross-platform consistency**
 - **Directory organization** across 20 top-level main-target directories for discoverability

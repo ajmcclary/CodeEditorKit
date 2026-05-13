@@ -334,14 +334,28 @@ CodeEditor(text: $code)
 
 ## Environment Keys Reference
 
-CodeEditorPlugin provides several environment keys for configuration and state management:
+CodeEditorPlugin provides a consolidated environment value plus direct projections for common settings. Use the consolidated value when setting several defaults at once, and use direct keys or modifiers for targeted overrides.
 
 ### Available Environment Keys
+
+#### `\.codeEditorEnvironment`
+- **Type**: `CodeEditorEnvironment`
+- **Default**: `CodeEditorEnvironment.default`
+- **Usage**: Sets language, theme, configuration, focus, memory monitor, and event system together
+```swift
+CodeEditor(text: $code)
+    .codeEditorEnvironment(
+        language: .swift,
+        theme: .dark,
+        configuration: .minimal,
+        becomeFirstResponder: .yes
+    )
+```
 
 #### `\.codeEditorConfiguration`
 - **Type**: `EditorConfiguration`
 - **Default**: `EditorConfiguration()`
-- **Usage**: Sets the complete editor configuration
+- **Usage**: Sets the editor configuration projection
 ```swift
 CodeEditor(text: $code)
     .environment(\.codeEditorConfiguration, .presentation)
@@ -363,6 +377,10 @@ CodeEditor(text: $code)
 ```swift
 CodeEditor(text: $code)
     .environment(\.codeEditorTheme, .dark)
+
+// Prefer the convenience modifier for individual editors:
+CodeEditor(text: $code)
+    .codeTheme(.dark)
 ```
 
 #### `\.codeEditorBecomeFirstResponder`
@@ -375,6 +393,24 @@ CodeEditor(text: $code)
 // Or use the convenience modifier:
 CodeEditor(text: $code)
     .becomeFirstResponder()
+```
+
+#### `\.codeEditorMemoryMonitor`
+- **Type**: `MemoryMonitor?`
+- **Default**: `nil`
+- **Usage**: Shares a memory monitor across editors
+```swift
+CodeEditor(text: $code)
+    .environment(\.codeEditorMemoryMonitor, sharedMonitor)
+```
+
+#### `\.codeEditorEventSystem`
+- **Type**: `UnifiedEventSystem?`
+- **Default**: `nil`
+- **Usage**: Shares an event system across editors
+```swift
+CodeEditor(text: $code)
+    .environment(\.codeEditorEventSystem, sharedEventSystem)
 ```
 
 ### Using Environment Keys
@@ -469,6 +505,6 @@ extension EnvironmentValues {
 
 ## See Also
 
-- [Configuration-System](../Configuration/system.md)
-- [Theme-System](../Features/theme-system.md)
-- [UIKit-AppKit-Integration](../Platform/uikit-appkit.md)
+- [Configuration system](../Configuration/system.md)
+- [Theme system](../Features/theme-system.md)
+- [UIKit and AppKit integration](../Platform/uikit-appkit.md)

@@ -45,7 +45,7 @@ class EditorWindowController: NSWindowController {
 ### Tab Support
 
 ```swift
-@available(macOS 12.0, *)
+@available(macOS 26.3, *)
 class TabbedEditorController: NSViewController {
     @IBOutlet weak var tabView: NSTabView!
     

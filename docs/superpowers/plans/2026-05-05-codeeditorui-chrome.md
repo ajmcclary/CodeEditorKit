@@ -1,5 +1,7 @@
 # CodeEditorUI Chrome Primitives Implementation Plan
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship a new `CodeEditorUI` SwiftPM library target with eight chrome components (title bar, traffic lights, tab strip, breadcrumb, status bar, sidebar shell, command palette, glass surface), an additive `@Observable EditorState` in `CodeEditorPlugin` with `\.editorState` env key, and two SwiftUI Style protocols (`EditorTabStripStyle`, `EditorCommandPaletteStyle`).

@@ -27,17 +27,15 @@ swift test -Xswiftc -strict-concurrency=complete
 ### 3. Actor Isolation Validation
 Test actor-based architecture:
 ```bash
-swift test --filter ActorIsolationTests
-swift test --filter BackgroundProcessorTests
-swift test --filter MainActorTests
+swift test --filter ConcurrencyTests
+swift test --filter AsyncTextProcessorTests
+swift test --filter SwiftUICoordinatorTests
 ```
 
 ### 4. Sample App Swift 6 Compliance
 ```bash
-cd CodeEditorSample
-swift build -Xswiftc -strict-concurrency=complete
-swift test -Xswiftc -strict-concurrency=complete
-cd ..
+swift build --target CodeEditorSample -Xswiftc -strict-concurrency=complete
+swift test --filter CodeEditorSampleTests -Xswiftc -strict-concurrency=complete
 ```
 
 ## Swift 6 Architecture Validation
@@ -99,7 +97,7 @@ await MainActor.run {
 
 ## Success Criteria
 - ✅ Builds with `-strict-concurrency=complete` flag
-- ✅ All 319 tests pass with strict concurrency
+- ✅ Requested strict-concurrency test scope passes
 - ✅ No data race warnings or errors
 - ✅ Proper actor isolation throughout codebase
 - ✅ All UI updates on main actor
@@ -118,9 +116,7 @@ await MainActor.run {
 - Keyboard handling with proper threading
 
 ### Mac Catalyst
-- Hybrid threading model support
-- Consistent behavior across input methods
-- Platform capability detection
+- Unsupported as of 0.2.0; strict-concurrency validation targets native macOS and iOS / iPadOS only.
 
 ## Common Concurrency Issues
 
@@ -207,8 +203,8 @@ swift build -Xswiftc -strict-concurrency=complete \
 - Combine with `@performance-analysis` for concurrency performance
 
 ## File Locations
-- **Actor Implementations**: `Sources/CodeEditorPlugin/TextProcessing/`
-- **Concurrency Tests**: `Tests/CodeEditorPluginTests/ConcurrencyTests/`
+- **Actor Implementations**: `Sources/CodeEditorPlugin/Core/Actors/` and `Sources/CodeEditorPlugin/Text/Processing/`
+- **Concurrency Tests**: `Tests/CodeEditorPluginTests/ConcurrencyTests.swift`
 - **MainActor UI**: `Sources/CodeEditorPlugin/SwiftUI/`
 - **Platform Threading**: `Sources/CodeEditorPlugin/Platform/`
 

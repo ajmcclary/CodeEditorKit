@@ -70,8 +70,8 @@
 - `LICENSE` at repo root (MIT, ajmcclary, 2026). Distribution-blocking gap closed.
 - Real GitHub URL `https://github.com/ajmcclary/CodeEditorPlugin.git` replaces the
   `yourusername` placeholder in `Package.swift`.
-- `docs/README.md` documents the platform floor (macOS / iOS / Catalyst 26.3+) as
-  intentional rather than aspirational.
+- `docs/README.md` documented the then-current platform floor (macOS / iOS /
+  Catalyst 26.3+) as intentional rather than aspirational.
 - `docs/FeatureMatrix.md` enumerates platform-by-platform capability coverage
   for every product, sample demo, and editor capability.
 - GitHub Actions workflows: `swift-build-test.yml`, `ios-build.yml`, `lint.yml`.

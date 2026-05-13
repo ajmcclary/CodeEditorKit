@@ -16,7 +16,7 @@ Comprehensive release preparation workflow that validates all aspects of the cod
 ```
 @swift-quality-check
 ```
-**Validation**: 322 tests passing, 0 linting violations
+**Validation**: requested SwiftPM test scope passing, 0 linting violations
 
 ### Phase 2: Performance Validation
 ```
@@ -28,7 +28,7 @@ Comprehensive release preparation workflow that validates all aspects of the cod
 ```
 @cross-platform-test
 ```
-**Validation**: macOS, iOS, Mac Catalyst compatibility
+**Validation**: native macOS and iOS / iPadOS compatibility
 
 ### Phase 4: Sample App Verification
 ```
@@ -45,18 +45,18 @@ Comprehensive release preparation workflow that validates all aspects of the cod
 ## Release Checklist
 
 ### ✅ Code Quality Requirements
-- [ ] **Zero SwiftLint violations** across all 204 files
-- [ ] **100% test pass rate** (322/322 tests)
-- [ ] **Swift 6 compliance** with strict concurrency
+- [ ] **Zero SwiftLint violations** for the configured `Sources` and `Tests` paths
+- [ ] **100% test pass rate** for the requested SwiftPM test scope
+- [ ] **Swift 6.3 compliance** with strict concurrency
 - [ ] **Actor isolation** properly implemented
 - [ ] **Memory management** validated with TextKit2
 
 ### ✅ Feature Completeness
-- [ ] **17 programming languages** syntax highlighting functional
-- [ ] **Cross-platform support** verified (macOS, iOS, Catalyst)
-- [ ] **Configuration system** complete with presets and builder
+- [ ] **25 concrete languages plus plain text** syntax highlighting functional
+- [ ] **Cross-platform support** verified (native macOS and iOS / iPadOS)
+- [ ] **Configuration system** complete with presets and direct nested updates
 - [ ] **Sample application** demonstrates all features
-- [ ] **Plugin architecture** foundation implemented
+- [ ] **LSP, annotations, theming, and sample workflows** documented against current APIs
 
 ### ✅ Performance Standards
 - [ ] **Memory usage** within acceptable limits
@@ -73,11 +73,11 @@ Comprehensive release preparation workflow that validates all aspects of the cod
 - [ ] **CLAUDE.md** reflects current architecture
 
 ### ✅ Platform Compatibility
-- [ ] **macOS 12.0+** support verified
-- [ ] **iOS 16.0+** support verified
-- [ ] **Mac Catalyst 16.0+** support verified
-- [ ] **Swift 6.0+** requirement met
-- [ ] **Xcode 16.0+** compatibility confirmed
+- [ ] **macOS 26.3+** support verified
+- [ ] **iOS / iPadOS 26.3+** support verified
+- [ ] **Mac Catalyst unsupported** status reflected in docs and package metadata
+- [ ] **Swift 6.3+** requirement met
+- [ ] **Xcode 26.3+** compatibility confirmed
 
 ### ✅ Security and Stability
 - [ ] **No security vulnerabilities** in dependencies
@@ -91,12 +91,12 @@ Comprehensive release preparation workflow that validates all aspects of the cod
 ### Test Coverage Validation
 ```bash
 # Verify comprehensive test coverage
-swift test --list-tests | wc -l  # Should be 322+
-cd CodeEditorSample && swift test --list-tests | wc -l  # Should be 46+
+swift test list | wc -l
+rg --files Tests -g '*Tests.swift' | wc -l
 
 # Ensure all tests pass
-swift test
-cd CodeEditorSample && swift test
+swift test --parallel
+swift test --filter CodeEditorSampleTests
 ```
 
 ### Code Quality Validation
@@ -105,7 +105,7 @@ cd CodeEditorSample && swift test
 swiftlint | grep "Found 0 violations"
 
 # Verify file count
-find . -name "*.swift" | grep -v ".build" | wc -l  # Should be 204+
+rg --files Sources Tests -g '*.swift' | wc -l
 ```
 
 ### Performance Validation
@@ -123,11 +123,11 @@ swift test --filter TextKit2
 ## Release Metrics Verification
 
 ### Expected Metrics for Release
-- **Tests**: 322 total (276 core + 46 sample) - 100% passing
-- **Linting**: 0 violations across 204 files
-- **Languages**: 17 programming languages supported
-- **Platforms**: 3 platforms (macOS, iOS, Mac Catalyst)
-- **Architecture**: Swift 6 with actor-based concurrency
+- **Tests**: 100% pass rate for the requested SwiftPM test scope
+- **Linting**: 0 violations for the configured `Sources` and `Tests` paths
+- **Languages**: 25 concrete languages plus plain text
+- **Platforms**: native macOS and iOS / iPadOS
+- **Architecture**: Swift 6.3 with actor-based concurrency
 - **Quality**: Production-ready with zero technical debt
 
 ### Documentation Accuracy Check
@@ -147,8 +147,6 @@ Verify all documentation reflects current state:
 
 ### Real-World Usage Testing
 ```bash
-# Test sample app functionality
-cd CodeEditorSample
 swift run CodeEditorSample
 
 # Verify all demo features work:
@@ -246,7 +244,7 @@ For non-critical issues:
 ## File Locations
 - **Release Documentation**: All README files, CHANGELOG.md
 - **Quality Configuration**: `.swiftlint.yml`, test files
-- **Sample App**: Complete CodeEditorSample directory
+- **Sample App**: `Sources/CodeEditorSample/` target plus `Tests/CodeEditorSampleTests/`
 
 ## Notes
 Release preparation ensures:

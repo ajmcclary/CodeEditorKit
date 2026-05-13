@@ -31,31 +31,30 @@ Compile the core CodeEditorPlugin:
 swift build
 ```
 
-### 4. Run Main Package Tests
-Execute all 284 core tests:
+### 4. Run Package Tests
+Execute the complete SwiftPM test suite:
 ```bash
 swift test
 ```
 
 ### 5. Build Sample App
-Compile the CodeEditorSample:
+Compile the CodeEditorSample target:
 ```bash
-cd CodeEditorSample && swift build
+swift build --target CodeEditorSample
 ```
 
-### 6. Run Sample App Tests  
-Execute all 35 sample tests:
+### 6. Run Sample App Tests
+Run the sample test target when you want a narrower sample-only loop:
 ```bash
-cd CodeEditorSample && swift test
+swift test --filter CodeEditorSampleTests
 ```
 
 ## Success Criteria
 - ✅ SwiftLint shows 0 violations across all files
 - ✅ Main package builds without errors
-- ✅ All 284 core tests pass (100% pass rate)
+- ✅ The requested SwiftPM test scope passes
 - ✅ Sample app builds without errors  
-- ✅ All 35 sample tests pass (100% pass rate)
-- ✅ Total: 319 tests passing
+- ✅ Sample target tests pass when run
 
 ## Error Handling
 
@@ -87,13 +86,13 @@ If tests fail:
 - Run `@git-commit-push` to commit quality improvements
 
 ## File Locations
-- **Main SwiftLint**: `/Users/ajmcclary/Dev/CodeEditorPlugin/.swiftlint.yml`
-- **Main Package**: `/Users/ajmcclary/Dev/CodeEditorPlugin/`
-- **Sample App**: `/Users/ajmcclary/Dev/CodeEditorPlugin/CodeEditorSample/`
+- **Main SwiftLint**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/.swiftlint.yml`
+- **Main Package**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/`
+- **Sample Target Sources**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorSample/`
 
 ## Notes
 This workflow maintains our project standards:
-- Zero SwiftLint violations across 274 files
-- 100% test pass rate (319/319 tests)
+- Zero SwiftLint violations for the configured `Sources` and `Tests` paths
+- 100% pass rate for the requested SwiftPM test scope
 - Swift 6 concurrency compliance
 - Production-ready quality gates

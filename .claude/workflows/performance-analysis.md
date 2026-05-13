@@ -179,7 +179,6 @@ let summary = insights.generateSummary()
 ## Integration with Sample App
 Test performance in sample app:
 ```bash
-cd CodeEditorSample
 swift run CodeEditorSample --enable-performance-monitoring
 ```
 
@@ -196,9 +195,9 @@ Monitor real-time performance:
 - Follow with `@documentation-update` to record performance improvements
 
 ## File Locations
-- **Performance Tests**: `/Users/ajmcclary/Dev/CodeEditorPlugin/Tests/CodeEditorPluginTests/Performance*`
-- **Memory Tests**: `/Users/ajmcclary/Dev/CodeEditorPlugin/Tests/CodeEditorPluginTests/Memory*`
-- **Performance Monitor**: `/Users/ajmcclary/Dev/CodeEditorPlugin/Sources/CodeEditorPlugin/Core/PerformanceMonitor.swift`
+- **Performance Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Tests/CodeEditorPluginTests/Performance*`
+- **Memory Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Tests/CodeEditorPluginTests/Memory*`
+- **Performance Monitor**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Performance/PerformanceMonitor.swift`
 
 ## Notes
 Performance analysis ensures:

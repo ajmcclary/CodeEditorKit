@@ -14,18 +14,14 @@ Use this skill when the user asks to run the migrated source command `project-sa
 Build, test, and run the CodeEditorSample:
 
 ```bash
-cd CodeEditorSample
-
 # Build sample app
-swift build
+swift build --target CodeEditorSample
 
-# Run sample tests (35 tests)
-swift test
+# Run sample target tests
+swift test --filter CodeEditorSampleTests
 
 # Run sample app
 swift run CodeEditorSample
-
-cd ..
 ```
 
 Validates the demonstration application functionality and integration.

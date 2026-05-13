@@ -7,18 +7,14 @@ description: CodeEditorSample build, test, and run operations
 Build, test, and run the CodeEditorSample:
 
 ```bash
-cd CodeEditorSample
-
 # Build sample app
-swift build
+swift build --target CodeEditorSample
 
-# Run sample tests (35 tests)
-swift test
+# Run sample target tests
+swift test --filter CodeEditorSampleTests
 
 # Run sample app
 swift run CodeEditorSample
-
-cd ..
 ```
 
 Validates the demonstration application functionality and integration.

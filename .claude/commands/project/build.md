@@ -11,7 +11,7 @@ Build both the main CodeEditorPlugin package and CodeEditorSample:
 swift build
 
 # Build sample app
-cd CodeEditorSample && swift build && cd ..
+swift build --target CodeEditorSample
 ```
 
 This command builds both components to verify compilation without running tests.

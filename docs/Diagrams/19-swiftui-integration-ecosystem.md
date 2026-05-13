@@ -64,7 +64,7 @@ classDiagram
     }
 
     class AppKitCodeEditorRepresentable {
-        <<NSViewRepresentable macOS 13.0+>>
+        <<NSViewRepresentable macOS 26.3+>>
         +makeNSView(context) CodeEditorContainerView
         +updateNSView(nsView, context) Void
         +dismantleNSView(_, coordinator) Void
@@ -73,7 +73,7 @@ classDiagram
     }
 
     class UIKitCodeEditorRepresentable {
-        <<UIViewRepresentable iOS 16.0+>>
+        <<UIViewRepresentable iOS 26.3+>>
         +makeUIView(context) CodeEditorContainerView
         +updateUIView(uiView, context) Void
         +dismantleUIView(_, coordinator) Void

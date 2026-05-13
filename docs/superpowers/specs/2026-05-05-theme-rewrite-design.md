@@ -1,5 +1,7 @@
 # Theme Rewrite + Bundled Themes
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 **Date:** 2026-05-05
 **Status:** brainstorm complete — pending user review of written spec
 **Type:** sub-project spec — sub-project 2 of the [Design System Migration umbrella](2026-05-05-design-system-migration-design.md).

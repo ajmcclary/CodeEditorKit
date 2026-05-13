@@ -11,14 +11,14 @@ Use this skill when the user asks to run the migrated source command `project-te
 
 # Complete Test Suite
 
-Run all 319 tests across main package and sample app:
+Run all package tests, including CodeEditorSample tests:
 
 ```bash
-# Run main package tests (284 tests)
+# Run the complete SwiftPM test suite
 swift test
 
-# Run sample app tests (35 tests)
-cd CodeEditorSample && swift test && cd ..
+# Or run only sample target tests
+swift test --filter CodeEditorSampleTests
 ```
 
-Success criteria: 100% pass rate across all 319 tests.
+Success criteria: 100% pass rate for the requested test scope.

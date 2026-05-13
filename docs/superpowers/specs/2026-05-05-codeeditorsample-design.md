@@ -1,5 +1,7 @@
 # CodeEditorSample design (sub-project 5)
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 **Status:** spec
 **Date:** 2026-05-05
 **Sub-project:** 5 of 5 (design-system migration capstone)

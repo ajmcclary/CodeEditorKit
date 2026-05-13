@@ -1,5 +1,7 @@
 # CodeEditorSample Implementation Plan
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the `CodeEditorSample` macOS executable that boots into a single window exercising every public surface added in sub-projects 1–4 — chrome primitives, both Style protocols, the Liquid Glass surface, the bundled themes, and the full `EditorConfiguration` knob set — without any filesystem dependency.

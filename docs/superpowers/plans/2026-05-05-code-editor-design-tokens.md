@@ -1,5 +1,7 @@
 # CodeEditorDesignTokens Implementation Plan
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a new `CodeEditorDesignTokens` SwiftPM library target that codifies `Design/tokens.css` as a UI-agnostic Swift module (Foundation only).

@@ -1,5 +1,7 @@
 # Design System Migration
 
+> **Archive note:** Historical working note from May 2026. It may mention pre-0.2.0 Catalyst, plugin, or theme APIs; use `AGENTS.md`, `docs/README.md`, and `docs/FeatureMatrix.md` for current package truth.
+
 **Date:** 2026-05-05
 **Status:** brainstorm complete — pending user review of written spec
 **Type:** umbrella spec covering five sub-projects; sub-project 1 is fully specified, sub-projects 2–5 are sketched and will each get their own spec.

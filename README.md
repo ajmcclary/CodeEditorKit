@@ -1,6 +1,6 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/test%20files-115-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/test%20files-116-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
 [![Swift](https://img.shields.io/badge/Swift-6.3%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS-lightgrey)](#requirements)
@@ -229,7 +229,7 @@ try await client.connect(configuration: server, language: .swift)
 
 ## 🧪 Testing
 
-The package includes 4 test targets and 115 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
+The package includes 4 test targets and 116 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
 
 ```bash
 # Run tests in parallel (faster)

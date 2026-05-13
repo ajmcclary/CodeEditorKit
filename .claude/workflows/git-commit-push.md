@@ -27,8 +27,8 @@ Stage files based on change analysis:
 git add .swiftlint.yml
 git add Sources/ Tests/
 
-# Documentation updates  
-git add README.md CodeEditorSample/README.md CLAUDE.md
+# Documentation updates
+git add README.md docs/ CLAUDE.md AGENTS.md .claude/ .agents/
 
 # Configuration changes
 git add Package.swift .claude/
@@ -93,8 +93,8 @@ fix: Complete CodeEditorSample integration and update documentation
 - Update test counts and quality metrics  
 - Add status badges to both READMEs
 
-All tests passing: 276 core + 46 sample = 322 total
-All linting clean: 0 violations across 204 files
+All requested SwiftPM tests passing
+All linting clean for configured Sources and Tests paths
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
@@ -122,8 +122,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 docs: Update README metrics and add Sample Application section
 
-- Update test count badges: 322 total tests (276 core + 46 sample)
-- Update quality metrics: 0 violations across 204 files
+- Update test-file count badge from live `rg --files Tests -g '*Tests.swift'`
+- Update quality metrics from live SwiftLint output
 - Add comprehensive Sample Application showcase section
 - Sync achievement callouts across all documentation
 

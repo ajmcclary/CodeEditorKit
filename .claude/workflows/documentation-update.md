@@ -1,11 +1,13 @@
 # Documentation Update Workflow
 
-**Sync documentation with current project state** - Updates READMEs, metrics, and status badges
+**Sync documentation with current project state** - Updates READMEs, metrics, workflow docs, and status badges.
 
 ## Description
-Maintains documentation consistency by updating test counts, quality metrics, status badges, and achievement sections across all README files. Ensures documentation accurately reflects the current state of the project.
+
+Maintains documentation consistency by checking project metrics against the current package layout. The sample app is a SwiftPM target, not a separate package, so all commands run from the repository root.
 
 ## Usage
+
 ```
 @documentation-update
 ```
@@ -13,166 +15,92 @@ Maintains documentation consistency by updating test counts, quality metrics, st
 ## Update Operations
 
 ### 1. Collect Current Metrics
-Gather latest project statistics:
+
 ```bash
-# Count total tests
-swift test --list-tests 2>/dev/null | wc -l  # Main package tests
-cd CodeEditorSample && swift test --list-tests 2>/dev/null | wc -l  # Sample tests
+# Markdown inventory
+find . -path './.git' -prune -o -path './.build' -prune -o -name '*.md' -print | wc -l
 
-# Verify linting status
-swiftlint | grep "Found.*violations"
+# Source counts
+rg --files Sources/CodeEditorPlugin -g '*.swift' | wc -l
+rg --files Sources -g '*.swift' | wc -l
+rg --files Tests -g '*Tests.swift' | wc -l
 
-# Count total files
-find . -name "*.swift" | grep -v ".build" | wc -l
+# Test enumeration and quality gates
+swift test list | wc -l
+swiftlint --fix
+swiftlint
+swift test --parallel
 ```
 
-### 2. Update Main README.md
-Update `/Users/ajmcclary/Dev/CodeEditorPlugin/README.md`:
+### 2. Update Public Docs
 
-#### Status Badges
-```markdown
-[![Tests](https://img.shields.io/badge/tests-319%20passing-brightgreen)](#testing--quality)
-[![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#code-quality-standards)
-[![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
-[![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
+Update these files when metrics or package shape changes:
+
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/README.md`
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/docs/README.md`
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/AGENTS.md`
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/CLAUDE.md`
+
+Current stable facts:
+
+- Swift 6.3+, Xcode 26.3+
+- Platforms: native macOS 26.3+ and iOS / iPadOS 26.3+
+- Mac Catalyst is retired
+- Language catalog: 25 concrete languages plus plain text
+- Sample app target: `CodeEditorSample`
+
+### 3. Update Assistant Workflow Docs
+
+Keep `.claude/` and `.agents/` Markdown aligned with project commands:
+
+```bash
+swift build
+swift build --target CodeEditorSample
+swiftlint --fix
+swiftlint
+swift test --parallel
+swift test --filter CodeEditorSampleTests
+swift run CodeEditorSample
 ```
 
-#### Quality Metrics Section
-- **319 Total Tests**: 284 core package tests + 35 sample app tests
-- **100% Test Pass Rate**: All tests passing with zero failures
-- **Zero Linting Violations**: 0 violations across 274 files
-- **Swift 6 Strict Concurrency**: Complete compliance
+Avoid hard-coding total test counts unless they are freshly collected in the same pass. Prefer test-file counts or commands that compute live totals.
 
-### 3. Update Sample App README.md
-Update `/Users/ajmcclary/Dev/CodeEditorPlugin/CodeEditorSample/README.md`:
+### 4. Validate Links
 
-#### Status Badges
-```markdown
-[![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen)](#testing--quality)
-[![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#quality-metrics)
-[![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
-[![Files](https://img.shields.io/badge/files-66-blue)](#quality-metrics)
+Check local Markdown links after edits:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import re, urllib.parse
+
+root = Path('.').resolve()
+mds = [p for p in root.rglob('*.md') if '.git' not in p.parts and '.build' not in p.parts]
+link_re = re.compile(r'(?<!!)' + r'\[[^\]]+\]\(([^)]+)\)')
+missing = []
+
+for path in mds:
+    text = path.read_text(errors='ignore')
+    for raw in link_re.findall(text):
+        url = raw.strip().strip('<>')
+        if not url or url.startswith('#') or re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', url):
+            continue
+        target_path = urllib.parse.unquote(url.split('#', 1)[0])
+        if target_path and not (path.parent / target_path).resolve().exists():
+            missing.append((path.relative_to(root), raw))
+
+if missing:
+    for path, raw in missing:
+        print(f'{path}: {raw}')
+    raise SystemExit(1)
+print(f'Checked {len(mds)} Markdown files; no missing local links.')
+PY
 ```
-
-#### Test Breakdown
-- BasicFunctionalityTests (4 tests)
-- ConfigurationUITests (9 tests)
-- PluginConfigurationTests (8 tests)
-- QuickIsFlippedTest (1 test)
-- SampleCodeTests (9 tests)
-- SimplifiedIntegrationTests (4 tests)
-
-### 4. Update CLAUDE.md
-Update project instructions with latest achievements:
-- Test counts and pass rates
-- Quality metrics and violations status
-- Recent architectural improvements
-- Performance optimizations
-
-### 5. Sync Achievement Sections
-Update achievement callouts across all docs:
-- ✅ Perfect Test Suite: 319 tests passing
-- ✅ Zero Code Quality Issues: 0 violations across 274 files
-- ✅ Swift 6 Ready: Full actor-based concurrency
-- ✅ Production Performance: Optimized builds
-- ✅ Cross-Platform Excellence: macOS, iOS, Catalyst verified
-
-## Template Sections
-
-### Status Badges Template
-```markdown
-[![Tests](https://img.shields.io/badge/tests-{TOTAL_TESTS}%20passing-brightgreen)](#testing--quality)
-[![SwiftLint](https://img.shields.io/badge/SwiftLint-{VIOLATIONS}%20violations-{COLOR})](#code-quality-standards)
-[![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
-[![Files](https://img.shields.io/badge/files-{FILE_COUNT}-blue)](#quality-metrics)
-```
-
-### Test Coverage Template
-```markdown
-### Comprehensive Test Coverage
-- **{TOTAL} Total Tests**: {CORE} core package tests + {SAMPLE} sample app tests
-- **100% Test Pass Rate**: All tests passing with zero failures in final validation
-- **{CATEGORIES} Test Categories**: From low-level text processing to high-level UI integration
-```
-
-### Quality Metrics Template
-```markdown
-### Code Quality Standards
-- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across 274 files**
-- **Swift 6 Strict Concurrency**: Complete compliance with Swift's strictest concurrency checking
-- **Actor-Based Safety**: All potentially unsafe operations properly isolated to background actors
-```
-
-## Validation Steps
-
-### 1. Verify Badge Accuracy
-- Test counts match `swift test --list-tests` output
-- Violation counts match `swiftlint` output
-- File counts match actual project files
-
-### 2. Check Consistency
-- All READMEs use same metrics
-- Status badges reflect current state
-- Achievement sections are synchronized
-
-### 3. Validate Links
-- All badges link to correct sections
-- Internal documentation links work
-- External links are accessible
 
 ## Success Criteria
-- ✅ All metrics accurately reflect current project state
-- ✅ Status badges show correct counts and colors
-- ✅ Achievement sections highlight latest improvements
-- ✅ Documentation consistency across all files
-- ✅ Links and references work properly
 
-## Common Updates
-
-### After Test Changes
-- Update total test counts (core + sample)
-- Verify test pass rates
-- Update test breakdown by category
-
-### After Quality Improvements
-- Update violation counts (should be 0)
-- Update file counts if new files added
-- Refresh achievement sections
-
-### After Feature Additions
-- Update supported language counts
-- Update platform compatibility info
-- Add new feature descriptions
-
-## Error Handling
-
-### Metric Mismatches
-If documentation doesn't match actual state:
-1. Re-run metric collection commands
-2. Verify test counting logic
-3. Check for uncommitted changes affecting counts
-
-### Badge Display Issues
-If badges don't display correctly:
-1. Check badge URL syntax
-2. Verify color and status parameters
-3. Test badge links in preview
-
-## Related Workflows
-- Run after `@swift-quality-check` to sync latest metrics
-- Run before `@git-commit-push` to ensure documentation accuracy
-- Run as part of `@release-preparation` for release docs
-
-## File Locations
-- **Main README**: `/Users/ajmcclary/Dev/CodeEditorPlugin/README.md`
-- **Sample README**: `/Users/ajmcclary/Dev/CodeEditorPlugin/CodeEditorSample/README.md`
-- **Project Docs**: `/Users/ajmcclary/Dev/CodeEditorPlugin/CLAUDE.md`
-
-## Notes
-Documentation is crucial for:
-- Project credibility and professionalism
-- Developer onboarding and integration
-- Showcasing quality and capabilities
-- Maintaining contribution standards
-
-Keep documentation current to reflect the project's true state and achievements.
+- All public metrics match live commands.
+- Markdown links resolve locally.
+- Active docs do not describe Mac Catalyst as supported.
+- Sample-app commands use the `CodeEditorSample` target from the package root.
+- Archived `docs/superpowers/` notes are clearly marked as historical when referenced.

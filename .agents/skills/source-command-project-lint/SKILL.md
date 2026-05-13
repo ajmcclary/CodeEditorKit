@@ -21,4 +21,4 @@ swiftlint --fix
 swiftlint
 ```
 
-Success criteria: "Found 0 violations, 0 serious" across all 274 Swift files.
+Success criteria: "Found 0 violations, 0 serious" for the configured `Sources` and `Tests` paths.

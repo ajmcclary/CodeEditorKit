@@ -6,4 +6,4 @@ description: Quick quality check (alias for quality)
 
 Execute the swift-quality-check workflow:
 
-@/Users/ajmcclary/Dev/CodeEditorPlugin/.claude/workflows/swift-quality-check.md
+@/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/.claude/workflows/swift-quality-check.md

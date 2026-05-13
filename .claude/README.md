@@ -8,7 +8,7 @@ This directory contains Claude Code workflows designed to streamline development
 - **`swift-quality-check`** - Most used: lint fix → lint → build → test pipeline
 - **`swift6-validation`** - Swift 6 strict concurrency compliance validation
 - **`performance-analysis`** - Memory leak detection and performance benchmarking
-- **`cross-platform-test`** - macOS, iOS, and Catalyst compatibility testing
+- **`cross-platform-test`** - macOS and iOS / iPadOS compatibility testing
 
 ### 🚀 Development Pipelines
 - **`swift-full-pipeline`** - Complete development workflow from code to release
@@ -24,7 +24,7 @@ This directory contains Claude Code workflows designed to streamline development
 ### Core Development
 - **`q`** - Quick quality check (alias for quality)
 - **`build`** - Build main package and sample app
-- **`test`** - Run all 319 tests
+- **`test`** - Run the complete SwiftPM test suite
 - **`lint`** - Fix and check SwiftLint violations
 - **`sample`** - CodeEditorSample operations
 
@@ -68,17 +68,17 @@ For development with new features:
 
 These workflows are specifically designed for:
 - **Swift 6** projects with actor-based concurrency
-- **Cross-platform** development (macOS, iOS, Mac Catalyst)
+- **Cross-platform** development (native macOS and iOS / iPadOS)
 - **SwiftLint** strict compliance (zero violations)
-- **Comprehensive testing** (319 automated tests)
+- **Comprehensive testing** (4 test targets, 116 `*Tests.swift` files)
 - **Production-ready** quality standards
 
 ## Current Project Status
 
-- **319 Total Tests**: 284 core package + 35 sample app tests
-- **Zero Violations**: 0 SwiftLint violations across 274 Swift files
-- **Swift 6 Ready**: Complete actor-based concurrency compliance
-- **Cross-Platform**: macOS, iOS, and Mac Catalyst support
+- **116 Test Files**: 4 SwiftPM test targets across plugin, UI, design tokens, and sample coverage
+- **Zero Violations Goal**: SwiftLint strict mode over the configured `Sources` and `Tests` paths
+- **Swift 6.3 Ready**: Strict-concurrency package configuration
+- **Cross-Platform**: Native macOS and iOS / iPadOS support; Mac Catalyst is retired
 - **Production Quality**: Zero tolerance for quality issues
 
 ## Enhanced Features
@@ -90,7 +90,7 @@ These workflows are specifically designed for:
 - Sendable data structures
 
 ### Advanced Testing
-- Comprehensive test coverage (319 tests)
+- Comprehensive test coverage across 116 `*Tests.swift` files
 - Cross-platform validation
 - Performance benchmarking
 - Architecture-specific builds
