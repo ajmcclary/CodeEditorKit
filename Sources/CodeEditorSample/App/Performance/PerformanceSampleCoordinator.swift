@@ -42,7 +42,7 @@ final class PerformanceSampleCoordinator {
     private let unifiedPerformanceSystem: UnifiedPerformanceSystem
 
     @ObservationIgnored
-    private let performanceInsights: PerformanceInsights
+    let performanceInsights: PerformanceInsights
 
     @ObservationIgnored
     private weak var adaptivePerformanceMode: AdaptivePerformanceMode?

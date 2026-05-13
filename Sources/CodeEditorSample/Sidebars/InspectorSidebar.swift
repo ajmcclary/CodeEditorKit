@@ -10,6 +10,7 @@ import SwiftUI
 struct InspectorSidebar: View {
     @Environment(\.codeEditorTheme) private var theme
     @Bindable var appState: AppState
+    @State private var showingPerformanceReport = false
 
     var body: some View {
         EditorSidebarShell(
@@ -25,6 +26,27 @@ struct InspectorSidebar: View {
                             isSwiftActive: appState.documents.activeLanguage == .swift,
                             onToggle: handleToggle
                         )
+                        PerformanceInspectorPanel(
+                            state: appState.performance.state,
+                            fps: appState.performance.fps,
+                            memoryStats: appState.performance.memoryStats,
+                            pressure: appState.performance.pressure,
+                            adaptiveMode: appState.performance.adaptiveMode,
+                            lastHighlightMs: appState.performance.lastHighlightMs,
+                            highlightP95Ms: appState.performance.highlightP95Ms,
+                            healthScore: appState.performance.healthScore,
+                            issuesCount: appState.performance.issuesCount,
+                            recommendationsCount: appState.performance.recommendationsCount,
+                            memorySparkline: appState.performance.memorySparkline,
+                            thresholds: .default(fpsTarget: appState.performance.targetFPS),
+                            onResetPeak: { appState.performance.resetPeak() },
+                            onShowReport: { showingPerformanceReport = true },
+                            onAppear: { appState.performance.start() },
+                            onDisappear: { appState.performance.stop() }
+                        )
+                        .sheet(isPresented: $showingPerformanceReport) {
+                            DetailedPerformanceReportView(insights: appState.performance.performanceInsights)
+                        }
                         AnnotationsInspectorPanel(
                             hub: appState.annotationsHub,
                             controller: appState.editorController
