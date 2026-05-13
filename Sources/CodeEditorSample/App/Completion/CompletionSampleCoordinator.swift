@@ -147,6 +147,5 @@ final class CompletionSampleCoordinator {
         snapshot.cacheHitRate = stats?.cacheHitRate ?? 0
         snapshot.avgProcessingMs = (stats?.averageProcessingTime ?? 0) * 1_000
     }
-
 }
 #endif
