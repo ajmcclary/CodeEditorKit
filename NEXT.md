@@ -8,7 +8,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 **Code completion — protocol is hidden.** `CompletionManager`, the `CompletionProvider` protocol, `SmartCompletionEngine`, `CompletionDebouncer`, and the ready-made language member completions (Swift/JS/TS/Python/Go/Rust/C++/Java/Ruby/PHP/YAML/Markdown/JSON) are never wired to a UI. A toggle exists in `BehaviorKnobsSection.swift` but no panel shows what completions look like or how to register a custom provider.
 
-**Performance HUD missing.** `PerformanceMonitor`, `MemoryMonitor`, `UnifiedPerformanceSystem`, `PerformanceInsights`, `AdaptivePerformanceMode`, and the metric/report families have no live view. This is a major selling point of the framework and there is no `PerformanceInspectorPanel.swift` next to `LSPStatusPanel.swift`.
+**Performance HUD — ✅ complete (2026-05-13).** The sample now ships a `PerformanceInspectorPanel` in the right-rail inspector showing live FPS, memory (current/peak/avg + sparkline), pressure, adaptive-mode badge, last syntax-highlight time and p95, health score, and an issues/recommendations summary with a "Report ›" link into the framework's `DetailedPerformanceReportView`. Backed by a new sample-side `PerformanceSampleCoordinator` (`Sources/CodeEditorSample/App/Performance/`) that snapshots monitors on a 1Hz timer. Targeted framework changes: new public `FrameRateMonitor` (CADisplayLink-based via `NSScreen.main.displayLink`); `PerformanceInsights.currentFPS = 60` and `cpuUsage = Double.random(...)` placeholders replaced with the real `FrameRateMonitor` reading and a `mach task_threads`/`thread_info` CPU sampler; new `MemoryMonitor.resetPeak()`; new `UnifiedPerformanceSystem.track` non-throwing overload + `AsyncSyntaxHighlighter` instrumentation that feeds `.syntaxHighlighting` metrics when `EditorConfiguration.performance.unifiedPerformanceSystem` is non-nil; public `EditorController.adaptivePerformanceMode` accessor. Also made the long-internal `UnifiedPerformanceInsights` / `MetricAnalysis` / `PerformanceIssue` / `PerformanceRecommendation` fields and `MemoryStatistics.init()` actually public. macOS-only via `#if canImport(AppKit)` (iOS sample unchanged). Spec: `docs/superpowers/specs/2026-05-13-sample-app-performance-inspector-design.md`; plan: `docs/superpowers/plans/2026-05-13-sample-app-performance-inspector.md`.
 
 **Event stream invisible.** `UnifiedEventSystem` + `EditorEvent` (textDidChange, selectionDidChange, languageDidChange, themeDidChange, …) — no event log panel. The `.eventSystem(_:)` modifier is undemonstrated.
 
@@ -37,7 +37,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 | New surface | Where it goes | What it demos |
 |---|---|---|
 | ~~`LSPInspectorPanel`~~ ✅ | Inspector sidebar | Spawn a local server via `ProcessTransport`, show capabilities + live diagnostics |
-| `PerformanceInspectorPanel` | Inspector sidebar | FPS, memory, highlight times, adaptive-mode state |
+| ~~`PerformanceInspectorPanel`~~ ✅ | Inspector sidebar | FPS, memory, highlight times, adaptive-mode state |
 | `EventLogPanel` | Inspector sidebar | Tail of `EditorEvent` stream with filtering |
 | `WorkspaceFileTreeSidebar` | New left-rail above settings, or as a Switcher tab | Tree from `workspaceRoot` via `FileSystemActor` |
 | `ProjectSearchSidebar` | New left section | Cross-file find using `PortableProjectSearchAdapter` |
@@ -71,4 +71,4 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 ## Recommended next step
 
-LSP is now wired (✅ 2026-05-13). The next headline gap is **performance HUD + event stream**, because together they let an evaluator see the framework's runtime behavior at a glance. Start with a `PerformanceInspectorPanel` (low risk, no external dependencies) — it can sit next to `LSPInspectorPanel` in the right-rail inspector and surface FPS, memory, highlight times, and adaptive-mode state from the existing `PerformanceMonitor` / `MemoryMonitor` / `UnifiedPerformanceSystem` types. Follow with `EventLogPanel` tailing `UnifiedEventSystem` — same sidebar slot, similar wiring pattern to `LSPInspectorPanel`.
+LSP and Performance Inspector are both wired (✅ 2026-05-13). The natural next headline gap is **`EventLogPanel`** tailing `UnifiedEventSystem` — same right-rail inspector slot, similar wiring pattern to `LSPInspectorPanel` and `PerformanceInspectorPanel` (sample-side `@MainActor @Observable` coordinator subscribes to the event stream and exposes a windowed buffer for a stateless list view). The `.eventSystem(_:)` modifier is undemonstrated today, and the LSP↔Performance coordinator pair is now a clean template for a third.
