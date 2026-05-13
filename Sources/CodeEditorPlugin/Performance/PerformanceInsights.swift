@@ -1,4 +1,5 @@
 import Foundation
+import IssueReporting
 import SwiftUI
 #if canImport(Combine)
 import Combine
@@ -32,6 +33,7 @@ public final class PerformanceInsights: ObservableObject {
     private let performanceMonitor: PerformanceMonitor
     private let textKit2Monitor = InsightsTextKit2Monitor()
     private let memoryMonitor: MemoryMonitor
+    private let frameRateMonitor: FrameRateMonitor
 
     /// Update timer
     private var updateTimer: Timer?
@@ -50,14 +52,17 @@ public final class PerformanceInsights: ObservableObject {
     /// Creates a PerformanceInsights instance
     /// - Parameters:
     ///   - memoryMonitor: Memory monitor for tracking memory usage
+    ///   - frameRateMonitor: Frame-rate monitor for real FPS measurement
     ///   - performanceMonitor: Performance monitor (defaults to new instance)
     ///   - capabilities: Platform capabilities (defaults to shared instance)
     public init(
         memoryMonitor: MemoryMonitor,
+        frameRateMonitor: FrameRateMonitor,
         performanceMonitor: PerformanceMonitor? = nil,
         capabilities: PlatformCapabilities? = nil
     ) {
         self.memoryMonitor = memoryMonitor
+        self.frameRateMonitor = frameRateMonitor
         self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
         self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         startMonitoring()
@@ -163,15 +168,15 @@ public final class PerformanceInsights: ObservableObject {
     }
 
     private func collectRealTimeMetrics() {
-        // CPU usage (simplified - would use proper system APIs)
-        metrics.cpuUsage = Double.random(in: 10...90) // Placeholder
+        // CPU usage via mach thread_info across all process threads.
+        metrics.cpuUsage = Self.sampleCPUUsage()
 
         // Memory usage
         let memoryInfo = ProcessInfo.processInfo
         metrics.memoryUsage = Double(memoryInfo.physicalMemory) / 1_073_741_824 // GB
 
         // FPS (for UI responsiveness)
-        metrics.currentFPS = 60 // Placeholder - would measure actual frame rate
+        metrics.currentFPS = frameRateMonitor.currentFPS
 
         // Active operations and response time will be updated asynchronously
         Task {
@@ -308,6 +313,49 @@ public final class PerformanceInsights: ObservableObject {
         // This would get the actual file size from the editor
         // For now, return a placeholder
         nil
+    }
+
+    // MARK: - CPU Sampling
+
+    @MainActor private static var didReportCPUFailure = false
+
+    /// Reads the current process's CPU usage as a percentage in `[0, 100]`,
+    /// summed across all non-idle threads. Returns 0 on mach call failure
+    /// (and reports the issue once per session).
+    @MainActor
+    private static func sampleCPUUsage() -> Double {
+        var threadsArray: thread_act_array_t?
+        var threadCount: mach_msg_type_number_t = 0
+        let listResult = task_threads(mach_task_self_, &threadsArray, &threadCount)
+        guard listResult == KERN_SUCCESS, let threadsArray else {
+            if !didReportCPUFailure {
+                reportIssue("PerformanceInsights: task_threads failed (\(listResult))")
+                didReportCPUFailure = true
+            }
+            return 0
+        }
+        defer {
+            vm_deallocate(
+                mach_task_self_,
+                vm_address_t(UInt(bitPattern: threadsArray)),
+                vm_size_t(Int(threadCount) * MemoryLayout<thread_t>.size)
+            )
+        }
+
+        var totalUsage: Double = 0
+        for index in 0..<Int(threadCount) {
+            var info = thread_basic_info()
+            var infoCount = mach_msg_type_number_t(MemoryLayout<thread_basic_info_data_t>.size / MemoryLayout<natural_t>.size)
+            let infoResult = withUnsafeMutablePointer(to: &info) { infoPtr in
+                infoPtr.withMemoryRebound(to: integer_t.self, capacity: Int(infoCount)) { rebound in
+                    thread_info(threadsArray[index], thread_flavor_t(THREAD_BASIC_INFO), rebound, &infoCount)
+                }
+            }
+            if infoResult == KERN_SUCCESS && (info.flags & TH_FLAGS_IDLE) == 0 {
+                totalUsage += Double(info.cpu_usage) / Double(TH_USAGE_SCALE) * 100.0
+            }
+        }
+        return min(max(totalUsage, 0), 100)
     }
 }
 
