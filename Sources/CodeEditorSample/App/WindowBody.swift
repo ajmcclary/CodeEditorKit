@@ -76,6 +76,12 @@ struct WindowBody: View {
                 }
                 #endif
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                #if canImport(AppKit)
+                .onAppear { appState.lsp.currentWorkspaceRoot = appState.workspaceRoot }
+                .onChange(of: appState.workspaceRoot) { _, newValue in
+                    appState.lsp.currentWorkspaceRoot = newValue
+                }
+                #endif
                 .safeAreaInset(edge: .top, spacing: 0) {
                     if appState.findOverlayVisible {
                         FindReplaceOverlay(appState: appState)

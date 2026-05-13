@@ -87,6 +87,13 @@ final class AppState {
                   let url = coordinator.mirrorURL(for: activeID) else { return nil }
             return "file://" + url.path
         }
+        let controllerRef = editorController
+        coordinator.onRequestOpen = { [weak documentsRef] url in
+            documentsRef?.openFile(url: url)
+        }
+        coordinator.onRequestScroll = { [weak controllerRef] line in
+            controllerRef?.gotoLine(line)
+        }
         #endif
     }
 }

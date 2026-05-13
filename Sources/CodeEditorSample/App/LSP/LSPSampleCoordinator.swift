@@ -232,10 +232,64 @@ final class LSPSampleCoordinator {
         )) ?? []
     }
 
-    /// Stub for the definition-jump path. Filled out in Task 18.
+    enum DefinitionTarget: Equatable {
+        case openInWorkspace(url: URL, line: Int)
+        case toast(message: String)
+        case empty
+    }
+
+    /// Closure injected by `AppState` so the coordinator can open a tab via
+    /// `DocumentStore` without depending on it directly. Returns the new
+    /// tab's id when the open succeeded.
+    var onRequestOpen: ((URL) -> UUID?)?
+
+    /// Closure injected by `AppState` to scroll the active tab to a line.
+    var onRequestScroll: ((Int) -> Void)?
+
+    /// Workspace root used for in/out-of-scope checks. Tracked separately
+    /// so it can change without restarting the coordinator.
+    var currentWorkspaceRoot: URL?
+
     func jumpToDefinition(at position: SourcePosition, in tabID: UUID) async {
-        _ = await requestDefinition(at: position, in: tabID)
-        // Resolution logic added in the definition-jump task.
+        let locations = await requestDefinition(at: position, in: tabID)
+        let target = Self.resolveDefinitionTarget(
+            locations: locations,
+            workspaceRoot: currentWorkspaceRoot
+        )
+        apply(target: target)
+    }
+
+    /// Pure resolver — picks the first location and classifies the jump as
+    /// in-workspace (open + scroll), out-of-workspace (toast), or none.
+    static func resolveDefinitionTarget(
+        locations: [Location],
+        workspaceRoot: URL?
+    ) -> DefinitionTarget {
+        guard let first = locations.first else { return .empty }
+        guard let uri = URL(string: first.uri) else {
+            return .toast(message: "Could not parse definition URI: \(first.uri)")
+        }
+        let line = first.range.start.line
+        let path = uri.path
+        if let root = workspaceRoot, path.hasPrefix(root.path) {
+            return .openInWorkspace(url: uri, line: line)
+        }
+        return .toast(message: "Defined in \(uri.lastPathComponent):\(line)")
+    }
+
+    private func apply(target: DefinitionTarget) {
+        switch target {
+        case let .openInWorkspace(url, line):
+            if onRequestOpen?(url) != nil {
+                onRequestScroll?(line + 1)  // EditorController.gotoLine is 1-based
+            }
+
+        case let .toast(message):
+            lastError = message
+
+        case .empty:
+            lastError = "No definition found."
+        }
     }
 
     /// Single entry point used by the `.onTextHover` modifier. Dismisses when
