@@ -30,6 +30,11 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
     /// (re-adding a different kind overwrites).
     private(set) var demoAnnotations: [Int: AnnotationKind] = [:]
 
+    /// Server-vended diagnostic annotations (typically from LSP). Stored as a
+    /// separate bucket so toggling the language server off doesn't disturb
+    /// user-placed breakpoints or demo annotations.
+    private(set) var diagnosticAnnotations: [Annotation] = []
+
     /// Weak handle on the host's `EditorController`; needed to translate
     /// line numbers into ranges when vending annotations.
     @ObservationIgnored
@@ -74,6 +79,15 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
         controller?.reloadAnnotations()
     }
 
+    // MARK: - Diagnostic annotations
+
+    /// Replace the current diagnostic bucket with `annotations` and trigger an
+    /// annotation reload. Breakpoints and demo annotations are untouched.
+    func replaceDiagnosticAnnotations(_ annotations: [Annotation]) {
+        diagnosticAnnotations = annotations
+        controller?.reloadAnnotations()
+    }
+
     // MARK: - AnnotationsDataSource
 
     func annotations(for range: NSRange) -> [Annotation] {
@@ -105,25 +119,29 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
     // MARK: - Internal builders
 
     private func currentAnnotations() -> [Annotation] {
-        guard let controller else { return [] }
         var out: [Annotation] = []
-        for line in breakpointLines.sorted() {
-            guard let range = controller.nsRange(forLine: line) else { continue }
-            out.append(Annotation(
-                range: range,
-                content: "ERROR: breakpoint",
-                id: "bp-\(line)"
-            ))
+        if let controller {
+            for line in breakpointLines.sorted() {
+                guard let range = controller.nsRange(forLine: line) else { continue }
+                out.append(Annotation(
+                    range: range,
+                    content: "ERROR: breakpoint",
+                    id: "bp-\(line)"
+                ))
+            }
+            for line in demoAnnotations.keys.sorted() {
+                guard let kind = demoAnnotations[line],
+                      let range = controller.nsRange(forLine: line) else { continue }
+                out.append(Annotation(
+                    range: range,
+                    content: "\(kind.rawValue): demo annotation",
+                    id: "demo-\(kind.rawValue)-\(line)"
+                ))
+            }
         }
-        for line in demoAnnotations.keys.sorted() {
-            guard let kind = demoAnnotations[line],
-                  let range = controller.nsRange(forLine: line) else { continue }
-            out.append(Annotation(
-                range: range,
-                content: "\(kind.rawValue): demo annotation",
-                id: "demo-\(kind.rawValue)-\(line)"
-            ))
-        }
+        // Diagnostics arrive with their own pre-computed ranges, so they're
+        // visible even before a controller is attached.
+        out.append(contentsOf: diagnosticAnnotations)
         return out
     }
 }
