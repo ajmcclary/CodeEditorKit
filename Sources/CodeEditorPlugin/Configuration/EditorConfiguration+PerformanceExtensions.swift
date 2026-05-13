@@ -92,10 +92,17 @@ extension EditorConfiguration {
         public var iOSLargeFileThreshold: Int = 1_048_576 // 1MB
 
         /// iOS maximum highlighting chunk size
-        /// 
+        ///
         /// On iOS, syntax highlighting is performed in chunks to prevent
         /// memory spikes. This sets the maximum characters per chunk.
         public var iOSMaxHighlightingChunk: Int = 100_000 // 100KB
+
+        /// Optional `UnifiedPerformanceSystem` for tracking editor performance metrics.
+        ///
+        /// When non-nil, the syntax highlighter records `.syntaxHighlighting` metrics
+        /// here. Excluded from `Codable` and `Equatable` (reference identity is not
+        /// configuration).
+        public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
 
         // MARK: - Initialization
 
@@ -160,6 +167,7 @@ extension EditorConfiguration.Performance: Codable {
         }()
         iOSLargeFileThreshold = try container.decodeIfPresent(Int.self, forKey: .iOSLargeFileThreshold) ?? 1_048_576
         iOSMaxHighlightingChunk = try container.decodeIfPresent(Int.self, forKey: .iOSMaxHighlightingChunk) ?? 100_000
+        unifiedPerformanceSystem = nil
     }
 
     public func encode(to encoder: Encoder) throws {
