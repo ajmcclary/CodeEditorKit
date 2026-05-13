@@ -305,6 +305,15 @@ public final class EditorController {
         return view.lineNumber(at: stringRange.lowerBound)
     }
 
+    /// The editor's adaptive performance mode controller.
+    ///
+    /// Exposes the underlying `CodeEditorView`'s instance so observers see the same state
+    /// the editor itself uses (file-size and memory-pressure driven transitions). Returns
+    /// `nil` before the controller is attached to a view.
+    public var adaptivePerformanceMode: AdaptivePerformanceMode? {
+        codeEditorView?.adaptivePerformanceMode
+    }
+
     /// Build an `NSTextRange` covering line `lineNumber` (1-based).
     /// Useful for constructing `Annotation` values from line numbers,
     /// either to pass to `addAnnotation(_:)` or to vend from an
