@@ -77,6 +77,35 @@ final class DocumentStore {
         activeTabID = id
     }
 
+    /// Open a file from disk into a new tab and activate it. If a tab is
+    /// already open for the same URL, activates that tab instead. Returns
+    /// the tab id, or nil when the file cannot be read.
+    ///
+    /// Sample-internal: used by the LSP definition-jump path to surface
+    /// cross-file Swift navigation results. The opened tab carries the
+    /// source URL on `TabModel.url`; persistence (write-back) is out of
+    /// scope for this iteration.
+    @discardableResult
+    func openFile(url: URL) -> TabModel.ID? {
+        if let existing = tabs.first(where: { $0.url == url }) {
+            activeTabID = existing.id
+            return existing.id
+        }
+        guard let text = try? String(contentsOf: url, encoding: .utf8) else {
+            return nil
+        }
+        let language = LanguageDetectionService().detectLanguage(fromExtension: url.pathExtension)
+        let tab = TabModel(
+            name: url.lastPathComponent,
+            url: url,
+            language: language
+        )
+        tabs.append(tab)
+        texts[tab.id] = text
+        activeTabID = tab.id
+        return tab.id
+    }
+
     // MARK: - Per-tab content access
 
     /// Text binding for a given tab id. Reads return the empty string
