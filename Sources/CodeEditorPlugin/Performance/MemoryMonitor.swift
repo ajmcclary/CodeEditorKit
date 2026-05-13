@@ -443,6 +443,13 @@ public final class MemoryMonitor: ObservableObject {
         logger.info("Memory statistics reset")
     }
 
+    /// Sets peak memory back to current usage and clears the usage history.
+    /// Triggers `@Published` notification for `memoryStats` observers.
+    public func resetPeak() {
+        memoryStats.peakUsageMB = memoryStats.currentUsageMB
+        memoryStats.usageHistory.removeAll(keepingCapacity: true)
+    }
+
     // MARK: - Private Methods
 
     private func checkMemoryUsage() async {
@@ -621,5 +628,25 @@ extension MemoryMonitor {
             memoryPressure: memoryPressure
         )
         return MemoryMonitor(memoryProvider: mockProvider)
+    }
+
+    /// Test helper: returns a `MemoryMonitor` with the given fixed `memoryStats` values.
+    /// Use for snapshot tests and coordinator tests that need specific peak/current values.
+    public static func mock(
+        currentUsageMB: Double,
+        peakUsageMB: Double,
+        averageUsageMB: Double = 0,
+        usageHistory: [Double] = [],
+        isUnderPressure: Bool = false
+    ) -> MemoryMonitor {
+        let monitor = MemoryMonitor.mock(
+            memoryUsage: currentUsageMB,
+            memoryPressure: isUnderPressure ? .critical : .normal
+        )
+        monitor.memoryStats.currentUsageMB = currentUsageMB
+        monitor.memoryStats.peakUsageMB = peakUsageMB
+        monitor.memoryStats.averageUsageMB = averageUsageMB == 0 ? currentUsageMB : averageUsageMB
+        monitor.memoryStats.usageHistory = usageHistory
+        return monitor
     }
 }
