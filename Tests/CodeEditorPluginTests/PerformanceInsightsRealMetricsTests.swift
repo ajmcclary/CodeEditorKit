@@ -30,5 +30,4 @@ struct PerformanceInsightsRealCPUTests {
         #expect(cpu >= 0)
         #expect(cpu <= 100)
     }
-
 }
