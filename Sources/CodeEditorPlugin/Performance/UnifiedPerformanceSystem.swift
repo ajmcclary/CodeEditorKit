@@ -76,6 +76,39 @@ public final class UnifiedPerformanceSystem {
         }
     }
 
+    /// Track a performance metric for a non-throwing async operation.
+    /// Records duration on success identically to the throwing variant.
+    public func track<T>(
+        _ metricType: PerformanceMetricType,
+        operation: () async -> T
+    ) async -> T {
+        let operationId = UUID()
+        let startTime = CFAbsoluteTimeGetCurrent()
+        let startMemory = getMemoryUsage()
+
+        activeOperations[operationId] = OperationInfo(
+            id: operationId,
+            type: metricType,
+            startTime: startTime,
+            startMemory: startMemory
+        )
+
+        let result = await operation()
+
+        let endTime = CFAbsoluteTimeGetCurrent()
+        let endMemory = getMemoryUsage()
+
+        await recordMetric(
+            type: metricType,
+            duration: endTime - startTime,
+            memoryDelta: Int64(endMemory) - Int64(startMemory),
+            success: true
+        )
+
+        activeOperations.removeValue(forKey: operationId)
+        return result
+    }
+
     /// Generate performance insights
     public func generateInsights() -> UnifiedPerformanceInsights {
         cleanupOldMetrics()
