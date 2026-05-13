@@ -47,6 +47,9 @@ struct WindowBody: View {
             CodeEditor(text: appState.documents.textBinding(for: activeID))
                 .onTextChange { newText in
                     appState.documents.markDirty(activeID, newText: newText)
+                    #if canImport(AppKit)
+                    appState.lsp.handleTextChange(id: activeID, newText: newText)
+                    #endif
                 }
                 .editorController(appState.editorController)
                 .editorInteractionState(appState.documents.interactionBinding(for: activeID))

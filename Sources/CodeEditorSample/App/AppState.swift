@@ -57,10 +57,36 @@ final class AppState {
     /// FocusedValue channel.
     var paletteVisible: Bool = false
 
+    #if canImport(AppKit)
+    /// Sample-side LSP coordinator. Owns the `LSPManager`, document
+    /// mirroring, and the diagnostics bridge. macOS-only (process spawning
+    /// is unavailable on iOS, so the LSP demo doesn't ship on that
+    /// platform). Adding it to AppState contradicts the deferred refactor
+    /// in `docs/superpowers/specs/2026-05-13-sample-app-lsp-integration-design.md`
+    /// (splitting AppState into feature-scoped models); the LSP wiring
+    /// uses the existing god-object pattern for now.
+    let lsp: LSPSampleCoordinator
+    #endif
+
     init() {
         let hub = AnnotationsHub()
         self.annotationsHub = hub
         hub.controller = editorController
         editorController.setAnnotationsDataSource(hub)
+        #if canImport(AppKit)
+        let coordinator = LSPSampleCoordinator(memoryMonitor: MemoryMonitor())
+        self.lsp = coordinator
+        let documentsRef = documents
+        coordinator.attach(
+            controller: editorController,
+            hub: hub
+        ) { [weak coordinator, weak documentsRef] in
+            guard let coordinator,
+                  let documents = documentsRef,
+                  let activeID = documents.activeTabID,
+                  let url = coordinator.mirrorURL(for: activeID) else { return nil }
+            return "file://" + url.path
+        }
+        #endif
     }
 }
