@@ -163,7 +163,11 @@ let package = Package(
         .testTarget(
             name: "CodeEditorSampleTests",
             dependencies: [
-                "CodeEditorSample"
+                "CodeEditorSample",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ],
+            exclude: [
+                "__Snapshots__"
             ],
             swiftSettings: swiftSettings
         )

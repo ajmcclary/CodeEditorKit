@@ -613,6 +613,9 @@ public struct MemoryStatistics {
         guard totalCleanupOperations > 0 else { return 0 }
         return totalMemoryFreed / Double(totalCleanupOperations)
     }
+
+    /// Creates a zero-initialized `MemoryStatistics`. Useful for tests and previews.
+    public init() {}
 }
 
 // MARK: - Extensions
