@@ -14,10 +14,10 @@ source and tests as implementation truth.
 | Area | Decision | Current state |
 |---|---|---|
 | Edit events | Keep a two-phase edit model: `WillEditEvent` before mutation and `TextEditEvent` after mutation. | Implemented in `TextEditEventHub`. |
-| Range providers | Keep the existing `RangeHighlightProviding` surface. | Adequate for Tree-sitter-shaped providers, LSP semantic tokens, spell-check, and AI suggestions. |
+| Range providers | Keep the existing `RangeHighlightProviding` surface. | Adequate for range-query providers, LSP semantic tokens, spell-check, and AI suggestions. |
 | Attribute edits | Gate legacy syntax highlighting to character edits only. | Implemented to avoid attribute-only highlight loops and double-apply work. |
 | Line geometry | Use `LineGeometryStore` as the UTF-16-correct line and y-position index. | Implemented; `LineIndexCache` and `OptimizedLineIndexCache` are deprecated prior art. |
-| Tree-sitter | Keep Tree-sitter-shaped highlighting behind a feature flag; defer real C grammar packaging. | Architecture is present; current parser backend is still regex-backed with bounded invalidation. |
+| Tree-sitter | Keep range-query highlighting behind a feature flag; defer real C grammar packaging. | Architecture is present; current parser backend is still regex-backed with bounded invalidation. |
 | Renderer | Do not build a full custom text renderer. | TextKit2 remains the sole text rendering path. |
 
 ## Foundation Audit
@@ -84,9 +84,9 @@ and `queryHighlights` supports both syntax and semantic-token style providers.
 
 ### Language Descriptor Audit
 
-All concrete languages have `treeSitterName` values where appropriate.
+All concrete languages have `parserName` values where appropriate.
 
-| Language | `treeSitterName` | Note |
+| Language | `parserName` | Note |
 |---|---|---|
 | Swift | `nil` | Uses SwiftSyntax, not Tree-sitter. |
 | Shell | `bash` | Matches the canonical `tree-sitter-bash` grammar. |
@@ -196,7 +196,7 @@ store integration, edit handling, view reuse, and geometry helpers.
 
 ### Implementation Summary
 
-The phase baseline established the Tree-sitter-shaped range-provider path while
+The phase baseline established the range-query range-provider path while
 keeping regex highlighting as the backend.
 
 | Phase | Deliverable |
@@ -205,7 +205,7 @@ keeping regex highlighting as the backend.
 | 2 | Consolidated `LanguageDescriptor` as the language metadata source of truth. |
 | 3 | Added structural shebang parsing with `/usr/bin/env -S` support and Vim/Emacs modelines. |
 | 4 | Added TOML, Lua, C#, Kotlin, and Dart to reach 25 concrete languages plus plain text. |
-| 5 | Added `TreeSitterRangeHighlightProvider`, capture maps, and the regex-backed parser spike. |
+| 5 | Added `RegexRangeHighlightProvider`, capture maps, and the regex-backed parser spike. |
 
 Current architecture:
 
@@ -218,17 +218,17 @@ EditorConfiguration.performance.usesRangeBasedHighlighting
             -> StyledRangeContainer
             -> RangeAttributeApplier
 
-TreeSitterRangeHighlightProvider remains internal scaffolding until a real
+RegexRangeHighlightProvider remains internal scaffolding until a real
 companion package provides C grammar loading.
 ```
 
-The current `TreeSitterParser` keeps actor-isolated parser state, translates
+The current `RegexIncrementalRangeQueryParser` keeps actor-isolated parser state, translates
 UTF-16 ranges to UTF-8 byte ranges, and uses bounded invalidation around edits.
 It does not link real C grammar libraries yet.
 
 ### Phase-5 Benchmark Snapshot
 
-JavaScript highlighting through the regex-backed Tree-sitter-shaped pipeline:
+JavaScript highlighting through the regex-backed range-query pipeline:
 
 | Scale | Parse time | Query time | Captures | Baseline result |
 |---|---:|---:|---:|---|

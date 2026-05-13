@@ -82,7 +82,7 @@ struct IOSRootView: View {
             CodeEditor(text: appState.documents.textBinding(for: activeID))
                 .editorController(appState.editorController)
                 .codeLanguage(appState.documents.activeLanguage ?? .plainText)
-                .codeWorkspaceRoot(appState.configuration.workspaceRoot)
+                .codeWorkspaceRoot(appState.workspaceRoot)
                 .environment(\.codeEditorConfiguration, appState.configuration)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -101,7 +101,7 @@ struct IOSRootView: View {
                 LayoutKnobsSection(configuration: $appState.configuration, expansion: .always)
                 BehaviorKnobsSection(configuration: $appState.configuration, expansion: .always)
                 PerformanceKnobsSection(configuration: $appState.configuration, expansion: .always)
-                WorkspaceKnobsSection(configuration: $appState.configuration, expansion: .always)
+                WorkspaceKnobsSection(workspaceRoot: $appState.workspaceRoot, expansion: .always)
                 AnnotationsKnobsSection(appState: appState, expansion: .always)
             }
             .padding(.vertical, 12)

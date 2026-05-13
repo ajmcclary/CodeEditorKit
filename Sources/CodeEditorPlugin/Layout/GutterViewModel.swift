@@ -141,7 +141,7 @@ public final class GutterViewModel {
 
     // MARK: - Private Properties
 
-    private let businessLogicServices: BusinessLogicServiceRegistry
+    private let featureDependencies: EditorFeatureRuntimeDependencies
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "GutterViewModel")
 
     // Debugging and diagnostic support (delegated to GutterDebugSupport)
@@ -149,16 +149,16 @@ public final class GutterViewModel {
 
     // Services
     private var lineNumberService: LineNumberCalculationService {
-        businessLogicServices.lineNumberCalculationService
+        featureDependencies.lineNumberCalculationService
     }
 
     private var gutterSizingService: GutterSizingService {
-        businessLogicServices.gutterSizingService
+        featureDependencies.gutterSizingService
     }
 
     private var codeFoldingService: CodeFoldingCoordinatorService? {
         do {
-            return try businessLogicServices.codeFoldingCoordinatorService()
+            return try featureDependencies.codeFoldingCoordinatorService()
         } catch {
             logger.warning("Code folding service unavailable: \(error)")
             return nil
@@ -187,13 +187,13 @@ public final class GutterViewModel {
     /// Initializes the gutter view model
     /// - Parameters:
     ///   - configuration: Editor configuration
-    ///   - businessLogicServices: Registry of business logic services
+    ///   - featureDependencies: Registry of business logic services
     public init(
         configuration: EditorConfiguration,
-        businessLogicServices: BusinessLogicServiceRegistry
+        featureDependencies: EditorFeatureRuntimeDependencies
     ) {
         self.configuration = configuration
-        self.businessLogicServices = businessLogicServices
+        self.featureDependencies = featureDependencies
         self.displayState = GutterDisplayState()
         self.interactionState = GutterInteractionState()
 

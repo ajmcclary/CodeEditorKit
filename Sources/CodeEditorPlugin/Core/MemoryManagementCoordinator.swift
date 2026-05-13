@@ -167,7 +167,7 @@ public final class MemoryManagementCoordinator {
         // LSPManager
         if components.lspManager != nil {
             if let editorView {
-                editorView.lspManager = createLSPManager()
+                editorView.lspManager = createLSPManager(workspaceRoot: editorView.runtime.dependencies.workspaceRoot)
             }
         }
         #endif
@@ -253,7 +253,7 @@ extension CodeEditorView {
         self.completionManager = memoryCoordinator.createCompletionManager()
 
         #if canImport(AppKit)
-        self.lspManager = memoryCoordinator.createLSPManager(workspaceRoot: configuration.workspaceRoot)
+        self.lspManager = memoryCoordinator.createLSPManager(workspaceRoot: runtime.dependencies.workspaceRoot)
         #endif
     }
 }

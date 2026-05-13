@@ -10,7 +10,7 @@ classDiagram
     class TextProcessingCoordinator {
         <<main coordinator>>
         +actorCoordinator ActorCoordinator
-        +processingPipeline TextProcessingPipeline
+        +processingPipeline TextProcessingActor
         +textKit2Helper TextKit2PerformanceHelper
         +memoryMonitor MemoryMonitor
         +validationContext ValidationContext
@@ -20,7 +20,7 @@ classDiagram
         +monitorMemoryUsage()
     }
 
-    class TextProcessingPipeline {
+    class TextProcessingActor {
         <<modern pipeline>>
         +operations [TextProcessingOperation]
         +validators [TextValidator]
@@ -419,7 +419,7 @@ classDiagram
     }
 
     %% Key Relationships - Modern Architecture
-    TextProcessingCoordinator --> TextProcessingPipeline : orchestrates
+    TextProcessingCoordinator --> TextProcessingActor : orchestrates
     TextProcessingCoordinator --> ActorCoordinator : coordinates
     TextProcessingCoordinator --> TextKit2PerformanceHelper : optimizes with
     TextProcessingCoordinator --> MemoryMonitor : monitors
@@ -429,9 +429,9 @@ classDiagram
     ActorCoordinator --> PerformanceMetricsActor : tracks with
     ActorCoordinator --> DocumentStateActor : manages state
 
-    TextProcessingPipeline --> TextProcessingOperation : executes
-    TextProcessingPipeline --> TextValidator : validates with
-    TextProcessingPipeline --> TextTransformer : transforms with
+    TextProcessingActor --> TextProcessingOperation : executes
+    TextProcessingActor --> TextValidator : validates with
+    TextProcessingActor --> TextTransformer : transforms with
 
     TextProcessingOperation <|-- SyntaxHighlightingOperation : implements
     TextProcessingOperation <|-- WhitespaceNormalizationOperation : implements
@@ -457,7 +457,7 @@ classDiagram
     ValidationContext <|-- ValidationContextWrapper : implements
 
     %% Processing Results
-    TextProcessingPipeline --> ProcessingResult : produces
+    TextProcessingActor --> ProcessingResult : produces
     ProcessingResult --> TextComplexity : analyzes
     ProcessingResult --> ProcessingCost : estimates
 
@@ -475,7 +475,7 @@ classDiagram
     classDef config fill:#8E8E9315,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class TextProcessingCoordinator coordinator
-    class TextProcessingPipeline pipeline
+    class TextProcessingActor pipeline
     class ActorCoordinator actor
     class TextProcessingActor actor
     class CacheCoordinatorActor actor
@@ -525,7 +525,7 @@ flowchart TB
     INPUT[Text Input] --> COORD[TextProcessingCoordinator]
     
     COORD --> MEMORY{Memory Check}
-    MEMORY -->|OK| PIPELINE[TextProcessingPipeline]
+    MEMORY -->|OK| PIPELINE[TextProcessingActor]
     MEMORY -->|Pressure| CLEANUP[Memory Cleanup]
     CLEANUP --> PIPELINE
     
@@ -636,7 +636,7 @@ flowchart TB
 ### 6. Cross-Platform Text Processing
 - **Platform Abstraction**: Unified API across macOS/iOS
 - **Capability Detection**: Runtime feature detection
-- **TextKit Bridge**: TextKit2-only convenience wrapper for `NSRange ↔ NSTextRange` conversion (TextKit1 fallback retired in 0.2.0)
+- **TextKit Bridge**: TextKit2-only convenience wrapper for `NSRange ↔ NSTextRange` conversion (legacy layout fallback retired in 0.2.0)
 - **Memory Providers**: Platform-specific memory management
 - **Performance Optimization**: Device-specific optimizations
 

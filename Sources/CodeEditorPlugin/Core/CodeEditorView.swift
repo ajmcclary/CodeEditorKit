@@ -144,6 +144,35 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Event publisher for unified event handling
     public let eventPublisher = EditorEventPublisher()
 
+    /// Runtime composition root for services that are not configuration values.
+    public var runtime = EditorRuntime() {
+        didSet {
+            guard runtime !== oldValue else { return }
+            memoryCoordinator.updateMemoryMonitor(runtime.dependencies.memoryMonitor)
+            #if canImport(AppKit)
+            lspManager.workspaceRoot = runtime.dependencies.workspaceRoot
+            #endif
+            applyConfiguration()
+        }
+    }
+
+    #if canImport(AppKit)
+    /// Retains the TextKit2 content manager backing the AppKit text network.
+    private var textKit2ContentStorage: NSTextContentStorage?
+
+    /// Retains the TextKit2 layout manager backing the AppKit text network.
+    private var textKit2LayoutManager: NSTextLayoutManager?
+
+    override public var textLayoutManager: NSTextLayoutManager? {
+        textKit2LayoutManager ?? super.textLayoutManager
+    }
+    #endif
+
+    /// Explicit feature dependencies used by view models and live editor behavior.
+    internal var featureDependencies: EditorFeatureRuntimeDependencies {
+        runtime.featureDependencies
+    }
+
     /// Layout coordinator to prevent recursive layout
     internal lazy var layoutCoordinator = LayoutCoordinator(view: self)
 
@@ -165,11 +194,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
                 return
             }
 
-            // Apply configuration if it changed OR if the memory monitor changed OR if workspace root changed
-            // (memoryMonitor and workspaceRoot are excluded from EditorConfiguration equality)
-            if configuration != oldValue ||
-                configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor ||
-                configuration.workspaceRoot != oldValue.workspaceRoot {
+            if configuration != oldValue {
                 isApplyingConfiguration = true
                 applyConfiguration()
                 isApplyingConfiguration = false
@@ -191,7 +216,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     /// LSP manager for language server integration
     #if canImport(AppKit)
-    internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: configuration.workspaceRoot)
+    internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: runtime.dependencies.workspaceRoot)
 
     /// LSP content coordinator — batches edit events into `textDocument/didChange`
     /// notifications with ~250 ms debounce. Created by `setupLSPIntegration()`
@@ -213,9 +238,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         engine.attach(to: self)
         return engine
     }()
-
-    /// Business logic service registry for dependency injection
-    internal lazy var businessLogicServices = BusinessLogicServiceRegistry()
 
     /// Adaptive performance mode manager
     internal lazy var adaptivePerformanceMode = AdaptivePerformanceMode(memoryMonitor: memoryMonitor)
@@ -266,13 +288,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// let editor2 = CodeEditorView() 
     /// editor2.memoryMonitor = sharedMonitor
     /// ```
-    public var memoryMonitor = CodeEditorDependencies.makeMemoryMonitor() {
-        didSet {
-            // Only update if the monitor actually changed
-            guard memoryMonitor !== oldValue else { return }
-
-            // Update memory coordinator with new monitor
-            memoryCoordinator.updateMemoryMonitor(memoryMonitor)
+    public var memoryMonitor: MemoryMonitor {
+        get {
+            runtime.dependencies.memoryMonitor
+        }
+        set {
+            guard newValue !== runtime.dependencies.memoryMonitor else { return }
+            runtime.update(memoryMonitor: newValue)
+            memoryCoordinator.updateMemoryMonitor(newValue)
         }
     }
 
@@ -286,7 +309,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// - Note: Changing the language may cause a brief visual update as highlighting is reprocessed
     public var language: Language = .plainText {
         didSet {
-            let languageService = businessLogicServices.languageDetectionService
+            let languageService = featureDependencies.languageDetectionService
             let validation = languageService.validateLanguageChange(from: oldValue, to: language)
 
             if validation != .noChange {
@@ -360,9 +383,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Memory management coordinator
     internal lazy var memoryCoordinator = MemoryManagementCoordinator(memoryMonitor: memoryMonitor, editorView: self)
 
-    /// Default actor coordinator owned by this editor instance.
-    internal lazy var defaultActorCoordinator = ActorCoordinator.create()
-
     #if canImport(AppKit)
     override public var string: String {
         get {
@@ -401,18 +421,19 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     #if canImport(AppKit)
     override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
-        super.init(frame: frameRect, textContainer: container)
+        let textKit2Network = Self.makeTextKit2Network(frame: frameRect, textContainer: container)
+        super.init(frame: frameRect, textContainer: textKit2Network.textContainer)
+        textKit2ContentStorage = textKit2Network.contentStorage
+        textKit2LayoutManager = textKit2Network.layoutManager
         setupTextView()
     }
 
     override public init(frame frameRect: NSRect) {
-        // Use default NSTextView initialization - don't create custom text container
-        // The custom text container creation was breaking text rendering
         Self.logger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
-
-        // Use default NSTextView initialization
-        // NSTextView should automatically use TextKit2 on supported systems
-        super.init(frame: frameRect)
+        let textKit2Network = Self.makeTextKit2Network(frame: frameRect, textContainer: nil)
+        super.init(frame: frameRect, textContainer: textKit2Network.textContainer)
+        textKit2ContentStorage = textKit2Network.contentStorage
+        textKit2LayoutManager = textKit2Network.layoutManager
         setupTextView()
     }
 
@@ -425,21 +446,41 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         self.memoryMonitor = memoryMonitor
     }
 
-    /// Initializes CodeEditorView with custom services for dependency injection
+    /// Initializes CodeEditorView with custom feature dependencies.
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
-    ///   - businessLogicServices: Service registry for business logic dependencies
+    ///   - featureDependencies: Feature dependencies for editor view models
     ///   - memoryMonitor: Optional custom memory monitor for resource management
     public convenience init(
         frame frameRect: NSRect,
-        businessLogicServices: BusinessLogicServiceRegistry,
+        featureDependencies: EditorFeatureRuntimeDependencies,
         memoryMonitor: MemoryMonitor? = nil
     ) {
         self.init(frame: frameRect)
-        self.businessLogicServices = businessLogicServices
+        runtime.update(featureDependencies: featureDependencies)
         if let memoryMonitor {
             self.memoryMonitor = memoryMonitor
         }
+    }
+
+    private static func makeTextKit2Network(
+        frame frameRect: NSRect,
+        textContainer providedContainer: NSTextContainer?
+    ) -> (
+        textContainer: NSTextContainer,
+        contentStorage: NSTextContentStorage,
+        layoutManager: NSTextLayoutManager
+    ) {
+        let contentStorage = NSTextContentStorage()
+        contentStorage.textStorage = NSTextStorage()
+
+        let layoutManager = NSTextLayoutManager()
+        contentStorage.addTextLayoutManager(layoutManager)
+
+        let textContainer = providedContainer ?? NSTextContainer(size: frameRect.size)
+        layoutManager.textContainer = textContainer
+
+        return (textContainer, contentStorage, layoutManager)
     }
     #else
     override public init(frame frameRect: CGRect, textContainer container: NSTextContainer?) {
@@ -462,18 +503,18 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         self.memoryMonitor = memoryMonitor
     }
 
-    /// Initializes CodeEditorView with custom services for dependency injection
+    /// Initializes CodeEditorView with custom feature dependencies.
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
-    ///   - businessLogicServices: Service registry for business logic dependencies
+    ///   - featureDependencies: Feature dependencies for editor view models
     ///   - memoryMonitor: Optional custom memory monitor for resource management
     public convenience init(
         frame frameRect: CGRect,
-        businessLogicServices: BusinessLogicServiceRegistry,
+        featureDependencies: EditorFeatureRuntimeDependencies,
         memoryMonitor: MemoryMonitor? = nil
     ) {
         self.init(frame: frameRect)
-        self.businessLogicServices = businessLogicServices
+        runtime.update(featureDependencies: featureDependencies)
         if let memoryMonitor {
             self.memoryMonitor = memoryMonitor
         }

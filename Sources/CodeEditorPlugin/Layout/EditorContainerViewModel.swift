@@ -117,7 +117,7 @@ public final class EditorContainerViewModel {
 
     // MARK: - Private Properties
 
-    private let businessLogicServices: BusinessLogicServiceRegistry
+    private let featureDependencies: EditorFeatureRuntimeDependencies
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "EditorContainerViewModel")
 
     // Child view models
@@ -137,14 +137,14 @@ public final class EditorContainerViewModel {
 
     /// Initializes the editor container view model
     /// - Parameters:
-    ///   - businessLogicServices: Registry of business logic services
+    ///   - featureDependencies: Registry of business logic services
     ///   - configuration: Initial editor configuration
     public init(
-        businessLogicServices: BusinessLogicServiceRegistry,
+        featureDependencies: EditorFeatureRuntimeDependencies,
         configuration: EditorConfiguration = EditorConfiguration()
     ) {
         self.configuration = configuration
-        self.businessLogicServices = businessLogicServices
+        self.featureDependencies = featureDependencies
         self.editorState = EditorState()
         self.componentVisibility = ComponentVisibility()
 
@@ -159,7 +159,7 @@ public final class EditorContainerViewModel {
         self.textView = textView
 
         // Configure business logic services
-        businessLogicServices.configureForEditor(
+        featureDependencies.configureForEditor(
             textView: textView,
             configuration: configuration
         )
@@ -181,7 +181,7 @@ public final class EditorContainerViewModel {
         updateComponentVisibility()
 
         // Invalidate layout if needed
-        if businessLogicServices.editorLayoutService.shouldAnimateLayoutChange(
+        if featureDependencies.editorLayoutService.shouldAnimateLayoutChange(
             from: oldConfiguration,
             to: newConfiguration
         ) {
@@ -204,7 +204,7 @@ public final class EditorContainerViewModel {
     public func updateLayout(containerBounds: CGRect, animated: Bool = true) {
         guard let textView else { return }
 
-        let newFrames = businessLogicServices.editorLayoutService.standardLayout(
+        let newFrames = featureDependencies.editorLayoutService.standardLayout(
             containerBounds: containerBounds,
             configuration: configuration,
             textView: textView
@@ -212,7 +212,7 @@ public final class EditorContainerViewModel {
 
         // Check if layout actually changed
         if let currentFrames = layoutFrames,
-           !businessLogicServices.editorLayoutService.layoutNeedsUpdate(
+           !featureDependencies.editorLayoutService.layoutNeedsUpdate(
                currentFrames: currentFrames,
                newBounds: containerBounds,
                configuration: configuration
@@ -313,7 +313,7 @@ public final class EditorContainerViewModel {
 
     /// Clears all caches and resets state
     public func clearCaches() {
-        businessLogicServices.clearAllCaches()
+        featureDependencies.clearAllCaches()
         gutterViewModel?.clearCache()
         completionViewModel?.clearCache()
         minimapViewModel?.clearCache()
@@ -341,21 +341,21 @@ extension EditorContainerViewModel {
         // Create gutter view model
         gutterViewModel = GutterViewModel(
             configuration: configuration,
-            businessLogicServices: businessLogicServices
+            featureDependencies: featureDependencies
         )
         gutterViewModel?.configure(with: textView)
 
         // Create completion view model
         completionViewModel = CompletionViewModel(
             configuration: configuration,
-            businessLogicServices: businessLogicServices
+            featureDependencies: featureDependencies
         )
         completionViewModel?.configure(with: textView)
 
         // Create minimap view model
         minimapViewModel = MinimapViewModel(
             configuration: configuration,
-            businessLogicServices: businessLogicServices
+            featureDependencies: featureDependencies
         )
         minimapViewModel?.configure(with: textView)
     }
@@ -378,7 +378,7 @@ extension EditorContainerViewModel {
 
         // Update visible range if we have layout information
         if let textView {
-            let visibleLineRange = businessLogicServices.lineNumberCalculationService.calculateVisibleLineRanges(
+            let visibleLineRange = featureDependencies.lineNumberCalculationService.calculateVisibleLineRanges(
                 for: textView,
                 configuration: configuration
             )
@@ -442,7 +442,7 @@ extension EditorContainerViewModel {
 
     func getLineNumber(for characterIndex: Int) -> Int {
         guard let textView else { return 1 }
-        return businessLogicServices.lineNumberCalculationService.lineNumber(for: characterIndex, in: textView)
+        return featureDependencies.lineNumberCalculationService.lineNumber(for: characterIndex, in: textView)
     }
 
     func getColumnNumber(for characterIndex: Int) -> Int {

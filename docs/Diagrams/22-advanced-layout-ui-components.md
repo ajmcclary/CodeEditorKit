@@ -57,7 +57,7 @@ classDiagram
         +gutterView GutterView
         +minimapView MinimapView
         +configuration EditorConfiguration
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +layoutViews()
         +updateTextContainerInsets()
         +showsLineNumbers Bool
@@ -91,7 +91,7 @@ classDiagram
         +interactionState GutterInteractionState
         +visibleLineNumbers [LineNumberDisplayInfo]
         +configuration EditorConfiguration
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +configure(with: CodeEditorView)
         +updateConfiguration(_ EditorConfiguration)
         +handlePointerDown(at: CGPoint) Bool
@@ -233,7 +233,7 @@ classDiagram
         +RecommendationRow
     }
 
-    class BusinessLogicServiceRegistry {
+    class EditorRuntime {
         <<service registry>>
         +lineNumberCalculationService LineNumberCalculationService
         +gutterSizingService GutterSizingService
@@ -332,12 +332,12 @@ classDiagram
     BaseUIComponents --> MinimapView : implements protocols
     CodeEditorContainerView --> GutterView : contains
     CodeEditorContainerView --> MinimapView : contains
-    CodeEditorContainerView --> BusinessLogicServiceRegistry : uses services
+    CodeEditorContainerView --> EditorRuntime : uses services
     
     GutterView --> GutterViewModel : manages state
     MinimapView --> MinimapViewModel : manages state
-    GutterViewModel --> BusinessLogicServiceRegistry : accesses services
-    MinimapViewModel --> BusinessLogicServiceRegistry : accesses services
+    GutterViewModel --> EditorRuntime : accesses services
+    MinimapViewModel --> EditorRuntime : accesses services
     
     CodeEditor --> CodeEditorContainerView : represents
     CodeEditor --> MemoryMonitor : monitors memory
@@ -349,7 +349,7 @@ classDiagram
     UnifiedEventSystem --> PerformanceInsights : publishes events
     
     PerformanceViews --> PerformanceInsights : observes
-    BusinessLogicServiceRegistry --> MemoryMonitor : provides service
+    EditorRuntime --> MemoryMonitor : provides service
     EditorContainerViewModel --> LayoutContext : uses
     ContentView --> PerformanceViews : integrates
     
@@ -393,7 +393,7 @@ classDiagram
     class UnifiedEventSystem platform
     class PerformanceInsights performance
     class PerformanceViews performance
-    class BusinessLogicServiceRegistry performance
+    class EditorRuntime performance
     class MemoryMonitor performance
     class InsertionPointView feature
     class LineHighlightView feature
@@ -536,7 +536,7 @@ flowchart TB
 ### 3. Advanced Component Architecture
 - **MVVM with Observable**: Clean separation of UI and business logic using modern MVVM patterns
 - **Protocol-based Components**: Flexible component system with `ConfigurableUIComponent`, `ThemeableUIComponent`, and `ReusableUIComponent` protocols
-- **Dependency Injection**: `BusinessLogicServiceRegistry` provides clean service access without singletons
+- **Dependency Injection**: `EditorRuntime` provides clean service access without singletons
 - **Component Lifecycle**: Proper initialization, configuration, and cleanup patterns
 
 ### 4. SwiftUI Integration Excellence

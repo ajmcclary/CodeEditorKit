@@ -208,11 +208,10 @@ enum TextKit2PerformanceHelper {
     ) -> Bool {
         // TextKit2 is generally beneficial for larger files
         let fileSize = FileSize(characterCount: characterCount)
-        let shouldUseTextKit2 = fileSize == .large || fileSize == .veryLarge
+        let requiresTextKit2Optimization = fileSize == .large || fileSize == .veryLarge
 
-        if shouldUseTextKit2 && textView.textLayoutManager == nil {
-            // Try to enable TextKit2
-            return ModernTextKitHelper.ensureTextKit2(for: textView)
+        if requiresTextKit2Optimization && textView.textLayoutManager == nil {
+            return ModernTextKitHelper.validateRequiredTextKit2Surface(for: textView)
         }
 
         return textView.textLayoutManager != nil

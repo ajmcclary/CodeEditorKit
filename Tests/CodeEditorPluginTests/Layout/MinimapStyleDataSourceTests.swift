@@ -113,7 +113,7 @@ struct MinimapViewModelStyleDataSourceTests {
     func defaultsNil() {
         let vm = MinimapViewModel(
             configuration: EditorConfiguration(),
-            businessLogicServices: BusinessLogicServiceRegistry()
+            featureDependencies: EditorFeatureRuntimeDependencies()
         )
         #expect(vm.styleDataSource == nil)
     }
@@ -123,7 +123,7 @@ struct MinimapViewModelStyleDataSourceTests {
     func acceptsDataSource() {
         let vm = MinimapViewModel(
             configuration: EditorConfiguration(),
-            businessLogicServices: BusinessLogicServiceRegistry()
+            featureDependencies: EditorFeatureRuntimeDependencies()
         )
         let ds = NoOpMinimapStyleDataSource()
         vm.styleDataSource = ds

@@ -17,6 +17,9 @@ final class AppState {
     /// flows into the editor via `\.codeEditorConfiguration`.
     var configuration: EditorConfiguration = PresetCatalog.default.configuration
 
+    /// Workspace root for runtime-only LSP/file integrations.
+    var workspaceRoot: URL?
+
     /// Multi-tab document store backing `EditorTabStrip` and the editor
     /// pane. Lives here (rather than as `@State` inside `RootWindow`) so
     /// the Settings window can observe and mutate the active language.

@@ -63,7 +63,7 @@ internal protocol TextEditEventObserving: AnyObject {
 
 ### Ownership
 
-The `TextEditEventHub` is a property on `CodeEditorView`. It is NOT a service in `BusinessLogicServiceRegistry` because:
+The `TextEditEventHub` is a property on `CodeEditorView`. It is NOT a service in `EditorRuntime` because:
 - It is tied to a single editor instance, not application-wide.
 - Its lifecycle matches the text view's lifecycle.
 - Making it a service would require per-editor service isolation, adding complexity without benefit.
@@ -94,7 +94,7 @@ Observers are notified in registration order. This is intentional:
 
 ## Rejected Alternatives
 
-- **Service in BusinessLogicServiceRegistry:** Requires per-editor service isolation. Over-engineered for an editor-local concern.
+- **Service in EditorRuntime:** Requires per-editor service isolation. Over-engineered for an editor-local concern.
 - **Combine publisher:** Adds framework dependency for a simple observer pattern. Direct protocol conformance is simpler and testable.
 - **No hub, keep direct notification:** Prevents shared range storage from receiving canonical edit events.
 

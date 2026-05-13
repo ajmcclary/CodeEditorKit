@@ -9,7 +9,7 @@ import UIKit
 // MARK: - TextKitBridge
 //
 // As of 0.2.0 the framework is TextKit2-only. The bridge no longer chooses
-// between TextKit1 and TextKit2 — its purpose now is to provide a single
+// with the required TextKit2 surface — its purpose is to provide a single
 // `NSRange ↔ NSTextRange` and TextKit2 layout convenience surface so call
 // sites don't need to repeat the location-translation boilerplate.
 
@@ -253,7 +253,7 @@ final class TextKitBridge {
     // MARK: - Attributes Management
 
     /// Set rendering attributes on TextKit2 layout fragments for the given range.
-    /// (Replaces TextKit1's `setTemporaryAttributes` API.)
+    /// Applies temporary attributes through TextKit2 APIs.
     func setTemporaryAttributes(_: [NSAttributedString.Key: Any], for range: NSRange) {
         guard let textRange = textRangeFromNSRange(range),
               let textLayoutManager = textView?.textLayoutManager else { return }

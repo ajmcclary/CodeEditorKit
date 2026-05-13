@@ -153,7 +153,7 @@ public enum EditorEvent: Sendable {
 // Modern dependency injection approach
 let eventSystem = UnifiedEventSystem()
 var config = EditorConfiguration()
-config.eventSystem = eventSystem
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(eventSystem: eventSystem))
 
 // SwiftUI integration
 CodeEditor(text: $code)
@@ -283,7 +283,7 @@ if metrics.eventsPerSecond > 50 {
 
 ### Core Event System
 1. **Type-Safe Events**: Strongly-typed `EditorEvent` enum with associated values
-2. **Dependency Injection**: Event system injected via `EditorConfiguration.eventSystem`
+2. **Dependency Injection**: Event system injected via `EditorSetup.runtimeDependencies.eventSystem`
 3. **Combine Integration**: Native support for reactive programming patterns
 4. **Batch Publishing**: Efficient `publishBatch(_:)` for multiple events
 

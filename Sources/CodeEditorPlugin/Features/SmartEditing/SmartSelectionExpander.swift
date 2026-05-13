@@ -31,7 +31,7 @@ public enum SmartSelectionExpander {
     /// - Returns: The expanded range, or nil if expansion not possible
     public static func expandToWord(from range: NSRange, in textView: CodeEditorView) -> NSRange? {
         guard let text = textView.text else { return nil }
-        return RangeUtilities.wordRange(at: range.location, in: text)
+        return TextRangeUtilities.wordRange(at: range.location, in: text)
     }
 
     // MARK: - Line Expansion
@@ -43,7 +43,7 @@ public enum SmartSelectionExpander {
     /// - Returns: The expanded range, or nil if expansion not possible
     public static func expandToLine(from range: NSRange, in textView: CodeEditorView) -> NSRange? {
         guard let text = textView.text else { return nil }
-        return RangeUtilities.lineRange(containing: range.location, in: text)
+        return TextRangeUtilities.lineRange(containing: range.location, in: text)
     }
 
     // MARK: - Bracket Expansion

@@ -38,7 +38,7 @@ Code folding must visually hide folded content without destroying document text 
 - Modifies document text — must virtualize carefully to avoid corrupting the underlying NSTextStorage.
 - CodeEditorPlugin does not have CodeEditSourceEditor's `TextAttachment` base class or `layoutManager.attachments.add/remove` APIs.
 - High risk of document corruption if attachment management has bugs.
-- TextKit2 attachment behavior differs from the older TextKit1 attachment APIs many sample implementations were written against.
+- TextKit2 attachment behavior differs from the older legacy TextKit attachment APIs many sample implementations were written against.
 
 **Risk:** VERY HIGH for first implementation. Not rejecting, but not for initial delivery.
 

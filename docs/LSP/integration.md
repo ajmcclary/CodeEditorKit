@@ -22,7 +22,7 @@ Set a workspace root for file-relative features and local server initialization:
 
 ```swift
 var configuration = EditorConfiguration()
-configuration.workspaceRoot = URL(fileURLWithPath: "/path/to/project")
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(workspaceRoot: URL(fileURLWithPath: "/path/to/project")))
 ```
 
 In SwiftUI, use the environment or the provided modifier:
@@ -164,7 +164,7 @@ For iOS, rely on local framework intelligence unless you have a remote LSP servi
 ```swift
 var configuration = EditorConfiguration()
 configuration.behavior.isCodeCompletionEnabled = true
-configuration.workspaceRoot = projectURL
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(workspaceRoot: projectURL))
 ```
 
 The local completion system still provides descriptor-backed completions for the 25 concrete language catalog plus the plain-text fallback. Use remote LSP only when your app can operate a secure WebSocket endpoint.

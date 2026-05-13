@@ -121,7 +121,7 @@ extension CodeEditorView {
 
     internal func applySyntaxHighlighting() {
         updateRangeBasedHighlightingConfiguration()
-        let syntaxService = businessLogicServices.syntaxHighlightingService
+        let syntaxService = featureDependencies.syntaxHighlightingService
         #if canImport(AppKit)
         let textLength = textStorage?.length ?? 0
         #else
@@ -180,7 +180,7 @@ extension CodeEditorView {
         // Skip the legacy scheduling entirely.
         if isRangeStorePrimary { return }
 
-        let syntaxService = businessLogicServices.syntaxHighlightingService
+        let syntaxService = featureDependencies.syntaxHighlightingService
         #if canImport(AppKit)
         let textLength = textStorage?.length ?? 0
         #else

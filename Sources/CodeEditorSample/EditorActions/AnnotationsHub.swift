@@ -78,7 +78,7 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
 
     func annotations(for range: NSRange) -> [Annotation] {
         let all = currentAnnotations()
-        return all.filter { $0.range.intersects(range) }
+        return all.filter { TextRangeUtilities.overlaps($0.range, range) }
     }
 
     var textViewAnnotations: [CodeEditorViewAnnotation] {

@@ -31,7 +31,7 @@ import UIKit
 ///
 /// // Inject via configuration
 /// var config = EditorConfiguration()
-/// config.performance.memoryMonitor = monitor
+/// let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor))
 /// config.apply(to: editorView)
 /// ```
 ///

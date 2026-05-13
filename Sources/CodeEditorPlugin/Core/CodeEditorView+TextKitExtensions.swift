@@ -55,7 +55,7 @@ extension CodeEditorView {
             string
         }
         set {
-            let textEditingService = businessLogicServices.textEditingService
+            let textEditingService = featureDependencies.textEditingService
             // Use a large limit for text validation - maxSyntaxHighlightingLength is for highlighting only
             let validationResult = textEditingService.validateTextChange(
                 newText: newValue,
@@ -281,8 +281,8 @@ extension CodeEditorView {
     /// Determines whether text should be changed in the specified range.
     ///
     /// This method is the pre-mutation hook for TextKit2 edits. It publishes a
-    /// `WillEditEvent` so downstream consumers (LSP coordinator, tree-sitter
-    /// provider) can capture state before `NSTextStorage` mutates.
+    /// `WillEditEvent` so downstream consumers can capture state before
+    /// `NSTextStorage` mutates.
     ///
     /// ## Validation Process
     ///

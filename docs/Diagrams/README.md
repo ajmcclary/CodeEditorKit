@@ -2,7 +2,7 @@
 
 This directory contains architectural diagrams for the CodeEditorPlugin framework, illustrating major components, systems, integrations, and their data flows.
 
-> **Note (0.2.0):** several diagrams in this folder were authored while Mac Catalyst was a supported platform and TextKit1 was a live fallback. As of 0.2.0 both have been retired — the framework targets macOS and iOS only, and TextKit2 is the only supported layout system. Catalyst-specific boxes / class members in the mermaid sources below are preserved for historical context but no longer reflect source. The platform-abstraction diagram (#8) carries an explicit historical-snapshot banner. For the current state, see [`docs/Platform/platform-abstraction.md`](../Platform/platform-abstraction.md) and [`docs/FeatureMatrix.md`](../FeatureMatrix.md).
+> **Note (0.2.0):** several diagrams in this folder were authored while Mac Catalyst was a supported platform and legacy TextKit was a live fallback. As of 0.2.0 both have been retired — the framework targets macOS and iOS only, and TextKit2 is the only supported layout system. Catalyst-specific boxes / class members in the mermaid sources below are preserved for historical context but no longer reflect source. The platform-abstraction diagram (#8) carries an explicit historical-snapshot banner. For the current state, see [`docs/Platform/platform-abstraction.md`](../Platform/platform-abstraction.md) and [`docs/FeatureMatrix.md`](../FeatureMatrix.md).
 
 When a diagram conflicts with source or a topic page, treat the source and topic page as authoritative. The diagrams are subsystem maps, not complete generated type inventories.
 
@@ -12,13 +12,13 @@ When a diagram conflicts with source or a topic page, treat the source and topic
 Overview of the entire CodeEditorPlugin framework showing main layers and their relationships. Includes SwiftUI integration, core components, services, configuration, platform abstraction, features, language support, and external integrations.
 
 ### 2. [Core Components Class Diagram](02-core-components-class.md)
-Detailed class diagram of the main components including CodeEditorView, CodeEditorAPI protocol, UnifiedEventSystem, BusinessLogicServiceRegistry, and their relationships. Shows the protocol-oriented design and delegation patterns.
+Detailed class diagram of the main components including CodeEditorView, CodeEditorAPI protocol, UnifiedEventSystem, EditorRuntime, and their relationships. Shows the protocol-oriented design and delegation patterns.
 
 ### 3. [Configuration System](03-configuration-system.md)
 Configuration architecture including EditorConfiguration structure with Display, Layout, Behavior, and Performance sections. Shows presets, validation, and SwiftUI environment integration.
 
 ### 4. [Service Architecture](04-service-architecture.md)
-Service-oriented architecture diagram showing BusinessLogicServiceRegistry and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionProviderRegistry, LineNumberCalculationService, GutterSizingService, CodeFoldingCoordinatorService, EditorLayoutService, MemoryManagementCoordinator).
+Service-oriented architecture diagram showing EditorRuntime and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionProviderRegistry, LineNumberCalculationService, GutterSizingService, CodeFoldingCoordinatorService, EditorLayoutService, MemoryManagementCoordinator).
 
 ### 5. [Event System Flow](05-event-system-flow.md)
 Unified event system flow diagram illustrating event sources (UI, text changes, system, service, configuration), built-in `EditorEvent` creation, filtering, history, Combine subscriptions, and handler-token execution. Adjacent debouncing and async utilities are shown as integration points rather than custom event-type support.
@@ -102,7 +102,7 @@ Shared Mermaid color palette used by the diagrams in this directory.
 
 | File | Status |
 |---|---|
-| `08-platform-abstraction-layer.md` | Historical snapshot from the retired Catalyst/TextKit1 era. |
+| `08-platform-abstraction-layer.md` | Historical snapshot from the retired Catalyst/legacy TextKit era. |
 | `20-debugging-integration.md` | Current implemented debugging integration. |
 | `20-debugging-integration-architecture.md` | Extended design document. |
 | `27-plugin-system-architecture.md` | Planned plugin design; plugin APIs are not implemented. |

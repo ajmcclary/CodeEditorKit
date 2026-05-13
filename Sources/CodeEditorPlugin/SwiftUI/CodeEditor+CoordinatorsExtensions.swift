@@ -55,25 +55,14 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Track if focus has been requested to avoid duplicate requests
     private var hasFocusBeenRequested = false
 
+    private let platformAdapter = CodeEditorPlatformAdapterFactory.make()
+
     /// Request focus for the text view
     func requestFocusIfNeeded(for view: PlatformView, shouldBecomeFirstResponder: Bool) {
         guard shouldBecomeFirstResponder, !hasFocusBeenRequested else { return }
 
         hasFocusBeenRequested = true
-
-        #if canImport(AppKit)
-        if let containerView = view as? CodeEditorContainerView {
-            Task { @MainActor in
-                containerView.window?.makeFirstResponder(containerView.textView)
-            }
-        }
-        #else
-        if let containerView = view as? CodeEditorContainerView {
-            Task { @MainActor in
-                _ = containerView.textView.becomeFirstResponder()
-            }
-        }
-        #endif
+        platformAdapter.requestFocus(for: view)
     }
 
     /// Reset focus tracking when environment changes
@@ -204,11 +193,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     }
 
     private func text(from textView: CodeEditorView) -> String {
-        #if canImport(AppKit)
-        textView.string
-        #else
-        textView.text ?? ""
-        #endif
+        platformAdapter.text(from: textView)
     }
 
     private static func utf16Offset(for cursor: EditorCursorPosition, in text: String) -> Int {
@@ -247,53 +232,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     func setupTextChangeObservers(for textView: CodeEditorView) {
         removeNotificationObservers()
 
-        #if canImport(AppKit)
-        let textChangeObserver = NotificationCenter.default.addObserver(
-            forName: NSText.didChangeNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self, weak textView] _ in
-            MainActor.assumeIsolated {
-                guard let self, let textView else { return }
-                self.handleTextChange(textView.string)
-            }
-        }
-
-        let selectionChangeObserver = NotificationCenter.default.addObserver(
-            forName: NSTextView.didChangeSelectionNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self, weak textView] _ in
-            MainActor.assumeIsolated {
-                guard let self, let textView else { return }
-                self.handleSelectionChange(textView.selectedRange())
-            }
-        }
-        #else
-        let textChangeObserver = NotificationCenter.default.addObserver(
-            forName: UITextView.textDidChangeNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self, weak textView] _ in
-            MainActor.assumeIsolated {
-                guard let self, let textView else { return }
-                self.handleTextChange(textView.text ?? "")
-            }
-        }
-
-        let selectionChangeObserver = NotificationCenter.default.addObserver(
-            forName: UITextView.textDidChangeNotification, // iOS doesn't have separate selection change notification
-            object: textView,
-            queue: .main
-        ) { [weak self, weak textView] _ in
-            MainActor.assumeIsolated {
-                guard let self, let textView else { return }
-                self.handleSelectionChange(textView.selectedRange)
-            }
-        }
-        #endif
-
-        notificationObservers = [textChangeObserver, selectionChangeObserver]
+        notificationObservers = platformAdapter.textChangeObservers(for: textView, coordinator: self)
     }
 
     /// Remove all notification observers
@@ -326,15 +265,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         configuration: EditorConfiguration
     ) {
         // Update text if changed
-        #if canImport(AppKit)
-        if textView.string != text {
-            textView.string = text
-        }
-        #else
-        if textView.text != text {
-            textView.text = text
-        }
-        #endif
+        platformAdapter.setText(text, in: textView, preserveSelection: false)
 
         // Update language if changed
         if textView.language != language {
@@ -358,7 +289,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         language: Language,
         theme _: Theme,
         configuration: EditorConfiguration,
-        memoryMonitor: MemoryMonitor,
+        runtimeDependencies: EditorRuntimeDependencies,
         onTextChange: ((String) -> Void)? = nil,
         onSelectionChange: ((NSRange) -> Void)? = nil
     ) {
@@ -369,15 +300,10 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Get the text view
         let textView = container.textView
 
-        // Set the memory monitor
-        textView.memoryMonitor = memoryMonitor
+        textView.apply(runtimeDependencies: runtimeDependencies)
 
         // Set initial text
-        #if canImport(AppKit)
-        textView.string = text
-        #else
-        textView.text = text
-        #endif
+        platformAdapter.setText(text, in: textView, preserveSelection: false)
 
         // Set language
         textView.language = language
@@ -388,13 +314,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // when switching between dark and light theme variants without
         // baking specific theme tokens (some are near-black even for
         // "light" theme families).
-        #if canImport(AppKit)
-        textView.backgroundColor = .textBackgroundColor
-        textView.textColor = .textColor
-        #else
-        textView.backgroundColor = .systemBackground
-        textView.textColor = .label
-        #endif
+        platformAdapter.applySystemEditorColors(to: textView)
 
         // Apply initial configuration
         container.configuration = configuration
@@ -406,13 +326,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         updateState(text: text, language: language, configuration: configuration)
 
         // Force initial layout
-        #if canImport(AppKit)
-        textView.needsLayout = true
-        textView.needsDisplay = true
-        #else
-        textView.setNeedsLayout()
-        textView.setNeedsDisplay()
-        #endif
+        platformAdapter.invalidateLayoutAndDisplay(for: textView)
     }
 
     /// Update a container view with new values
@@ -421,7 +335,8 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         text: String,
         language: Language,
         theme _: Theme,
-        configuration: EditorConfiguration
+        configuration: EditorConfiguration,
+        runtimeDependencies: EditorRuntimeDependencies
     ) {
         // Check if we need to update
         guard shouldUpdate(text: text, language: language, configuration: configuration) else {
@@ -429,24 +344,10 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         }
 
         let textView = container.textView
+        textView.apply(runtimeDependencies: runtimeDependencies)
 
         // Update text if changed
-        #if canImport(AppKit)
-        if textView.string != text {
-            textView.string = text
-        }
-        #else
-        // On iOS, preserve selection when updating text
-        let savedSelectedRange = textView.selectedRange
-        if textView.text != text {
-            textView.text = text
-
-            // Restore selection if possible
-            if savedSelectedRange.location <= (textView.text ?? "").count {
-                textView.setSelectedRangeWithoutScrolling(savedSelectedRange)
-            }
-        }
-        #endif
+        platformAdapter.setText(text, in: textView, preserveSelection: true)
 
         // Update language if changed
         if textView.language != language {
@@ -455,13 +356,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         // Re-assert system-adaptive editor colors so the canvas tracks
         // the theme appearance via .preferredColorScheme on every update.
-        #if canImport(AppKit)
-        textView.backgroundColor = .textBackgroundColor
-        textView.textColor = .textColor
-        #else
-        textView.backgroundColor = .systemBackground
-        textView.textColor = .label
-        #endif
+        platformAdapter.applySystemEditorColors(to: textView)
 
         // Update configuration if changed
         if container.configuration != configuration {

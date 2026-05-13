@@ -97,7 +97,7 @@ struct SettingsScene: View {
             PerformanceKnobsSection(configuration: $appState.configuration, expansion: .always)
 
         case .workspace:
-            WorkspaceKnobsSection(configuration: $appState.configuration, expansion: .always)
+            WorkspaceKnobsSection(workspaceRoot: $appState.workspaceRoot, expansion: .always)
 
         case .annotations:
             AnnotationsKnobsSection(appState: appState, expansion: .always)

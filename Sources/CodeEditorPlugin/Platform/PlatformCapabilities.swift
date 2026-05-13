@@ -31,7 +31,7 @@ import AppKit
 /// }
 /// 
 /// // Check feature availability
-/// if capabilities.supportsTextKit2 {
+/// if capabilities.supportsRequiredTextKit2Surface {
 ///     // Use TextKit2 features
 /// }
 /// 
@@ -194,7 +194,7 @@ public final class PlatformCapabilities {
         - Device Type: \(deviceType.displayName)
         - Architecture: \(perf.processorArchitecture)
         - Memory Profile: \(perf.memoryProfile)
-        - TextKit2 Support: \(textKit.supportsTextKit2) (Preferred: \(textKit.preferTextKit2))
+        - TextKit2 Required Surface: \(textKit.supportsRequiredTextKit2Surface)
         - Hardware Acceleration: \(perf.supportsHardwareAcceleration)
         - Recommended Cache Size: \(ByteCountFormatter.string(fromByteCount: Int64(perf.recommendedCacheSize), countStyle: .binary))
         - Max File Size: \(ByteCountFormatter.string(fromByteCount: Int64(perf.maxRecommendedFileSize), countStyle: .binary))
@@ -207,7 +207,7 @@ public final class PlatformCapabilities {
 extension CodeEditorView {
     /// Apply platform-optimized configuration
     public func applyPlatformOptimizations() {
-        let capabilities = configuration.platformCapabilities ?? CodeEditorDependencies.makePlatformCapabilities()
+        let capabilities = runtime.dependencies.platformCapabilities
         let config = capabilities.recommendedConfiguration()
         self.configuration = config
     }

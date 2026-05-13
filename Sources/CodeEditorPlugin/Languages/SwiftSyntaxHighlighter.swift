@@ -29,43 +29,7 @@ public enum SwiftTokenType: String, CaseIterable {
 
     /// Returns the appropriate color for this token type
     public var color: PlatformColor {
-        switch self {
-        case .keyword:
-            PlatformColors.systemPurple
-
-        case .identifier:
-            PlatformColors.label
-
-        case .string:
-            PlatformColors.systemRed
-
-        case .number:
-            PlatformColors.systemBlue
-
-        case .comment:
-            PlatformColors.systemGreen
-
-        case .type:
-            PlatformColors.systemTeal
-
-        case .function:
-            PlatformColors.systemIndigo
-
-        case .property:
-            PlatformColors.systemOrange
-
-        case .operator:
-            PlatformColors.systemPink
-
-        case .punctuation:
-            PlatformColors.secondaryLabel
-
-        case .whitespace:
-            PlatformColors.clear
-
-        case .unknown:
-            PlatformColors.label
-        }
+        SyntaxColorScheme.default.color(for: self)
     }
 }
 

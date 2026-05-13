@@ -47,7 +47,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
     @MainActor
     func testTextKit2Support() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
-        XCTAssertTrue(capabilities.supportsTextKit2)
+        XCTAssertTrue(capabilities.supportsRequiredTextKit2Surface)
     }
 
     @MainActor

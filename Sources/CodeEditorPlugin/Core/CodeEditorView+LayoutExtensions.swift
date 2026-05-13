@@ -17,7 +17,7 @@ extension CodeEditorView {
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
 
         // Get cached paragraph style instead of creating new one each time
-        let paragraphStyle = (configuration.paragraphStyleCache ?? CodeEditorDependencies.makeParagraphStyleCache()).paragraphStyle(
+        let paragraphStyle = runtime.dependencies.paragraphStyleCache.paragraphStyle(
             tabWidth: configuration.layout.tabWidth,
             lineHeightMultiple: configuration.layout.lineHeightMultiple,
             font: font

@@ -338,11 +338,11 @@ public final class LanguageDetectionService {
 
     /// Resolves a modeline filetype string to a `Language`.
     ///
-    /// First checks `treeSitterName`, then tries matching the `Language`
+    /// First checks `parserName`, then tries matching the `Language`
     /// raw value, then falls back to `shebangIdentifiers`.
     private func resolveModelineFiletype(_ filetype: String) -> Language? {
-        // Check tree-sitter names first (most common modeline values)
-        for (language, descriptor) in LanguageDescriptor.all where descriptor.treeSitterName == filetype {
+        // Check parser aliases first (most common modeline values)
+        for (language, descriptor) in LanguageDescriptor.all where descriptor.parserName == filetype {
             return language
         }
         // Try raw value match

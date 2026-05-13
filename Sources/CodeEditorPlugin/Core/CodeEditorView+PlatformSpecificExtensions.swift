@@ -46,13 +46,13 @@ extension CodeEditorView {
     ///
     /// - SeeAlso: `language`, `Language`
     public func setLanguage(fileExtension: String) {
-        let languageService = businessLogicServices.languageDetectionService
+        let languageService = featureDependencies.languageDetectionService
         language = languageService.detectLanguage(fromExtension: fileExtension)
     }
 
     /// Get all supported file extensions for syntax highlighting
     public var supportedFileExtensions: [String] {
-        let languageService = businessLogicServices.languageDetectionService
+        let languageService = featureDependencies.languageDetectionService
         return Array(languageService.getAllSupportedExtensions())
     }
 

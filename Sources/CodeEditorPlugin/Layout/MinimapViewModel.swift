@@ -180,12 +180,12 @@ public final class MinimapViewModel {
 
     // MARK: - Private Properties
 
-    private let businessLogicServices: BusinessLogicServiceRegistry
+    private let featureDependencies: EditorFeatureRuntimeDependencies
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "MinimapViewModel")
 
     // Services
     private var lineNumberService: LineNumberCalculationService {
-        businessLogicServices.lineNumberCalculationService
+        featureDependencies.lineNumberCalculationService
     }
 
     // Text view reference (weak to avoid retain cycles)
@@ -214,13 +214,13 @@ public final class MinimapViewModel {
     /// Initializes the minimap view model
     /// - Parameters:
     ///   - configuration: Editor configuration
-    ///   - businessLogicServices: Registry of business logic services
+    ///   - featureDependencies: Registry of business logic services
     public init(
         configuration: EditorConfiguration,
-        businessLogicServices: BusinessLogicServiceRegistry
+        featureDependencies: EditorFeatureRuntimeDependencies
     ) {
         self.configuration = configuration
-        self.businessLogicServices = businessLogicServices
+        self.featureDependencies = featureDependencies
         self.minimapState = MinimapState()
         self.interaction = MinimapInteraction()
 

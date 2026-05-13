@@ -350,17 +350,14 @@ extension Language {
 /// - ``whitespace`` - Spaces, tabs, and newlines (typically not visible)
 /// - ``unknown`` - Unrecognized tokens
 ///
-/// ## Platform-Specific Colors
+/// ## Theme Colors
 ///
-/// Colors automatically adapt to the current platform and appearance:
+/// Colors resolve through the active theme when one is applied, falling back
+/// to ``SyntaxColorScheme`` defaults for callers that do not have a theme:
 ///
 /// ```swift
-/// let keywordColor = TokenType.keyword.adaptiveColor
-/// // Returns appropriate color for current platform and dark/light mode
+/// let keywordColor = SyntaxColorScheme.color(for: .keyword, in: theme)
 /// ```
-///
-/// - Note: On macOS, colors integrate with the system's source code
-///         appearance preferences when available.
 ///
 /// - SeeAlso: ``HighlightedToken``, ``Theme``, ``TokenName``
 public enum TokenType: String, CaseIterable, Sendable {
@@ -403,57 +400,60 @@ public enum TokenType: String, CaseIterable, Sendable {
     /// Tokens that don't match any other category
     case unknown
 
-    /// Cross-platform adaptive color property.
-    ///
-    /// Returns a color that automatically adapts to the current platform
-    /// and appearance settings (light/dark mode). On macOS, integrates
-    /// with system source code appearance preferences when available.
-    ///
-    /// ```swift
-    /// let color = TokenType.keyword.adaptiveColor
-    /// textStorage.addAttribute(.foregroundColor, value: color, range: range)
-    /// ```
-    ///
-    /// - Important: Always use this property instead of hardcoded colors
-    ///              to ensure proper appearance across platforms.
+    /// Cross-platform color property backed by ``SyntaxColorScheme``.
+    /// Prefer `SyntaxColorScheme.color(for:in:)` when an applied theme is available.
     @MainActor public var adaptiveColor: PlatformColor {
-        #if canImport(AppKit)
-        AdaptiveColorSystem.syntaxColor(for: self)
-        #else
-        defaultColor
-        #endif
+        SyntaxColorScheme.default.color(for: self)
     }
 
-    /// Legacy color property - use adaptiveColor for macOS compatibility.
-    ///
-    /// This property is maintained for backward compatibility but
-    /// `adaptiveColor` should be preferred for new code.
-    ///
-    /// - SeeAlso: ``adaptiveColor``
+    /// Legacy color property backed by ``SyntaxColorScheme``.
     @MainActor public var color: PlatformColor {
         adaptiveColor
     }
 
-    #if canImport(UIKit)
-    /// Default colors for iOS
-    @MainActor public var defaultColor: PlatformColor {
+    /// Theme token used for this syntax category.
+    public var tokenName: TokenName {
         switch self {
-        case .keyword: return .systemPurple
-        case .identifier: return .label
-        case .string: return .systemRed
-        case .number: return .systemBlue
-        case .comment: return .systemGreen
-        case .type: return .systemTeal
-        case .function: return .systemIndigo
-        case .property: return .systemOrange
-        case .operator: return .systemBrown
-        case .punctuation: return .secondaryLabel
-        case .whitespace: return .clear
-        case .preprocessor: return .systemPink
-        case .unknown: return .label
+        case .keyword:
+            "keyword"
+
+        case .identifier:
+            "variable"
+
+        case .string:
+            "string"
+
+        case .number:
+            "number"
+
+        case .comment:
+            "comment"
+
+        case .type:
+            "type"
+
+        case .function:
+            "function"
+
+        case .property:
+            "property"
+
+        case .operator:
+            "operator"
+
+        case .punctuation:
+            "punctuation"
+
+        case .whitespace:
+            TokenName.default
+
+        case .preprocessor:
+            "preprocessor"
+
+        case .unknown:
+            TokenName.default
         }
     }
-    #endif
 
     /// Convert from color to closest token type
     static func fromColor(_ color: PlatformColor, scheme: SyntaxColorScheme) -> Self {
@@ -543,11 +543,8 @@ public enum TokenType: String, CaseIterable, Sendable {
 /// ```swift
 /// // Apply highlighting to text storage
 /// for token in highlightedTokens {
-///     textStorage.addAttribute(
-///         .foregroundColor,
-///         value: token.type.adaptiveColor,
-///         range: token.range
-///     )
+///     let color = SyntaxColorScheme.default.color(for: token.type)
+///     textStorage.addAttribute(.foregroundColor, value: color, range: token.range)
 /// }
 /// ```
 ///

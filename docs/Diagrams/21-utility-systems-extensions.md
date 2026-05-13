@@ -548,7 +548,7 @@ flowchart TB
 ```swift
 // Create ActorCoordinator via dependency injection
 var config = EditorConfiguration()
-config.actorCoordinator = ActorCoordinator.create()
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(actorCoordinator: ActorCoordinator.create()))
 
 // Use through CodeEditorView
 let processedText = try await editorView.processText(
@@ -611,7 +611,7 @@ monitor.registerCleanupHandler(
 monitor.startMonitoring()
 
 // Inject via configuration
-config.performance.memoryMonitor = monitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor))
 ```
 
 ### Text Metrics & Performance

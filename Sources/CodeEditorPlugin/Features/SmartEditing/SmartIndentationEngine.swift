@@ -29,7 +29,7 @@ public enum SmartIndentationEngine {
         #endif
 
         // Get the current line
-        let lineRange = RangeUtilities.lineRange(containing: location, in: textStorage.string)
+        let lineRange = TextRangeUtilities.lineRange(containing: location, in: textStorage.string)
         let currentLine = textStorage.attributedSubstring(from: lineRange).string
 
         // Extract current indentation

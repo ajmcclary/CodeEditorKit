@@ -27,7 +27,7 @@ let coordinator = ActorCoordinator.create()
 
 // Configure in EditorConfiguration
 var config = EditorConfiguration()
-config.actorCoordinator = coordinator
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(actorCoordinator: coordinator))
 
 // Deprecated: Avoid using the singleton
 // let coordinator = ActorCoordinator.shared  // ⚠️ Deprecated
@@ -227,7 +227,7 @@ class MyEditorViewController {
     let coordinator: ActorCoordinator
     
     init(configuration: EditorConfiguration) {
-        self.coordinator = configuration.actorCoordinator ?? ActorCoordinator.create()
+        self.coordinator = runtime.dependencies.actorCoordinator
     }
 }
 
@@ -243,7 +243,7 @@ class MyEditorViewController {
 // Coordinators are lightweight, create as needed
 func createEditor() -> CodeEditorView {
     var config = EditorConfiguration()
-    config.actorCoordinator = ActorCoordinator.create()
+    let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(actorCoordinator: ActorCoordinator.create()))
     return CodeEditorView(configuration: config)
 }
 ```

@@ -17,7 +17,7 @@ struct InspectorSidebar: View {
             content: {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        LSPStatusPanel(workspaceRoot: appState.configuration.workspaceRoot)
+                        LSPStatusPanel(workspaceRoot: appState.workspaceRoot)
                         AnnotationsInspectorPanel(
                             hub: appState.annotationsHub,
                             controller: appState.editorController

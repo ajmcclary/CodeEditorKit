@@ -153,6 +153,37 @@ final class FeatureBehaviorTests: CleanupTestCase {
         }
     }
 
+    func testSymbolProviderCatalogCoversEveryLanguage() {
+        let catalog = SymbolProviderCatalog.default
+
+        for language in Language.allCases {
+            XCTAssertTrue(catalog.hasProvider(for: language), "\(language.name) should be registered in SymbolProviderCatalog")
+        }
+    }
+
+    func testSymbolNavigatorCachesPreserveSearchBreadcrumbAndLookupBehavior() async throws {
+        let editor = createCodeEditorView()
+        editor.language = .swift
+        editor.text = String(repeating: " ", count: 200)
+
+        var catalog = SymbolProviderCatalog()
+        catalog.registerProvider(StaticDocumentSymbolProvider(), for: .swift)
+
+        let navigator = SymbolNavigator(providerCatalog: catalog)
+        navigator.attach(to: editor)
+
+        _ = try await waitForSymbols(in: navigator)
+
+        let inner = try XCTUnwrap(navigator.symbol(at: 35))
+        XCTAssertEqual(inner.name, "inner")
+        XCTAssertEqual(navigator.symbol(withId: inner.id)?.name, "inner")
+        XCTAssertEqual(navigator.searchSymbols(query: "inn").map(\.name), ["inner"])
+
+        editor.selectedRange = NSRange(location: 35, length: 0)
+        navigator.updateBreadcrumbs()
+        XCTAssertEqual(navigator.currentBreadcrumbs.map { $0.symbol.name }, ["Outer", "inner"])
+    }
+
     private func waitForFoldableRegion(in engine: CodeFoldingEngine) async throws -> FoldableRegion {
         for _ in 0..<20 {
             if let region = engine.foldableRegions.first {
@@ -163,5 +194,36 @@ final class FeatureBehaviorTests: CleanupTestCase {
 
         XCTFail("Expected at least one foldable region")
         throw CancellationError()
+    }
+
+    private func waitForSymbols(in navigator: SymbolNavigator) async throws -> [DocumentSymbol] {
+        for _ in 0..<30 {
+            if !navigator.symbols.isEmpty {
+                return navigator.symbols
+            }
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+
+        XCTFail("Expected symbols to be detected")
+        throw CancellationError()
+    }
+}
+
+private struct StaticDocumentSymbolProvider: DocumentSymbolProvider {
+    func detectSymbols(in _: String) async -> [DocumentSymbol] {
+        [
+            DocumentSymbol(
+                name: "Outer",
+                kind: .class,
+                range: NSRange(location: 0, length: 120),
+                selectionRange: NSRange(location: 0, length: 5)
+            ),
+            DocumentSymbol(
+                name: "inner",
+                kind: .method,
+                range: NSRange(location: 20, length: 30),
+                selectionRange: NSRange(location: 20, length: 5)
+            )
+        ]
     }
 }

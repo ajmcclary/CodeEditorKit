@@ -15,9 +15,13 @@ public class SymbolNavigator: ObservableObject {
     // MARK: - Properties
 
     private weak var textView: CodeEditorView?
-    private var providers: [Language: DocumentSymbolProvider] = [:]
+    private var providerCatalog: SymbolProviderCatalog
     private var updateTask: Task<Void, Never>?
     private let asyncOperationManager = AsyncOperationManager()
+
+    private var flattenedSymbolsCache: [DocumentSymbol] = []
+    private var symbolByIdCache: [UUID: DocumentSymbol] = [:]
+    private var symbolRangeIndex = SymbolRangeIndex<DocumentSymbol>()
 
     // MARK: - Configuration
 
@@ -25,8 +29,8 @@ public class SymbolNavigator: ObservableObject {
 
     // MARK: - Initialization
 
-    public init() {
-        setupDefaultProviders()
+    public init(providerCatalog: SymbolProviderCatalog = .default) {
+        self.providerCatalog = providerCatalog
     }
 
     /// Attach to a text view
@@ -39,57 +43,12 @@ public class SymbolNavigator: ObservableObject {
 
     /// Register a symbol provider for a language
     public func registerProvider(_ provider: DocumentSymbolProvider, for language: Language) {
-        providers[language] = provider
+        providerCatalog.registerProvider(provider, for: language)
         logger.info("Registered symbol provider for \(language.name)")
     }
 
     internal func hasProvider(for language: Language) -> Bool {
-        providers[language] != nil
-    }
-
-    private func setupDefaultProviders() {
-        // Register default providers
-        registerProvider(SwiftSymbolProvider(), for: .swift)
-        registerProvider(JavaScriptSymbolProvider(), for: .javascript)
-        registerProvider(JavaScriptSymbolProvider(), for: .typescript)
-
-        // C-style languages can use the same provider
-        let cStyleProvider = CStyleSymbolProvider()
-        registerProvider(cStyleProvider, for: .c)
-        registerProvider(cStyleProvider, for: .cpp)
-        registerProvider(cStyleProvider, for: .java)
-        registerProvider(cStyleProvider, for: .go)
-        registerProvider(cStyleProvider, for: .rust)
-
-        // Python indentation-based provider
-        registerProvider(PythonSymbolProvider(), for: .python)
-
-        // Markdown section provider
-        registerProvider(MarkdownSymbolProvider(), for: .markdown)
-
-        // Web technologies
-        registerProvider(HTMLSymbolProvider(), for: .html)
-        registerProvider(CSSSymbolProvider(), for: .css)
-
-        // Data formats
-        registerProvider(JSONSymbolProvider(), for: .json)
-        registerProvider(YAMLSymbolProvider(), for: .yaml)
-        registerProvider(XMLSymbolProvider(), for: .xml)
-
-        // Databases and scripting
-        registerProvider(SQLSymbolProvider(), for: .sql)
-        registerProvider(RubySymbolProvider(), for: .ruby)
-        registerProvider(PHPSymbolProvider(), for: .php)
-        registerProvider(ShellSymbolProvider(), for: .shell)
-
-        // Newly added languages enter through the Tree-sitter provider facade.
-        // The spike delegates to heuristics today and moves to tags.scm later.
-        registerProvider(TreeSitterSymbolProvider(language: .csharp), for: .csharp)
-        registerProvider(TreeSitterSymbolProvider(language: .kotlin), for: .kotlin)
-        registerProvider(TreeSitterSymbolProvider(language: .dart), for: .dart)
-        registerProvider(TreeSitterSymbolProvider(language: .dockerfile), for: .dockerfile)
-        registerProvider(TreeSitterSymbolProvider(language: .toml), for: .toml)
-        registerProvider(TreeSitterSymbolProvider(language: .lua), for: .lua)
+        providerCatalog.hasProvider(for: language)
     }
 
     // MARK: - Symbol Detection
@@ -115,13 +74,15 @@ public class SymbolNavigator: ObservableObject {
     }
 
     private func detectSymbols() async {
-        guard let textView, let provider = providers[textView.language] else {
+        guard let textView, let provider = providerCatalog.provider(for: textView.language) else {
             symbols = []
+            invalidateSymbolCaches()
             return
         }
         #if canImport(AppKit)
         guard let text = textView.textStorage?.string else {
             symbols = []
+            invalidateSymbolCaches()
             return
         }
         #else
@@ -139,6 +100,7 @@ public class SymbolNavigator: ObservableObject {
 
         // Update symbols
         symbols = symbolTree
+        rebuildSymbolCaches()
 
         // Update breadcrumbs based on current cursor position
         updateBreadcrumbs()
@@ -156,7 +118,7 @@ public class SymbolNavigator: ObservableObject {
         for symbol in sorted {
             // Pop symbols from stack that don't contain current symbol
             while let parent = symbolStack.last,
-                  !RangeUtilities.contains(parent.range, symbol.range) {
+                  !TextRangeUtilities.contains(parent.range, symbol.range) {
                 symbolStack.removeLast()
             }
 
@@ -192,6 +154,43 @@ public class SymbolNavigator: ObservableObject {
             }
             updateSymbolInTree(&tree[index].children, updated: updated)
         }
+    }
+
+    // MARK: - Cache Management
+
+    private func invalidateSymbolCaches() {
+        flattenedSymbolsCache.removeAll()
+        symbolByIdCache.removeAll()
+        symbolRangeIndex.removeAll()
+    }
+
+    private func rebuildSymbolCaches() {
+        invalidateSymbolCaches()
+
+        var flattened: [DocumentSymbol] = []
+        flattenSymbolsInto(symbols, into: &flattened)
+        flattenedSymbolsCache = flattened
+
+        for symbol in flattened {
+            symbolByIdCache[symbol.id] = symbol
+            symbolRangeIndex.insert(range: symbol.range, value: symbol)
+        }
+    }
+
+    private func flattenSymbolsInto(_ symbols: [DocumentSymbol], into result: inout [DocumentSymbol]) {
+        for symbol in symbols {
+            result.append(symbol)
+            flattenSymbolsInto(symbol.children, into: &result)
+        }
+    }
+
+    private var flattenedSymbols: [DocumentSymbol] {
+        if flattenedSymbolsCache.isEmpty, symbols.isEmpty == false {
+            var flattened: [DocumentSymbol] = []
+            flattenSymbolsInto(symbols, into: &flattened)
+            flattenedSymbolsCache = flattened
+        }
+        return flattenedSymbolsCache
     }
 
     // MARK: - Navigation
@@ -234,7 +233,7 @@ public class SymbolNavigator: ObservableObject {
     }
 
     private func findNextSymbol(after location: Int) -> DocumentSymbol? {
-        let allSymbols = flattenSymbols(symbols)
+        let allSymbols = flattenedSymbols
 
         return allSymbols
             .filter { $0.range.location > location }
@@ -242,7 +241,7 @@ public class SymbolNavigator: ObservableObject {
     }
 
     private func findPreviousSymbol(before location: Int) -> DocumentSymbol? {
-        let allSymbols = flattenSymbols(symbols)
+        let allSymbols = flattenedSymbols
 
         return allSymbols
             .filter { $0.range.location < location }
@@ -251,12 +250,7 @@ public class SymbolNavigator: ObservableObject {
 
     private func flattenSymbols(_ symbols: [DocumentSymbol]) -> [DocumentSymbol] {
         var flattened: [DocumentSymbol] = []
-
-        for symbol in symbols {
-            flattened.append(symbol)
-            flattened.append(contentsOf: flattenSymbols(symbol.children))
-        }
-
+        flattenSymbolsInto(symbols, into: &flattened)
         return flattened
     }
 
@@ -270,36 +264,28 @@ public class SymbolNavigator: ObservableObject {
         }
 
         let cursorLocation = textView.selectedRange.location
-        var breadcrumbs: [BreadcrumbItem] = []
-
-        // Find symbols containing cursor
-        var currentSymbols = symbols
-
-        while !currentSymbols.isEmpty {
-            if let containingSymbol = currentSymbols.first(where: {
-                RangeUtilities.contains($0.range, NSRange(location: cursorLocation, length: 0))
-            }) {
-                breadcrumbs.append(BreadcrumbItem(
-                    symbol: containingSymbol,
-                    level: breadcrumbs.count
-                ))
-                currentSymbols = containingSymbol.children
-            } else {
-                break
+        currentBreadcrumbs = symbolRangeIndex
+            .findContaining(location: cursorLocation)
+            .sorted { lhs, rhs in
+                if lhs.range.length == rhs.range.length {
+                    return lhs.range.location < rhs.range.location
+                }
+                return lhs.range.length > rhs.range.length
             }
-        }
-
-        currentBreadcrumbs = breadcrumbs
+            .enumerated()
+            .map { index, symbol in
+                BreadcrumbItem(symbol: symbol, level: index)
+            }
     }
 
     // MARK: - Symbol Search
 
     /// Search symbols by name
     public func searchSymbols(query: String) -> [DocumentSymbol] {
-        guard !query.isEmpty else { return flattenSymbols(symbols) }
+        guard !query.isEmpty else { return flattenedSymbols }
 
         let fuzzyMatcher = FuzzyMatcher()
-        let allSymbols = flattenSymbols(symbols)
+        let allSymbols = flattenedSymbols
         let symbolNames = allSymbols.map { $0.name }
 
         let matches = fuzzyMatcher.match(pattern: query, candidates: symbolNames)
@@ -311,18 +297,19 @@ public class SymbolNavigator: ObservableObject {
 
     /// Get symbol at location
     public func symbol(at location: Int) -> DocumentSymbol? {
-        findDeepestSymbol(containing: location, in: symbols)
+        symbolRangeIndex
+            .findContaining(location: location)
+            .min { lhs, rhs in
+                if lhs.range.length == rhs.range.length {
+                    return lhs.range.location > rhs.range.location
+                }
+                return lhs.range.length < rhs.range.length
+            }
     }
 
-    private func findDeepestSymbol(containing location: Int, in symbols: [DocumentSymbol]) -> DocumentSymbol? {
-        for symbol in symbols where RangeUtilities.contains(symbol.range, NSRange(location: location, length: 0)) {
-            // Check children for deeper match
-            if let childMatch = findDeepestSymbol(containing: location, in: symbol.children) {
-                return childMatch
-            }
-            return symbol
-        }
-        return nil
+    /// Get a cached symbol by ID.
+    public func symbol(withId id: UUID) -> DocumentSymbol? {
+        symbolByIdCache[id]
     }
 
     deinit {

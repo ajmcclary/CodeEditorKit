@@ -33,22 +33,7 @@ extension NSRange {
 
     /// Apply a range mutation to this range
     func apply(_ mutation: RangeMutation) -> NSRange? {
-        let mutationRange = mutation.range
-        let delta = mutation.delta
-
-        // If mutation is before this range, shift the range
-        if mutationRange.upperBound <= location {
-            return NSRange(location: location + delta, length: length)
-        }
-
-        // If mutation is after this range, no change
-        if mutationRange.location >= upperBound {
-            return self
-        }
-
-        // If mutation overlaps with this range, it's more complex
-        // For now, return nil to indicate the range is invalidated
-        return nil
+        RangeMutationEngine.transformSingle(self, applying: mutation, policy: .invalidateOnOverlap)
     }
 
     /// Returns a range clamped to the given limiting range

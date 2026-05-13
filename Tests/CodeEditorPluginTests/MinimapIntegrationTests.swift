@@ -116,8 +116,8 @@ final class MinimapIntegrationTests: XCTestCase {
     @MainActor
     func testMinimapViewModel() async {
         let config = EditorConfiguration()
-        let services = BusinessLogicServiceRegistry()
-        let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
+        let services = EditorFeatureRuntimeDependencies()
+        let viewModel = MinimapViewModel(configuration: config, featureDependencies: services)
 
         // Test initial state
         XCTAssertEqual(viewModel.minimapState.isVisible, config.display.isMinimapVisible, "Visibility should match config")
@@ -140,8 +140,8 @@ final class MinimapIntegrationTests: XCTestCase {
     func testMinimapViewModelTextChange() async {
         var config = EditorConfiguration()
         config.display.isMinimapVisible = true
-        let services = BusinessLogicServiceRegistry()
-        let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
+        let services = EditorFeatureRuntimeDependencies()
+        let viewModel = MinimapViewModel(configuration: config, featureDependencies: services)
 
         // Test text change
         viewModel.textDidChange("Line 1\nLine 2\nLine 3")
@@ -159,8 +159,8 @@ final class MinimapIntegrationTests: XCTestCase {
     func testMinimapViewModelInteraction() async {
         var config = EditorConfiguration()
         config.display.isMinimapVisible = true
-        let services = BusinessLogicServiceRegistry()
-        let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
+        let services = EditorFeatureRuntimeDependencies()
+        let viewModel = MinimapViewModel(configuration: config, featureDependencies: services)
 
         // Set up frame
         viewModel.updateFrame(CGRect(x: 0, y: 0, width: 60, height: 400))

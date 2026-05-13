@@ -112,7 +112,7 @@ classDiagram
         +provideCompletions()
     }
 
-    class BaseCompletionProvider {
+    class UniversalCompletionProvider {
         <<base class>>
         +provideCompletions()
         +buildCompletions()
@@ -173,7 +173,7 @@ classDiagram
     }
 
     %% Relationships
-    CompletionProvider <|.. BaseCompletionProvider : implements
+    CompletionProvider <|.. UniversalCompletionProvider : implements
     CompletionProvider <|.. UniversalCompletionProvider : implements
     CompletionProvider <|.. LSPCompletionProvider : implements
 
@@ -196,7 +196,7 @@ classDiagram
     classDef shared fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class CompletionProvider protocol
-    class BaseCompletionProvider base
+    class UniversalCompletionProvider base
     class CompletionProviderRegistry registry
     class LanguageProviderFactory factory
     class LanguageMetadataRegistry registry

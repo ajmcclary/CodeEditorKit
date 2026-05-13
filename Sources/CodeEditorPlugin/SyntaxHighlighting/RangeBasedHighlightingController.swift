@@ -32,8 +32,8 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     ///   - textView: The editor view to observe.
     ///   - language: The language to highlight.
     ///   - externalProvider: An optional `RangeHighlightProviding` to use
-    ///     instead of the default regex-backed adapter. When non-nil (e.g.
-    ///     a `TreeSitterRangeHighlightProvider`), it is used directly.
+    ///     instead of the default regex-backed adapter. When non-nil, it is
+    ///     used directly.
     ///     When nil, the standard `SyntaxHighlighterRangeAdapter` is used.
     internal init(
         textView: CodeEditorView,
@@ -52,7 +52,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         let container = StyledRangeContainer(documentLength: documentLength)
         let providerID = container.registerProvider(priority: 0)
 
-        // Use external provider (Tree-sitter) if supplied, otherwise fall back
+        // Use external provider if supplied, otherwise fall back
         // to the regex-backed SyntaxHighlighter adapter.
         let provider: any RangeHighlightProviding
         if let externalProvider {
@@ -72,8 +72,14 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
             documentLength: documentLength
         )
         self.visibleRangeProvider = VisibleRangeProvider(textView: textView)
-        self.styleDataSource = StyledMinimapStyleDataSource(container: container) { capture in
-            TokenType(rawValue: capture)?.adaptiveColor ?? PlatformColors.label
+        self.styleDataSource = StyledMinimapStyleDataSource(container: container) { [weak textView] capture in
+            if let theme = textView?.appliedTheme {
+                return SyntaxColorScheme.color(forCapture: capture, in: theme)
+            }
+            if let tokenType = TokenType(rawValue: capture) {
+                return SyntaxColorScheme.default.color(for: tokenType)
+            }
+            return SyntaxColorScheme.default.plain
         }
         self.applier = RangeAttributeApplier(textView: textView, container: container)
         self.previousSourceSnapshot = Self.sourceString(from: textView)

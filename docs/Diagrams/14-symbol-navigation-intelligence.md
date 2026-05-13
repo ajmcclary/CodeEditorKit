@@ -18,7 +18,7 @@ classDiagram
         +updateBreadcrumbs()
     }
 
-    class OptimizedSymbolNavigator {
+    class SymbolNavigator {
         <<optimized navigator>>
         +flattenedSymbolsCache [DocumentSymbol]
         +symbolByIdCache [UUID: DocumentSymbol]
@@ -249,7 +249,7 @@ classDiagram
         +updateBreadcrumbs()
     }
 
-    class RangeUtilities {
+    class TextRangeUtilities {
         <<utilities>>
         +contains(range, otherRange) Bool
         +intersects(range, otherRange) Bool
@@ -289,9 +289,9 @@ classDiagram
     SymbolNavigator --> AsyncOperationManager : coordinates async operations
     SymbolNavigator --> BreadcrumbItem : generates
     
-    OptimizedSymbolNavigator --> IntervalTree : uses for range queries
-    OptimizedSymbolNavigator --> LRUCache : caches symbols  
-    OptimizedSymbolNavigator --> OptimizedFuzzyMatcher : searches symbols
+    SymbolNavigator --> IntervalTree : uses for range queries
+    SymbolNavigator --> LRUCache : caches symbols  
+    SymbolNavigator --> OptimizedFuzzyMatcher : searches symbols
     
     DocumentSymbolProvider <|-- SwiftSymbolProvider : implements
     DocumentSymbolProvider <|-- JavaScriptSymbolProvider : implements
@@ -316,11 +316,11 @@ classDiagram
     OptimizedFuzzyMatcher --> MatchResult : produces
     
     AsyncOperationManager --> SymbolNavigator : manages debouncing
-    AsyncOperationManager --> OptimizedSymbolNavigator : manages operations
+    AsyncOperationManager --> SymbolNavigator : manages operations
     
     IntervalTree --> DocumentSymbol : indexes
     SymbolTreeBuilder --> DocumentSymbol : builds hierarchy
-    NavigationLogic --> RangeUtilities : uses utilities
+    NavigationLogic --> TextRangeUtilities : uses utilities
 
     %% Styling - Dark mode friendly colors
     classDef navigator fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
@@ -335,7 +335,7 @@ classDiagram
     classDef utilities fill:#FFCC0020,stroke:#FFCC00,stroke-width:2px,color:#1D1D1F
 
     class SymbolNavigator navigator
-    class OptimizedSymbolNavigator navigator
+    class SymbolNavigator navigator
     class DocumentSymbolProvider provider
     class SwiftSymbolProvider provider
     class PythonSymbolProvider provider
@@ -360,7 +360,7 @@ classDiagram
     class LSPSymbolInformation lsp
     class SymbolTreeBuilder utilities
     class NavigationLogic utilities
-    class RangeUtilities utilities
+    class TextRangeUtilities utilities
     class SymbolNavigationConfiguration config
     class DocumentSymbolKind enum
     class CleanupResult utilities
@@ -373,7 +373,7 @@ classDiagram
 sequenceDiagram
     participant User as User
     participant Editor as CodeEditorView
-    participant Navigator as OptimizedSymbolNavigator
+    participant Navigator as SymbolNavigator
     participant AsyncMgr as AsyncOperationManager
     participant Provider as DocumentSymbolProvider
     participant IntervalTree as IntervalTree

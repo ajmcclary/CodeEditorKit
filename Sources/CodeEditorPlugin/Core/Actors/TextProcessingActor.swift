@@ -16,7 +16,7 @@ public actor TextProcessingActor {
     public struct TextProcessor {
         let id: UUID
         let type: ProcessorType
-        let priority: TaskPriority
+        let priority: TextProcessingPriority
         var isCancelled: Bool = false
 
         public enum ProcessorType: Sendable {
@@ -28,9 +28,21 @@ public actor TextProcessingActor {
         }
     }
 
+    /// Priority levels for editor text-processing work.
+    public enum TextProcessingPriority: Int, Comparable, Sendable {
+        case low = 0
+        case normal = 1
+        case high = 2
+        case critical = 3
+
+        public static func < (lhs: TextProcessingPriority, rhs: TextProcessingPriority) -> Bool {
+            lhs.rawValue < rhs.rawValue
+        }
+    }
+
     // MARK: - Helper Methods
 
-    private func convertToSwiftPriority(_ priority: TaskPriority) -> _Concurrency.TaskPriority {
+    private func convertToSwiftPriority(_ priority: TextProcessingPriority) -> _Concurrency.TaskPriority {
         switch priority {
         case .low: return .low
         case .normal: return .medium
@@ -43,7 +55,7 @@ public actor TextProcessingActor {
     public func process(
         text: String,
         with processorType: TextProcessor.ProcessorType,
-        priority: TaskPriority = .high
+        priority: TextProcessingPriority = .high
     ) async throws -> String {
         let processorId = UUID()
         let processor = TextProcessor(

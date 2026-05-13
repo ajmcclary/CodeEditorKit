@@ -9,7 +9,7 @@ import UIKit
 
 // MARK: - TextKitLineNumberHelper
 
-/// Helper for calculating line numbers and positions without forcing TextKit 1 compatibility mode
+/// Helper for calculating line numbers and positions through the TextKit2 surface.
 @MainActor
 public final class TextKitLineNumberHelper {
     // MARK: - Properties

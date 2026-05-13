@@ -45,87 +45,105 @@ final class MutableMockMemoryProvider: PlatformMemoryProvider {
 
 final class MemoryMonitorDITests: XCTestCase {
     @MainActor
-    func testMemoryMonitorConfigurationInjection() {
-        // Create a custom memory monitor
+    func testMemoryMonitorRuntimeInjection() {
         let customMonitor = MemoryMonitor()
-        customMonitor.memoryThresholdMB = 200.0 // Set a distinctive value
+        customMonitor.memoryThresholdMB = 200.0
 
-        // Create configuration with custom memory monitor
-        var config = EditorConfiguration()
-        config.performance.memoryMonitor = customMonitor
-
-        // Create editor view using initializer with memory monitor
         let editor = CodeEditorView(frame: .zero, memoryMonitor: customMonitor)
 
-        // Verify the custom monitor was injected via initializer
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 200.0, "Memory monitor should be injected via initializer")
 
-        // Apply configuration with a different monitor
         let anotherMonitor = MemoryMonitor()
         anotherMonitor.memoryThresholdMB = 300.0
-        config.performance.memoryMonitor = anotherMonitor
-        try? config.apply(to: editor)
+        editor.apply(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: anotherMonitor))
 
-        // Verify the monitor was updated from configuration
-        XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 300.0, "Memory monitor should be updated from configuration")
+        XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 300.0, "Memory monitor should be updated from runtime dependencies")
     }
 
     @MainActor
-    func testMemoryMonitorBuilderInjection() {
-        // Create a custom memory monitor
+    func testEditorSetupRuntimeInjection() throws {
         let customMonitor = MemoryMonitor()
         customMonitor.memoryThresholdMB = 250.0
 
-        // Inject the custom monitor through the configuration directly.
-        var config = EditorConfiguration()
-        config.performance.memoryMonitor = customMonitor
-
-        // Create editor view
         let editor = CodeEditorView()
+        let setup = EditorSetup(
+            configuration: EditorConfiguration(),
+            runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: customMonitor)
+        )
 
-        // Apply configuration
-        try? config.apply(to: editor)
+        try setup.apply(to: editor)
 
-        // Verify the custom monitor was injected via configuration
-        XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 250.0, "Memory monitor should be injected from builder configuration")
+        XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 250.0, "Memory monitor should be injected from editor setup")
     }
 
     @MainActor
-    func testMemoryMonitorDefaultWhenNilInConfiguration() {
-        // Create configuration without memory monitor
+    func testConfigurationApplyDoesNotReplaceRuntimeMemoryMonitor() {
         let config = EditorConfiguration()
-        XCTAssertNil(config.performance.memoryMonitor, "Default configuration should have nil memory monitor")
-
-        // Create editor view with its own monitor
         let editor = CodeEditorView()
         let originalMonitor = editor.memoryMonitor
 
-        // Apply configuration
         try? config.apply(to: editor)
 
-        // Verify the original monitor is still used
-        XCTAssertIdentical(editor.memoryMonitor, originalMonitor, "Editor should keep its original monitor when config has nil")
+        XCTAssertIdentical(editor.memoryMonitor, originalMonitor, "Editor configuration should not carry runtime dependencies")
     }
 
     @MainActor
-    func testMemoryMonitorUpdatePropagation() {
-        // Create editor view
+    func testEditorSetupAppliesRuntimeDependenciesOutsideConfiguration() throws {
+        let editor = CodeEditorView()
+        let eventSystem = UnifiedEventSystem(enableDefaultFilters: false)
+        let memoryMonitor = MemoryMonitor()
+        let metadataRegistry = LanguageMetadataRegistry()
+        let workspaceRoot = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("CodeEditorRuntime")
+        var configuration = EditorConfiguration()
+        configuration.display.fontSize = 17
+
+        let setup = EditorSetup(
+            configuration: configuration,
+            runtimeDependencies: EditorRuntimeDependencies(
+                workspaceRoot: workspaceRoot,
+                eventSystem: eventSystem,
+                memoryMonitor: memoryMonitor,
+                languageMetadataRegistry: metadataRegistry
+            )
+        )
+
+        try setup.apply(to: editor)
+
+        XCTAssertEqual(editor.configuration.display.fontSize, 17)
+        XCTAssertIdentical(editor.runtime.dependencies.eventSystem, eventSystem)
+        XCTAssertIdentical(editor.runtime.dependencies.memoryMonitor, memoryMonitor)
+        XCTAssertIdentical(editor.runtime.dependencies.languageMetadataRegistry, metadataRegistry)
+        XCTAssertEqual(editor.runtime.dependencies.workspaceRoot, workspaceRoot)
+        #if canImport(AppKit)
+        XCTAssertEqual(editor.lspManager.workspaceRoot, workspaceRoot)
+        #endif
+
+        let provider = editor.featureDependencies.completionProviderRegistry.ensureProvider(for: .python)
+        XCTAssertTrue(provider is UniversalCompletionProvider)
+
+        var valueOnlyConfiguration = editor.configuration
+        valueOnlyConfiguration.display.fontSize = 19
+        try valueOnlyConfiguration.apply(to: editor)
+
+        XCTAssertEqual(editor.configuration.display.fontSize, 19)
+        XCTAssertIdentical(editor.runtime.dependencies.eventSystem, eventSystem)
+        XCTAssertIdentical(editor.runtime.dependencies.memoryMonitor, memoryMonitor)
+        XCTAssertEqual(editor.runtime.dependencies.workspaceRoot, workspaceRoot)
+    }
+
+    @MainActor
+    func testMemoryMonitorRuntimeUpdatePropagation() {
         let editor = CodeEditorView()
 
-        // Create and apply first monitor
         let monitor1 = MemoryMonitor()
         monitor1.memoryThresholdMB = 150.0
-        var config = EditorConfiguration()
-        config.performance.memoryMonitor = monitor1
-        try? config.apply(to: editor)
+        editor.apply(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor1))
 
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 150.0, "First monitor should be applied")
 
-        // Create and apply second monitor
         let monitor2 = MemoryMonitor()
         monitor2.memoryThresholdMB = 175.0
-        config.performance.memoryMonitor = monitor2
-        try? config.apply(to: editor)
+        editor.apply(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor2))
 
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 175.0, "Second monitor should replace the first")
     }

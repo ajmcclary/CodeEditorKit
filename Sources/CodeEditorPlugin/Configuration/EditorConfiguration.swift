@@ -1,9 +1,4 @@
 import Foundation
-#if canImport(AppKit)
-import AppKit
-#elseif canImport(UIKit)
-import UIKit
-#endif
 
 /// Comprehensive configuration system for customizing code editor behavior and appearance.
 ///
@@ -105,138 +100,42 @@ public struct EditorConfiguration: Codable, Sendable {
     /// Performance configuration
     public var performance = Performance()
 
-    /// Event system for publishing and subscribing to editor events
-    /// If nil, no events will be published
-    public var eventSystem: UnifiedEventSystem?
-
-    /// Actor coordinator for managing specialized actors
-    /// If nil, a new instance will be created when needed
-    @available(macOS 13.0, iOS 16.0, *)
-    public var actorCoordinator: ActorCoordinator?
-
-    /// Workspace root URL for LSP and file operations
-    /// If set, enables language server protocol features with the specified workspace root
-    public var workspaceRoot: URL?
-
-    // MARK: - Injectable Dependencies
-    //
-    // These properties support dependency injection instead of singleton access.
-    //
-    // ## Isolation contract (Swift 6 strict concurrency)
-    //
-    // `EditorConfiguration` is a `Sendable` value type, but four of these
-    // injection slots are `@MainActor`-isolated because the underlying
-    // services touch UIKit / AppKit state (`PlatformCapabilities`,
-    // `UnifiedPerformanceSystem`, `LanguageMetadataRegistry`,
-    // `PlatformServiceLayer`). Reading or writing those properties from a
-    // background actor will fail to compile under strict concurrency — that
-    // is intentional. The expected usage pattern is:
-    //
-    //   1. Build a configuration from any actor context using
-    //      `EditorConfiguration(layout:display:behavior:performance:)`
-    //      (the non-`@MainActor` initializer).
-    //   2. If you need to inject MainActor-bound services, switch to the
-    //      `@MainActor public init(...)` overload (declared below) or
-    //      assign the properties from a `@MainActor`-isolated context.
-    //   3. `Codable` round-trips drop the four `@MainActor` slots and the
-    //      `eventSystem` slot — they are treated as runtime-only injection
-    //      points. See `init(from:)` and `encode(to:)` at the bottom of this
-    //      file. Consumers persisting configuration to disk get the value
-    //      types (`layout`, `display`, `behavior`, `performance`); they
-    //      re-inject the live services after decoding.
-    //
-    // `paragraphStyleCache` is an actor-agnostic cache (its own internal
-    // `DispatchQueue` provides thread-safety — see ParagraphStyleCache.swift)
-    // so it does not require `@MainActor` isolation here.
-
-    /// Platform capabilities provider.
-    /// `@MainActor` because the underlying detection touches UIKit/AppKit.
-    /// If nil, the configured dependency factory will be used.
-    @MainActor public var platformCapabilities: PlatformCapabilities?
-
-    /// Unified performance monitoring system.
-    /// `@MainActor` because the system observes view-hierarchy events.
-    /// If nil, the configured dependency factory will be used.
-    @MainActor public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
-
-    /// Paragraph style cache for text rendering.
-    /// Internally synchronized — safe to use from any actor.
-    /// If nil, the configured dependency factory will be used.
-    public var paragraphStyleCache: ParagraphStyleCache?
-
-    /// Language metadata registry for completion and highlighting.
-    /// `@MainActor` because the registry caches view-derived metrics.
-    /// If nil, the configured dependency factory will be used.
-    @MainActor public var languageMetadataRegistry: LanguageMetadataRegistry?
-
-    /// Platform service layer for cross-platform operations.
-    /// `@MainActor` because the layer dispatches to AppKit/UIKit services.
-    /// If nil, the configured dependency factory will be used.
-    @MainActor public var platformServiceLayer: PlatformServiceLayer?
-
     // MARK: - Initialization
 
     public init() {}
 
-    public init(layout: Layout = Layout(), display: Display = Display(), behavior: Behavior = Behavior(), performance: Performance = Performance(), eventSystem: UnifiedEventSystem? = nil) {
-        self.layout = layout
-        self.display = display
-        self.behavior = behavior
-        self.performance = performance
-        self.eventSystem = eventSystem
-    }
-
-    /// Full initializer with all injectable dependencies
-    @MainActor
     public init(
         layout: Layout = Layout(),
         display: Display = Display(),
         behavior: Behavior = Behavior(),
-        performance: Performance = Performance(),
-        eventSystem: UnifiedEventSystem? = nil,
-        platformCapabilities: PlatformCapabilities? = nil,
-        unifiedPerformanceSystem: UnifiedPerformanceSystem? = nil,
-        paragraphStyleCache: ParagraphStyleCache? = nil,
-        languageMetadataRegistry: LanguageMetadataRegistry? = nil,
-        platformServiceLayer: PlatformServiceLayer? = nil
+        performance: Performance = Performance()
     ) {
         self.layout = layout
         self.display = display
         self.behavior = behavior
         self.performance = performance
-        self.eventSystem = eventSystem
-        self.platformCapabilities = platformCapabilities
-        self.unifiedPerformanceSystem = unifiedPerformanceSystem
-        self.paragraphStyleCache = paragraphStyleCache
-        self.languageMetadataRegistry = languageMetadataRegistry
-        self.platformServiceLayer = platformServiceLayer
     }
 
     // MARK: - Convenience Methods
 
     /// Create a new configuration with updated layout
     public func with(layout: Layout) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance)
     }
 
     /// Create a new configuration with updated display
     public func with(display: Display) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance)
     }
 
     /// Create a new configuration with updated behavior
     public func with(behavior: Behavior) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance)
     }
 
     /// Create a new configuration with updated performance
     public func with(performance: Performance) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
-    }
-
-    /// Create a new configuration with updated event system
-    public func with(eventSystem: UnifiedEventSystem?) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance)
     }
 
     // MARK: - Validation
@@ -365,12 +264,10 @@ public struct EditorConfiguration: Codable, Sendable {
 
 extension EditorConfiguration: Equatable {
     public static func == (lhs: EditorConfiguration, rhs: EditorConfiguration) -> Bool {
-        // Compare all properties except eventSystem
         lhs.layout == rhs.layout &&
         lhs.display == rhs.display &&
         lhs.behavior == rhs.behavior &&
         lhs.performance == rhs.performance
-        // eventSystem is intentionally excluded from equality comparison
     }
 }
 
@@ -382,7 +279,6 @@ extension EditorConfiguration {
         case display
         case behavior
         case performance
-        // eventSystem and injectable dependencies are intentionally excluded from serialization
     }
 
     /// Initializes an EditorConfiguration from a decoder
@@ -394,13 +290,6 @@ extension EditorConfiguration {
         self.display = try container.decode(Display.self, forKey: .display)
         self.behavior = try container.decode(Behavior.self, forKey: .behavior)
         self.performance = try container.decode(Performance.self, forKey: .performance)
-        // Non-serialized properties are always nil when decoding
-        self.eventSystem = nil
-        self.platformCapabilities = nil
-        self.unifiedPerformanceSystem = nil
-        self.paragraphStyleCache = nil
-        self.languageMetadataRegistry = nil
-        self.platformServiceLayer = nil
     }
 
     /// Encodes the EditorConfiguration to an encoder
@@ -412,6 +301,5 @@ extension EditorConfiguration {
         try container.encode(display, forKey: .display)
         try container.encode(behavior, forKey: .behavior)
         try container.encode(performance, forKey: .performance)
-        // eventSystem is not encoded
     }
 }

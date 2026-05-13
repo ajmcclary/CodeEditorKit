@@ -21,10 +21,10 @@
 │ CodeEditorTreeSitterLanguages (~35 MB)  │
 │  ├── Grammar binaries (.dylib/.xcframework)│
 │  ├── Query files (.scm)                 │
-│  ├── TreeSitterCaptureMap (per-lang)    │
-│  ├── TreeSitterInjectionLayer           │
-│  ├── TreeSitterFoldProvider             │
-│  └── TreeSitterSymbolProvider           │
+│  ├── QueryCaptureMap (per-lang)    │
+│  ├── EmbeddedLanguageInjectionLayer           │
+│  ├── HeuristicFoldProvider             │
+│  └── HeuristicSymbolProviderFacade           │
 └─────────────────────────────────────────┘
 ```
 
@@ -32,15 +32,15 @@
 
 All Tree-sitter types are `internal` and live in:
 ```
-Sources/CodeEditorPlugin/SyntaxHighlighting/TreeSitter/
-├── TreeSitterRangeHighlightProvider.swift
-├── TreeSitterCaptureMap.swift
-├── TreeSitterInjectionLayer.swift
-├── TreeSitterFoldProvider.swift
-└── TreeSitterSymbolProvider.swift
+Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/
+├── RegexRangeHighlightProvider.swift
+├── QueryCaptureMap.swift
+├── EmbeddedLanguageInjectionLayer.swift
+├── HeuristicFoldProvider.swift
+└── HeuristicSymbolProviderFacade.swift
 ```
 
-The spike uses `RegexBackedTreeSitterParser` — a regex-backed implementation that proves the architecture without requiring C grammar binaries.
+The spike uses `RegexBackedRangeQueryParser` — a regex-backed implementation that proves the architecture without requiring C grammar binaries.
 
 ## Public Runtime Gate
 
@@ -49,11 +49,11 @@ There is currently no public runtime Tree-sitter gate. `Package.swift` does not 
 ## Extraction Checklist
 
 - [ ] Create `CodeEditorTreeSitterLanguages` target in `Package.swift`
-- [ ] Move `Sources/CodeEditorPlugin/SyntaxHighlighting/TreeSitter/` to new target
-- [ ] Replace `RegexBackedTreeSitterParser` with real C Tree-sitter integration
+- [ ] Move `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/` to new target
+- [ ] Replace `RegexBackedRangeQueryParser` with real C Tree-sitter integration
 - [ ] Add grammar binaries as target resources
 - [ ] Add query files as target resources
-- [ ] Make `TreeSitterParserProtocol` public API
+- [ ] Make `RangeQueryParserProtocol` public API
 - [ ] Add consumer integration guide (this file serves as the draft)
 - [ ] CI pipeline for grammar binary updates
 
@@ -93,7 +93,7 @@ These stay in the core editor regardless:
 
 | Component | Why |
 |-----------|-----|
-| `LanguageDescriptor.treeSitterName` | Data field — no code dependency |
+| `LanguageDescriptor.parserName` | Data field — no code dependency |
 | `RangeHighlightProviding` protocol | Core interface — used by LSP, spellcheck too |
 | `RangeBasedHighlightingController` | Core pipeline — accepts any provider |
 | `SyntaxHighlighterRangeAdapter` | Regex adapter — default provider |

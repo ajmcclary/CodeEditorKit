@@ -248,6 +248,48 @@ final class CompletionSystemTests: XCTestCase {
     }
 
     @MainActor
+    func testAllDescriptorLanguagesUseUniversalCompletionProvider() throws {
+        for language in Language.allCases {
+            let provider = try XCTUnwrap(
+                LanguageProviderFactory.createProvider(for: language),
+                "\(language.name) should create a descriptor-backed provider"
+            )
+
+            XCTAssertTrue(
+                provider is UniversalCompletionProvider,
+                "\(language.name) should use UniversalCompletionProvider"
+            )
+            XCTAssertEqual(provider.id, "\(language.rawValue)-universal")
+        }
+    }
+
+    @MainActor
+    func testDescriptorSnippetsSurfaceInGeneralCompletionContext() async throws {
+        let provider = try XCTUnwrap(LanguageProviderFactory.createProvider(for: .python))
+        let context = CompletionContextModel(
+            text: "",
+            cursorPosition: 0,
+            language: .python,
+            triggerKind: .manual
+        )
+
+        let result = try await provider.completions(for: context)
+        let snippet = try XCTUnwrap(result.items.first { $0.kind == .snippet && $0.label == "def" })
+
+        XCTAssertTrue(snippet.snippetSupport)
+        XCTAssertTrue(snippet.insertText.contains("${1:function_name}"))
+    }
+
+    @MainActor
+    func testCompletionProfilesExposeDescriptorModulesMembersAndTriggers() throws {
+        let swiftProfile = try XCTUnwrap(LanguageProviderFactory.profile(for: .swift))
+
+        XCTAssertTrue(swiftProfile.triggerCharacters.contains("."))
+        XCTAssertTrue(swiftProfile.commonModules.contains("Foundation"))
+        XCTAssertFalse(swiftProfile.memberCompletions.createMemberCompletions(for: "String", filter: "count").isEmpty)
+    }
+
+    @MainActor
     func testLanguageProviderFactorySwiftCompletions() async throws {
         let provider = try XCTUnwrap(LanguageProviderFactory.createProvider(for: .swift))
         let language = Language.swift

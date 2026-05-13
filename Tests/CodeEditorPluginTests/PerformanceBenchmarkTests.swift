@@ -219,7 +219,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
         measure(options: Self.ultraFastMeasureOptions) {
             // Query various capabilities with reduced count
             for _ in 0..<100 { // Reduced from 1_000
-                _ = capabilities.textKitCapabilities.supportsTextKit2
+                _ = capabilities.textKitCapabilities.supportsRequiredTextKit2Surface
                 _ = capabilities.performanceCapabilities.supportsHardwareAcceleration
                 _ = capabilities.isFeatureAvailable(.syntaxHighlighting)
                 _ = capabilities.recommendedConfiguration()

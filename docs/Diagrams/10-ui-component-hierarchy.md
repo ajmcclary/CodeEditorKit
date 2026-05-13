@@ -88,7 +88,7 @@ classDiagram
         +minimapView MinimapView
         +contentView EditorContentView
         +configuration EditorConfiguration
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +layoutViews() Void
         +applyConfiguration() Void
     }
@@ -97,7 +97,7 @@ classDiagram
         &lt;&lt;TextKit2 Editor&gt;&gt;
         +language Language
         +memoryMonitor MemoryMonitor
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +textKitBridge TextKitBridge
         +viewportManager ViewportManager
         +setupAccessibility() Void
@@ -499,7 +499,7 @@ graph TB
 - **ObserverStore**: Thread-safe notification observer management
 
 **Enhanced Container Management**:
-- Dependency injection for all services through BusinessLogicServiceRegistry
+- Dependency injection for all services through EditorRuntime
 - Proper memory management with weak references and automatic cleanup
 - Platform-specific optimizations for performance and user experience
 
@@ -526,7 +526,7 @@ graph TB
 - **Background Processing**: Async text processing with cancellation support
 
 **Rendering Optimizations**:
-- TextKit2 integration (TextKit1 fallback retired in 0.2.0)
+- TextKit2 integration (legacy layout fallback retired in 0.2.0)
 - Hardware acceleration detection and utilization
 - Efficient line number rendering with minimal redraws
 - Smart invalidation for syntax highlighting and layout
@@ -589,4 +589,4 @@ graph TB
 9. **AccessibilitySupport**: Comprehensive VoiceOver and Dynamic Type integration
 10. **AdaptiveLayoutProvider**: Dynamic layout system for all screen sizes
 11. **UnifiedDrawingCoordinator**: Cross-platform drawing abstraction
-12. **BusinessLogicServiceRegistry**: Dependency injection and service coordination
+12. **EditorRuntime**: Dependency injection and service coordination

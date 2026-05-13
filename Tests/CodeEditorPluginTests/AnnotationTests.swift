@@ -357,22 +357,12 @@ final class AnnotationTests: XCTestCase {
     func testAnnotationTextKit2Integration() {
         textView.text = "TextKit2 annotation test"
 
-        // Check if using TextKit2
-        let usingTextKit2 = textView.textLayoutManager != nil
-
-        if usingTextKit2 {
-            // Test TextKit2 specific functionality
-            guard let textLayoutManager = textView.textLayoutManager else {
-                XCTFail("TextKit2 layout manager not available")
-                return
-            }
-
-            XCTAssertNotNil(textLayoutManager.textContentManager)
-        } else {
-            // Test TextKit1 fallback
-            XCTAssertNotNil(textView.layoutManager)
-            XCTAssertNotNil(textView.textContainer)
+        guard let textLayoutManager = textView.textLayoutManager else {
+            XCTFail("TextKit2 layout manager not available")
+            return
         }
+
+        XCTAssertNotNil(textLayoutManager.textContentManager)
     }
 
     // MARK: - Performance Tests

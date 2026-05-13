@@ -15,8 +15,7 @@ enum ConfigurationCodeFormatter {
             ("Display", displayLines(configuration, baseline: baseline)),
             ("Layout", layoutLines(configuration, baseline: baseline)),
             ("Behavior", behaviorLines(configuration, baseline: baseline)),
-            ("Performance", performanceLines(configuration, baseline: baseline)),
-            ("Workspace", workspaceLines(configuration, baseline: baseline))
+            ("Performance", performanceLines(configuration, baseline: baseline))
         ]
 
         var out = "var config = EditorConfiguration()\n"
@@ -262,23 +261,6 @@ enum ConfigurationCodeFormatter {
         }
         if live.iOSMaxHighlightingChunk != base.iOSMaxHighlightingChunk {
             lines.append("\(prefix).iOSMaxHighlightingChunk = \(live.iOSMaxHighlightingChunk)")
-        }
-        return lines
-    }
-
-    // MARK: - Workspace
-
-    private static func workspaceLines(
-        _ live: EditorConfiguration,
-        baseline: EditorConfiguration
-    ) -> [String] {
-        var lines: [String] = []
-        if live.workspaceRoot != baseline.workspaceRoot {
-            if let root = live.workspaceRoot {
-                lines.append("config.workspaceRoot = URL(fileURLWithPath: \(swiftStringLiteral(root.path)))")
-            } else {
-                lines.append("config.workspaceRoot = nil")
-            }
         }
         return lines
     }

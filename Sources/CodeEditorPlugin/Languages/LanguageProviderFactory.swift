@@ -19,42 +19,22 @@ public enum LanguageProviderFactory {
             return nil
         }
 
-        let memberCompletions = descriptor.memberCompletions ?? DefaultMemberCompletions()
-
-        let metadata = LanguageMetadata(
-            keywords: descriptor.keywords,
-            types: descriptor.types,
-            functions: descriptor.functions,
-            literals: descriptor.literals,
-            triggerCharacters: descriptor.triggerCharacters,
-            memberCompletions: memberCompletions
-        )
-
         return UniversalCompletionProvider(
             language: language,
-            metadata: metadata
+            profile: CompletionProfile(descriptor: descriptor)
         )
     }
 
-    /// Creates metadata for a specific language
+    /// Creates a descriptor-derived completion profile for a specific language.
     ///
-    /// This is useful when you need direct access to the metadata
+    /// This is useful when you need direct access to completion data
     /// without creating a full provider.
-    public static func metadata(for language: Language) -> LanguageMetadata? {
+    public static func profile(for language: Language) -> CompletionProfile? {
         guard let descriptor = LanguageDescriptor.descriptor(for: language) else {
             return nil
         }
 
-        let memberCompletions = descriptor.memberCompletions ?? DefaultMemberCompletions()
-
-        return LanguageMetadata(
-            keywords: descriptor.keywords,
-            types: descriptor.types,
-            functions: descriptor.functions,
-            literals: descriptor.literals,
-            triggerCharacters: descriptor.triggerCharacters,
-            memberCompletions: memberCompletions
-        )
+        return CompletionProfile(descriptor: descriptor)
     }
 
     /// Gets all supported languages
@@ -76,14 +56,14 @@ public final class UniversalCompletionProvider: CompletionProvider {
     public let supportsSnippets = true
 
     private let language: Language
-    private let metadata: LanguageMetadata
+    private let profile: CompletionProfile
 
-    init(language: Language, metadata: LanguageMetadata) {
+    init(language: Language, profile: CompletionProfile) {
         self.language = language
-        self.metadata = metadata
+        self.profile = profile
         self.id = "\(language.rawValue)-universal"
         self.supportedLanguages = [language]
-        self.triggerCharacters = metadata.triggerCharacters
+        self.triggerCharacters = profile.triggerCharacters
     }
 
     // MARK: - CompletionProvider Implementation
@@ -92,63 +72,78 @@ public final class UniversalCompletionProvider: CompletionProvider {
         let startTime = Date()
 
         // Use shared context analysis
-        let analysisResult = SharedContextAnalyzer.analyzeContext(context, for: language)
+        let analysisResult = profile.analyze(context)
         var items: [CompletionItemModel] = []
 
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .keyword:
             items.append(contentsOf: SharedCompletionBuilder.createKeywordCompletions(
-                from: metadata.keywords,
+                from: profile.keywords,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
 
         case .type:
             items.append(contentsOf: SharedCompletionBuilder.createTypeCompletions(
-                from: metadata.types,
+                from: profile.types,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
 
         case .function:
             items.append(contentsOf: SharedCompletionBuilder.createFunctionCompletions(
-                from: metadata.functions,
+                from: profile.functions,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
 
         case .literal:
             items.append(contentsOf: SharedCompletionBuilder.createLiteralCompletions(
-                from: metadata.literals,
+                from: profile.literals,
+                filter: analysisResult.filter,
+                languageName: language.rawValue.capitalized
+            ))
+            items.append(contentsOf: SharedCompletionBuilder.createModuleCompletions(
+                from: profile.commonModules,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
 
         case .member:
-            items.append(contentsOf: metadata.memberCompletions.createMemberCompletions(
+            items.append(contentsOf: profile.memberCompletions.createMemberCompletions(
                 for: analysisResult.targetType,
                 filter: analysisResult.filter
             ))
 
         case .general:
             items.append(contentsOf: SharedCompletionBuilder.createKeywordCompletions(
-                from: metadata.keywords,
+                from: profile.keywords,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
             items.append(contentsOf: SharedCompletionBuilder.createTypeCompletions(
-                from: metadata.types,
+                from: profile.types,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
             items.append(contentsOf: SharedCompletionBuilder.createFunctionCompletions(
-                from: metadata.functions,
+                from: profile.functions,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
             items.append(contentsOf: SharedCompletionBuilder.createLiteralCompletions(
-                from: metadata.literals,
+                from: profile.literals,
+                filter: analysisResult.filter,
+                languageName: language.rawValue.capitalized
+            ))
+            items.append(contentsOf: SharedCompletionBuilder.createSnippetCompletions(
+                from: profile.snippets,
+                filter: analysisResult.filter,
+                languageName: language.rawValue.capitalized
+            ))
+            items.append(contentsOf: SharedCompletionBuilder.createModuleCompletions(
+                from: profile.commonModules,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
@@ -172,16 +167,6 @@ public final class UniversalCompletionProvider: CompletionProvider {
 }
 
 // MARK: - Supporting Types
-
-/// Metadata container for a specific language
-public struct LanguageMetadata {
-    let keywords: [String]
-    let types: [String]
-    let functions: [String]
-    let literals: [String]
-    let triggerCharacters: [String]
-    let memberCompletions: LanguageMemberCompletions
-}
 
 /// Protocol for language-specific member completions
 public protocol LanguageMemberCompletions: Sendable {

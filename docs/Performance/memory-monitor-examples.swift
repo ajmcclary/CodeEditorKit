@@ -17,7 +17,7 @@ func basicMemoryMonitorSetup() {
     // Create editor with custom monitor
     let editor = CodeEditorView()
     var config = EditorConfiguration()
-    config.performance.memoryMonitor = memoryMonitor
+    let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor))
     config.apply(to: editor)
 }
 
@@ -60,7 +60,7 @@ class EditorManager {
         let editor = CodeEditorView()
 
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = editorMemoryMonitor
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: editorMemoryMonitor))
         config.apply(to: editor)
 
         return editor
@@ -124,7 +124,7 @@ struct DocumentEditor: View {
     let memoryMonitor: MemoryMonitor
     private var configuration: EditorConfiguration {
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = memoryMonitor
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor))
         config.display.isLineNumbersEnabled = true
         return config
     }
@@ -160,7 +160,7 @@ class EditorTests: XCTestCase {
         // Configure editor
         let editor = CodeEditorView()
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = testMonitor
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: testMonitor))
         config.apply(to: editor)
 
         // Trigger cleanup

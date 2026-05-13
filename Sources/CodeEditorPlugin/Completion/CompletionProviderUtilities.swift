@@ -44,7 +44,7 @@ public enum CompletionProviderUtilities {
     public static func calculateRelevanceScore(
         item: String,
         filter: String,
-        contextType: CompletionContextType
+        contextType: UniversalContextAnalysisResult.CompletionType
     ) -> Double {
         var score = 1.0
 
@@ -63,14 +63,14 @@ public enum CompletionProviderUtilities {
         case .keyword:
             score += 3.0
 
-        case .general:
-            score += 2.5
-
         case .function:
             score += 2.0
 
         case .member:
             score += 1.5
+
+        case .general:
+            score += 2.5
 
         default:
             break

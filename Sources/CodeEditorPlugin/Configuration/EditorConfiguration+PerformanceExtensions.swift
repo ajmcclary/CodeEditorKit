@@ -97,42 +97,6 @@ extension EditorConfiguration {
         /// memory spikes. This sets the maximum characters per chunk.
         public var iOSMaxHighlightingChunk: Int = 100_000 // 100KB
 
-        /// Custom memory monitor instance for tracking memory usage.
-        ///
-        /// When nil, the code editor will create its own instance.
-        /// Set this to share a memory monitor across multiple views or
-        /// to provide a custom implementation for testing.
-        ///
-        /// ## Example
-        ///
-        /// ```swift
-        /// // Create custom monitor
-        /// let monitor = MemoryMonitor()
-        /// monitor.memoryThresholdMB = 200.0
-        /// monitor.enableAutomaticCleanup = true
-        /// 
-        /// // Inject via configuration
-        /// var config = EditorConfiguration()
-        /// config.performance.memoryMonitor = monitor
-        /// config.apply(to: editorView)
-        /// ```
-        /// 
-        /// ## Shared Monitor Pattern
-        /// 
-        /// ```swift
-        /// // Share monitor across multiple editors
-        /// let sharedMonitor = MemoryMonitor()
-        /// 
-        /// var config = EditorConfiguration()
-        /// config.performance.memoryMonitor = sharedMonitor
-        /// 
-        /// config.apply(to: editor1)
-        /// config.apply(to: editor2)
-        /// ```
-        ///
-        /// See `docs/Performance/memory-monitoring.md` for integration examples.
-        public var memoryMonitor: MemoryMonitor?
-
         // MARK: - Initialization
 
         public init() {}
@@ -196,7 +160,6 @@ extension EditorConfiguration.Performance: Codable {
         }()
         iOSLargeFileThreshold = try container.decodeIfPresent(Int.self, forKey: .iOSLargeFileThreshold) ?? 1_048_576
         iOSMaxHighlightingChunk = try container.decodeIfPresent(Int.self, forKey: .iOSMaxHighlightingChunk) ?? 100_000
-        // memoryMonitor is not decoded - it's a runtime dependency
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -215,7 +178,6 @@ extension EditorConfiguration.Performance: Codable {
         try container.encode(enableIOSOptimizations, forKey: .enableIOSOptimizations)
         try container.encode(iOSLargeFileThreshold, forKey: .iOSLargeFileThreshold)
         try container.encode(iOSMaxHighlightingChunk, forKey: .iOSMaxHighlightingChunk)
-        // memoryMonitor is not encoded - it's a runtime dependency
     }
 }
 
@@ -223,7 +185,6 @@ extension EditorConfiguration.Performance: Codable {
 
 extension EditorConfiguration.Performance: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        // Compare all properties except memoryMonitor
         lhs.maxSyntaxHighlightingLength == rhs.maxSyntaxHighlightingLength &&
         lhs.useHardwareAcceleration == rhs.useHardwareAcceleration &&
         lhs.renderingUpdateStrategy == rhs.renderingUpdateStrategy &&
@@ -237,6 +198,5 @@ extension EditorConfiguration.Performance: Equatable {
         lhs.enableIOSOptimizations == rhs.enableIOSOptimizations &&
         lhs.iOSLargeFileThreshold == rhs.iOSLargeFileThreshold &&
         lhs.iOSMaxHighlightingChunk == rhs.iOSMaxHighlightingChunk
-        // memoryMonitor is intentionally excluded from equality comparison
     }
 }

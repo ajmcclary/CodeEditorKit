@@ -21,7 +21,7 @@ flowchart TB
 
     %% Modern TextKit2 Components
     subgraph "Modern TextKit2 Engine"
-        MTK2[ModernTextKit2Bridge<br/>Pure TextKit2 implementation<br/>Cross-platform abstractions<br/>No TextKit1 fallbacks]
+        MTK2[ModernTextKit2Bridge<br/>Pure TextKit2 implementation<br/>Cross-platform abstractions<br/>No legacy layout fallbacks]
         NTLM[NSTextLayoutManager<br/>Delegate support<br/>Advanced layout controls<br/>Fragment enumeration]
         TVLC[TextViewportLayoutController<br/>Viewport-based layout<br/>Efficient scrolling<br/>Delegate-driven updates]
         TK2RO[TextKit2RenderingOptimizer<br/>Fragment caching & recycling<br/>Large file optimizations<br/>Adaptive performance tuning]
@@ -30,7 +30,7 @@ flowchart TB
     %% Actor-Based Processing System
     subgraph "Actor-Based Processing System"
         AC[ActorCoordinator<br/>Central coordination<br/>Dependency injection<br/>Resource management]
-        ATP[AsyncTextProcessor<br/>Priority queues<br/>Adaptive performance<br/>System load monitoring]
+        ATP[TextProcessingActor<br/>Priority queues<br/>Adaptive performance<br/>System load monitoring]
         TPA[TextProcessingActor<br/>Thread-safe operations<br/>Background processing]
         AOF[AsyncOperationManager<br/>Debouncing & throttling<br/>Priority scheduling<br/>Retry logic with backoff]
     end
@@ -314,7 +314,7 @@ internal class ModernTextKit2Bridge: NSObject {
 
 ### 3. Advanced Async Text Processor with System Load Monitoring
 ```swift
-actor AsyncTextProcessor {
+actor TextProcessingActor {
     private var processingQueue = PriorityQueue<ProcessingTask>()
     private var activeTasks: [UUID: Task<ProcessingResult, Error>] = [:]
     private var maxConcurrentOperations: Int
@@ -491,7 +491,7 @@ public final class ViewportManager: ObservableObject {
 
 ### Actor-Based Concurrency
 1. **ActorCoordinator**: Central coordination with dependency injection for specialized actors
-2. **AsyncTextProcessor**: Priority-based task queues with system load monitoring
+2. **TextProcessingActor**: Priority-based task queues with system load monitoring
 3. **TextProcessingActor**: Thread-safe background processing with error recovery
 4. **CacheCoordinatorActor**: Unified cache management with smart eviction policies
 5. **PerformanceMetricsActor**: Real-time performance tracking with aggregated insights

@@ -330,7 +330,7 @@ final class CodeEditorViewTests: XCTestCase {
     }
 
     @MainActor
-    func testAnnotationWithTextKit1() {
+    func testAnnotationWithRequiredTextKit2Surface() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "// TODO: Implement this feature\nlet x = 42"
 
@@ -565,7 +565,7 @@ class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
     func annotations(for range: NSRange) -> [Annotation] {
         // Return annotations that intersect with the given range
         mockAnnotations.filter { annotation in
-            annotation.range.intersects(range)
+            TextRangeUtilities.overlaps(annotation.range, range)
         }
     }
 

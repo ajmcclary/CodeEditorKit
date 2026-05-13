@@ -37,14 +37,9 @@ final class ConfigurationCodeFormatterTests: XCTestCase {
         ))
     }
 
-    func testEscapesWorkspaceRootPath() {
-        var configuration = EditorConfiguration()
-        configuration.workspaceRoot = URL(fileURLWithPath: "/tmp/Project \"A\" \\ Beta")
+    func testDoesNotRenderRuntimeWorkspaceRoot() {
+        let rendered = ConfigurationCodeFormatter.render(EditorConfiguration())
 
-        let rendered = ConfigurationCodeFormatter.render(configuration)
-
-        XCTAssertTrue(rendered.contains(
-            #"config.workspaceRoot = URL(fileURLWithPath: "/tmp/Project \"A\" \\ Beta")"#
-        ))
+        XCTAssertFalse(rendered.contains("workspaceRoot"))
     }
 }

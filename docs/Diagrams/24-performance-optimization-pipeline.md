@@ -457,9 +457,9 @@ sequenceDiagram
 ### With EditorConfiguration
 ```swift
 var config = EditorConfiguration()
-config.actorCoordinator = ActorCoordinator.create()
-config.performance.memoryMonitor = MemoryMonitor()
-let adaptiveMode = AdaptivePerformanceMode(memoryMonitor: config.performance.memoryMonitor)
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(actorCoordinator: ActorCoordinator.create()))
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: MemoryMonitor()))
+let adaptiveMode = AdaptivePerformanceMode(memoryMonitor: runtime.dependencies.memoryMonitor)
 ```
 
 ### With CodeEditorView

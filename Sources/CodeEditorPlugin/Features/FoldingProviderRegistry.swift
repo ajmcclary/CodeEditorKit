@@ -63,15 +63,14 @@ internal final class FoldingProviderRegistry {
         registerProvider(braceProvider, for: .json)
         registerProvider(braceProvider, for: .php)
 
-        // Tree-sitter spike providers wire newly added languages into the
-        // folding pipeline while delegating to existing heuristics where
-        // possible until grammar-backed folding queries land.
-        registerProvider(TreeSitterFoldProvider(language: .csharp), for: .csharp)
-        registerProvider(TreeSitterFoldProvider(language: .kotlin), for: .kotlin)
-        registerProvider(TreeSitterFoldProvider(language: .dart), for: .dart)
-        registerProvider(TreeSitterFoldProvider(language: .dockerfile), for: .dockerfile)
-        registerProvider(TreeSitterFoldProvider(language: .toml), for: .toml)
-        registerProvider(TreeSitterFoldProvider(language: .lua), for: .lua)
+        // Delegating providers wire newly added languages into the folding
+        // pipeline while preserving existing heuristic behavior.
+        registerProvider(HeuristicFoldProvider(language: .csharp), for: .csharp)
+        registerProvider(HeuristicFoldProvider(language: .kotlin), for: .kotlin)
+        registerProvider(HeuristicFoldProvider(language: .dart), for: .dart)
+        registerProvider(HeuristicFoldProvider(language: .dockerfile), for: .dockerfile)
+        registerProvider(HeuristicFoldProvider(language: .toml), for: .toml)
+        registerProvider(HeuristicFoldProvider(language: .lua), for: .lua)
 
         // Python and YAML use indentation-based folding
         let indentationProvider = IndentationFoldingProvider()

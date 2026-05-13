@@ -56,7 +56,7 @@ let monitor = MemoryMonitor()
 monitor.memoryThresholdMB = 250
 
 var config = EditorConfiguration.default
-config.performance.memoryMonitor = monitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor))
 config.performance.maxFileSize = 5_000_000 // 5MB limit
 ```
 
@@ -166,7 +166,7 @@ if let textRange = NSTextRange(validRange) {
 
 ### TextKit2 (always on)
 
-As of 0.2.0 the framework is TextKit2-only on every supported platform — the TextKit1 fallback was retired along with Catalyst. `PlatformCapabilities.supportsTextKit2` always returns `true` on macOS / iOS 26.3+. If you have older code that branches on it, you can simplify the call site.
+As of 0.2.0 the framework is TextKit2-only on every supported platform — the legacy layout fallback was retired along with Catalyst. `PlatformCapabilities.supportsRequiredTextKit2Surface` always returns `true` on macOS / iOS 26.3+. If you have older code that branches on it, you can simplify the call site.
 
 ## Debugging Tips
 
@@ -181,7 +181,7 @@ CrossPlatformLogger.logger().info("Published events: \(metrics?.publishedCount ?
 
 ```swift
 let capabilities = PlatformCapabilities()
-CrossPlatformLogger.logger().info("TextKit2: \(capabilities.supportsTextKit2)")
+CrossPlatformLogger.logger().info("TextKit2: \(capabilities.supportsRequiredTextKit2Surface)")
 CrossPlatformLogger.logger().info("Hardware acceleration: \(capabilities.supportsHardwareAcceleration)")
 CrossPlatformLogger.logger().info("Touch Bar: \(capabilities.supportsTouchBar)")
 ```

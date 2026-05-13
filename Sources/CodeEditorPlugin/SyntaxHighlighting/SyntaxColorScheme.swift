@@ -175,6 +175,77 @@ public struct SyntaxColorScheme: Sendable {
 }
 
 extension SyntaxColorScheme {
+    /// Resolve a high-level syntax token against this color scheme.
+    public func color(for tokenType: TokenType) -> PlatformColor {
+        switch tokenType {
+        case .keyword:
+            keyword
+
+        case .identifier:
+            identifier
+
+        case .string:
+            string
+
+        case .number:
+            number
+
+        case .comment:
+            comment
+
+        case .type:
+            type
+
+        case .function:
+            function
+
+        case .property:
+            property
+
+        case .operator:
+            self.operator
+
+        case .punctuation:
+            punctuation
+
+        case .whitespace:
+            plain.withAlphaComponent(0)
+
+        case .preprocessor:
+            preprocessor
+
+        case .unknown:
+            plain
+        }
+    }
+
+    /// Resolve a regex token through the canonical high-level token mapping.
+    public func color(for tokenType: RegexSyntaxTokenType) -> PlatformColor {
+        color(for: TokenType(fromRegexType: tokenType))
+    }
+
+    /// Resolve a Swift parser token through the canonical high-level token mapping.
+    public func color(for tokenType: SwiftTokenType) -> PlatformColor {
+        color(for: TokenType(fromSwiftType: tokenType))
+    }
+
+    /// Resolve a high-level syntax token through an applied theme.
+    public static func color(for tokenType: TokenType, in theme: Theme) -> PlatformColor {
+        if tokenType == .whitespace {
+            return PlatformColor(tokens: theme.color(forToken: tokenType.tokenName)).withAlphaComponent(0)
+        }
+        return color(forToken: tokenType.tokenName, in: theme)
+    }
+
+    /// Resolve a capture name through an applied theme, using dotted token
+    /// fallback for unknown provider-specific captures.
+    public static func color(forCapture capture: String, in theme: Theme) -> PlatformColor {
+        if let tokenType = TokenType(rawValue: capture) {
+            return color(for: tokenType, in: theme)
+        }
+        return color(forToken: TokenName(capture), in: theme)
+    }
+
     /// Resolve a token-name to its themed `PlatformColor`. Routes through
     /// `Theme.color(forToken:)`, which performs hierarchical dotted
     /// fallback over `style.syntax` and ends at `style.editor.foreground`.

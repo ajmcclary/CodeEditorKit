@@ -30,7 +30,7 @@ Tree-sitter has grammars for ~250 languages. CodeEditorPlugin currently supports
 
 ### Architectural Integration
 
-CodeEditSourceEditor's `TreeSitterExecutor` pattern (priority queue with sync/async fallback) is well-designed. CodeEditorPlugin now has the intended integration surface: `RangeHighlightProviding`, `RangeBasedHighlightingController`, and an internal Tree-sitter-shaped provider.
+CodeEditSourceEditor's `TreeSitterExecutor` pattern (priority queue with sync/async fallback) is well-designed. CodeEditorPlugin now has the intended integration surface: `RangeHighlightProviding`, `RangeBasedHighlightingController`, and an internal range-query provider.
 
 ### Risks
 
@@ -45,8 +45,8 @@ CodeEditSourceEditor's `TreeSitterExecutor` pattern (priority queue with sync/as
 
 Rationale:
 1. The `RangeHighlightProviding` protocol and range-based highlighting infrastructure now exist.
-2. `TreeSitterRangeHighlightProvider` remains internal scaffolding and is no longer wired to public configuration.
-3. The current provider intentionally uses `RegexBackedTreeSitterParser`; it proves the range-provider architecture without adding C grammar binaries or consumer-facing Tree-sitter claims to the core package.
+2. `RegexRangeHighlightProvider` remains internal scaffolding and is no longer wired to public configuration.
+3. The current provider intentionally uses `RegexBackedRangeQueryParser`; it proves the range-provider architecture without adding C grammar binaries or consumer-facing Tree-sitter claims to the core package.
 4. Real Tree-sitter adoption still carries the original build, binary-size, and maintenance risks.
 
 ## Required Actions (before real grammar adoption)

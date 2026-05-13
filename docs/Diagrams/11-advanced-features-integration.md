@@ -81,7 +81,7 @@ classDiagram
         +cleanup(olderThan)
     }
 
-    class OptimizedSymbolNavigator {
+    class SymbolNavigator {
         <<symbol navigation>>
         +providers [DocumentSymbolProvider]
         +symbolRangeIndex IntervalTree<DocumentSymbol>
@@ -362,7 +362,7 @@ classDiagram
     CrossPlatformCoordinator --> TextInputFeatures : uses
 
     %% Enhanced Performance Integration
-    PerformanceInsights --> OptimizedSymbolNavigator : monitors
+    PerformanceInsights --> SymbolNavigator : monitors
     PerformanceInsights --> SmartEditingEngine : monitors
     PerformanceInsights --> SearchReplaceEngine : monitors
     PerformanceInsights --> CodeFoldingEngine : monitors
@@ -370,15 +370,15 @@ classDiagram
     PerformanceInsights --> LSPManager : monitors
 
     %% Advanced Feature Integration with AsyncOperationManager
-    AsyncOperationManager --> OptimizedSymbolNavigator : schedules symbol operations
+    AsyncOperationManager --> SymbolNavigator : schedules symbol operations
     AsyncOperationManager --> SearchReplaceEngine : manages search operations
     AsyncOperationManager --> CodeFoldingEngine : schedules folding operations
     AsyncOperationManager --> DebuggerIntegrationCore : manages debug operations
 
     %% Cache and Processing Integration
-    OptimizedSymbolNavigator --> CacheCoordinatorActor : uses interval tree cache
-    OptimizedSymbolNavigator --> TextProcessingActor : requests symbol processing
-    OptimizedSymbolNavigator --> AsyncOperationManager : uses for debouncing
+    SymbolNavigator --> CacheCoordinatorActor : uses interval tree cache
+    SymbolNavigator --> TextProcessingActor : requests symbol processing
+    SymbolNavigator --> AsyncOperationManager : uses for debouncing
 
     %% Smart Editing Integration
     SmartEditingEngine --> TextProcessingActor : requests text processing
@@ -429,7 +429,7 @@ classDiagram
     class CrossPlatformCoordinator coordinator
     class PerformanceInsights performance
     class AsyncOperationManager performance
-    class OptimizedSymbolNavigator advanced
+    class SymbolNavigator advanced
     class SmartEditingEngine smart
     class SearchReplaceEngine advanced
     class TextInputFeatures platform
@@ -467,7 +467,7 @@ classDiagram
 - **Memory Management Coordination**: Sophisticated memory monitoring with component-specific cleanup strategies
 
 ### 3. Optimized Symbol Navigation & Smart Editing
-- **OptimizedSymbolNavigator**: Interval tree indexing with flattened symbol caching and breadcrumb navigation
+- **SymbolNavigator**: Interval tree indexing with flattened symbol caching and breadcrumb navigation
 - **SmartEditingEngine**: Multi-cursor editing with bracket matching, smart indentation, and selection expansion
 - **Enhanced Search & Replace**: Async search operations with regex support and comprehensive result management
 - **Intelligent Text Input**: Platform-specific text input features with capability detection

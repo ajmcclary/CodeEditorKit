@@ -81,7 +81,7 @@ if !errors.isEmpty {
 // Configure memory monitor through configuration
 var config = EditorConfiguration()
 let memoryMonitor = MemoryMonitor()
-config.performance.memoryMonitor = memoryMonitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor))
 
 // Automatic memory cleanup under pressure
 await memoryMonitor.performCleanup()

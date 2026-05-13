@@ -92,10 +92,10 @@ public final class CodeEditorContainerView: PlatformView {
     /// Initializes the container view with custom services for dependency injection
     /// - Parameters:
     ///   - frame: The frame rectangle for the view
-    ///   - businessLogicServices: Service registry for business logic dependencies
-    public convenience init(frame: CGRect, businessLogicServices: BusinessLogicServiceRegistry) {
+    ///   - featureDependencies: Service registry for business logic dependencies
+    public convenience init(frame: CGRect, featureDependencies: EditorFeatureRuntimeDependencies) {
         self.init(frame: frame)
-        textView.businessLogicServices = businessLogicServices
+        textView.runtime.update(featureDependencies: featureDependencies)
     }
 
     public required init?(coder: NSCoder) {

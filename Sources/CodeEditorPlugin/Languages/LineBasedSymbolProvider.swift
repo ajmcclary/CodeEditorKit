@@ -56,7 +56,7 @@ extension LineBasedSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1 // +1 for newline
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1 // +1 for newline
         }
 
         return symbols
@@ -95,7 +95,7 @@ extension LineBasedSymbolProvider {
         return DocumentSymbol(
             name: String(name),
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: line
         )
     }
@@ -129,13 +129,18 @@ extension LineBasedSymbolProvider {
         // Calculate selection range
         let nameString = String(name)
         let nameStart = fullLine.range(of: nameString)?.lowerBound
-        let selectionStart = nameStart.map { fullLine.distance(from: fullLine.startIndex, to: $0) } ?? 0
+        let selectionStart = nameStart.map { prefixStart in
+            TextRangeUtilities.utf16Length(of: String(fullLine[..<prefixStart]))
+        } ?? 0
 
         return DocumentSymbol(
             name: nameString,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
-            selectionRange: NSRange(location: location + selectionStart, length: name.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
+            selectionRange: NSRange(
+                location: location + selectionStart,
+                length: TextRangeUtilities.utf16Length(of: nameString)
+            ),
             detail: line
         )
     }

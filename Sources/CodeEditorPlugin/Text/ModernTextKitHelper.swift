@@ -5,60 +5,45 @@ import os
 
 // MARK: - ModernTextKitHelper
 
-/// Helper for managing TextKit2 and modern macOS features
+/// Helper for managing required TextKit2 and modern macOS features.
 @MainActor
 enum ModernTextKitHelper {
-    /// Check if TextKit2 should be used
-    static var shouldUseTextKit2: Bool {
-        shouldUseTextKit2(capabilities: CodeEditorDependencies.makePlatformCapabilities())
+    /// Check if the required TextKit2 surface is available.
+    static var supportsRequiredTextKit2Surface: Bool {
+        supportsRequiredTextKit2Surface(capabilities: CodeEditorDependencies.makePlatformCapabilities())
     }
 
-    /// Check if TextKit2 should be used with injectable capabilities
-    static func shouldUseTextKit2(capabilities: PlatformCapabilities) -> Bool {
-        capabilities.preferTextKit2
+    /// Check if the required TextKit2 surface is available with injectable capabilities.
+    static func supportsRequiredTextKit2Surface(capabilities: PlatformCapabilities) -> Bool {
+        capabilities.supportsRequiredTextKit2Surface
     }
 
-    /// Check if we can opt into TextKit2 for a specific text view
-    static func canOptIntoTextKit2(
+    /// Validate TextKit2 requirements for a specific text view.
+    static func validatesRequiredTextKit2Surface(
         for textView: NSTextView,
         capabilities: PlatformCapabilities? = nil
     ) -> Bool {
         let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
-        // Basic requirement checks
         guard textView.textContainer != nil else { return false }
-
-        // Only opt into TextKit2 on macOS 13+ where it's more stable
-        guard capabilities.preferTextKit2 else {
-            return false
-        }
-
-        // Additional checks can be added here for specific compatibility requirements
-        return true
+        return capabilities.supportsRequiredTextKit2Surface
     }
 
-    /// Force TextKit2 initialization if possible and beneficial
-    static func ensureTextKit2(
+    /// Validate that the required TextKit2 surface is active.
+    static func validateRequiredTextKit2Surface(
         for textView: NSTextView,
         capabilities: PlatformCapabilities? = nil
     ) -> Bool {
         let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
-        // Check if TextKit2 is already active
         if textView.textLayoutManager != nil {
             return true
         }
 
-        // Only attempt to force TextKit2 on compatible systems
-        guard canOptIntoTextKit2(for: textView, capabilities: capabilities) else {
+        guard validatesRequiredTextKit2Surface(for: textView, capabilities: capabilities) else {
             return false
         }
 
-        // TextKit2 should be default on macOS 13+
-        // If it's not active, there might be a specific reason
-        if capabilities.preferTextKit2 {
-            // Log the situation for debugging
-            os.Logger(subsystem: "com.codeeditor.plugin", category: "ModernTextKitHelper")
-                .debug("TextKit2 not active, using TextKit1 fallback")
-        }
+        os.Logger(subsystem: "com.codeeditor.plugin", category: "ModernTextKitHelper")
+            .debug("Required TextKit2 surface is unavailable on this text view")
 
         return false
     }
@@ -89,8 +74,7 @@ enum ModernTextKitHelper {
             configureForLegacyMacOS(textView)
         }
 
-        // TextKit2 specific configuration
-        if shouldUseTextKit2 {
+        if supportsRequiredTextKit2Surface {
             configureTextKit2Features(textView)
         }
     }
@@ -172,7 +156,7 @@ enum ModernTextKitHelper {
         textView.isGrammarCheckingEnabled = false
         textView.isContinuousSpellCheckingEnabled = false
 
-        // Skip layout manager configuration to avoid triggering TextKit1 compatibility mode
+        // Skip layout manager configuration that would bypass the required TextKit2 surface.
         // TextKit2 handles these optimizations automatically
 
         // Configure text container
@@ -210,11 +194,11 @@ enum ModernTextKitHelper {
 
 /// iOS stub for ModernTextKitHelper
 enum ModernTextKitHelper {
-    static var shouldUseTextKit2: Bool { false }
+    static var supportsRequiredTextKit2Surface: Bool { true }
 
-    static func canOptIntoTextKit2(for _: Any) -> Bool { false }
+    static func validatesRequiredTextKit2Surface(for _: Any) -> Bool { true }
 
-    static func ensureTextKit2(for _: Any) -> Bool { false }
+    static func validateRequiredTextKit2Surface(for _: Any) -> Bool { true }
 }
 
 #endif

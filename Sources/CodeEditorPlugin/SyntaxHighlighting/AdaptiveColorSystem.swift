@@ -9,7 +9,7 @@ import Foundation
 public enum AdaptiveColorSystem {
     // MARK: - Syntax Highlighting Colors
 
-    /// Adaptive syntax highlighting colors
+    /// Syntax highlighting colors routed through the canonical scheme.
     /// - Parameters:
     ///   - tokenType: The type of syntax token to color
     ///   - capabilities: Platform capabilities for adaptive behavior (defaults to dependency factory)
@@ -17,114 +17,8 @@ public enum AdaptiveColorSystem {
         for tokenType: TokenType,
         capabilities: PlatformCapabilities? = nil
     ) -> PlatformColor {
-        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
-        // Use enhanced colors on macOS 14+ for better contrast
-        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
-            return enhancedColor(for: tokenType)
-        } else {
-            return traditionalColor(for: tokenType)
-        }
-    }
-
-    // MARK: - Enhanced Colors (macOS 14+)
-
-    private static func enhancedColor(for tokenType: TokenType) -> PlatformColor {
-        switch tokenType {
-        case .keyword:
-            // Enhanced purple with better contrast
-            PlatformColor(displayP3Red: 0.65, green: 0.31, blue: 0.85, alpha: 1.0)
-
-        case .identifier:
-            // Primary label color with enhanced contrast
-            PlatformColors.label.withAlphaComponent(0.95)
-
-        case .string:
-            // Warmer red for better visibility
-            PlatformColor(displayP3Red: 0.85, green: 0.25, blue: 0.30, alpha: 1.0)
-
-        case .number:
-            // Vivid blue
-            PlatformColor(displayP3Red: 0.15, green: 0.45, blue: 0.90, alpha: 1.0)
-
-        case .comment:
-            // Softer green that maintains readability
-            PlatformColor(displayP3Red: 0.25, green: 0.70, blue: 0.35, alpha: 0.85)
-
-        case .type:
-            // Enhanced teal
-            PlatformColor(displayP3Red: 0.20, green: 0.65, blue: 0.75, alpha: 1.0)
-
-        case .function:
-            // Rich indigo
-            PlatformColor(displayP3Red: 0.35, green: 0.25, blue: 0.80, alpha: 1.0)
-
-        case .property:
-            // Warm orange with improved contrast
-            PlatformColor(displayP3Red: 0.90, green: 0.50, blue: 0.15, alpha: 1.0)
-
-        case .operator:
-            // Earth tone brown
-            PlatformColor(displayP3Red: 0.65, green: 0.45, blue: 0.25, alpha: 1.0)
-
-        case .punctuation:
-            // Subtle but visible secondary color
-            PlatformColors.secondaryLabel.withAlphaComponent(0.80)
-
-        case .preprocessor:
-            // Vibrant pink for preprocessor directives
-            PlatformColor(displayP3Red: 0.85, green: 0.35, blue: 0.70, alpha: 1.0)
-
-        case .whitespace:
-            PlatformColors.clear
-
-        case .unknown:
-            PlatformColors.label
-        }
-    }
-
-    // MARK: - Traditional Colors (macOS < 14)
-
-    private static func traditionalColor(for tokenType: TokenType) -> PlatformColor {
-        switch tokenType {
-        case .keyword:
-            PlatformColors.systemPurple
-
-        case .identifier:
-            PlatformColors.label
-
-        case .string:
-            PlatformColors.systemRed
-
-        case .number:
-            PlatformColors.systemBlue
-
-        case .comment:
-            PlatformColors.systemGreen
-
-        case .type:
-            PlatformColors.systemTeal
-
-        case .function:
-            PlatformColors.systemIndigo
-
-        case .property:
-            PlatformColors.systemOrange
-
-        case .operator:
-            PlatformColors.systemBrown
-
-        case .punctuation:
-            PlatformColors.secondaryLabel
-
-        case .preprocessor:
-            PlatformColors.systemPink
-
-        case .whitespace:
-            PlatformColors.clear
-
-        case .unknown:
-            PlatformColors.label
-        }
+        _ = capabilities
+        return SyntaxColorScheme.default.color(for: tokenType)
     }
 
     // MARK: - UI Element Colors

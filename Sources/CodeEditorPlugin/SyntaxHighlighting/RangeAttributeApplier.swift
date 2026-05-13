@@ -103,11 +103,15 @@ internal final class RangeAttributeApplier: TextEditEventObserving {
         textStorage.endEditing()
     }
 
-    /// Resolves a `StyleElement` to a platform color using the
-    /// `TokenType.adaptiveColor` lookup.
+    /// Resolves a `StyleElement` to a platform color using the applied theme
+    /// when available, otherwise falling back to `SyntaxColorScheme.default`.
     private func resolveColor(for element: StyleElement) -> PlatformColor? {
         guard let capture = element.capture else { return nil }
-        return TokenType(rawValue: capture)?.adaptiveColor
+        if let theme = textView?.appliedTheme {
+            return SyntaxColorScheme.color(forCapture: capture, in: theme)
+        }
+        guard let tokenType = TokenType(rawValue: capture) else { return nil }
+        return SyntaxColorScheme.default.color(for: tokenType)
     }
 
     /// Applies `color` to `range` in `textStorage`, skipping ranges that

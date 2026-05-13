@@ -10,7 +10,7 @@ import AppKit
 /// As of 0.2.0 the framework is TextKit2-only. The helper still centralizes
 /// the platform-specific `NSTextView`/`UITextView` configuration (auto-correction,
 /// scroll-view setup, layer flags, container sizing) but no longer chooses
-/// between TextKit1 and TextKit2.
+/// for the required TextKit2 surface.
 @MainActor
 public enum TextKitSetupHelper {
     // MARK: - Configuration Structures

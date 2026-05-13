@@ -298,7 +298,7 @@ extension GutterView {
 
     /// Find the line number at the given point
     private func findLineNumber(at point: CGPoint, in textView: CodeEditorView) -> Int? {
-        // Use TextKitLineNumberHelper to avoid forcing TextKit 1
+        // Use TextKitLineNumberHelper to stay on the required TextKit2 surface.
         let helper = TextKitLineNumberHelper(textView: textView)
         return helper.lineNumber(at: point)
     }

@@ -29,7 +29,7 @@ classDiagram
         +delegate CodeEditorViewDelegate?
         +language Language?
         +eventSystem UnifiedEventSystem
-        +serviceRegistry BusinessLogicServiceRegistry
+        +serviceRegistry EditorRuntime
         +performTextEdit()
     }
 
@@ -95,7 +95,7 @@ classDiagram
     }
 
     %% Fifth Row - Service Registry
-    class BusinessLogicServiceRegistry {
+    class EditorRuntime {
         &lt;&lt;dependency injection&gt;&gt;
         +textEditingService TextEditingService
         +syntaxHighlightingService SyntaxHighlightingService
@@ -270,7 +270,7 @@ classDiagram
     CodeEditorView ..|> CodeEditorAPI : implements
     CodeEditorView --> CodeEditorViewDelegate : delegates to
     CodeEditorView --> UnifiedEventSystem : uses
-    CodeEditorView --> BusinessLogicServiceRegistry : uses
+    CodeEditorView --> EditorRuntime : uses
     CodeEditorView --> TextLayoutManager : uses
     CodeEditorView --> LineIndexCache : maintains
     CodeEditorView --> EditorConfiguration : configured by
@@ -291,15 +291,15 @@ classDiagram
     UnifiedEventSystem --> EventHandler : uses
     UnifiedEventSystem --> EventFilter : applies
     
-    BusinessLogicServiceRegistry --> TextEditingService : manages
-    BusinessLogicServiceRegistry --> SyntaxHighlightingService : manages
-    BusinessLogicServiceRegistry --> LanguageDetectionService : manages
-    BusinessLogicServiceRegistry --> CompletionProviderRegistry : manages
-    BusinessLogicServiceRegistry --> LineNumberCalculationService : manages
-    BusinessLogicServiceRegistry --> GutterSizingService : manages
-    BusinessLogicServiceRegistry --> CodeFoldingCoordinatorService : manages
-    BusinessLogicServiceRegistry --> EditorLayoutService : manages
-    BusinessLogicServiceRegistry --> MemoryManagementCoordinator : manages
+    EditorRuntime --> TextEditingService : manages
+    EditorRuntime --> SyntaxHighlightingService : manages
+    EditorRuntime --> LanguageDetectionService : manages
+    EditorRuntime --> CompletionProviderRegistry : manages
+    EditorRuntime --> LineNumberCalculationService : manages
+    EditorRuntime --> GutterSizingService : manages
+    EditorRuntime --> CodeFoldingCoordinatorService : manages
+    EditorRuntime --> EditorLayoutService : manages
+    EditorRuntime --> MemoryManagementCoordinator : manages
     
     %% Inter-service Dependencies
     GutterSizingService --> LineNumberCalculationService : uses
@@ -346,7 +346,7 @@ classDiagram
     class Event event
     class EventHandler event
     class EventFilter event
-    class BusinessLogicServiceRegistry service
+    class EditorRuntime service
     class TextEditingService service
     class SyntaxHighlightingService service
     class LanguageDetectionService service
@@ -371,7 +371,7 @@ classDiagram
 
 1. **Protocol-Oriented Design**: Core functionality exposed through `CodeEditorAPI` protocol
 2. **Delegation Pattern**: `CodeEditorViewDelegate` for customizable behavior
-3. **Service Locator**: `BusinessLogicServiceRegistry` manages all services
+3. **Service Locator**: `EditorRuntime` manages all services
 4. **Dependency Injection**: No singletons - services injected via configuration
 5. **Observer Pattern**: `UnifiedEventSystem` for decoupled event handling
 6. **Composite Pattern**: `CodeEditorContainerView` composes multiple views

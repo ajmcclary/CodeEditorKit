@@ -33,7 +33,7 @@ customMonitor.memoryThresholdMB = 200.0
 
 // Create configuration with the monitor
 var config = EditorConfiguration()
-config.performance.memoryMonitor = customMonitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: customMonitor))
 
 // Apply to editor view
 let editor = CodeEditorView()
@@ -49,7 +49,7 @@ let monitor = MemoryMonitor()
 monitor.startMonitoring()
 
 var config = EditorConfiguration()
-config.performance.memoryMonitor = monitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor))
 config.display.isLineNumbersEnabled = true
 config.display.fontSize = 14
 
@@ -73,7 +73,7 @@ let editor1 = CodeEditorView()
 let editor2 = CodeEditorView()
 
 var config = EditorConfiguration()
-config.performance.memoryMonitor = sharedMonitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: sharedMonitor))
 
 config.apply(to: editor1)
 config.apply(to: editor2)
@@ -147,7 +147,7 @@ struct ContentView: View {
     let memoryMonitor = MemoryMonitor()
     private var configuration: EditorConfiguration {
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = memoryMonitor
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor))
         return config
     }
     
@@ -193,7 +193,7 @@ func testMemoryCleanup() async {
     }
     
     var config = EditorConfiguration()
-    config.performance.memoryMonitor = monitor
+    let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor))
     
     let editor = CodeEditorView()
     config.apply(to: editor)
@@ -214,10 +214,10 @@ final class CleanupCounter {
 
 Many internal components accept MemoryMonitor as a parameter:
 
-### AsyncTextProcessor
+### TextProcessingActor
 
 ```swift
-let processor = AsyncTextProcessor(
+let processor = TextProcessingActor(
     memoryMonitor: customMonitor,
     maxConcurrentOperations: 4
 )
@@ -329,7 +329,7 @@ If older app code or docs used a shared monitor, replace that global access with
 let monitor = MemoryMonitor()
 monitor.startMonitoring()
 var config = EditorConfiguration()
-config.performance.memoryMonitor = monitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor))
 config.apply(to: editor)
 ```
 
@@ -398,7 +398,7 @@ enum MemoryMonitorFactory {
 // Usage
 let editor = CodeEditorView()
 var config = EditorConfiguration()
-config.performance.memoryMonitor = MemoryMonitorFactory.createDefault()
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: MemoryMonitorFactory.createDefault()))
 config.apply(to: editor)
 ```
 
@@ -440,8 +440,8 @@ class DependencyContainer {
     
     func createEditorConfiguration() -> EditorConfiguration {
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = memoryMonitor
-        config.eventSystem = eventSystem
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor))
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(eventSystem: eventSystem))
         return config
     }
 }
@@ -491,7 +491,7 @@ class DocumentWindowController {
         // Create editor with document-specific monitor
         let editor = CodeEditorView()
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = documentMonitor
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: documentMonitor))
         config.apply(to: editor)
         return editor
     }
@@ -674,7 +674,7 @@ class MultiTabEditorController {
         tabMonitors[tabID] = tabMonitor
         
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = tabMonitor
+        let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: tabMonitor))
         
         let editor = CodeEditorView()
         config.apply(to: editor)

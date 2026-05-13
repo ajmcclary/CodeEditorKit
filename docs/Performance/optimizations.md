@@ -58,7 +58,7 @@ Internally this uses `RangeBasedHighlightingController`, `RangeHighlightProvidin
 
 ### Tree-sitter Spike
 
-The Tree-sitter-shaped provider remains internal architecture only. The core package does not expose a runtime Tree-sitter switch and does not ship C grammar binaries; syntax highlighting uses SwiftSyntax for Swift and regex definitions for the rest of the language catalog. Real C grammar packaging is tracked in [Tree-sitter packaging](../TreeSitterPackaging.md).
+The range-query provider remains internal architecture only. The core package does not expose a runtime grammar-backed parser switch and does not ship C grammar binaries; syntax highlighting uses SwiftSyntax for Swift and regex definitions for the rest of the language catalog. Real C grammar packaging is tracked in [Tree-sitter packaging](../TreeSitterPackaging.md).
 
 ## Memory and Cache Behavior
 
@@ -68,7 +68,7 @@ Use injected `MemoryMonitor` instances to coordinate cleanup across editors, cac
 let memoryMonitor = MemoryMonitor()
 
 var config = EditorConfiguration()
-config.performance.memoryMonitor = memoryMonitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor))
 ```
 
 Memory-aware components register cleanup handlers and report freed memory estimates. Avoid global monitors; inject one through configuration or initializers.

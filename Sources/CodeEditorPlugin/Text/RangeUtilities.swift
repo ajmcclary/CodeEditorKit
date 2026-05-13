@@ -1,9 +1,16 @@
+#if canImport(AppKit)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#else
 import Foundation
+#endif
 
 // MARK: - Range Processing Utilities
 
 /// Consolidated range processing operations that eliminate duplication across
-/// RangeValidator, RangeProcessor, NSRange+Extensions, and RangeMutation
+/// RangeValidator, RangeProcessor, NSRange+Extensions, and RangeMutation.
+/// All offsets and lengths are UTF-16 code units to match `NSRange` and TextKit.
 public enum TextRangeUtilities {
     // MARK: - Supporting Types
 
@@ -72,6 +79,44 @@ public enum TextRangeUtilities {
 
     // MARK: - Range Validation
 
+    // MARK: - Range Conversion
+
+    /// Converts a UTF-16 `NSRange` to a TextKit text range.
+    public static func convert(_ nsRange: NSRange, in textContentManager: NSTextContentManager) -> NSTextRange? {
+        guard nsRange.location >= 0, nsRange.length >= 0 else { return nil }
+
+        let documentRange = textContentManager.documentRange
+        guard
+            let startLocation = textContentManager.location(documentRange.location, offsetBy: nsRange.location),
+            let endLocation = textContentManager.location(startLocation, offsetBy: nsRange.length)
+        else {
+            return nil
+        }
+
+        return NSTextRange(location: startLocation, end: endLocation)
+    }
+
+    /// Converts a TextKit text range to a UTF-16 `NSRange`.
+    public static func convert(_ textRange: NSTextRange, in textContentManager: NSTextContentManager) -> NSRange? {
+        let documentRange = textContentManager.documentRange
+        let startOffset = textContentManager.offset(from: documentRange.location, to: textRange.location)
+        let length = textContentManager.offset(from: textRange.location, to: textRange.endLocation)
+
+        guard startOffset != NSNotFound, length != NSNotFound else { return nil }
+
+        return NSRange(location: startOffset, length: length)
+    }
+
+    /// Converts a Swift string range to a UTF-16 `NSRange`.
+    public static func convert(_ range: Range<String.Index>, in string: String) -> NSRange {
+        NSRange(range, in: string)
+    }
+
+    /// Converts a UTF-16 `NSRange` to a Swift string range.
+    public static func convert(_ nsRange: NSRange, in string: String) -> Range<String.Index>? {
+        Range(nsRange, in: string)
+    }
+
     /// Validates a range against text bounds with detailed error information
     /// Consolidates validation logic from RangeValidator and scattered checks
     public static func validateRange(_ range: NSRange, in text: String) -> RangeValidationResult {
@@ -111,6 +156,12 @@ public enum TextRangeUtilities {
         return .valid
     }
 
+    /// Returns whether the range is within UTF-16 string bounds.
+    public static func isValid(_ range: NSRange, in string: String) -> Bool {
+        guard range.location >= 0, range.length >= 0 else { return false }
+        return NSMaxRange(range) <= utf16Length(of: string)
+    }
+
     /// Clamps a range to fit within specified bounds
     /// Consolidates clamping logic from NSRange+Extensions
     public static func clampRange(_ range: NSRange, to bounds: NSRange) -> NSRange {
@@ -124,6 +175,11 @@ public enum TextRangeUtilities {
     /// Clamps a range to text length
     public static func clampRange(_ range: NSRange, toTextLength textLength: Int) -> NSRange {
         clampRange(range, to: NSRange(location: 0, length: textLength))
+    }
+
+    /// Clamps a UTF-16 range to the bounds of a string.
+    public static func clamp(_ range: NSRange, to string: String) -> NSRange {
+        clampRange(range, toTextLength: utf16Length(of: string))
     }
 
     /// Returns the UTF-16 code-unit length used by `NSRange`, `NSTextStorage`,
@@ -247,13 +303,22 @@ public enum TextRangeUtilities {
         var workingRange = range
 
         for mutation in mutations.sorted(by: { $0.range.location < $1.range.location }) {
-            guard let transformedRange = applyMutation(mutation, to: workingRange) else {
+            guard let transformedRange = RangeMutationEngine.transformSingle(
+                workingRange,
+                applying: mutation,
+                policy: .invalidateOnOverlap
+            ) else {
                 return nil // Mutation invalidated the range
             }
             workingRange = transformedRange
         }
 
         return workingRange
+    }
+
+    /// Merges overlapping or adjacent ranges.
+    public static func merge(_ ranges: [NSRange]) -> [NSRange] {
+        mergeOverlappingRanges(ranges)
     }
 
     /// Merges overlapping ranges into consolidated ranges
@@ -353,8 +418,7 @@ public enum TextRangeUtilities {
         )
     }
 
-    /// Finds optimal batch ranges for processing large text efficiently
-    /// Consolidates batching logic from AsyncTextProcessor
+    /// Finds optimal batch ranges for processing large text efficiently.
     public static func findOptimalBatchRanges(
         totalLength: Int,
         batchSize: Int,
@@ -406,9 +470,71 @@ public enum TextRangeUtilities {
                NSMaxRange(container) >= NSMaxRange(contained)
     }
 
+    /// Checks if one UTF-16 range contains another.
+    public static func contains(_ container: NSRange, _ contained: NSRange) -> Bool {
+        range(container, contains: contained)
+    }
+
     /// Checks if a range intersects with another range
     public static func range(_ range1: NSRange, intersects range2: NSRange) -> Bool {
         calculateRangeOverlap(range1, range2).hasOverlap
+    }
+
+    /// Checks if two UTF-16 ranges overlap.
+    public static func overlaps(_ range1: NSRange, _ range2: NSRange) -> Bool {
+        range(range1, intersects: range2)
+    }
+
+    /// Returns the non-empty intersection of two UTF-16 ranges.
+    public static func intersect(_ range1: NSRange, _ range2: NSRange) -> NSRange? {
+        let intersection = NSIntersectionRange(range1, range2)
+        return intersection.length > 0 ? intersection : nil
+    }
+
+    /// Subtracts one UTF-16 range from another, returning surviving segments.
+    public static func subtract(_ rangeToRemove: NSRange, from sourceRange: NSRange) -> [NSRange] {
+        guard let intersection = intersect(sourceRange, rangeToRemove) else {
+            return [sourceRange]
+        }
+
+        if intersection == sourceRange {
+            return []
+        }
+
+        var result: [NSRange] = []
+        if intersection.location > sourceRange.location {
+            result.append(NSRange(
+                location: sourceRange.location,
+                length: intersection.location - sourceRange.location
+            ))
+        }
+
+        let intersectionEnd = NSMaxRange(intersection)
+        let sourceEnd = NSMaxRange(sourceRange)
+        if intersectionEnd < sourceEnd {
+            result.append(NSRange(location: intersectionEnd, length: sourceEnd - intersectionEnd))
+        }
+
+        return result
+    }
+
+    /// Adjusts ranges after an insertion, expanding ranges that contain the insertion point.
+    public static func adjustRangesForInsertion(
+        _ ranges: [NSRange],
+        insertionPoint: Int,
+        insertionLength: Int
+    ) -> [NSRange] {
+        let mutation = RangeMutation(
+            range: NSRange(location: insertionPoint, length: 0),
+            delta: max(0, insertionLength)
+        )
+        return RangeMutationEngine.transform(ranges, applying: mutation, policy: .expandForInsertions)
+    }
+
+    /// Adjusts ranges after a deletion, preserving surviving range segments.
+    public static func adjustRangesForDeletion(_ ranges: [NSRange], deletionRange: NSRange) -> [NSRange] {
+        let mutation = RangeMutation(range: deletionRange, delta: -deletionRange.length)
+        return RangeMutationEngine.transform(ranges, applying: mutation, policy: .preserveSurvivingSegments)
     }
 
     /// Calculates the distance between two ranges
@@ -453,32 +579,112 @@ public enum TextRangeUtilities {
     public static func locationForLine(_ lineIndex: Int, in lines: [String]) -> Int {
         var location = 0
         for index in 0..<lineIndex {
-            location += lines[index].count + 1 // +1 for newline
+            location += utf16Length(of: lines[index]) + 1 // +1 for newline
         }
         return location
+    }
+
+    /// Returns all UTF-16 line ranges in the string, including line terminators.
+    public static func lineRanges(in string: String) -> [NSRange] {
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = string as NSString
+        guard nsText.length > 0 else { return [] }
+
+        var ranges: [NSRange] = []
+        var location = 0
+        while location < nsText.length {
+            let lineRange = nsText.lineRange(for: NSRange(location: location, length: 0))
+            ranges.append(lineRange)
+            let nextLocation = NSMaxRange(lineRange)
+            guard nextLocation > location else { break }
+            location = nextLocation
+        }
+        return ranges
+    }
+
+    /// Returns the zero-based line number for a UTF-16 offset.
+    public static func lineNumber(for offset: Int, in string: String) -> Int {
+        let clampedOffset = max(0, min(offset, utf16Length(of: string)))
+        guard clampedOffset > 0 else { return 0 }
+
+        let prefix = substring(upToUTF16Offset: clampedOffset, in: string)
+        return prefix.reduce(into: 0) { count, character in
+            if character == "\n" {
+                count += 1
+            }
+        }
+    }
+
+    /// Returns the UTF-16 range for a zero-based line number.
+    public static func startOfLine(_ lineNumber: Int, in string: String) -> Int? {
+        let ranges = lineRanges(in: string)
+        guard lineNumber >= 0, lineNumber < ranges.count else { return nil }
+        return ranges[lineNumber].location
+    }
+
+    /// Returns the UTF-16 line range containing an offset.
+    public static func lineRange(containing offset: Int, in string: String) -> NSRange {
+        lineRange(containingUTF16Offset: offset, in: string)
+    }
+
+    /// Returns the identifier-like word range at a UTF-16 offset.
+    public static func wordRange(at offset: Int, in string: String) -> NSRange? {
+        let clampedOffset = max(0, min(offset, utf16Length(of: string)))
+        guard let insertionRange = Range(NSRange(location: clampedOffset, length: 0), in: string) else {
+            return nil
+        }
+
+        var start = insertionRange.lowerBound
+        while start > string.startIndex {
+            let previous = string.index(before: start)
+            guard isIdentifierCharacter(string[previous]) else { break }
+            start = previous
+        }
+
+        var end = insertionRange.lowerBound
+        while end < string.endIndex, isIdentifierCharacter(string[end]) {
+            end = string.index(after: end)
+        }
+
+        guard start < end else { return nil }
+        return NSRange(start..<end, in: string)
+    }
+
+    /// Batch processes UTF-16 ranges in ascending order.
+    public static func batchProcess<T>(
+        ranges: [NSRange],
+        in string: String,
+        operation: (NSRange, String) -> T
+    ) -> [T] {
+        ranges.sorted { $0.location < $1.location }.map { operation($0, string) }
+    }
+
+    /// Finds the UTF-16 range visible in a viewport when line metrics are known.
+    public static func visibleRanges(
+        in viewport: CGRect,
+        lineHeight: CGFloat,
+        totalLines: Int,
+        string: String
+    ) -> [NSRange] {
+        guard lineHeight > 0, totalLines > 0 else { return [] }
+
+        let firstVisibleLine = max(0, Int(viewport.minY / lineHeight))
+        let lastVisibleLine = min(totalLines - 1, Int(viewport.maxY / lineHeight) + 1)
+        let ranges = lineRanges(in: string)
+        guard firstVisibleLine < ranges.count else { return [] }
+
+        let endLine = min(lastVisibleLine, ranges.count - 1)
+        guard firstVisibleLine <= endLine else { return [] }
+        let visible = ranges[firstVisibleLine...endLine]
+        guard let first = visible.first, let last = visible.last else { return [] }
+
+        return [NSRange(location: first.location, length: NSMaxRange(last) - first.location)]
     }
 }
 
 // MARK: - Private Helpers
 
 extension TextRangeUtilities {
-    static func applyMutation(_ mutation: RangeMutation, to range: NSRange) -> NSRange? {
-        let mutationRange = mutation.range
-
-        if range.location >= NSMaxRange(mutationRange) {
-            // Range is after mutation, adjust location
-            let offset = mutation.delta
-            return NSRange(location: range.location + offset, length: range.length)
-        } else if NSMaxRange(range) <= mutationRange.location {
-            // Range is before mutation, no change needed
-            return range
-        } else {
-            // Range overlaps with mutation, this is complex and depends on mutation type
-            // For safety, we'll return nil to indicate the range is invalidated
-            return nil
-        }
-    }
-
     static func adjustBatchLengthToLineBoundary(text: String, startLocation: Int, targetLength: Int) -> Int {
         let textLength = TextRangeUtilities.utf16Length(of: text)
         let endLocation = min(startLocation + targetLength, textLength)

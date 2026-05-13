@@ -84,7 +84,7 @@ classDiagram
         +triggerCharacters [String]
     }
 
-    class BaseCompletionProvider {
+    class UniversalCompletionProvider {
         <<abstract provider>>
         +keywords [String]
         +types [String]
@@ -352,9 +352,9 @@ classDiagram
     LanguageMetadataRegistry --> UniversalCompletionProvider : creates
     LanguageMetadataRegistry --> ExtendedLanguageMetadata : contains
     
-    UniversalCompletionProvider --> BaseCompletionProvider : extends
-    BaseCompletionProvider <|-- SwiftCompletionProvider : implements
-    BaseCompletionProvider <|-- LSPCompletionProvider : implements
+    UniversalCompletionProvider --> UniversalCompletionProvider : extends
+    UniversalCompletionProvider <|-- SwiftCompletionProvider : implements
+    UniversalCompletionProvider <|-- LSPCompletionProvider : implements
     
     LSPCompletionProvider --> CompletionItemModel : creates
     SwiftCompletionProvider --> CompletionItemModel : creates
@@ -396,7 +396,7 @@ classDiagram
     class CompletionProviderRegistry registry
     class LanguageMetadataRegistry registry
     class UniversalCompletionProvider provider
-    class BaseCompletionProvider provider
+    class UniversalCompletionProvider provider
     class SwiftCompletionProvider provider
     class LSPCompletionProvider provider
     class CompletionCacheManager cache
@@ -516,7 +516,7 @@ sequenceDiagram
     participant Registry as CompletionProviderRegistry
     participant Metadata as LanguageMetadataRegistry
     participant Universal as UniversalCompletionProvider
-    participant BaseProvider as BaseCompletionProvider
+    participant BaseProvider as UniversalCompletionProvider
     participant Builder as SharedCompletionBuilder
     
     Registry->>Registry: ensureProvider(for: .swift)

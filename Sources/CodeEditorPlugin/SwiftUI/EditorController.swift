@@ -277,7 +277,7 @@ public final class EditorController {
               let stringRange = view.lineRange(for: lineNumber),
               let storage = view.textContentStorage else { return nil }
         let nsRange = NSRange(stringRange, in: view.content)
-        return RangeUtilities.convert(nsRange, in: storage)
+        return TextRangeUtilities.convert(nsRange, in: storage)
     }
 
     /// Build a UTF-16 `NSRange` covering line `lineNumber` (1-based).

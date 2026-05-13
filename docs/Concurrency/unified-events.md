@@ -4,7 +4,7 @@ Use `UnifiedEventSystem` when host applications need a shared, injectable event 
 
 ## Overview
 
-`UnifiedEventSystem` is a `@MainActor` `ObservableObject` that publishes the framework's `EditorEvent` enum through Combine. It is intentionally dependency-injected: create an instance where your app owns editor coordination, then pass it through `EditorConfiguration.eventSystem` or SwiftUI's `.eventSystem(_:)` modifier.
+`UnifiedEventSystem` is a `@MainActor` `ObservableObject` that publishes the framework's `EditorEvent` enum through Combine. It is intentionally dependency-injected: create an instance where your app owns editor coordination, then pass it through `EditorSetup.runtimeDependencies.eventSystem` or SwiftUI's `.eventSystem(_:)` modifier.
 
 The current event model is closed over the built-in `EditorEvent` cases. Custom event types are not added by conforming to `EditorEvent`; instead, app-specific events should live in the host app's own publisher or wrapper.
 
@@ -35,7 +35,7 @@ Typed extraction helpers exist for text events:
 let eventSystem = UnifiedEventSystem()
 
 var configuration = EditorConfiguration()
-configuration.eventSystem = eventSystem
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(eventSystem: eventSystem))
 
 let editor = CodeEditorView()
 configuration.apply(to: editor)

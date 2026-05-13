@@ -139,7 +139,7 @@ final class IntegrationTests: CleanupTestCase {
         #if canImport(AppKit)
         XCTAssertEqual(capabilities.currentPlatform, .macOS)
         XCTAssertTrue(capabilities.performanceCapabilities.supportsHardwareAcceleration)
-        XCTAssertTrue(capabilities.textKitCapabilities.supportsTextKit2)
+        XCTAssertTrue(capabilities.textKitCapabilities.supportsRequiredTextKit2Surface)
 
         // Test macOS-specific features
         editor.isAutomaticQuoteSubstitutionEnabled = false
@@ -270,7 +270,7 @@ final class IntegrationTests: CleanupTestCase {
     // MARK: - TextKit2 Optimization Integration Tests
 
     func testTextKit2OptimizationWithLargeFile() async throws {
-        guard CodeEditorDependencies.makePlatformCapabilities().supportsTextKit2 else {
+        guard CodeEditorDependencies.makePlatformCapabilities().supportsRequiredTextKit2Surface else {
             throw XCTSkip("TextKit2 not supported on this platform")
         }
 

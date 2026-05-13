@@ -150,7 +150,7 @@ extension CodeEditorView {
         }
 
         guard let textContentManager = textLayoutManager.textContentManager,
-              let annotationTextRange = RangeUtilities.convert(annotation.range, in: textContentManager) else {
+              let annotationTextRange = TextRangeUtilities.convert(annotation.range, in: textContentManager) else {
             return
         }
 

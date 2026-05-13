@@ -40,7 +40,7 @@ public final class CompletionViewModel {
 
     // MARK: - Private Properties
 
-    private let businessLogicServices: BusinessLogicServiceRegistry
+    private let featureDependencies: EditorFeatureRuntimeDependencies
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "CompletionViewModel")
 
     // Text view reference (weak to avoid retain cycles)
@@ -69,16 +69,16 @@ public final class CompletionViewModel {
     /// Creates a new completion view model
     /// - Parameters:
     ///   - configuration: Editor configuration settings
-    ///   - businessLogicServices: Registry of business logic services
+    ///   - featureDependencies: Registry of business logic services
     public init(
         configuration: EditorConfiguration,
-        businessLogicServices: BusinessLogicServiceRegistry
+        featureDependencies: EditorFeatureRuntimeDependencies
     ) {
         self.configuration = configuration
-        self.businessLogicServices = businessLogicServices
+        self.featureDependencies = featureDependencies
         self.popupState = CompletionPopupState()
         self.generationService = CompletionGenerationService(
-            providerRegistry: businessLogicServices.completionProviderRegistry
+            providerRegistry: featureDependencies.completionProviderRegistry
         )
 
         logger.debug("CompletionViewModel initialized")

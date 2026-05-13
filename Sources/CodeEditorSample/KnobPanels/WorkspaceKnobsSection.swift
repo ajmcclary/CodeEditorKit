@@ -5,14 +5,14 @@ import CodeEditorDesignTokens
 import CodeEditorPlugin
 import SwiftUI
 
-/// Section that surfaces `EditorConfiguration.workspaceRoot`. The picker
+/// Section that surfaces the runtime workspace root. The picker
 /// is macOS-only (NSOpenPanel); iOS shows the current value with a clear
 /// button. The framework's LSP and file-relative features key off this
 /// URL, so wiring it from the sample makes those subsystems addressable
 /// at all.
 struct WorkspaceKnobsSection: View {
     @Environment(\.codeEditorTheme) private var theme
-    @Binding var configuration: EditorConfiguration
+    @Binding var workspaceRoot: URL?
     @State private var expanded: Bool = true
     var expansion: KnobSectionExpansion = .toggleable
 
@@ -41,7 +41,7 @@ struct WorkspaceKnobsSection: View {
                 .frame(width: 18, height: 18)
             Text(pathDisplay)
                 .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(Color(tokens: configuration.workspaceRoot == nil
+                .foregroundStyle(Color(tokens: workspaceRoot == nil
                                        ? theme.style.text.muted
                                        : theme.style.text.base))
                 .lineLimit(2)
@@ -63,9 +63,9 @@ struct WorkspaceKnobsSection: View {
             }
             .controlSize(.small)
             #endif
-            if configuration.workspaceRoot != nil {
+            if workspaceRoot != nil {
                 Button(role: .destructive) {
-                    configuration.workspaceRoot = nil
+                    workspaceRoot = nil
                 } label: {
                     Label("Clear", systemImage: "xmark.circle")
                         .labelStyle(.titleAndIcon)
@@ -78,7 +78,7 @@ struct WorkspaceKnobsSection: View {
     }
 
     private var pathDisplay: String {
-        configuration.workspaceRoot?.path ?? "Not set"
+        workspaceRoot?.path ?? "Not set"
     }
 
     #if canImport(AppKit)
@@ -89,11 +89,11 @@ struct WorkspaceKnobsSection: View {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.prompt = "Select Workspace"
-        if let current = configuration.workspaceRoot {
+        if let current = workspaceRoot {
             panel.directoryURL = current
         }
         if panel.runModal() == .OK, let url = panel.url {
-            configuration.workspaceRoot = url
+            workspaceRoot = url
         }
     }
     #endif

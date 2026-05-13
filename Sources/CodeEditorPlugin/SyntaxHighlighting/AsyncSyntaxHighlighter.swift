@@ -8,33 +8,6 @@ import UIKit
 /// Asynchronous syntax highlighter with debouncing and cancellation support
 @MainActor
 public final class AsyncSyntaxHighlighter {
-    // MARK: - Adaptive editor text color
-
-    /// Dynamic foreground for unhighlighted code (identifier / unknown
-    /// tokens). Cream on dark appearance, near-black on light. Resolves
-    /// at draw time, so theme/appearance flips repaint without needing a
-    /// fresh highlight pass.
-    static let editorAdaptiveTextColor: PlatformColor = {
-        #if canImport(AppKit)
-        return NSColor(name: nil) { appearance in
-            let isDark = appearance.bestMatch(from: [.darkAqua, .vibrantDark]) != nil
-            return isDark
-                ? NSColor(srgbRed: 242.0 / 255.0, green: 231.0 / 255.0, blue: 216.0 / 255.0, alpha: 1.0)
-                : NSColor(srgbRed: 0.10, green: 0.10, blue: 0.10, alpha: 1.0)
-        }
-        #elseif canImport(UIKit)
-        return UIColor { trait in
-            // swiftlint:disable object_literal
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 242.0 / 255.0, green: 231.0 / 255.0, blue: 216.0 / 255.0, alpha: 1.0)
-                : UIColor(red: 0.10, green: 0.10, blue: 0.10, alpha: 1.0)
-            // swiftlint:enable object_literal
-        }
-        #else
-        return PlatformColors.label
-        #endif
-    }()
-
     // MARK: - Properties
 
     private let coordinator: SyntaxHighlightingCoordinator
@@ -397,7 +370,7 @@ public final class AsyncSyntaxHighlighter {
         to textView: CodeEditorView,
         visibleRange: NSRange? = nil
     ) {
-        // Get text storage - works for both TextKit1 and TextKit2
+        // Get text storage through the platform text view.
         #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return }
         #else
@@ -414,17 +387,11 @@ public final class AsyncSyntaxHighlighter {
             return
         }
 
-        // Update text storage efficiently with both TextKit1 and TextKit2 support
+        // Update text storage efficiently through the platform text view.
         textStorage.beginEditing()
 
-        // First, apply base text color to the entire range. Use an
-        // explicitly dynamic NSColor whose provider closure runs at draw
-        // time against the textView's effective appearance so the editor
-        // tracks Light/Dark theme switching without re-highlighting.
-        // We don't trust NSColor.textColor here because the system color's
-        // resolution path through NSAttributedString proved unreliable
-        // (rendered as a baked, mis-tinted value in practice).
-        let baseTextColor: PlatformColor = Self.editorAdaptiveTextColor
+        let appliedTheme = textView.appliedTheme
+        let baseTextColor = Self.color(for: .identifier, theme: appliedTheme)
 
         #if true
         textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: rangeToHighlight)
@@ -445,13 +412,8 @@ public final class AsyncSyntaxHighlighter {
                 continue
             }
 
-            // .identifier / .unknown / .punctuation render in the base
-            // editor text color. Their hardcoded adaptiveColors use
-            // NSColor.{label,secondaryLabel}.withAlphaComponent, which
-            // collapses to a static color resolved against the *system*
-            // appearance and produces invisible dark-on-dark (or
-            // washed-out light-on-light) when the active theme's
-            // appearance disagrees with the system's.
+            // Neutral tokens render in the base editor foreground so theme
+            // contrast is controlled by the theme's editor/token palette.
             if token.type == .identifier
                 || token.type == .unknown
                 || token.type == .punctuation {
@@ -459,8 +421,8 @@ public final class AsyncSyntaxHighlighter {
                 continue
             }
 
-            // Group tokens by color
-            let tokenColor = token.type.adaptiveColor
+            // Group tokens by resolved theme/scheme color.
+            let tokenColor = Self.color(for: token.type, theme: appliedTheme)
             tokensByColor[tokenColor, default: []].append(token.range)
         }
 
@@ -497,10 +459,20 @@ public final class AsyncSyntaxHighlighter {
 
         textStorage.beginEditing()
 
-        // Reset to the adaptive editor text color (matches applyTokens).
-        textStorage.addAttribute(.foregroundColor, value: Self.editorAdaptiveTextColor, range: range)
+        textStorage.addAttribute(
+            .foregroundColor,
+            value: Self.color(for: .identifier, theme: textView.appliedTheme),
+            range: range
+        )
 
         textStorage.endEditing()
+    }
+
+    private static func color(for tokenType: TokenType, theme: Theme?) -> PlatformColor {
+        guard let theme else {
+            return SyntaxColorScheme.default.color(for: tokenType)
+        }
+        return SyntaxColorScheme.color(for: tokenType, in: theme)
     }
 
     /// Merge adjacent or overlapping ranges for more efficient attribute application

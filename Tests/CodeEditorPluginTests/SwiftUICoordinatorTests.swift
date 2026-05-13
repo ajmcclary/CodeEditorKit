@@ -71,7 +71,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
             language: .swift,
             theme: .default,
             configuration: .default,
-            memoryMonitor: memoryMonitor,
+            runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor),
             onTextChange: nil,
             onSelectionChange: nil
         )
@@ -104,6 +104,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
 
         let container = CodeEditorContainerView()
+        let runtimeDependencies = EditorRuntimeDependencies(memoryMonitor: MemoryMonitor())
 
         // Initial setup
         coordinator.setupContainer(
@@ -112,7 +113,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
             language: .plainText,
             theme: .default,
             configuration: .default,
-            memoryMonitor: MemoryMonitor(),
+            runtimeDependencies: runtimeDependencies,
             onTextChange: nil,
             onSelectionChange: nil
         )
@@ -123,7 +124,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
             text: "updated",
             language: .python,
             theme: .dark,
-            configuration: .minimal
+            configuration: .minimal,
+            runtimeDependencies: runtimeDependencies
         )
 
         // Verify updates
@@ -342,7 +344,14 @@ final class SwiftUICoordinatorTests: XCTestCase {
 
         // All these should be callable from MainActor context
         let container = CodeEditorContainerView()
-        coordinator.updateContainer(container, text: "test", language: .swift, theme: .default, configuration: .default)
+        coordinator.updateContainer(
+            container,
+            text: "test",
+            language: .swift,
+            theme: .default,
+            configuration: .default,
+            runtimeDependencies: EditorRuntimeDependencies()
+        )
         coordinator.requestFocusIfNeeded(for: container, shouldBecomeFirstResponder: true)
         coordinator.resetFocusTracking()
 

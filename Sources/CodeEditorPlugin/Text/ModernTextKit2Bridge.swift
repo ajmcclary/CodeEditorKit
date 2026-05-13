@@ -5,7 +5,7 @@ import AppKit
 import UIKit
 #endif
 
-/// Modern TextKit2-only implementation without TextKit1 fallbacks
+/// Modern TextKit2-only implementation.
 @MainActor
 internal class ModernTextKit2Bridge: NSObject {
     // MARK: - Properties

@@ -10,11 +10,8 @@ import AppKit
 extension PlatformCapabilities {
     /// TextKit version and feature support
     public struct TextKitCapabilities {
-        /// Whether TextKit 2 is available on this platform/OS version
-        public let supportsTextKit2: Bool
-
-        /// Whether TextKit 2 is the preferred text rendering system
-        public let preferTextKit2: Bool
+        /// Whether the required TextKit2 surface is available.
+        public let supportsRequiredTextKit2Surface: Bool
 
         /// Whether TextKit 2 layout fragments are supported
         public let supportsTextLayoutFragments: Bool
@@ -33,69 +30,28 @@ extension PlatformCapabilities {
     ///
     /// ```swift
     /// let textKit = capabilities.textKitCapabilities
-    /// if textKit.preferTextKit2 {
+    /// if textKit.supportsRequiredTextKit2Surface {
     ///     // Use modern TextKit2 features
-    ///     textView.useTextKit2 = true
-    /// } else if textKit.supportsTextKit2 {
-    ///     // TextKit2 available but not preferred
-    ///     textView.useTextKit2 = userPreferences.experimentalFeatures
     /// }
     /// ```
     ///
     /// - Returns: Comprehensive TextKit capability information
     public var textKitCapabilities: TextKitCapabilities {
         TextKitCapabilities(
-            supportsTextKit2: supportsTextKit2,
-            preferTextKit2: preferTextKit2,
+            supportsRequiredTextKit2Surface: supportsRequiredTextKit2Surface,
             supportsTextLayoutFragments: supportsTextLayoutFragments,
             supportsRenderingAttributes: supportsRenderingAttributes
         )
     }
 
-    /// Whether TextKit2 is supported on the current platform
-    ///
-    /// TextKit2 provides improved performance and features but requires
-    /// minimum OS versions for stability.
-    ///
-    /// ## Platform Support
-    /// - **macOS**: Supported on 13.0+, stable on 14.0+
-    /// - **iOS**: Supported on 16.0+
-    /// - **iOS**: Follows iOS requirements
-    ///
-    /// - Returns: True if TextKit2 is available
-    public var supportsTextKit2: Bool {
+    /// Whether the required TextKit2 surface is supported on this platform.
+    public var supportsRequiredTextKit2Surface: Bool {
         #if canImport(AppKit)
-        // TextKit2 is stable on macOS 13.0+
         let (major, minor, _) = systemVersionComponents
         return major > 13 || (major == 13 && minor >= 0)
         #elseif canImport(UIKit)
-        // TextKit2 is available on iOS 16.0+
         let (major, minor, _) = systemVersionComponents
         return major > 16 || (major == 16 && minor >= 0)
-        #else
-        return false
-        #endif
-    }
-
-    /// Whether TextKit2 is preferred over TextKit1
-    ///
-    /// While TextKit2 may be supported, it might not be recommended
-    /// for all use cases due to stability or feature completeness.
-    ///
-    /// ## Recommendation Logic
-    /// - **macOS**: Preferred on 14.0+ for better stability
-    /// - **iOS**: Always preferred when available
-    /// - **iOS**: Follows iOS logic
-    ///
-    /// - Returns: True if TextKit2 should be used by default
-    public var preferTextKit2: Bool {
-        #if canImport(AppKit)
-        // Prefer TextKit2 on macOS 14.0+ for better stability
-        let (major, minor, _) = systemVersionComponents
-        return major > 14 || (major == 14 && minor >= 0)
-        #elseif canImport(UIKit)
-        // Always prefer TextKit2 on iOS when available
-        return supportsTextKit2
         #else
         return false
         #endif
@@ -108,7 +64,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if layout fragments are available
     public var supportsTextLayoutFragments: Bool {
-        supportsTextKit2
+        supportsRequiredTextKit2Surface
     }
 
     /// Whether TextKit2 rendering attributes are supported
@@ -118,7 +74,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if advanced rendering attributes are available
     public var supportsRenderingAttributes: Bool {
-        supportsTextKit2
+        supportsRequiredTextKit2Surface
     }
 
     /// Get recommended TextKit configuration for optimal performance
@@ -127,7 +83,6 @@ extension PlatformCapabilities {
     /// configuration based on system capabilities and performance characteristics.
     ///
     /// ## Configuration Options
-    /// - **useTextKit2**: Whether to enable TextKit2
     /// - **enableLayoutFragments**: Whether to use layout fragments
     /// - **maxRenderingLength**: Maximum document length for full rendering
     /// - **incrementalRendering**: Whether to use incremental updates
@@ -136,9 +91,7 @@ extension PlatformCapabilities {
     public func recommendedTextKitConfiguration() -> TextKitConfiguration {
         var config = TextKitConfiguration()
 
-        // Base TextKit version decision
-        config.useTextKit2 = preferTextKit2
-        config.enableLayoutFragments = supportsTextLayoutFragments && preferTextKit2
+        config.enableLayoutFragments = supportsTextLayoutFragments
 
         // Performance tuning based on platform
         switch currentPlatform {
@@ -166,9 +119,6 @@ extension PlatformCapabilities {
 
     /// Configuration for TextKit features and performance
     public struct TextKitConfiguration {
-        /// Whether to use TextKit2 instead of TextKit1
-        public var useTextKit2: Bool = false
-
         /// Whether to enable TextKit2 layout fragments
         public var enableLayoutFragments: Bool = false
 

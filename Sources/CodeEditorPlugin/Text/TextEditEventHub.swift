@@ -6,7 +6,7 @@ import Foundation
 /// is destroyed by the mutation — the old range content, the replacement
 /// text, and the pre-edit line/column bounds.
 ///
-/// Downstream consumers (LSP coordinator, tree-sitter provider) read this
+/// Downstream consumers (LSP coordinator, range highlight providers) read this
 /// event to compute incremental diffs without reconstructing deleted text
 /// from the post-edit state.
 internal struct WillEditEvent: Sendable {
@@ -21,7 +21,7 @@ internal struct WillEditEvent: Sendable {
     internal var preEditLineRange: ClosedRange<Int>
 
     /// An optional snapshot of the old source string spanning the affected
-    /// region. Providers that need byte-range translation (e.g. tree-sitter)
+    /// region. Providers that need byte-range translation
     /// capture this lazily — only when a subscriber requests it.
     internal var preEditSource: String?
 }

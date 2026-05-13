@@ -407,10 +407,6 @@ extension CodeEditorView {
         // Publish to the local event publisher
         eventPublisher.publishSync(event)
 
-        // Publish to the unified system if available
-        // Only use the injected event system from configuration
-        if let eventSystem = configuration.eventSystem {
-            eventSystem.publish(event)
-        }
+        runtime.dependencies.eventSystem?.publish(event)
     }
 }

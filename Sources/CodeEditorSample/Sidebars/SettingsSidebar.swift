@@ -46,7 +46,7 @@ struct SettingsSidebar: View {
             LayoutKnobsSection(configuration: $appState.configuration)
             BehaviorKnobsSection(configuration: $appState.configuration)
             PerformanceKnobsSection(configuration: $appState.configuration)
-            WorkspaceKnobsSection(configuration: $appState.configuration)
+            WorkspaceKnobsSection(workspaceRoot: $appState.workspaceRoot)
             AnnotationsKnobsSection(appState: appState)
         }
     }

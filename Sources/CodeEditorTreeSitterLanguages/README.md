@@ -1,7 +1,7 @@
 # CodeEditorTreeSitterLanguages
 
 > Optional companion package for Tree-sitter grammar support.
-> **Status**: Extraction target — currently lives inside `CodeEditorPlugin/SyntaxHighlighting/TreeSitter/`.
+> **Status**: Extraction target — currently lives inside `CodeEditorPlugin/SyntaxHighlighting/RegexQuery/`.
 
 ## Purpose
 
@@ -9,21 +9,21 @@ This package will contain:
 
 - **Grammar binaries**: Prebuilt `.dylib`/`.framework` files for each supported Tree-sitter grammar (JavaScript, TypeScript, Python, Go, Rust, C, C++, Java, HTML, CSS, JSON, Markdown, YAML, XML, SQL, Ruby, PHP, Shell, etc.)
 - **Query files**: `highlights.scm`, `folds.scm`, `tags.scm`, `injections.scm` per language
-- **Swift wrappers**: Thin Swift types that load grammars and queries, conforming to `TreeSitterParserProtocol`
+- **Swift wrappers**: Thin Swift types that load grammars and queries, conforming to `RangeQueryParserProtocol`
 
 ## Extraction Plan (Phase 7)
 
 ### Current state
 
-All Tree-sitter code lives in `Sources/CodeEditorPlugin/SyntaxHighlighting/TreeSitter/`:
+All Tree-sitter code lives in `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/`:
 
 ```
-TreeSitter/
-├── TreeSitterRangeHighlightProvider.swift   # Provider + ParserProtocol + RegexBackedParser
-├── TreeSitterCaptureMap.swift               # Capture name → TokenType mapping
-├── TreeSitterInjectionLayer.swift           # Injection rules
-├── TreeSitterFoldProvider.swift             # folds.scm-backed folding
-└── TreeSitterSymbolProvider.swift           # tags.scm-backed symbols
+RegexQuery/
+├── RegexRangeHighlightProvider.swift   # Provider + ParserProtocol + RegexBackedParser
+├── QueryCaptureMap.swift               # Capture name → TokenType mapping
+├── EmbeddedLanguageInjectionLayer.swift           # Injection rules
+├── HeuristicFoldProvider.swift             # folds.scm-backed folding
+└── HeuristicSymbolProviderFacade.swift           # tags.scm-backed symbols
 ```
 
 ### Extraction steps
@@ -38,9 +38,9 @@ TreeSitter/
    )
    ```
 
-2. **Move Tree-sitter files** from `CodeEditorPlugin/SyntaxHighlighting/TreeSitter/` to the new target.
+2. **Move Tree-sitter files** from `CodeEditorPlugin/SyntaxHighlighting/RegexQuery/` to the new target.
 
-3. **Swap `RegexBackedTreeSitterParser`** for a real C Tree-sitter parser that loads grammar binaries and runs `highlights.scm` queries.
+3. **Swap `RegexBackedRangeQueryParser`** for a real C Tree-sitter parser that loads grammar binaries and runs `highlights.scm` queries.
 
 4. **Add as optional dependency** in consumer `Package.swift`:
    ```swift

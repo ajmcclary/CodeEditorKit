@@ -220,7 +220,7 @@ classDiagram
         +errorMessage String?
         +isLoading Bool
         +statusText String
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +updateTask Task<Void, Never>?
         +configure() Void
         +updateConfiguration() Void
@@ -289,7 +289,7 @@ classDiagram
     }
 
     %% Row 8 - Business Logic Integration
-    class BusinessLogicServiceRegistry {
+    class EditorRuntime {
         <<@MainActor dependency injection>>
         +lineNumberCalculationService LineNumberCalculationService
         +gutterSizingService GutterSizingService
@@ -306,7 +306,7 @@ classDiagram
     class GutterViewModel {
         <<@Observable @MainActor>>
         +configuration EditorConfiguration
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +configure() Void
         +updateConfiguration() Void
         +textDidChange() Void
@@ -319,7 +319,7 @@ classDiagram
     class CompletionViewModel {
         <<@Observable @MainActor>>
         +configuration EditorConfiguration
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +showPopup() Void
         +hidePopup() Void
         +textDidChange() Void
@@ -330,7 +330,7 @@ classDiagram
     class MinimapViewModel {
         <<@Observable @MainActor>>
         +configuration EditorConfiguration
-        +businessLogicServices BusinessLogicServiceRegistry
+        +businessLogicServices EditorRuntime
         +configure() Void
         +updateFrame() Void
         +textDidChange() Void
@@ -363,15 +363,15 @@ classDiagram
     
     EditorContainerViewModel --> EditorState : manages nested state
     EditorContainerViewModel --> ComponentVisibility : controls UI visibility
-    EditorContainerViewModel --> BusinessLogicServiceRegistry : injects services
+    EditorContainerViewModel --> EditorRuntime : injects services
     
     PerformanceInsights --> PerformanceStatusView : provides data
     PerformanceInsights --> PerformanceInsightsPanel : provides metrics
     CodeEditorAccessibility --> CodeEditorView : extends with accessibility
     
-    BusinessLogicServiceRegistry --> GutterViewModel : provides services
-    BusinessLogicServiceRegistry --> CompletionViewModel : provides services
-    BusinessLogicServiceRegistry --> MinimapViewModel : provides services
+    EditorRuntime --> GutterViewModel : provides services
+    EditorRuntime --> CompletionViewModel : provides services
+    EditorRuntime --> MinimapViewModel : provides services
     
     EditorContainerViewModel --> GutterViewModel : manages child
     EditorContainerViewModel --> CompletionViewModel : manages child
@@ -420,7 +420,7 @@ classDiagram
     class PerformanceInsightsPanel performance
     class CodeEditorAccessibility performance
     
-    class BusinessLogicServiceRegistry service
+    class EditorRuntime service
 ```
 
 ## Modern SwiftUI Integration Flow

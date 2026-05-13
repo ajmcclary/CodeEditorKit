@@ -60,7 +60,7 @@ public final class ActorCoordinator {
     public func processText(
         _ text: String,
         processorType: TextProcessingActor.TextProcessor.ProcessorType,
-        priority: TaskPriority = .high
+        priority: TextProcessingActor.TextProcessingPriority = .high
     ) async throws -> String {
         do {
             return try await textProcessor.process(
@@ -133,19 +133,15 @@ extension ActorCoordinator {
 
 extension CodeEditorView {
     /// Access the actor coordinator for this editor instance
-    /// Creates a new instance if not provided in configuration
     @available(macOS 13.0, iOS 16.0, *)
     public var actorCoordinator: ActorCoordinator {
-        if let coordinator = configuration.actorCoordinator {
-            return coordinator
-        }
-        return defaultActorCoordinator
+        runtime.dependencies.actorCoordinator
     }
 
     /// Process text using the integrated actor system
     public func processText(
         with processorType: TextProcessingActor.TextProcessor.ProcessorType,
-        priority: TaskPriority = .high
+        priority: TextProcessingActor.TextProcessingPriority = .high
     ) async throws {
         #if canImport(AppKit)
         let currentText = string

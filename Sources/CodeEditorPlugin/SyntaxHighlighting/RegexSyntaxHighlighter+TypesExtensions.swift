@@ -57,45 +57,6 @@ public enum RegexSyntaxTokenType: String, CaseIterable, Sendable {
     case unknown
 
     public var color: RegexHighlighterColor {
-        switch self {
-        case .keyword:
-            PlatformColors.systemPurple
-
-        case .identifier:
-            PlatformColors.label
-
-        case .string:
-            PlatformColors.systemRed
-
-        case .number:
-            PlatformColors.systemBlue
-
-        case .comment:
-            PlatformColors.systemGreen
-
-        case .type:
-            PlatformColors.systemTeal
-
-        case .function:
-            PlatformColors.systemIndigo
-
-        case .property:
-            PlatformColors.systemOrange
-
-        case .operator:
-            PlatformColors.systemBrown
-
-        case .punctuation:
-            PlatformColors.secondaryLabel
-
-        case .whitespace:
-            PlatformColors.clear
-
-        case .preprocessor:
-            PlatformColors.systemPink
-
-        case .unknown:
-            PlatformColors.label
-        }
+        SyntaxColorScheme.default.color(for: self)
     }
 }

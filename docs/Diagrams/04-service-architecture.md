@@ -7,7 +7,7 @@ classDiagram
     direction LR
     
     %% Top Row - Central Registry & Core Services
-    class BusinessLogicServiceRegistry {
+    class EditorRuntime {
         &lt;&lt;dependency injection&gt;&gt;
         -services Dictionary&lt;String, Any&gt;
         -eventSystem UnifiedEventSystem
@@ -337,17 +337,17 @@ classDiagram
     %% Key Relationships - Enhanced 8-Service Architecture
     
     %% Registry manages all 8 services
-    BusinessLogicServiceRegistry *-- TextEditingService : manages
-    BusinessLogicServiceRegistry *-- SyntaxHighlightingService : manages
-    BusinessLogicServiceRegistry *-- LanguageDetectionService : manages
-    BusinessLogicServiceRegistry *-- CompletionProviderRegistry : manages
-    BusinessLogicServiceRegistry *-- LineNumberCalculationService : manages
-    BusinessLogicServiceRegistry *-- GutterSizingService : manages
-    BusinessLogicServiceRegistry *-- CodeFoldingCoordinatorService : manages
-    BusinessLogicServiceRegistry *-- EditorLayoutService : manages
+    EditorRuntime *-- TextEditingService : manages
+    EditorRuntime *-- SyntaxHighlightingService : manages
+    EditorRuntime *-- LanguageDetectionService : manages
+    EditorRuntime *-- CompletionProviderRegistry : manages
+    EditorRuntime *-- LineNumberCalculationService : manages
+    EditorRuntime *-- GutterSizingService : manages
+    EditorRuntime *-- CodeFoldingCoordinatorService : manages
+    EditorRuntime *-- EditorLayoutService : manages
     
     %% Central coordination
-    BusinessLogicServiceRegistry --> MemoryManagementCoordinator : coordinates
+    EditorRuntime --> MemoryManagementCoordinator : coordinates
     
     %% Service dependencies and relationships
     GutterSizingService --> LineNumberCalculationService : depends on
@@ -399,7 +399,7 @@ classDiagram
     classDef highlighting fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef completion fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     
-    class BusinessLogicServiceRegistry registry
+    class EditorRuntime registry
     class TextEditingService service
     class SyntaxHighlightingService service
     class LanguageDetectionService service

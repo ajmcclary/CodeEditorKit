@@ -117,7 +117,7 @@ enum ContainerViewHelper {
             textView.layoutIfNeeded()
 
             // Force content size update without accessing layoutManager
-            // This avoids triggering TextKit1 compatibility mode
+            // This keeps setup on the required TextKit2 surface.
             textView.invalidateIntrinsicContentSize()
         }
         #endif

@@ -10,40 +10,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     #if canImport(os)
     private let logger = Logger(subsystem: "CodeEditorPlugin", category: "PerformanceTests")
     #endif
-    // MARK: - Text Processing Performance
-
-    @MainActor
-    func testTextProcessingPerformance() throws {
-        let processor = AsyncTextProcessor(memoryMonitor: MemoryMonitor())
-
-        // Simple test operation
-        struct TestOperation: ProcessingOperation {
-            let name = "test-operation"
-
-            func process(_ text: String, _: NSRange) async throws -> Any {
-                // Simple processing: count characters
-                text.count
-            }
-        }
-
-        // Test with large text size
-        let text = String(repeating: "a", count: 100_000)
-
-        measure(options: Self.standardMeasureOptions) {
-            let expectation = self.expectation(description: "Text processing")
-            Task {
-                await processor.submit(
-                    text: text,
-                    range: NSRange(location: 0, length: text.count),
-                    operation: TestOperation(),
-                    priority: .normal
-                ) { _ in
-                    expectation.fulfill()
-                }
-            }
-            wait(for: [expectation], timeout: 5.0)
-        }
-    }
+    // MARK: - Range Processing Performance
 
     @MainActor
     func testRangeProcessingPerformance() throws {
@@ -336,7 +303,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
             // Test frequent capability checks
             for _ in 0..<100_000 {
                 _ = capabilities.currentPlatform == .macOS
-                _ = capabilities.supportsTextKit2
+                _ = capabilities.supportsRequiredTextKit2Surface
                 _ = capabilities.supportsHardwareAcceleration
                 _ = capabilities.supportsGestureRecognizers
                 _ = capabilities.maxRecommendedFileSize
@@ -381,13 +348,13 @@ final class ComprehensivePerformanceTests: XCTestCase {
 
         measure(options: Self.standardMeasureOptions) {
             // Test merge performance
-            let merged = RangeUtilities.merge(ranges)
+            let merged = TextRangeUtilities.merge(ranges)
             XCTAssertFalse(merged.isEmpty)
 
             // Test intersection performance
             for index in 0..<100 {
                 let testRange = NSRange(location: index * 1_000, length: 500)
-                let intersecting = ranges.filter { RangeUtilities.overlaps(testRange, $0) }
+                let intersecting = ranges.filter { TextRangeUtilities.overlaps(testRange, $0) }
                 _ = intersecting.count
             }
         }

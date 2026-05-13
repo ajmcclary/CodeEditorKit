@@ -62,7 +62,7 @@ internal struct BraceFoldingProvider: CodeFoldingProvider {
     }
 
     private func extractTitle(at location: Int, in text: String, type _: FoldingType) -> String {
-        let lineRange = RangeUtilities.lineRange(containing: location, in: text)
+        let lineRange = TextRangeUtilities.lineRange(containing: location, in: text)
         let lineStart = lineRange.location
 
         guard let startIndex = text.index(text.startIndex, offsetBy: lineStart, limitedBy: text.endIndex),

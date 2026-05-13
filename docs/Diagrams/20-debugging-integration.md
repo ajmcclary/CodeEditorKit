@@ -304,7 +304,7 @@ classDiagram
         <<main actor platform>>
         +shared PlatformCapabilities
         +currentPlatform Platform
-        +supportsTextKit2 Bool
+        +supportsRequiredTextKit2Surface Bool
         +supportsHardwareAcceleration Bool
         +isFeatureAvailable() Bool
         +recommendedConfiguration()

@@ -114,19 +114,16 @@ final class PlatformAbstractionTests: XCTestCase {
         #if canImport(AppKit)
         // macOS 13+ should support TextKit2
         if capabilities.systemVersionComponents.major >= 13 {
-            XCTAssertTrue(capabilities.supportsTextKit2)
+            XCTAssertTrue(capabilities.supportsRequiredTextKit2Surface)
         }
         #elseif canImport(UIKit)
         // iOS 16+ should support TextKit2
         if capabilities.systemVersionComponents.major >= 16 {
-            XCTAssertTrue(capabilities.supportsTextKit2)
+            XCTAssertTrue(capabilities.supportsRequiredTextKit2Surface)
         }
         #endif
 
-        // TextKit2 preference should match support
-        if capabilities.supportsTextKit2 {
-            XCTAssertTrue(capabilities.preferTextKit2 || !capabilities.preferTextKit2)
-        }
+        XCTAssertTrue(capabilities.supportsRequiredTextKit2Surface)
     }
 
     func testPlatformSpecificCapabilities() {
@@ -302,7 +299,7 @@ extension PlatformAbstractionTests {
         measure(options: Self.standardMeasureOptions) {
             let capabilities = CodeEditorDependencies.makePlatformCapabilities()
             _ = capabilities.currentPlatform
-            _ = capabilities.supportsTextKit2
+            _ = capabilities.supportsRequiredTextKit2Surface
             _ = capabilities.supportsHardwareAcceleration
             _ = capabilities.recommendedCacheSize
         }

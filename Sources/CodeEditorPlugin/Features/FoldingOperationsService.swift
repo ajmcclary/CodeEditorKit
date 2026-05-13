@@ -229,13 +229,13 @@ internal final class FoldingOperationsService {
 
     private func lineNumber(for location: Int) -> Int {
         guard let text = textStorage?.string else { return 0 }
-        return RangeUtilities.lineNumber(for: location, in: text)
+        return TextRangeUtilities.lineNumber(for: location, in: text)
     }
 
     private func firstLineEndLocation(for range: NSRange) -> Int {
         guard let text = textStorage?.string else { return range.location }
 
-        let lineRange = RangeUtilities.lineRange(containing: range.location, in: text)
+        let lineRange = TextRangeUtilities.lineRange(containing: range.location, in: text)
 
         // Return end of line minus newline character
         let lineEnd = NSMaxRange(lineRange)

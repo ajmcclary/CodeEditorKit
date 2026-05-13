@@ -48,7 +48,7 @@ struct WindowBody: View {
                 CodeEditor(text: appState.documents.textBinding(for: activeID))
                     .editorController(appState.editorController)
                     .codeLanguage(appState.documents.activeLanguage ?? .plainText)
-                    .codeWorkspaceRoot(appState.configuration.workspaceRoot)
+                    .codeWorkspaceRoot(appState.workspaceRoot)
                     .environment(\.codeEditorConfiguration, appState.configuration)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 if appState.findOverlayVisible {

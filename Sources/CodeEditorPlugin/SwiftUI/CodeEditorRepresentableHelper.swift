@@ -27,7 +27,7 @@ enum CodeEditorRepresentableHelper {
         let language: Language
         let theme: Theme
         let configuration: EditorConfiguration
-        let memoryMonitor: MemoryMonitor
+        let runtimeDependencies: EditorRuntimeDependencies
         let interactionState: Binding<EditorInteractionState>
         let editorController: EditorController?
         let onTextChange: ((String) -> Void)?
@@ -39,6 +39,7 @@ enum CodeEditorRepresentableHelper {
         let language: Language
         let theme: Theme
         let configuration: EditorConfiguration
+        let runtimeDependencies: EditorRuntimeDependencies
         let interactionState: Binding<EditorInteractionState>
         let editorController: EditorController?
         let environment: EnvironmentValues
@@ -60,14 +61,13 @@ enum CodeEditorRepresentableHelper {
             language: parameters.language,
             theme: parameters.theme,
             configuration: parameters.configuration,
-            memoryMonitor: parameters.memoryMonitor,
+            runtimeDependencies: parameters.runtimeDependencies,
             onTextChange: parameters.onTextChange,
             onSelectionChange: parameters.onSelectionChange
         )
         coordinator.applyInteractionState(to: container.textView)
 
-        // Platform-specific setup
-        setupPlatformSpecificFeatures(container: container, coordinator: coordinator)
+        CodeEditorPlatformAdapterFactory.make().setupPlatformFeatures(container: container, coordinator: coordinator)
 
         // Attach the host's controller (if any) to the underlying view.
         // The controller weakly references the view and is responsible for
@@ -97,7 +97,8 @@ enum CodeEditorRepresentableHelper {
             text: parameters.text,
             language: parameters.language,
             theme: parameters.theme,
-            configuration: parameters.configuration
+            configuration: parameters.configuration,
+            runtimeDependencies: parameters.runtimeDependencies
         )
         coordinator.applyInteractionState(to: container.textView)
 
@@ -126,22 +127,6 @@ enum CodeEditorRepresentableHelper {
         if !parameters.environment.codeEditorBecomeFirstResponder {
             coordinator.resetFocusTracking()
         }
-    }
-
-    // MARK: - Platform-Specific Setup
-
-    private static func setupPlatformSpecificFeatures(
-        container: CodeEditorContainerView,
-        coordinator: CodeEditorCoordinator
-    ) {
-        #if canImport(UIKit)
-        // Set up the text view delegate for iOS
-        coordinator.setupTextViewDelegate(container.textView)
-        #endif
-
-        #if canImport(AppKit)
-        // macOS-specific setup can be added here if needed
-        #endif
     }
 
     // MARK: - Size Calculation

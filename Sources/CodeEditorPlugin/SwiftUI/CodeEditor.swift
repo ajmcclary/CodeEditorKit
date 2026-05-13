@@ -271,24 +271,25 @@ public struct CodeEditor: View {
     public var body: some View {
         let effectiveLanguage = initialLanguage ?? environment.language
         let effectiveTheme = initialTheme ?? environment.theme
-        let effectiveMemoryMonitor = environment.memoryMonitor ?? defaultMemoryMonitor
 
-        // Update configuration with event system if provided
-        var effectiveConfiguration = environment.configuration
-        if let eventSystem = environment.eventSystem {
-            effectiveConfiguration.eventSystem = eventSystem
+        var effectiveRuntimeDependencies = environment.runtimeDependencies
+            ?? EditorRuntimeDependencies.live(workspaceRoot: environment.workspaceRoot, eventSystem: environment.eventSystem)
+        if let memoryMonitor = environment.memoryMonitor {
+            effectiveRuntimeDependencies.memoryMonitor = memoryMonitor
+        } else if environment.runtimeDependencies == nil {
+            effectiveRuntimeDependencies.memoryMonitor = defaultMemoryMonitor
         }
 
         // Use configuration's debounce interval when no explicit override was passed.
         let effectiveDebounceInterval = textDebounceInterval
-            ?? effectiveConfiguration.performance.textChangeDebounceInterval
+            ?? environment.configuration.performance.textChangeDebounceInterval
 
         return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
             language: effectiveLanguage,
             theme: effectiveTheme,
-            configuration: effectiveConfiguration,
-            memoryMonitor: effectiveMemoryMonitor,
+            configuration: environment.configuration,
+            runtimeDependencies: effectiveRuntimeDependencies,
             textDebounceInterval: effectiveDebounceInterval,
             interactionState: interactionState,
             editorController: editorController,
@@ -301,13 +302,13 @@ public struct CodeEditor: View {
         .environment(\.codeEditorConfiguration, environment.configuration)
         .onAppear {
             // Start monitoring if using default memory monitor
-            if environment.memoryMonitor == nil {
+            if environment.memoryMonitor == nil && environment.runtimeDependencies == nil {
                 defaultMemoryMonitor.startMonitoring()
             }
         }
         .onDisappear {
             // Stop monitoring if using default memory monitor
-            if environment.memoryMonitor == nil {
+            if environment.memoryMonitor == nil && environment.runtimeDependencies == nil {
                 defaultMemoryMonitor.stopMonitoring()
             }
         }

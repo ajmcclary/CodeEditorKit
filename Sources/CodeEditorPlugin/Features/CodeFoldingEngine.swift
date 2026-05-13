@@ -375,7 +375,7 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
             var parent: FoldableRegion?
             var level = 0
 
-            for existing in hierarchicalRegions.reversed() where RangeUtilities.contains(existing.range, region.range) {
+            for existing in hierarchicalRegions.reversed() where TextRangeUtilities.contains(existing.range, region.range) {
                 parent = existing
                 level = existing.level + 1
                 break

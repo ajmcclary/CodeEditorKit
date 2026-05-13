@@ -62,9 +62,7 @@ extension View {
     ///     .codeWorkspaceRoot(projectURL)
     /// ```
     public func codeWorkspaceRoot(_ url: URL?) -> some View {
-        transformEnvironment(\.codeEditorConfiguration) { config in
-            config.workspaceRoot = url
-        }
+        environment(\.codeEditorWorkspaceRoot, url)
     }
 
     /// Configures the visibility of line numbers in the gutter.
@@ -549,9 +547,6 @@ extension CodeEditor {
     /// ```
     public func eventSystem(_ eventSystem: UnifiedEventSystem) -> some View {
         environment(\.codeEditorEventSystem, eventSystem)
-            .transformEnvironment(\.codeEditorConfiguration) { config in
-                config.eventSystem = eventSystem
-            }
     }
 }
 

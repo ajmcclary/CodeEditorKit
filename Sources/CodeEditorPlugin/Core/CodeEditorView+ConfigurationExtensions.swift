@@ -12,18 +12,6 @@ extension CodeEditorView {
     // MARK: - Configuration Application
 
     internal func applyConfiguration() {
-        // Apply performance settings first (including memory monitor)
-        if let configMemoryMonitor = configuration.performance.memoryMonitor {
-            memoryMonitor = configMemoryMonitor
-        }
-
-        // Apply workspace root for LSP
-        #if canImport(AppKit)
-        if lspManager.workspaceRoot != configuration.workspaceRoot {
-            lspManager.workspaceRoot = configuration.workspaceRoot
-        }
-        #endif
-
         // Apply display settings
         #if canImport(AppKit)
         // On macOS, line numbers are handled by NSRulerView in the container

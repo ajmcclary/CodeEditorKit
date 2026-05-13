@@ -6,7 +6,7 @@ import Foundation
 ///
 /// Previously duplicated keyword/type/function/literal data that now lives in
 /// `LanguageDescriptor`. This class exists to satisfy the dependency-injection
-/// contract (`EditorConfiguration`, `BusinessLogicServiceRegistry`,
+/// contract (`EditorRuntimeDependencies`, `EditorFeatureRuntimeDependencies`,
 /// `CompletionProviderRegistry`) and provides a stable public API.
 @MainActor
 public final class LanguageMetadataRegistry {

@@ -109,7 +109,7 @@ case .iOS:
 }
 
 // Check features
-if capabilities.supportsTextKit2 {
+if capabilities.supportsRequiredTextKit2Surface {
     // TextKit2 is the only supported layout system as of 0.2.0
 }
 

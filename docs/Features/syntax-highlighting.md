@@ -11,7 +11,7 @@ The current highlighting pipeline is:
 - JSON uses the fast tokenizer path where appropriate.
 - Other concrete languages use descriptor-backed regex definitions from `LanguageDescriptor` and `RegexSyntaxHighlighter`.
 - `.plainText` is a first-class language case with no token styling.
-- Optional range-based highlighting and the Tree-sitter spike live behind configuration flags.
+- Optional range-based highlighting and the range-query parser spike live behind configuration flags.
 
 ## Supported Languages
 
@@ -70,7 +70,7 @@ var config = EditorConfiguration()
 config.performance.usesRangeBasedHighlighting = true
 ```
 
-The Tree-sitter spike is internal only. There is no public runtime flag and the package does not ship C grammar binaries. Today the editor uses SwiftSyntax for Swift and regex definitions for other languages; see [Tree-sitter packaging](../TreeSitterPackaging.md) for the extraction plan.
+The range-query parser spike is internal only. There is no public runtime flag and the package does not ship C grammar binaries. Today the editor uses SwiftSyntax for Swift and regex definitions for other languages; see [Tree-sitter packaging](../TreeSitterPackaging.md) for the extraction plan.
 
 ## Performance
 

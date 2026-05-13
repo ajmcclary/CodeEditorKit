@@ -60,7 +60,7 @@ Inject a shared `MemoryMonitor` through configuration when multiple editor insta
 let memoryMonitor = MemoryMonitor()
 
 var configuration = EditorConfiguration()
-configuration.performance.memoryMonitor = memoryMonitor
+let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: memoryMonitor))
 
 CodeEditor(text: $code)
     .environment(\.codeEditorConfiguration, configuration)

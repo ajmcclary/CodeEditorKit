@@ -98,6 +98,50 @@ public enum SharedCompletionBuilder {
             }
     }
 
+    /// Creates snippet completions from descriptor snippet templates.
+    public static func createSnippetCompletions(
+        from snippets: [SnippetTemplate],
+        filter: String,
+        languageName: String
+    ) -> [CompletionItemModel] {
+        snippets
+            .filter { snippet in
+                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
+            }
+            .map { snippet in
+                CompletionItemModel(
+                    label: snippet.label,
+                    insertText: snippet.insertText,
+                    kind: .snippet,
+                    detail: "\(languageName) snippet",
+                    documentation: snippet.description,
+                    priority: 90,
+                    snippetSupport: true
+                )
+            }
+    }
+
+    /// Creates module completions from descriptor module metadata.
+    public static func createModuleCompletions(
+        from modules: [String],
+        filter: String,
+        languageName: String
+    ) -> [CompletionItemModel] {
+        modules
+            .filter { module in
+                filter.isEmpty || module.localizedCaseInsensitiveContains(filter)
+            }
+            .map { module in
+                CompletionItemModel(
+                    label: module,
+                    insertText: module,
+                    kind: .module,
+                    detail: "\(languageName) module",
+                    priority: 65
+                )
+            }
+    }
+
     /// Creates parameter completions for common parameter names by language
     public static func createParameterCompletions(
         for language: Language,
@@ -337,37 +381,5 @@ public enum SharedContextAnalyzer {
             return String(text[range])
         }
         return nil
-    }
-}
-
-// MARK: - Result Conversion
-
-extension UniversalContextAnalysisResult {
-    /// Converts this result to a ContextAnalysisResult for use with BaseCompletionProvider
-    public func toContextAnalysisResult() -> ContextAnalysisResult {
-        let contextType: CompletionContextType
-        switch type {
-        case .keyword:
-            contextType = .keyword
-
-        case .type:
-            contextType = .type
-
-        case .function:
-            contextType = .function
-
-        case .literal:
-            contextType = .general
-
-        case .member:
-            contextType = .member
-
-        case .parameter:
-            contextType = .parameter
-
-        case .general:
-            contextType = .general
-        }
-        return ContextAnalysisResult(type: contextType, filter: filter, targetType: targetType)
     }
 }

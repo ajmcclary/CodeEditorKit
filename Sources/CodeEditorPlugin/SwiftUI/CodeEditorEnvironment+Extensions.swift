@@ -34,11 +34,18 @@ public struct CodeEditorEnvironment: Sendable {
     /// Whether the editor should become first responder
     public var becomeFirstResponder: Bool
 
+    /// Workspace root for LSP and file operations.
+    public var workspaceRoot: URL?
+
     /// Optional memory monitor for performance tracking
     public var memoryMonitor: MemoryMonitor?
 
     /// Optional unified event system for advanced event handling
     public var eventSystem: UnifiedEventSystem?
+
+    /// Optional complete runtime setup. When present, this is the canonical
+    /// source for runtime dependencies.
+    public var runtimeDependencies: EditorRuntimeDependencies?
 
     /// Creates a new CodeEditor environment configuration
     public init(
@@ -46,15 +53,19 @@ public struct CodeEditorEnvironment: Sendable {
         theme: Theme = .default,
         configuration: EditorConfiguration = EditorConfiguration(),
         becomeFirstResponder: Bool = false,
+        workspaceRoot: URL? = nil,
         memoryMonitor: MemoryMonitor? = nil,
-        eventSystem: UnifiedEventSystem? = nil
+        eventSystem: UnifiedEventSystem? = nil,
+        runtimeDependencies: EditorRuntimeDependencies? = nil
     ) {
         self.language = language
         self.theme = theme
         self.configuration = configuration
         self.becomeFirstResponder = becomeFirstResponder
+        self.workspaceRoot = workspaceRoot
         self.memoryMonitor = memoryMonitor
         self.eventSystem = eventSystem
+        self.runtimeDependencies = runtimeDependencies
     }
 
     /// Default environment configuration
@@ -66,16 +77,20 @@ public struct CodeEditorEnvironment: Sendable {
         theme: Theme? = nil,
         configuration: EditorConfiguration? = nil,
         becomeFirstResponder: BecomeFirstResponderOption = .unchanged,
+        workspaceRoot: URL? = nil,
         memoryMonitor: MemoryMonitor? = nil,
-        eventSystem: UnifiedEventSystem? = nil
+        eventSystem: UnifiedEventSystem? = nil,
+        runtimeDependencies: EditorRuntimeDependencies? = nil
     ) -> Self {
         Self(
             language: language ?? self.language,
             theme: theme ?? self.theme,
             configuration: configuration ?? self.configuration,
             becomeFirstResponder: becomeFirstResponder == .unchanged ? self.becomeFirstResponder : (becomeFirstResponder == .yes),
+            workspaceRoot: workspaceRoot ?? self.workspaceRoot,
             memoryMonitor: memoryMonitor ?? self.memoryMonitor,
-            eventSystem: eventSystem ?? self.eventSystem
+            eventSystem: eventSystem ?? self.eventSystem,
+            runtimeDependencies: runtimeDependencies ?? self.runtimeDependencies
         )
     }
 }
@@ -136,6 +151,18 @@ extension EnvironmentValues {
         get { codeEditorEnvironment.eventSystem }
         set { codeEditorEnvironment = codeEditorEnvironment.with(eventSystem: newValue) }
     }
+
+    /// Legacy: Access the workspace root directly
+    public var codeEditorWorkspaceRoot: URL? {
+        get { codeEditorEnvironment.workspaceRoot }
+        set { codeEditorEnvironment = codeEditorEnvironment.with(workspaceRoot: newValue) }
+    }
+
+    /// Access complete runtime dependencies directly.
+    public var codeEditorRuntimeDependencies: EditorRuntimeDependencies? {
+        get { codeEditorEnvironment.runtimeDependencies }
+        set { codeEditorEnvironment = codeEditorEnvironment.with(runtimeDependencies: newValue) }
+    }
 }
 
 // MARK: - View Modifiers
@@ -160,8 +187,10 @@ extension View {
         theme: Theme? = nil,
         configuration: EditorConfiguration? = nil,
         becomeFirstResponder: BecomeFirstResponderOption = .unchanged,
+        workspaceRoot: URL? = nil,
         memoryMonitor: MemoryMonitor? = nil,
-        eventSystem: UnifiedEventSystem? = nil
+        eventSystem: UnifiedEventSystem? = nil,
+        runtimeDependencies: EditorRuntimeDependencies? = nil
     ) -> some View {
         transformEnvironment(\.codeEditorEnvironment) { env in
             env = env.with(
@@ -169,8 +198,10 @@ extension View {
                 theme: theme,
                 configuration: configuration,
                 becomeFirstResponder: becomeFirstResponder,
+                workspaceRoot: workspaceRoot,
                 memoryMonitor: memoryMonitor,
-                eventSystem: eventSystem
+                eventSystem: eventSystem,
+                runtimeDependencies: runtimeDependencies
             )
         }
     }

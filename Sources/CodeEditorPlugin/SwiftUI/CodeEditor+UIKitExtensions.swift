@@ -10,7 +10,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
     let language: Language
     let theme: Theme
     let configuration: EditorConfiguration
-    let memoryMonitor: MemoryMonitor
+    let runtimeDependencies: EditorRuntimeDependencies
     let textDebounceInterval: Duration
     let interactionState: Binding<EditorInteractionState>
     let editorController: EditorController?
@@ -23,7 +23,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             language: language,
             theme: theme,
             configuration: configuration,
-            memoryMonitor: memoryMonitor,
+            runtimeDependencies: runtimeDependencies,
             interactionState: interactionState,
             editorController: editorController,
             onTextChange: onTextChange,
@@ -42,6 +42,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             language: language,
             theme: theme,
             configuration: configuration,
+            runtimeDependencies: runtimeDependencies,
             interactionState: interactionState,
             editorController: editorController,
             environment: context.environment
