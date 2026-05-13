@@ -88,7 +88,18 @@ final class LSPSampleCoordinator {
         }
         resolvedServerPath = serverURL
 
-        let manager = LSPManager(memoryMonitor: memoryMonitor, workspaceRoot: workspaceRoot)
+        // The framework's LSPClientRegistry requires a non-nil workspaceRoot
+        // to start a server. When the host hasn't picked one, fall back to a
+        // sample-owned scratch directory under the system temp dir — the
+        // mirror writes shadow files there too, so a single root drives both
+        // the LSP root URI and the mirror.
+        let effectiveRoot: URL = workspaceRoot ?? FileManager.default.temporaryDirectory
+            .appendingPathComponent("CodeEditorSample-LSP")
+        try? FileManager.default.createDirectory(
+            at: effectiveRoot, withIntermediateDirectories: true
+        )
+
+        let manager = LSPManager(memoryMonitor: memoryMonitor, workspaceRoot: effectiveRoot)
         self.manager = manager
 
         let config = LanguageServerConfig(
@@ -111,13 +122,9 @@ final class LSPSampleCoordinator {
         let caps = ServerCapabilitiesSummary(manager.client(for: "swift")?.serverCapabilities)
         state = .running(capabilities: caps)
 
-        // Mirror Swift documents to disk so sourcekit-lsp has real file URIs.
-        let mirrorRoot = workspaceRoot ?? FileManager.default.temporaryDirectory
-            .appendingPathComponent("CodeEditorSample-LSP")
-        try? FileManager.default.createDirectory(
-            at: mirrorRoot, withIntermediateDirectories: true
-        )
-        let mirror = DocumentMirror(rootDirectory: mirrorRoot)
+        // Mirror Swift documents under the same root so the LSP's idea of
+        // the workspace and the on-disk shadow files agree.
+        let mirror = DocumentMirror(rootDirectory: effectiveRoot)
         mirror.cleanupStaleShadows()
         self.mirror = mirror
 
