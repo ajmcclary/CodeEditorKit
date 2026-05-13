@@ -300,8 +300,14 @@ public final class AsyncSyntaxHighlighter {
         // Store the task
         highlightingTask = task
 
-        // Wait for the task to complete
-        await task.value
+        // Wait for the task to complete, optionally feeding UnifiedPerformanceSystem.
+        if let ups = textView.configuration.performance.unifiedPerformanceSystem {
+            await ups.track(.syntaxHighlighting) {
+                await task.value
+            }
+        } else {
+            await task.value
+        }
     }
 
     nonisolated private func highlightInBackground(text: String, language: Language) async -> [HighlightedToken] {
