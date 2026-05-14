@@ -4,7 +4,7 @@ Synthesis of four parallel reviewer passes covering the entire `Sources/` tree, 
 
 ## Status (2026-05-14)
 
-All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`), the SwiftUI hot path + env hygiene batch (`CodeEditor.body` runtime-deps caching, `EditorEventBusInstaller.sourcePosition` LineGeometryStore fast path, `EditorState` env default shared sentinel, `SwiftUICompletionItem`/`CompletionKind` `Sendable`), the Language descriptor cleanup batch (dropped dead `highlightingStrategy` field, added explicit `usesRegexHighlighter` flag, hoisted `HTMLSymbolProvider` attribute regexes), and the Logger privacy + tokens + continuation batch (explicit `.public` OSLog privacy, `Tokens.Palette.TrafficLight.*`, `SmartCompletionEngine` continuation dropped). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
+All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`), the SwiftUI hot path + env hygiene batch (`CodeEditor.body` runtime-deps caching, `EditorEventBusInstaller.sourcePosition` LineGeometryStore fast path, `EditorState` env default shared sentinel, `SwiftUICompletionItem`/`CompletionKind` `Sendable`), the Language descriptor cleanup batch (dropped dead `highlightingStrategy` field, added explicit `usesRegexHighlighter` flag, hoisted `HTMLSymbolProvider` attribute regexes), the Logger privacy + tokens + continuation batch (explicit `.public` OSLog privacy, `Tokens.Palette.TrafficLight.*`, `SmartCompletionEngine` continuation dropped), the Non-design remainder batch (engines `final`, FuzzyMatcher → OptimizedFuzzyMatcher, `@Dependency` wrapper, Swift Testing detection, JSON token round-trip removed, `PerformanceMonitor` lazy cleanup, `DiagnosticsBridge` isolation hop, `CodeEditorAPI` NSRange-only surface, `ProcessTransport` readabilityHandler, `RegexBackedRangeQueryParser` deletion, sample README), and the Sample coverage gaps batch (PerformanceInsightsPanel + DetailedPerformanceReportView in the sheet, individual `.codeLanguage` / `.codeWorkspaceRoot` / `.lineNumbers` / `.becomeFirstResponder()` modifiers, `LSPCompletionProvider` registration + context wiring, SnippetTemplate + fuzzyFilter + CompletionRankingModel demo, `CodeEditorError` recovery messages, EditorTitleBar + EditorTrafficLights + EditorBreadcrumbView + PlatformGlassSurface chrome, iOS ContentUnavailableView for desktop-only inspectors, `DocumentStore.save(_:)` + ⌘S, `CodeEditor.withConfiguration` on iOS). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
 
 | # | Issue | Status | Notes |
 |---|---|---|---|
@@ -222,6 +222,61 @@ Three items from the Cross-cutting Important list and the Minor section — priv
 
 Build: green. SwiftLint: 0 violations. Targeted suites (`Completion|Logger|TrafficLight`) pass without regressions.
 
+### Non-design remainder batch (landed 2026-05-14)
+
+Sweeps the remaining items from the Important + Minor sections that didn't need a design pass — six framework refactors, four minor fixes, plus the sample README. Strictly additive on the public surface except for the `CodeEditorAPI` migration (NSRange-only).
+
+| Item | Status | What landed |
+|---|---|---|
+| `SearchReplaceEngine` / `SmartEditingEngine` are `public class` (non-`final`) | ✅ Done | Both classes now `public final`; no in-tree subclasses existed. Closes the open-subclassing surface. |
+| Two parallel fuzzy matchers: `FuzzyMatcher` (non-`Sendable`) + `OptimizedFuzzyMatcher` (Sendable) | ✅ Done | Deleted `Completion/FuzzyMatcher.swift` (423 lines including dead `matchAcronym` / `highlightedString` extensions). Added `OptimizedFuzzyMatcher.matchSequential(pattern:candidates:)` public sync entry so `SmartCompletionEngine`'s `combineAndRank` (sync, MainActor) and `SymbolNavigator.searchSymbols` keep their non-async call sites. Tests (`PerformanceRegressionTests`, `ComprehensivePerformanceTests`) migrated; `FuzzyMatcher.MatchResult` references swapped for `OptimizedFuzzyMatcher.MatchResult`. |
+| `CodeEditorDependencies` reads `DependencyValues._current.codeEditorMemoryMonitor()` directly | ✅ Done | All eight factory accessors now resolve through `@Dependency(\.codeEditorMemoryMonitor) var factory` inside the function body. `withDependencies { }` overrides flow through reliably. |
+| `TestEnvironmentDetector.isRunningInTests` only checks XCTest env var | ✅ Done | Now combines: env var (XCTest), `NSClassFromString("XCTestCase")` (XCTest framework loaded), and `Bundle.allFrameworks` for a path containing `swift-testing` or `Testing.framework` (Swift Testing). Doc comment updated. |
+| `FastJSONTokenizer` round-trips color → `TokenType` to rebuild `HighlightedToken` | ✅ Done | `HighlightingStrategyExecutor.highlightJSON` now maps `FastJSONTokenizer.TokenType` → framework `TokenType` directly via a new `mapJSONTokenType(_:)` helper. The dead `TokenType.fromColor(_:scheme:)` static — sole call site of the round-trip — is deleted (40 lines removed from `SyntaxHighlightingCoordinator.swift`). Theme overrides that mapped two categories to the same hue are no longer collapsed. |
+| `PerformanceMonitor` starts a 5-min cleanup task at `init` unconditionally | ✅ Done | `init` is now empty. The first `startMeasuring(_:)` call lazily triggers `ensureCleanupTaskStarted()` which sets up the periodic drain. Unused `PerformanceMonitor` instances no longer keep a Task alive. |
+| `MainActor.assumeIsolated` after `.receive(on: DispatchQueue.main)` in `DiagnosticsBridge` | ✅ Done | The Combine publisher is no longer routed through `DispatchQueue.main`; the sink hops via `Task { @MainActor [weak self] in self?.handle(dict) }`. Isolation is statically guaranteed rather than asserted. |
+| `CodeEditorAPI` mixes `Range<String.Index>` and `NSRange` | ✅ Done | Public protocol surface is now NSRange-only. Affected signatures: `replaceText(in:with:)`, `deleteText(in:)`, `moveCursor(to:)` (Int offset), `find(_:options:)` → `[NSRange]`, `replaceAll(_:with:options:)`, `scrollToVisible(_:)`, `visibleRange()` → `NSRange` (non-optional), `lineNumber(at:)` (Int offset), `lineRange(for:)` → `NSRange?`. Default impls in `CodeEditorAPI.swift` rewritten against `NSString` line-enumeration. Concrete impls in `CodeEditorView+CodeEditorAPIExtensions.swift` rewritten. Internal callers updated: `EditorController.gotoLine` / `currentLineNumber` / `textRange(forLine:)` / `nsRange(forLine:)` / `nsLocation(forLSPLine:character:)`, `GutterViewModel.selectLineNumber`. `Range`/`nsRange` conversion helpers on the extension dropped (no external callers). Public-API impact: the old `Range<String.Index>` method bodies had no in-tree call sites, so the migration is source-breaking only for hosts that reached for `String.Index` directly. |
+| `ProcessTransport` busy-polls `availableData` every 10ms | ✅ Done | Replaced the busy-poll loop with `fileHandleForReading.readabilityHandler`. The handler runs on the OS's private queue; bytes hop back into the actor via `Task { await self.deliverStdoutData(data) }`. Empty data (`EOF`) detaches the handler. `stderr` follows the same pattern. `readTask` / `stderrTask` properties retired; `stdoutReading` flag prevents double-installation. `disconnect()` and `deinit` clear both readability handlers before tearing down the process. No more 100 wake-ups/sec per LSP transport. |
+| Delete `RegexBackedRangeQueryParser` | ✅ Done | The 70-line class in `RegexRangeHighlightProvider.swift` removed (unused in production — `makeProvider(for:)` already used `RegexIncrementalRangeQueryParser`). Tests migrated: `Tests/CodeEditorPluginTests/RegexRangeHighlightProviderTests.swift` (371 lines of correctness + benchmark coverage) now targets `RegexIncrementalRangeQueryParser` directly. Doc-comment reference in `Sources/CodeEditorTreeSitterLanguages/README.md` also updated. |
+| No `Sources/CodeEditorSample/README.md` — `cd CodeEditorSample` trap | ✅ Done | Added a README explaining the sample is a target (not a directory), with `swift run CodeEditorSample` / `./Scripts/run-sample.sh` examples and a brief tour of `App/`, `Documents/`, `Sidebars/`, `iOS/`. |
+
+**Files touched (this batch — 17 modified, 1 added, 1 deleted):**
+Sources — `Sources/CodeEditorPlugin/Features/SearchReplaceEngine.swift`, `Sources/CodeEditorPlugin/Features/SmartEditingEngine.swift`, `Sources/CodeEditorPlugin/Features/SymbolNavigator.swift`, `Sources/CodeEditorPlugin/Completion/OptimizedFuzzyMatcher.swift`, `Sources/CodeEditorPlugin/Completion/SmartCompletionEngine.swift`, `Sources/CodeEditorPlugin/Core/CodeEditorDependencies.swift`, `Sources/CodeEditorPlugin/Utilities/TestEnvironmentDetector.swift`, `Sources/CodeEditorPlugin/SyntaxHighlighting/HighlightingStrategyExecutor.swift`, `Sources/CodeEditorPlugin/SyntaxHighlighting/SyntaxHighlightingCoordinator.swift`, `Sources/CodeEditorPlugin/Performance/PerformanceMonitor.swift`, `Sources/CodeEditorPlugin/Core/CodeEditorAPI.swift`, `Sources/CodeEditorPlugin/Core/CodeEditorView+CodeEditorAPIExtensions.swift`, `Sources/CodeEditorPlugin/Layout/GutterViewModel.swift`, `Sources/CodeEditorPlugin/SwiftUI/EditorController.swift`, `Sources/CodeEditorPlugin/LSP/Transport/ProcessTransport.swift`, `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/RegexRangeHighlightProvider.swift`, `Sources/CodeEditorTreeSitterLanguages/README.md`, `Sources/CodeEditorSample/App/LSP/DiagnosticsBridge.swift`.
+Tests — `Tests/CodeEditorPluginTests/PerformanceRegressionTests.swift`, `Tests/CodeEditorPluginTests/ComprehensivePerformanceTests.swift`, `Tests/CodeEditorPluginTests/RegexRangeHighlightProviderTests.swift`, `Tests/CodeEditorPluginTests/LineGeometryStoreBenchmarkTests.swift`.
+Added — `Sources/CodeEditorSample/README.md`.
+Deleted — `Sources/CodeEditorPlugin/Completion/FuzzyMatcher.swift`.
+
+Build: green. SwiftLint: 0 violations. Targeted run (`Highlight|Symbol|FuzzyMatcher|LSPClient|RegexRange|PerformanceMonitor|EditorController|CodeEditorAPI|TestEnvironment|FastJSON|DiagnosticsBridge|SwiftUICoordinator`) — 60 tests in 17 suites passed with one pre-existing known issue (`MockRangeHighlightProvider.MockError` surfaced through IssueReporting; not introduced by this batch).
+
+### Sample coverage gaps batch (landed 2026-05-14)
+
+Closes every "Coverage gaps the sample fails to demonstrate" bullet plus the eighth API gap (`#7` performance observer modifier was deferred earlier — the underlying gap was the duplicated `PerformanceInspectorPanel`). All public framework surface area that previously had zero in-tree call sites now has at least one demonstration.
+
+| Item | Status | What landed |
+|---|---|---|
+| `PerformanceInsightsPanel` (framework) was duplicated by sample's `PerformanceInspectorPanel` | ✅ Done | The sample's rich bespoke panel stays (it covers FPS, memory pressure, adaptive mode, sparkline — none of which the framework's compact view offers) and serves as the "build your own inspector" reference. The framework's `PerformanceInsightsPanel` is now embedded in the `InspectorSidebar` "Show Report" sheet alongside `DetailedPerformanceReportView`, so both views fire on every Report-button press. |
+| `.codeLanguage(_:)`, `.codeWorkspaceRoot(_:)`, line-numbers / first-responder modifiers were unused | ✅ Done | `WindowBody.editorPane` replaced the bulk `.codeEditorEnvironment(language:configuration:becomeFirstResponder:workspaceRoot:)` call with the individual modifiers: `.codeLanguage(_:)`, `.codeWorkspaceRoot(_:)`, `.lineNumbers(_:)`, `.becomeFirstResponder()`, plus `.environment(\.codeEditorConfiguration, _:)` for the remaining knobs that don't have dedicated modifiers. |
+| `LSPCompletionProvider` wired nowhere through `CompletionManager` | ✅ Done | `LSPSampleCoordinator.start()` now creates an `LSPCompletionProvider(lspManager: manager, supportedLanguages: [.swift])` and registers it via `EditorController.registerCompletionProvider(_:)` after the language server reports `.running`. `stop()` unregisters it. `openTab(...)` and `handleTextChange(...)` call `provider.updateContext(filePath:, text:)` so trigger-character completions land in the right shadow file. |
+| `SnippetTemplate`, `CompletionProviderUtilities.fuzzyFilter`, `CompletionRankingModel` unreferenced | ✅ Done | `DemoCompletionProvider` (the sample's "copy this for your own provider" reference) rewritten to use all three: a static `[SnippetTemplate]` catalogue produces `CompletionItemModel`s, `CompletionProviderUtilities.fuzzyFilter(items:filter:keyPath:)` narrows against `context.currentWord`, then `CompletionRankingModel.rank(items:context:frequencyData:)` orders the results. Converted from `struct` to `@MainActor final class` because the ranking model is MainActor-isolated. |
+| `CodeEditorError` recovery suggestions pitched in docs but never used | ✅ Done | `LSPSampleCoordinator` failure paths now construct `CodeEditorError.languageServerNotAvailable("Swift")` (missing binary) and `.languageServerCommunicationFailed(error.localizedDescription)` (start failure). A new private `userFacingMessage(for:)` helper renders `errorDescription` + ` — ` + `recoverySuggestion` so the inspector surfaces the framework's recovery copy. |
+| `EditorTrafficLights`, `EditorTitleBar`, `EditorBreadcrumbView`, `PlatformGlassSurface` from `CodeEditorUI` — zero call sites | ✅ Done | `CodeEditorSampleApp` opted into `.windowStyle(.hiddenTitleBar)` so the embedded chrome owns the top of the window. `RootWindow` now renders `EditorTitleBar(title:trafficLights:)` with wire-actions for close/minimize/zoom routed to `NSApp.keyWindow?.perform{Close,Miniaturize,Zoom}`, plus `EditorBreadcrumbView()` reading the framework-populated `\.editorState.breadcrumbPath` between the tab strip and editor pane. `EditorTrafficLights` is consumed transitively via `EditorTitleBar`. `PlatformGlassSurface` is consumed transitively via `EditorTitleBar`'s `.platformGlassSurface(.titleBar)` and directly via the breadcrumb's `.platformGlassSurface(.tabBar)`. |
+| iOS silently lacks LSP / completion / perf / annotations inspectors | ✅ Done | `IOSRootView` gains a fifth sidebar section (`.inspectors`) that renders a `ContentUnavailableView` explaining the inspector panels live in `Sources/CodeEditorSample/Sidebars/` behind `#if canImport(AppKit)` — and that the underlying framework APIs (`LSPManager`, `CompletionManager`, `PerformanceInsights`, `AnnotationsHub`) do work on iOS; only the sample's chrome is desktop-only. |
+| No file-save path — `DocumentStore.openFile` reads but never writes | ✅ Done | `DocumentStore.save(_ id: TabModel.ID? = nil)` writes UTF-8 back through `TabModel.url` and clears `isDirty`. New `SaveOutcome` enum models `.saved(url:)` / `.untitled` / `.noTab` / `.failed(error:)` so the host can route Save-As separately. `CodeEditorSampleApp` adds a `Save` menu item bound to `⌘S`; `AppState.handleSaveOutcome(_:)` logs the result via `CrossPlatformLogger`. Save-As for `Untitled-*` tabs is intentionally left as a follow-up. |
+| `CodeEditor.withLanguage` / `withConfiguration` factories unused | ✅ Done | `IOSRootView.editor` switched from `CodeEditor(text:)` + `.codeEditorEnvironment(...)` to `CodeEditor.withConfiguration(_:configuration:language:theme:)`. The macOS path keeps the individual-modifier form so both calling conventions are demonstrated. |
+
+**Files touched (this batch — 9 modified, 0 added, 0 deleted):**
+`Sources/CodeEditorSample/Sidebars/InspectorSidebar.swift`, `Sources/CodeEditorSample/App/WindowBody.swift`, `Sources/CodeEditorSample/App/RootWindow.swift`, `Sources/CodeEditorSample/App/CodeEditorSampleApp.swift`, `Sources/CodeEditorSample/App/AppState.swift`, `Sources/CodeEditorSample/App/LSP/LSPSampleCoordinator.swift`, `Sources/CodeEditorSample/App/Completion/DemoCompletionProvider.swift`, `Sources/CodeEditorSample/Documents/DocumentStore.swift`, `Sources/CodeEditorSample/iOS/IOSRootView.swift`.
+
+Build: green. SwiftLint: 0 violations. No new test failures.
+
+**Deliberately deferred:**
+- Save-As panel for `Untitled-*` tabs. Needs a sample-side NSSavePanel flow and a small iOS document-picker variant; not a "non-design" change.
+- Three independent completion ranking pipelines (`CompletionManager.sortAndDeduplicateItems` vs `CompletionRankingModel.rank` vs `SmartCompletionEngine.rerank`) still disagree. Unification is a design call — what's the canonical scoring algorithm? Sample now exercises `CompletionRankingModel` so the gap is at least visible.
+- LSP iOS coverage. The docstrings still claim "remote servers on iOS" while the implementation is `#if canImport(AppKit)`. Adding iOS support or rewriting the docs both need design.
+- `SmartEditingEngine.attach` delegate-overwrite (LSP/completion/folding all want the delegate slot). Needs a delegate-multiplexer design.
+- `CodeEditorEnvironment.with(...)` cannot clear optional fields. Needs a sentinel/explicit-nil API design.
+- Inconsistent SwiftUI modifier return types (`some View` vs `CodeEditor`). Needs a one-pass migration decision.
+
 
 
 ## Top-level take
@@ -257,12 +312,12 @@ The most important strategic finding is from the sample review: **the API gaps r
 - ~~`MemoryMonitor` registers an `NSObjectProtocol` termination observer but never removes it; `Task`s aren't auto-cancelled (`Performance/MemoryMonitor.swift:259-285`). Leaks NotificationCenter slots + live tasks across tests/windows.~~ ✅ Done in the 2026-05-14 Concurrency batch.
 - ~~`EditorEventPublisher.publish` (`Core/EditorEventPublisher.swift:98-113`) spawns an unstructured `Task` per publish — A/B ordering is not preserved despite call-site expectations.~~ ✅ Done in the Editor lifecycle + EditorState mirror batch on 2026-05-14 (chain-tail FIFO via `deliveryTask`).
 - ~~`LSPClient.disconnect()` clears state synchronously while shutdown runs detached (`LSP/LSPClient.swift:179-224`); in-flight responses arriving after dictionary clear are silently dropped.~~ ✅ Done in the 2026-05-14 Concurrency batch.
-- `ProcessTransport` busy-polls `availableData` every 10ms and races its `receive()` with `setDataHandler` (`ProcessTransport.swift:233-256`). Use `readabilityHandler`/`DispatchIO`.
+- ~~`ProcessTransport` busy-polls `availableData` every 10ms and races its `receive()` with `setDataHandler` (`ProcessTransport.swift:233-256`). Use `readabilityHandler`/`DispatchIO`.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (`readabilityHandler` for stdout + stderr; handlers torn down in `disconnect()` and `deinit`).
 - ~~`LayoutCoordinator.processPendingOperations` can recurse unboundedly via its own `defer` (`Layout/LayoutCoordinator.swift:101-111`). Convert to an iterative drain.~~ ✅ Done in the 2026-05-14 Concurrency batch.
 - ~~`completionRequested` does not cancel in-flight task before spawning a new one (`Core/CodeEditorView+CompletionExtensions.swift:100`).~~ ✅ Done in the Editor lifecycle + EditorState mirror batch on 2026-05-14.
 
 ### API correctness
-- `CodeEditorAPI` mixes `Range<String.Index>` and `NSRange` despite claiming the latter is canonical (`Core/CodeEditorAPI.swift:65`, sites 93–145). `String.Index` is unstable across edits. Pick `NSRange`.
+- ~~`CodeEditorAPI` mixes `Range<String.Index>` and `NSRange` despite claiming the latter is canonical (`Core/CodeEditorAPI.swift:65`, sites 93–145). `String.Index` is unstable across edits. Pick `NSRange`.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (protocol is now NSRange-only; default impls rewritten against `NSString` line-enumeration; internal callers updated).
 - `EditorConfiguration.Layout.Codable` drops 5 fields silently (`Configuration/EditorConfiguration+LayoutExtensions.swift:66-116`) — `annotationBadgeSize`, `annotationBadgePadding`, `minimapWidth`, `foldingControlSize`, `foldingControlPadding`. Data loss on persistence round-trip.
 - `EditorConfiguration.Performance.usesRangeBasedHighlighting` is missing from `CodingKeys` and `==` (`+PerformanceExtensions.swift:22 / 128–142 / 194–209`).
 - `CodeEditorEnvironment.with(...)` cannot clear optional fields — `nil` is collapsed to "no change" (`SwiftUI/CodeEditorEnvironment+Extensions.swift:84-95, 185-207`).
@@ -270,7 +325,7 @@ The most important strategic finding is from the sample review: **the API gaps r
 - ~~`CodeEditor.body` reallocates `EditorRuntimeDependencies.live(...)` per render — `MemoryMonitor`, `ActorCoordinator`, etc. all rebuilt (`SwiftUI/CodeEditor.swift:271-277` + `Core/EditorRuntime.swift:46-64`).~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (`@State`-cached fallback; env overrides applied to a local copy).
 - Inconsistent SwiftUI modifier return types: some return `some View`, others return `CodeEditor` (`SwiftUI/CodeEditor+ModifiersExtensions.swift`). Chains break once a host hits a `some View` modifier before a `CodeEditor`-typed one.
 - `SmartEditingEngine.attach` overwrites `textView.delegate` with a warning log (`Features/SmartEditingEngine.swift:53-61`). With LSP/completion/folding all wanting hooks, last wins.
-- `SearchReplaceEngine` and `SmartEditingEngine` are `public class` (non-`final`) — open subclassing.
+- ~~`SearchReplaceEngine` and `SmartEditingEngine` are `public class` (non-`final`) — open subclassing.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (both marked `public final`).
 - ~~`SwiftUICompletionItem` not `Sendable` despite being returned from a `@Sendable` async closure (`SwiftUI/CodeEditor+CompletionExtensions.swift:36`).~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (`SwiftUICompletionItem: Sendable` + `CompletionKind: Sendable`).
 
 ### Language/highlighting/completion correctness
@@ -278,15 +333,15 @@ The most important strategic finding is from the sample review: **the API gaps r
 - Three independent completion ranking pipelines disagree: `CompletionManager.sortAndDeduplicateItems:289-311`, `CompletionRankingModel.rank:33-64`, `SmartCompletionEngine.rerank`.
 - ~~`descriptor.highlightingStrategy` is dead data — every descriptor sets it; nothing reads it (`HighlightingStrategyExecutor.determineStrategy:47-61` hardcodes the routing).~~ ✅ Done in the Language descriptor cleanup batch on 2026-05-14 (field + static helper deleted).
 - ~~`parserName` (a tree-sitter grammar id) doubles as a "use regex highlighter" gate (`RegexSyntaxHighlighter+LanguagesExtensions.swift:35,46`, `RegexRangeHighlightProvider.swift:319`). Misleading; introduce explicit `usesRegexHighlighter`.~~ ✅ Done in the Language descriptor cleanup batch on 2026-05-14 (`usesRegexHighlighter: Bool` added; three call sites switched).
-- Stale language count: `SyntaxHighlightingCoordinator.swift:167` says "17+ languages" — CLAUDE.md is canonical at 25 + plain text.
-- Two parallel fuzzy matchers: `FuzzyMatcher` (`FuzzyMatcher.swift:4`, non-`Sendable`) and `OptimizedFuzzyMatcher` (Sendable). `SmartCompletionEngine.swift:54` uses the non-`Sendable` one.
-- `RegexBackedRangeQueryParser` invalidates the entire document on every edit (`RegexRangeHighlightProvider.swift:88-92`). Unused; delete to prevent confusion.
+- ~~Stale language count: `SyntaxHighlightingCoordinator.swift:167` says "17+ languages" — CLAUDE.md is canonical at 25 + plain text.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~Two parallel fuzzy matchers: `FuzzyMatcher` (`FuzzyMatcher.swift:4`, non-`Sendable`) and `OptimizedFuzzyMatcher` (Sendable). `SmartCompletionEngine.swift:54` uses the non-`Sendable` one.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (`FuzzyMatcher.swift` deleted; `SmartCompletionEngine` + `SymbolNavigator` + tests migrated to `OptimizedFuzzyMatcher.matchSequential`).
+- ~~`RegexBackedRangeQueryParser` invalidates the entire document on every edit (`RegexRangeHighlightProvider.swift:88-92`). Unused; delete to prevent confusion.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (class deleted; tests migrated to `RegexIncrementalRangeQueryParser`).
 
 ### Cross-cutting
 - ~~`CrossPlatformLogger.osLogger.log(level:, "\(message)")` (`Utilities/CrossPlatformLogger.swift:100`) defeats OSLog format-string privacy/redaction — call sites already interpolated state. Privacy annotations are lost; arbitrary state may leak into release logs.~~ ✅ Done in the Logger privacy + tokens + continuation batch on 2026-05-14 (explicit `.public` privacy + doc comment spelling out the caller-redacts contract).
-- `CodeEditorDependencies` reads `DependencyValues._current.codeEditorMemoryMonitor()` instead of the `@Dependency` property wrapper (`Core/CodeEditorDependencies.swift:9`). `withDependencies { }` overrides won't flow through actor hops reliably.
+- ~~`CodeEditorDependencies` reads `DependencyValues._current.codeEditorMemoryMonitor()` instead of the `@Dependency` property wrapper (`Core/CodeEditorDependencies.swift:9`). `withDependencies { }` overrides won't flow through actor hops reliably.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (all eight factories resolve through `@Dependency`).
 - ~~`EditorEventBusInstaller.sourcePosition` is O(n) per hover/⌘-click via UTF-16 walk (`Layout/EditorEventBusInstaller.swift:124-144`). Use `LineGeometryStore`.~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (fast-path via `(textView as? CodeEditorView)?.lineGeometryStore`; UTF-16 walk retained as fallback for non-editor `NSTextView`s).
-- `PlatformEventFilter.shouldAllow` always returns `true` (`Core/UnifiedEventSystem.swift:241-244`). Dead.
+- ~~`PlatformEventFilter.shouldAllow` always returns `true` (`Core/UnifiedEventSystem.swift:241-244`). Dead.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
 - ~~`EditorTrafficLights` hardcodes RGB outside the token system (`Sources/CodeEditorUI/Window/EditorTrafficLights.swift:41-48`).~~ ✅ Done in the Logger privacy + tokens + continuation batch on 2026-05-14 (`Tokens.Palette.TrafficLight.{close, minimize, zoom}` added).
 
 ---
@@ -305,36 +360,39 @@ These are what the sample had to *invent* to integrate the framework — the fra
 8. **`FrameworkEdgeInsets` lacks per-edge writable subscripts** — `LayoutKnobsSection.swift:64-79` had to rebuild the whole struct per set.
 
 ### Coverage gaps the sample fails to demonstrate
-- `.codeLanguage(_:)`, `.showsLineNumbers(_:)`, `.codeWorkspaceRoot(_:)` — advertised in the umbrella; sample uses none of them.
-- `CodeEditor.withLanguage`/`withConfiguration` factories — unused.
-- `SnippetTemplate`, `CompletionProviderUtilities.fuzzyFilter`, `CompletionRankingModel` — unreferenced.
-- `LSPCompletionProvider` registration through `CompletionManager` — wired nowhere.
-- `CodeEditorError` recovery — pitched in umbrella docs, never used.
-- `PerformanceInsightsPanel` (framework view) is duplicated by `Sidebars/PerformanceInspectorPanel`; sample re-rolls.
-- `EditorTrafficLights`, `EditorTitleBar`, `EditorBreadcrumbView`, `PlatformGlassSurface` from `CodeEditorUI` — zero call sites.
-- iOS has no LSP/perf/completion inspector — silently absent. Add a `ContentUnavailableView` explaining the gap.
-- No file-save path; `DocumentStore.openFile` reads, never writes.
+
+All landed in the Sample coverage gaps batch on 2026-05-14:
+
+- ~~`.codeLanguage(_:)`, `.showsLineNumbers(_:)`, `.codeWorkspaceRoot(_:)` — advertised in the umbrella; sample uses none of them.~~ ✅ Done (`WindowBody.editorPane` now uses the individual modifiers).
+- ~~`CodeEditor.withLanguage`/`withConfiguration` factories — unused.~~ ✅ Done (`IOSRootView.editor` uses `CodeEditor.withConfiguration`).
+- ~~`SnippetTemplate`, `CompletionProviderUtilities.fuzzyFilter`, `CompletionRankingModel` — unreferenced.~~ ✅ Done (`DemoCompletionProvider` uses all three).
+- ~~`LSPCompletionProvider` registration through `CompletionManager` — wired nowhere.~~ ✅ Done (`LSPSampleCoordinator.start()` registers it; `openTab`/`handleTextChange` keep its context current).
+- ~~`CodeEditorError` recovery — pitched in umbrella docs, never used.~~ ✅ Done (`LSPSampleCoordinator` failure paths surface `errorDescription` + `recoverySuggestion`).
+- ~~`PerformanceInsightsPanel` (framework view) is duplicated by `Sidebars/PerformanceInspectorPanel`; sample re-rolls.~~ ✅ Done (framework panel embedded in the Report sheet alongside `DetailedPerformanceReportView`).
+- ~~`EditorTrafficLights`, `EditorTitleBar`, `EditorBreadcrumbView`, `PlatformGlassSurface` from `CodeEditorUI` — zero call sites.~~ ✅ Done (window opted into `.hiddenTitleBar`; `RootWindow` renders the chrome).
+- ~~iOS has no LSP/perf/completion inspector — silently absent. Add a `ContentUnavailableView` explaining the gap.~~ ✅ Done (`IOSRootView` adds an `.inspectors` sidebar section with an explanatory `ContentUnavailableView`).
+- ~~No file-save path; `DocumentStore.openFile` reads, never writes.~~ ✅ Done (`DocumentStore.save(_:)` + `⌘S`; Save-As for `Untitled-*` tabs deliberately deferred).
 
 ---
 
 ## Minor issues / dead code worth pruning
 
-- Dead types: `Text/TextLayoutManager.swift`, `Text/TextLayoutFragmentView.swift`, `Models/MarkedText.swift`, `Models/NSTextSegmentType.swift`, most of `Core/SendableTypes.swift` (only `SendablePerformanceMetric`, `FileChangeNotification` referenced).
-- `TestEnvironmentDetector.isRunningInTests` checks `XCTestConfigurationFilePath` only — wrong for Swift Testing (`Utilities/TestEnvironmentDetector.swift:39-41`). Worse, the env-detection branching in `MemoryManagementCoordinator.setupMemoryMonitoring:119` hides lifecycle bugs from tests.
-- Magic `17.0` line-height in `LineGeometryEditHandler.swift:125-126,136,142`.
-- `FastJSONTokenizer` round-trips color → `TokenType` to rebuild `HighlightedToken` (`HighlightingStrategyExecutor.highlightJSON:87-97`). Defeats theme overrides.
+- ~~Dead types: `Text/TextLayoutManager.swift`, `Text/TextLayoutFragmentView.swift`, `Models/MarkedText.swift`, `Models/NSTextSegmentType.swift`, most of `Core/SendableTypes.swift` (only `SendablePerformanceMetric`, `FileChangeNotification` referenced).~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`TestEnvironmentDetector.isRunningInTests` checks `XCTestConfigurationFilePath` only — wrong for Swift Testing (`Utilities/TestEnvironmentDetector.swift:39-41`).~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (now also checks `NSClassFromString("XCTestCase")` and a swift-testing/Testing-framework bundle scan). The remaining concern about `MemoryManagementCoordinator.setupMemoryMonitoring:119` hiding lifecycle bugs from tests is a separate design call (it's intentional test isolation, not a typo).
+- ~~Magic `17.0` line-height in `LineGeometryEditHandler.swift:125-126,136,142`.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14 (`LineGeometryStore.defaultEstimatedHeight`).
+- ~~`FastJSONTokenizer` round-trips color → `TokenType` to rebuild `HighlightedToken` (`HighlightingStrategyExecutor.highlightJSON:87-97`). Defeats theme overrides.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (direct `FastJSONTokenizer.TokenType` → framework `TokenType` mapping; dead `TokenType.fromColor` removed).
 - ~~`HTMLSymbolProvider.extractAttribute` compiles a regex per call (`HTMLSymbolProvider.swift:92-93`).~~ ✅ Done in the Language descriptor cleanup batch on 2026-05-14 (hoisted both regexes to `static let`).
 - ~~`CompletionDebouncer.executeRequest` cancels prior tasks but `withCheckedThrowingContinuation` in `SmartCompletionEngine` doesn't get resumed — caller can hang (`CompletionDebouncer.swift:196-221`, `SmartCompletionEngine:191-198`).~~ ✅ Done in the Logger privacy + tokens + continuation batch on 2026-05-14 (continuation removed; `performCompletion` now returns `CompletionResult` directly).
-- `EditorConfiguration.swift:68` doc comment teaches `print("Configuration errors: \(errors)")` — exempt by lint but bad pedagogy.
-- `CodeEditorUI/CodeEditorUI.swift:11` uses `## Topics` DocC directive — project has no DocC catalog.
-- `PerformanceMonitor` starts a 5-min cleanup task at `init` regardless of usage (`Performance/PerformanceMonitor.swift:64-69`).
-- `@preconcurrency import SwiftUI` in `CodeEditor.swift:2` and modifier files — unlinked.
-- `ConfigurationCodeFormatter.swiftStringLiteral` (`Sidebars/ConfigurationCodeFormatter.swift:284-286`) is dead.
-- `durationMilliseconds` duplicated in `ConfigurationCodeFormatter:278-282` and `KnobRow.swift:355-359`.
-- `AppState.swift:76-78` cites `docs/superpowers/...` — that path is archived working notes per CLAUDE.md.
-- `SettingsScene`'s `frame(width: 1380, height: 880)` precedes `windowResizability(.contentSize)` and overrides the min sizes (`App/CodeEditorSampleApp.swift:16-20`).
-- `MainActor.assumeIsolated` after `.receive(on: DispatchQueue.main)` (`DiagnosticsBridge.swift:49-55`) — works only by accident.
-- No `Sources/CodeEditorSample/README.md`; users will keep hitting the `cd CodeEditorSample` trap.
+- ~~`EditorConfiguration.swift:68` doc comment teaches `print("Configuration errors: \(errors)")` — exempt by lint but bad pedagogy.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`CodeEditorUI/CodeEditorUI.swift:11` uses `## Topics` DocC directive — project has no DocC catalog.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`PerformanceMonitor` starts a 5-min cleanup task at `init` regardless of usage (`Performance/PerformanceMonitor.swift:64-69`).~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (cleanup task starts lazily on first `startMeasuring(_:)`).
+- ~~`@preconcurrency import SwiftUI` in `CodeEditor.swift:2` and modifier files — unlinked.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`ConfigurationCodeFormatter.swiftStringLiteral` (`Sidebars/ConfigurationCodeFormatter.swift:284-286`) is dead.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`durationMilliseconds` duplicated in `ConfigurationCodeFormatter:278-282` and `KnobRow.swift:355-359`.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`AppState.swift:76-78` cites `docs/superpowers/...` — that path is archived working notes per CLAUDE.md.~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`SettingsScene`'s `frame(width: 1380, height: 880)` precedes `windowResizability(.contentSize)` and overrides the min sizes (`App/CodeEditorSampleApp.swift:16-20`).~~ ✅ Done in the Dead-code & doc cleanup batch on 2026-05-14.
+- ~~`MainActor.assumeIsolated` after `.receive(on: DispatchQueue.main)` (`DiagnosticsBridge.swift:49-55`) — works only by accident.~~ ✅ Done in the Non-design remainder batch on 2026-05-14 (sink now hops via `Task { @MainActor [weak self] in … }`).
+- ~~No `Sources/CodeEditorSample/README.md`; users will keep hitting the `cd CodeEditorSample` trap.~~ ✅ Done in the Non-design remainder batch on 2026-05-14.
 - ~~**`EditorState.language` is never populated by the framework.**~~ ✅ Done in the Editor lifecycle + EditorState mirror batch on 2026-05-14. The reviewer's "two-line fix" diagnosis was off — `EditorContainerViewModel.updateEditorState()` writes to a *different* (nested-struct) `EditorState`, not the `@Observable` class the chrome reads. The actual wiring threads the Observable `\.editorState` env value through `CodeEditor.body` → representable → `CodeEditorBaseCoordinator.hostEditorState` (weak), and the coordinator mirrors `language` + `lineCount` from `updateState(...)` and `selection` from `handleSelectionChange(...)`. See the batch section near the top for details and tests.
 
 ---
@@ -353,8 +411,20 @@ These are what the sample had to *invent* to integrate the framework — the fra
 
 ## Suggested ordering if you want to act on this
 
-1. **Land the 7 Critical fixes** first — they're either silent correctness bugs (1, 2, 4) or hot-path perf cliffs (5, 6, 7) plus one strict-concurrency soundness fix (3).
-2. **Close the sample-driven API gaps** (the 8 numbered items above) — every host you ship to will rediscover the same gaps.
-3. **Pick off the lifecycle/concurrency batch** as a single PR — `MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect`.
-4. **Codable + Equatable completeness sweep** for `EditorConfiguration.*` — small, high-value.
-5. Then minor/dead-code cleanup as background work.
+1. ~~**Land the 7 Critical fixes** first — they're either silent correctness bugs (1, 2, 4) or hot-path perf cliffs (5, 6, 7) plus one strict-concurrency soundness fix (3).~~ ✅ All landed.
+2. ~~**Close the sample-driven API gaps** (the 8 numbered items above) — every host you ship to will rediscover the same gaps.~~ ✅ Items #1, #2, #4, #8 landed in the first pass; items #3, #5, #6, #7 still require design (see "Still open" notes near the top).
+3. ~~**Pick off the lifecycle/concurrency batch** as a single PR — `MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect`.~~ ✅ Landed. `ProcessTransport` busy-poll (also in this bucket) landed in the Non-design remainder batch.
+4. ~~**Codable + Equatable completeness sweep** for `EditorConfiguration.*` — small, high-value.~~ ✅ Landed (Layout + Performance sub-structs).
+5. ~~Then minor/dead-code cleanup as background work.~~ ✅ Three batches landed (Dead-code & doc cleanup, Language descriptor cleanup, Non-design remainder).
+
+### What's left after this round
+
+All remaining items require a design conversation before any code lands:
+
+- **Sample-driven API gaps #3, #5, #6, #7** — `EditorDocument` recipe, `EditorController.onAttach`, `CompletionEvent` AsyncStream, `.performanceObserver(_:)` modifier.
+- **LSP iOS coverage** — docs claim "remote servers on iOS" but the implementation is gated to `#if canImport(AppKit)`. Either add iOS support or rewrite the docs.
+- **Three completion ranking pipelines disagree** — `CompletionManager.sortAndDeduplicateItems` vs `CompletionRankingModel.rank` vs `SmartCompletionEngine.rerank`. Pick one canonical scoring algorithm.
+- **`SmartEditingEngine.attach` overwrites the delegate** — needs a multiplexer (LSP / completion / folding all want the slot). Generalising the `TextEditEventObserving` pattern from `CodeFoldingEngine` is the suggested template in "Patterns worth codifying".
+- **`CodeEditorEnvironment.with(...)` cannot clear optional fields** — needs an explicit-nil sentinel or overloaded clearing variants.
+- **Inconsistent SwiftUI modifier return types** — `some View` vs `CodeEditor`. Pick one shape and migrate.
+- **Save-As for `Untitled-*` tabs** — needs sample-side `NSSavePanel` + iOS document-picker flows. Not a "non-design" change.
