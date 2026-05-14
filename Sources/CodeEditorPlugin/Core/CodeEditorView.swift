@@ -221,8 +221,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
     }
 
-    /// The syntax highlighting coordinator
-    internal let syntaxHighlighter = SyntaxHighlightingCoordinator()
+    /// The syntax highlighting coordinator.
+    ///
+    /// `nonisolated` so `deinit` can call `cancelHighlighting()` to shut down
+    /// any in-flight highlighting task that outlived the view's
+    /// `removeFromSuperview` (or never went through it). The coordinator is
+    /// itself `Sendable` and this is an immutable `let`, so no `(unsafe)` is
+    /// needed.
+    nonisolated internal let syntaxHighlighter = SyntaxHighlightingCoordinator()
 
     /// Async syntax highlighter with debouncing
     internal lazy var asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
@@ -585,6 +591,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     deinit {
         // Remove notification observers
         NotificationCenter.default.removeObserver(self)
+
+        // Cancel highlighting in case the view was dropped without going
+        // through `removeFromSuperview` (e.g., escape from a test harness or
+        // a host that bypasses the standard teardown). Idempotent with the
+        // sync cancel in `removeFromSuperview` because `cancelCurrent()`
+        // simply nils out a (possibly already-nil) task reference.
+        syntaxHighlighter.cancelHighlighting()
 
         // Note: Memory monitor cleanup is now handled in removeFromSuperview
         // to avoid creating tasks in deinit
