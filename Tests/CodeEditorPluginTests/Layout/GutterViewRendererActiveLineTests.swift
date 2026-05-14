@@ -1,10 +1,9 @@
-import Testing
 @testable import CodeEditorPlugin
+import Testing
 
 @Suite("GutterViewRenderer active line color")
 @MainActor
 struct GutterViewRendererActiveLineTests {
-
     @Test("Active line resolves to themedActiveLineNumberColor.")
     func activeLineUsesActiveColor() async throws {
         let renderer = GutterViewRenderer()

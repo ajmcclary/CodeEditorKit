@@ -84,8 +84,8 @@ The framework's `EditorState` mirror writes `language`, `selection`, and `lineCo
 ### B.4 ~~JSON `usesRegexHighlighter` redundancy~~ — done
 JSON now opts out of the regex pipeline (`usesRegexHighlighter: false`) to match the descriptor's own docstring and the actual routing in `HighlightingStrategyExecutor` (`.json` → `FastJSONTokenizer`). `RegexRangeHighlightProvider.makeProvider` has no production callers; the multi-language regex test was updated to filter on the flag.
 
-### B.5 NSRulerView gutter TextKit 1 island
-`Sources/CodeEditorPlugin/Layout/CodeEditorContainerView+AppKitExtensions.swift:drawHashMarksAndLabels(in:)` still reads `textView.layoutManager` for `glyphRange(forBoundingRect:in:)` enumeration, which triggers AppKit's TK1 compatibility shim. In production this means the editor flips to TK1 at first paint; in the headless test fixtures (no window) the TK2 stack is preserved. Rewrite the gutter against `NSTextLayoutManager.enumerateTextLayoutFragments(from:options:using:)` (or equivalent).
+### B.5 ~~NSRulerView gutter TextKit 1 island~~ — done
+`LineNumberRulerView` now delegates `drawHashMarksAndLabels(in:)` to `GutterViewRenderer` + `TextKitLineNumberHelper`, and fold-control hit-testing routes through the same TK2 helper. `NSTextView._layoutManager` stays nil through first paint (asserted by `LineNumberRulerViewTK2Tests`) — the TK1 compatibility shim is no longer synthesized. Active-line line-number coloring is wired through a new defaulted `activeLineNumber: Int?` parameter on `GutterViewRenderer.draw(...)` and refreshed on macOS via an `NSTextView.didChangeSelectionNotification` observer. Spec: `docs/superpowers/specs/2026-05-14-tk2-gutter-rewrite-design.md`; plan: `docs/superpowers/plans/2026-05-14-tk2-gutter-rewrite.md`.
 
 ### B.6 Save-As path
 Sample-side. `EditorDocuments.save(_:)` covers tabs that already have URLs. Save-As for `Untitled-*` tabs needs an `NSSavePanel` flow on macOS and an iOS document-picker variant. Tracked under A.1 above for the sample side; framework changes (if any) are minimal — `EditorDocuments` already exposes the storage and dirty tracking.

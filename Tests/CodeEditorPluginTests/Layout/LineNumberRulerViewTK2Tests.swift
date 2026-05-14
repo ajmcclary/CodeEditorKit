@@ -1,15 +1,14 @@
 #if canImport(AppKit)
 import AppKit
+@testable import CodeEditorPlugin
 import ObjectiveC.runtime
 import XCTest
-@testable import CodeEditorPlugin
 
 @MainActor
 final class LineNumberRulerViewTK2Tests: XCTestCase {
-
     /// Reads `NSTextView._layoutManager` without going through the public
     /// getter, which would itself synthesize the TK1 compatibility shim.
-    fileprivate func legacyLayoutManagerIvarValue(for textView: NSTextView) -> AnyObject? {
+    private func legacyLayoutManagerIvarValue(for textView: NSTextView) -> AnyObject? {
         guard let ivar = class_getInstanceVariable(NSTextView.self, "_layoutManager") else {
             XCTFail("NSTextView._layoutManager ivar not found — Apple may have renamed it. Update this test.")
             return nil

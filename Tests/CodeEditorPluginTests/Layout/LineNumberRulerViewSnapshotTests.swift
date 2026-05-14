@@ -1,12 +1,11 @@
 #if canImport(AppKit)
 import AppKit
+@testable import CodeEditorPlugin
 import SnapshotTesting
 import XCTest
-@testable import CodeEditorPlugin
 
 @MainActor
 final class LineNumberRulerViewSnapshotTests: XCTestCase {
-
     /// Toggle to `true` locally to re-record baselines after intentional
     /// visual changes. Keep `false` on commit.
     private static let isRecording = false
@@ -14,6 +13,11 @@ final class LineNumberRulerViewSnapshotTests: XCTestCase {
     override func setUp() {
         super.setUp()
         SnapshotTesting.isRecording = Self.isRecording
+    }
+
+    override func tearDown() {
+        SnapshotTesting.isRecording = false
+        super.tearDown()
     }
 
     /// Renders the ruler into a bitmap and returns the resulting NSImage. The
