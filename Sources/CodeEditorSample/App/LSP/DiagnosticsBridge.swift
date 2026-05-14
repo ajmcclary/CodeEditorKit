@@ -26,7 +26,10 @@ final class DiagnosticsBridge {
     private let applyDecoration: (_ attributes: [NSAttributedString.Key: Any], _ range: NSRange) -> Void
     private let clearAllDecorations: () -> Void
     private let activeURI: @MainActor () -> String?
-    private let currentTextLength: @MainActor () -> Int
+    /// Convert an LSP range into a UTF-16 `NSRange` against the active
+    /// buffer. Production wires this to `EditorController.nsRange(forLSPRange:)`;
+    /// tests can stub it to a fixture-aware identity-style function.
+    private let convertLSPRange: @MainActor (LSPRange) -> NSRange?
     private var subscription: AnyCancellable?
 
     init(
@@ -35,14 +38,14 @@ final class DiagnosticsBridge {
         applyDecoration: @escaping (_ attributes: [NSAttributedString.Key: Any], _ range: NSRange) -> Void,
         clearAllDecorations: @escaping () -> Void,
         activeURI: @escaping @MainActor () -> String?,
-        currentTextLength: @escaping @MainActor () -> Int
+        convertLSPRange: @escaping @MainActor (LSPRange) -> NSRange?
     ) {
         self.diagnosticsPublisher = diagnosticsPublisher
         self.hub = hub
         self.applyDecoration = applyDecoration
         self.clearAllDecorations = clearAllDecorations
         self.activeURI = activeURI
-        self.currentTextLength = currentTextLength
+        self.convertLSPRange = convertLSPRange
     }
 
     func start() {
@@ -76,7 +79,6 @@ final class DiagnosticsBridge {
 
         var annotations: [Annotation] = []
         var newCounts = Counts()
-        let textLength = currentTextLength()
 
         for diag in diagnostics {
             switch diag.severity {
@@ -85,7 +87,7 @@ final class DiagnosticsBridge {
             default: newCounts.info += 1
             }
 
-            let nsRange = Self.makeNSRange(from: diag.range, textLength: textLength)
+            let nsRange = convertLSPRange(diag.range) ?? NSRange(location: 0, length: 0)
             if nsRange.length > 0 {
                 let color: NSColor = {
                     switch diag.severity {
@@ -104,41 +106,22 @@ final class DiagnosticsBridge {
                 )
             }
 
-            let kindPrefix: String = {
+            let annotationKind: AnnotationKind = {
                 switch diag.severity {
-                case .error: return "ERROR"
-                case .warning: return "WARNING"
-                default: return "INFO"
+                case .error: return .error
+                case .warning: return .warning
+                default: return .info
                 }
             }()
             annotations.append(Annotation(
                 range: nsRange.length > 0 ? nsRange : NSRange(location: 0, length: 0),
-                content: "\(kindPrefix): \(diag.message)"
+                content: diag.message,
+                kind: annotationKind
             ))
         }
 
         hub.replaceDiagnosticAnnotations(annotations)
         counts = newCounts
-    }
-
-    private static func makeNSRange(from lspRange: LSPRange, textLength: Int) -> NSRange {
-        // The LSP range carries (line, character) positions. We don't have
-        // the original buffer here to do per-line offset arithmetic, so we
-        // approximate by mapping (line, character) to a single offset
-        // assuming the caller provides the text length for clamping. The
-        // real conversion uses currentTextStorage in production via the
-        // coordinator-supplied text length. For tests, we accept that the
-        // start offset may be approximate — the clamp is what matters for
-        // correctness when ranges go out of bounds.
-        //
-        // Approximation: treat character offsets as cumulative within line.
-        // Lines collapse to a single offset for simplicity. The integration
-        // smoke test exercises the real-text path.
-        let startOffset = max(0, lspRange.start.character)
-        let endOffset = max(startOffset, lspRange.end.character)
-        let clampedStart = min(startOffset, textLength)
-        let clampedEnd = min(endOffset, textLength)
-        return NSRange(location: clampedStart, length: clampedEnd - clampedStart)
     }
 }
 #endif

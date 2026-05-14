@@ -158,7 +158,8 @@ extension CodeEditorView {
         let textViewAnnotation = CodeEditorViewAnnotation(
             location: annotationTextRange.location,
             content: annotation.content,
-            id: annotation.id
+            id: annotation.id,
+            kind: annotation.kind
         )
 
         // Ensure layout for the annotation range

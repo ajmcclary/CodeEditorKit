@@ -58,11 +58,17 @@ import AppKit
 /// ```swift
 /// let dataSource = MyAnnotationsDataSource()
 /// editor.annotationsDataSource = dataSource
-/// 
+///
 /// // Update annotations
 /// dataSource.updateAnnotations(newAnnotations)
 /// editor.reloadAnnotations()
 /// ```
+///
+/// - Important: `CodeEditorView.annotationsDataSource` holds a **weak**
+///   reference to its data source. Keep a strong reference in your host
+///   (an `@Observable` app model, an `EditorController`, or similar);
+///   otherwise the source will deallocate and annotations will silently
+///   stop appearing.
 ///
 /// - SeeAlso: ``Annotation``, ``CodeEditorViewAnnotation``, ``CodeEditorView/annotationsDataSource``
 public protocol AnnotationsDataSource: AnyObject {

@@ -50,6 +50,11 @@ public struct Annotation: Sendable {
     public let range: NSRange
     /// Content of the annotation
     public let content: String
+    /// Optional explicit severity/category for this annotation. When set,
+    /// hosts (and the framework's default badge rendering) should prefer
+    /// this over inferring a kind from `content`'s prefix. `nil` preserves
+    /// the legacy behavior of inferring from the content string.
+    public let kind: AnnotationKind?
 
     /// Creates a new annotation.
     ///
@@ -57,12 +62,22 @@ public struct Annotation: Sendable {
     ///   - range: The text range where the annotation should appear
     ///   - content: The annotation content (e.g., "TODO", "FIXME", custom message)
     ///   - id: Unique identifier for the annotation (auto-generated if not provided)
+    ///   - kind: Optional explicit `AnnotationKind`. Pass this to avoid
+    ///     content-prefix smuggling (e.g., `"ERROR: …"`) when the host
+    ///     already knows the severity. Defaults to `nil`, in which case
+    ///     consumers fall back to inferring the kind from `content`.
     ///
     /// - Note: The range must be valid within the text view's content
-    public init(range: NSRange, content: String, id: String = UUID().uuidString) {
+    public init(
+        range: NSRange,
+        content: String,
+        id: String = UUID().uuidString,
+        kind: AnnotationKind? = nil
+    ) {
         self.id = id
         self.range = range
         self.content = content
+        self.kind = kind
     }
 
     /// Creates a new annotation from a TextKit range by converting it to a
@@ -72,7 +87,21 @@ public struct Annotation: Sendable {
     ///   - range: The text range where the annotation should appear
     ///   - content: The annotation content (e.g., "TODO", "FIXME", custom message)
     ///   - id: Unique identifier for the annotation (auto-generated if not provided)
-    public init(range textRange: NSTextRange, content: String, id: String = UUID().uuidString) {
-        self.init(range: NSRange(textRange) ?? .notFound, content: content, id: id)
+    ///   - kind: Optional explicit `AnnotationKind`. See `init(range:content:id:kind:)`.
+    public init(
+        range textRange: NSTextRange,
+        content: String,
+        id: String = UUID().uuidString,
+        kind: AnnotationKind? = nil
+    ) {
+        self.init(range: NSRange(textRange) ?? .notFound, content: content, id: id, kind: kind)
+    }
+
+    /// The annotation's effective kind. Returns the explicit `kind` when
+    /// the host supplied one, otherwise falls back to
+    /// `AnnotationKind.infer(from: content)` so legacy callers that
+    /// smuggle the kind through a content prefix keep working.
+    public var resolvedKind: AnnotationKind {
+        kind ?? AnnotationKind.infer(from: content)
     }
 }

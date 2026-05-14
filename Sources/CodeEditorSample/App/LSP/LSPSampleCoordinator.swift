@@ -143,8 +143,8 @@ final class LSPSampleCoordinator {
                     controller?.clearAllTemporaryAttributes()
                 },
                 activeURI: activeURI
-            ) { [weak controller] in
-                controller?.currentDocumentLength ?? 0
+            ) { [weak controller] lspRange in
+                controller?.nsRange(forLSPRange: lspRange)
             }
             bridge.start()
             self.bridge = bridge

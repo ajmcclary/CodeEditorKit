@@ -74,6 +74,30 @@ Investigating the skipped `testAnnotationTextKit2Integration` surfaced a real pr
 
 This is large enough to want its own design pass — the `LineGeometryStore` build path is on the hot edit/text-change path and is exercised by a meaningful chunk of the geometry-related tests, so the migration needs to preserve UTF-16 correctness while also unlocking `NSTextLayoutManager`-only features for downstream code (rendering attributes, viewport-aware layout, etc.).
 
+### Sample-driven API gaps — first pass (landed 2026-05-14)
+
+Four of the eight numbered "API gaps revealed by `CodeEditorSample`" — the additive, non-design-breaking subset. The four left (EditorDocument recipe, EditorController.onAttach, CompletionEvent stream, performance observer modifier) need their own design conversations and are deferred.
+
+| # | Gap | Status | What landed |
+|---|---|---|---|
+| 1 | No LSP-range-to-NSRange utility (sample shipped a known-wrong `makeNSRange`) | ✅ Done | Added `EditorController.nsLocation(forLSPLine:character:)` and `EditorController.nsRange(forLSPRange:)`. Both translate LSP zero-based `(line, character)` positions into UTF-16 offsets against the live buffer; clamping to line bounds is implicit because the conversion goes through the editor's own `lineRange(for:)`. `DiagnosticsBridge` now takes a `convertLSPRange: (LSPRange) -> NSRange?` closure (production wires it to `controller.nsRange(forLSPRange:)`); the apologetic 14-line comment and the broken `(line, character) → character` fallback are gone. Tests updated to stub the converter explicitly. |
+| 2 | `Annotation` has no public `kind` field — sample smuggled severity via `"ERROR: …"` content prefix | ✅ Done | Added `kind: AnnotationKind?` to both `Annotation` and `CodeEditorViewAnnotation` (optional, defaults to `nil` so existing call sites are source-compatible). New `Annotation.resolvedKind` reads the explicit kind first and falls back to `AnnotationKind.infer(from: content)`. `updateAnnotationView` propagates `kind` into the `CodeEditorViewAnnotation` passed to the data source. Sample's `AnnotationsHub` and `DiagnosticsBridge` now pass `kind:` directly; the `"ERROR: breakpoint"` / `"WARNING: …"` content prefixes are gone (content strings carry only the user-visible message). |
+| 4 | `AnnotationsDataSource` is `weak` — hosts must keep their own strong reference | ✅ Done (docs) | Added explicit `- Important:` blocks on both `CodeEditorView.annotationsDataSource` and the `AnnotationsDataSource` protocol header explaining the weak ownership invariant and the failure mode (annotations silently stop appearing if the host drops its retain). No code change; the lifecycle still belongs to the host. |
+| 8 | `FrameworkEdgeInsets` had `let` fields, forcing whole-struct rebuilds per edge | ✅ Done | Changed `EdgeInsets.{top,left,bottom,right}` from `let` to `var`. `LayoutKnobsSection.insetBinding` collapsed from a 9-line keyPath-equality branchy rebuilder to a 6-line `WritableKeyPath`-driven binding. |
+
+**Files touched (this batch — 9 modified, 0 added, 0 deleted):**
+`Sources/CodeEditorPlugin/Annotations/Annotation.swift`, `Sources/CodeEditorPlugin/Annotations/AnnotationsDataSource.swift`, `Sources/CodeEditorPlugin/Annotations/CodeEditorViewAnnotation.swift`, `Sources/CodeEditorPlugin/Core/CodeEditorView.swift`, `Sources/CodeEditorPlugin/Core/CodeEditorView+AnnotationsExtensions.swift`, `Sources/CodeEditorPlugin/SwiftUI/EditorController.swift`, `Sources/CodeEditorPlugin/Utilities/CoordinateSystemHelper.swift`, `Sources/CodeEditorSample/App/LSP/DiagnosticsBridge.swift`, `Sources/CodeEditorSample/App/LSP/LSPSampleCoordinator.swift`, `Sources/CodeEditorSample/EditorActions/AnnotationsHub.swift`, `Sources/CodeEditorSample/KnobPanels/LayoutKnobsSection.swift`, `Tests/CodeEditorSampleTests/DiagnosticsBridgeTests.swift`.
+
+Build: green. SwiftLint: 0 violations. Public-API changes are strictly additive (new methods, new optional fields with `nil` defaults, new convenience computed property); existing call sites continue to compile.
+
+**Still open from this section (deferred — need design):**
+- #3 EditorDocument value type — the sample reinvents `DocumentStore` / `TabModel` / dirty tracking. A first-class document recipe wants its own design pass (lifecycle, observability, naming, what's owned vs. shared).
+- #5 `EditorController.onAttach { … }` — the three-way wiring in `AppState.init` is awkward, but the fix interacts with #3 and with whether `EditorController` should grow a richer attach lifecycle.
+- #6 `CompletionManager` `AsyncStream<CompletionEvent>` — every completion provider has to be wrapped for telemetry today. The right surface (single bus per manager? per provider? what's an event?) is a design call.
+- #7 `.performanceObserver(_:)` SwiftUI modifier — `UnifiedPerformanceSystem` is dual-wired (config + polled). Folding both into one modifier is a small refactor but interacts with the SwiftUI runtime-rebuild issue (`EditorRuntimeDependencies.live(...)` per body call), so it's worth waiting until that's addressed.
+
+**Coverage gaps from REVIEW.md "Coverage gaps the sample fails to demonstrate" — still untouched.** Same story as before — they're sample updates that demonstrate already-public APIs (`.codeLanguage(_:)`, `.showsLineNumbers(_:)`, factories, snippet templates, `LSPCompletionProvider` registration, `CodeEditorError` recovery, the duplicated `PerformanceInspectorPanel` redundancy). Not blocking, but worth a small follow-up to make the sample a fuller "documentation by example".
+
 
 
 ## Top-level take

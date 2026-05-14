@@ -8,6 +8,21 @@ import Testing
 @MainActor
 @Suite("DiagnosticsBridge")
 struct DiagnosticsBridgeTests {
+    /// Stub `(line, character) → NSRange` converter for the tests. Maps
+    /// LSP positions onto a single-line buffer of `bufferLength` UTF-16
+    /// units (the production path goes through
+    /// `EditorController.nsRange(forLSPRange:)`, which is unavailable in
+    /// these unit tests because no `CodeEditorView` is attached).
+    private static func makeConverter(
+        bufferLength: Int
+    ) -> @MainActor (LSPRange) -> NSRange? {
+        { range in
+            let start = max(0, min(range.start.character, bufferLength))
+            let end = max(start, min(range.end.character, bufferLength))
+            return NSRange(location: start, length: end - start)
+        }
+    }
+
     @Test func translatesErrorDiagnosticToAnnotation() async throws {
         let hub = AnnotationsHub()
         let subject = PassthroughSubject<[String: [LSPDiagnostic]], Never>()
@@ -17,7 +32,7 @@ struct DiagnosticsBridgeTests {
             applyDecoration: { _, _ in },
             clearAllDecorations: {},
             activeURI: { "file:///x.swift" },
-            currentTextLength: { 20 }
+            convertLSPRange: Self.makeConverter(bufferLength: 20)
         )
         bridge.start()
 
@@ -33,7 +48,8 @@ struct DiagnosticsBridgeTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         #expect(hub.diagnosticAnnotations.count == 1)
-        #expect(hub.diagnosticAnnotations.first?.content.hasPrefix("ERROR:") == true)
+        #expect(hub.diagnosticAnnotations.first?.kind == .error)
+        #expect(hub.diagnosticAnnotations.first?.content == "Cannot convert")
         #expect(bridge.counts.errors == 1)
     }
 
@@ -46,7 +62,7 @@ struct DiagnosticsBridgeTests {
             applyDecoration: { _, _ in },
             clearAllDecorations: {},
             activeURI: { "file:///x.swift" },
-            currentTextLength: { 20 }
+            convertLSPRange: Self.makeConverter(bufferLength: 20)
         )
         bridge.start()
 
@@ -77,7 +93,7 @@ struct DiagnosticsBridgeTests {
             applyDecoration: { _, range in captured.append(range) },
             clearAllDecorations: {},
             activeURI: { "file:///x.swift" },
-            currentTextLength: { 3 }  // only 3 chars in buffer
+            convertLSPRange: Self.makeConverter(bufferLength: 3)
         )
         bridge.start()
 

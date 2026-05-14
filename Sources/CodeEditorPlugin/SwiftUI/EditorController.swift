@@ -334,6 +334,49 @@ public final class EditorController {
               let stringRange = view.lineRange(for: lineNumber) else { return nil }
         return NSRange(stringRange, in: view.content)
     }
+
+    // MARK: - LSP coordinate conversion
+
+    /// Convert an LSP `(line, character)` position (zero-based, with
+    /// `character` measured in UTF-16 code units per the LSP spec) into a
+    /// UTF-16 offset in the editor's content. Returns nil when no view
+    /// is attached, the line is out of range, or either input is negative.
+    ///
+    /// The returned offset is clamped to the line's UTF-16 length, so
+    /// positions past the line's content land at the line break rather
+    /// than overflowing into the next line.
+    public func nsLocation(forLSPLine line: Int, character: Int) -> Int? {
+        guard let view = codeEditorView,
+              line >= 0,
+              character >= 0 else { return nil }
+        guard let stringRange = view.lineRange(for: line + 1) else { return nil }
+        let content = view.content
+        let lineNSRange = NSRange(stringRange, in: content)
+        let candidate = lineNSRange.location + character
+        return min(candidate, NSMaxRange(lineNSRange))
+    }
+
+    /// Convert an LSP range (a `(start, end)` pair of zero-based positions)
+    /// into a UTF-16 `NSRange` in the editor's content. Returns nil when
+    /// no view is attached or either endpoint is out of range.
+    ///
+    /// This is the supported way to convert LSP diagnostics, hover ranges,
+    /// definitions, etc. into editor offsets — host code should not
+    /// attempt to reimplement `(line, character)` arithmetic from the
+    /// outside, since the buffer is the only source of truth for line
+    /// boundaries.
+    public func nsRange(forLSPRange lspRange: LSPRange) -> NSRange? {
+        guard let start = nsLocation(
+            forLSPLine: lspRange.start.line,
+            character: lspRange.start.character
+        ),
+        let end = nsLocation(
+            forLSPLine: lspRange.end.line,
+            character: lspRange.end.character
+        ) else { return nil }
+        let length = max(0, end - start)
+        return NSRange(location: start, length: length)
+    }
 }
 
 #endif

@@ -356,7 +356,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Annotation views mapping
     internal var annotationViews: [String: PlatformView] = [:]
 
-    /// The data source for providing custom annotations
+    /// The data source for providing custom annotations.
+    ///
+    /// - Important: This is a **weak** reference. The host (typically an
+    ///   `@Observable` app model or a SwiftUI host like `EditorController`)
+    ///   must retain the data source itself; if no other strong reference
+    ///   exists, the data source will deallocate and annotations will
+    ///   silently stop appearing.
     public weak var annotationsDataSource: AnnotationsDataSource?
 
     // MARK: - Completion System

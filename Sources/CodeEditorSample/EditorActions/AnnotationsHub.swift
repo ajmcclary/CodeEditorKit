@@ -15,11 +15,11 @@ import UIKit
 /// 2. **Demo annotations** — TODO / FIXME / WARNING badges added by the
 ///    user through the command palette or knob buttons.
 ///
-/// Both render through the framework's existing annotation gutter
-/// (`AnnotationKind.infer(from:)` keys color off the `content` prefix —
-/// hence the literal "ERROR" / "TODO" / etc. baked into the content
-/// strings). The hub borrows the host's `EditorController` to translate
-/// 1-based line numbers into ranges on demand.
+/// Both render through the framework's existing annotation gutter. Each
+/// `Annotation` carries an explicit `kind: AnnotationKind`, so the badge
+/// color follows the host's intent rather than the framework parsing the
+/// `content` string. The hub borrows the host's `EditorController` to
+/// translate 1-based line numbers into ranges on demand.
 @MainActor
 @Observable
 final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
@@ -111,8 +111,8 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
         textLineFragment _: NSTextLineFragment,
         proposedViewFrame _: CGRect
     ) -> PlatformView? {
-        // Default rendering — the framework's annotation badge picks the
-        // color via `AnnotationKind.infer(from: content)`.
+        // Default rendering — the framework reads each annotation's
+        // explicit `kind` (set at construction below) for its badge color.
         nil
     }
 
@@ -125,8 +125,9 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
                 guard let range = controller.nsRange(forLine: line) else { continue }
                 out.append(Annotation(
                     range: range,
-                    content: "ERROR: breakpoint",
-                    id: "bp-\(line)"
+                    content: "breakpoint",
+                    id: "bp-\(line)",
+                    kind: .error
                 ))
             }
             for line in demoAnnotations.keys.sorted() {
@@ -134,8 +135,9 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
                       let range = controller.nsRange(forLine: line) else { continue }
                 out.append(Annotation(
                     range: range,
-                    content: "\(kind.rawValue): demo annotation",
-                    id: "demo-\(kind.rawValue)-\(line)"
+                    content: "demo annotation",
+                    id: "demo-\(kind.rawValue)-\(line)",
+                    kind: kind
                 ))
             }
         }

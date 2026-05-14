@@ -14,16 +14,28 @@ public struct CodeEditorViewAnnotation {
     public var location: NSTextLocation
     /// Content of the annotation
     public var content: String
+    /// Optional explicit severity/category propagated from the source
+    /// `Annotation`. When `nil`, consumers should fall back to
+    /// `AnnotationKind.infer(from: content)`.
+    public var kind: AnnotationKind?
 
     /// Creates a new code editor view annotation
     /// - Parameters:
     ///   - location: Location in the text
     ///   - content: Annotation content
     ///   - id: Unique identifier (defaults to new UUID)
-    public init(location: NSTextLocation, content: String, id: String = UUID().uuidString) {
+    ///   - kind: Optional explicit `AnnotationKind`; mirrors the source
+    ///     `Annotation`'s `kind` field. Defaults to `nil`.
+    public init(
+        location: NSTextLocation,
+        content: String,
+        id: String = UUID().uuidString,
+        kind: AnnotationKind? = nil
+    ) {
         self.id = id
         self.location = location
         self.content = content
+        self.kind = kind
     }
 
     /// Creates a new code editor view annotation from a UTF-16 location.
@@ -31,7 +43,18 @@ public struct CodeEditorViewAnnotation {
     ///   - utf16Location: Location in the text
     ///   - content: Annotation content
     ///   - id: Unique identifier (defaults to new UUID)
-    public init(utf16Location: Int, content: String, id: String = UUID().uuidString) {
-        self.init(location: UTF16TextLocation(value: utf16Location), content: content, id: id)
+    ///   - kind: Optional explicit `AnnotationKind`. See `init(location:content:id:kind:)`.
+    public init(
+        utf16Location: Int,
+        content: String,
+        id: String = UUID().uuidString,
+        kind: AnnotationKind? = nil
+    ) {
+        self.init(
+            location: UTF16TextLocation(value: utf16Location),
+            content: content,
+            id: id,
+            kind: kind
+        )
     }
 }
