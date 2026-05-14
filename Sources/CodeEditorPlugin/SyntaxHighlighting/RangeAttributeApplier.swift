@@ -70,37 +70,35 @@ internal final class RangeAttributeApplier: TextEditEventObserving {
 
     /// Called by `HighlightProviderState` when a range transitions from
     /// pending → valid. Reads merged style runs from the container and
-    /// applies them to the text storage.
+    /// applies them as rendering attributes (non-destructive; TK2-native).
     func applyAttributes(for range: NSRange) {
         let runs = container.mergedRuns(in: range)
-        guard !runs.isEmpty, let textStorage = textView?.textStorage else { return }
-        guard range.upperBound <= textStorage.length else { return }
+        guard !runs.isEmpty, let textView else { return }
+        let bridge = textView.textKitBridge
+        guard range.upperBound <= bridge.documentLength else { return }
 
-        textStorage.beginEditing()
         var cursor = range.location
         for run in runs {
             let runRange = NSRange(location: cursor, length: run.length)
             let color = run.value.flatMap(resolveColor(for:))
-            applyColor(color, to: runRange, in: textStorage)
+            applyColor(color, to: runRange, via: bridge)
             cursor += run.length
         }
-        textStorage.endEditing()
     }
 
     // MARK: - Private
 
-    /// Clears the applier's managed attribute from `textStorage` in `range`.
+    /// Clears the applier's managed rendering attribute in `range`.
     private func clearAttributes(in range: NSRange) {
-        guard let textStorage = textView?.textStorage else { return }
+        guard let textView else { return }
+        let bridge = textView.textKitBridge
+        let documentLength = bridge.documentLength
         let clamped = NSRange(
             location: max(0, range.location),
-            length: min(range.length, textStorage.length - range.location)
+            length: min(range.length, documentLength - range.location)
         )
         guard clamped.length > 0 else { return }
-
-        textStorage.beginEditing()
-        textStorage.removeAttribute(attributeKey, range: clamped)
-        textStorage.endEditing()
+        bridge.removeAttributes([attributeKey], range: clamped)
     }
 
     /// Resolves a `StyleElement` to a platform color using the applied theme
@@ -114,38 +112,19 @@ internal final class RangeAttributeApplier: TextEditEventObserving {
         return SyntaxColorScheme.default.color(for: tokenType)
     }
 
-    /// Applies `color` to `range` in `textStorage`, skipping ranges that
-    /// already uniformly have the same color to avoid unnecessary mutation.
+    /// Applies `color` to `range` as a rendering attribute via the bridge.
+    /// Rendering attributes don't trigger NSTextStorage didProcessEditing
+    /// notifications, so the original skip-equal optimization (which existed
+    /// to avoid loop-triggering attribute mutations) is no longer needed.
     private func applyColor(
         _ color: PlatformColor?,
         to range: NSRange,
-        in textStorage: NSTextStorage
+        via bridge: TextKitBridge
     ) {
         guard let color else {
-            textStorage.removeAttribute(attributeKey, range: range)
+            bridge.removeAttributes([attributeKey], range: range)
             return
         }
-
-        // Skip-equal: check the full run, not just the first character.
-        // Uses `enumerateAttribute` to walk the range and verify every
-        // character already has the target color. If a mid-range edit
-        // cleared part of an existing token, the first character might
-        // still be correct while the rest is wrong.
-        if range.length > 0 {
-            var allMatch = true
-            textStorage.enumerateAttribute(
-                attributeKey,
-                in: range,
-                options: []
-            ) { value, _, stop in
-                if (value as? PlatformColor) != color {
-                    allMatch = false
-                    stop.pointee = true
-                }
-            }
-            if allMatch { return }
-        }
-
-        textStorage.addAttribute(attributeKey, value: color, range: range)
+        bridge.addAttributes([attributeKey: color], range: range)
     }
 }

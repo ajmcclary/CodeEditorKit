@@ -376,41 +376,38 @@ public final class AsyncSyntaxHighlighter {
         to textView: CodeEditorView,
         visibleRange: NSRange? = nil
     ) {
-        // Get text storage through the TK2-safe accessor; reading
-        // `textView.textStorage` would trigger Apple's TK1 compatibility shim.
-        guard let textStorage = textView.textContentStorage?.textStorage else { return }
+        let bridge = textView.textKitBridge
+        let documentLength = bridge.documentLength
+        guard documentLength > 0 else { return }
 
         // Determine range to apply
-        let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: textStorage.length)
+        let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: documentLength)
 
         // Validate range
         guard rangeToHighlight.location >= 0,
-              rangeToHighlight.location + rangeToHighlight.length <= textStorage.length else {
-            CrossPlatformLogger.logger().warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(textStorage.length)")
+              rangeToHighlight.location + rangeToHighlight.length <= documentLength else {
+            CrossPlatformLogger.logger().warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(documentLength)")
             return
         }
-
-        // Update text storage efficiently through the platform text view.
-        textStorage.beginEditing()
 
         let appliedTheme = textView.appliedTheme
         let baseTextColor = Self.color(for: .identifier, theme: appliedTheme)
 
-        #if true
-        textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: rangeToHighlight)
-        #endif
+        // Establish the base color across the entire range as rendering
+        // attributes. Subsequent token color writes overwrite this for
+        // matched ranges.
+        bridge.addAttributes([.foregroundColor: baseTextColor], range: rangeToHighlight)
 
         // Apply new highlighting - batch tokens by color for performance
         var tokensByColor: [PlatformColor: [NSRange]] = [:]
 
         for token in tokens {
-            // Prevent out-of-bounds NSRange crashes, required for stability:
-            // Validate that token.range.location and length are within textStorage bounds
+            // Validate that token.range is within bounds.
             guard
                 token.range.location >= 0,
                 token.range.length > 0,
-                token.range.location < textStorage.length,
-                token.range.location + token.range.length <= textStorage.length
+                token.range.location < documentLength,
+                token.range.location + token.range.length <= documentLength
             else {
                 continue
             }
@@ -429,42 +426,24 @@ public final class AsyncSyntaxHighlighter {
             tokensByColor[tokenColor, default: []].append(token.range)
         }
 
-        // Apply each color group in a single operation for better performance.
-        //
-        // C3 perf: hoist platform-specific per-token work out of the inner loop —
-        // colour resolution and font lookup are O(palette) instead of
-        // O(tokens). On non-iOS, build a single attribute dictionary so
-        // the inner call is `addAttributes(_:range:)` not per-attribute.
-        #if true
+        // Apply each color group via rendering attributes.
         for (color, ranges) in tokensByColor {
             let mergedRanges = mergeAdjacentRanges(ranges)
             for range in mergedRanges {
-                textStorage.addAttribute(.foregroundColor, value: color, range: range)
+                bridge.addAttributes([.foregroundColor: color], range: range)
             }
         }
-        #endif
-
-        textStorage.endEditing()
     }
 
     private func clearHighlighting(for textView: CodeEditorView) {
-        guard let textStorage = textView.textContentStorage?.textStorage else { return }
+        let bridge = textView.textKitBridge
+        let range = NSRange(location: 0, length: bridge.documentLength)
+        guard range.length > 0 else { return }
 
-        #if canImport(AppKit)
-            let range = NSRange(location: 0, length: textView.string.count)
-        #else
-            let range = NSRange(location: 0, length: textView.text?.count ?? 0)
-        #endif
-
-        textStorage.beginEditing()
-
-        textStorage.addAttribute(
-            .foregroundColor,
-            value: Self.color(for: .identifier, theme: textView.appliedTheme),
+        bridge.addAttributes(
+            [.foregroundColor: Self.color(for: .identifier, theme: textView.appliedTheme)],
             range: range
         )
-
-        textStorage.endEditing()
     }
 
     private static func color(for tokenType: TokenType, theme: Theme?) -> PlatformColor {
