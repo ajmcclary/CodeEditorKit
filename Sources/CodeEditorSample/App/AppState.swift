@@ -72,10 +72,9 @@ final class AppState {
     /// Sample-side LSP coordinator. Owns the `LSPManager`, document
     /// mirroring, and the diagnostics bridge. macOS-only (process spawning
     /// is unavailable on iOS, so the LSP demo doesn't ship on that
-    /// platform). Adding it to AppState contradicts the deferred refactor
-    /// in `docs/superpowers/specs/2026-05-13-sample-app-lsp-integration-design.md`
-    /// (splitting AppState into feature-scoped models); the LSP wiring
-    /// uses the existing god-object pattern for now.
+    /// platform). The LSP wiring uses the existing god-object pattern in
+    /// `AppState`; a future refactor may split it into feature-scoped
+    /// models.
     let lsp: LSPSampleCoordinator
 
     /// Sample-side Performance Inspector coordinator. Owns the framework

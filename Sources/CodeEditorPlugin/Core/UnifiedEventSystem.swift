@@ -177,13 +177,7 @@ public final class UnifiedEventSystem: ObservableObject {
     // MARK: - Private Methods
 
     private func setupDefaultFilters() {
-        // Add platform-specific filters
-        let platformFilter = PlatformEventFilter(
-            allowedPlatforms: [capabilities.currentPlatform]
-        )
-        eventFilters.append(platformFilter)
-
-        // Add performance filter to throttle high-frequency events
+        // Throttle high-frequency events.
         let performanceFilter = PerformanceEventFilter(
             maxEventsPerSecond: 60  // Default throttle rate
         )
@@ -232,16 +226,6 @@ public protocol EventFilter {
     /// - Parameter event: The event to evaluate
     /// - Returns: True if the event should be allowed, false otherwise
     func shouldAllow(_ event: EditorEvent) -> Bool
-}
-
-/// Filter events by platform
-public struct PlatformEventFilter: EventFilter {
-    let allowedPlatforms: Set<PlatformCapabilities.Platform>
-
-    public func shouldAllow(_: EditorEvent) -> Bool {
-        // For now, allow all events since we don't have platform-specific events in the current EditorEvent
-        true
-    }
 }
 
 /// Filter events for performance (throttling)

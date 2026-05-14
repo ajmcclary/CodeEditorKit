@@ -276,12 +276,6 @@ enum ConfigurationCodeFormatter {
     }
 
     private static func durationMilliseconds(_ duration: Duration) -> Int {
-        let attos = duration.components.attoseconds
-        let seconds = Double(duration.components.seconds)
-        return Int(seconds * 1_000 + Double(attos) / 1_000_000_000_000_000)
-    }
-
-    private static func swiftStringLiteral(_ value: String) -> String {
-        String(reflecting: value)
+        Int(duration.totalMilliseconds)
     }
 }

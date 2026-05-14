@@ -164,7 +164,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
 ///
 /// ## Supported Languages
 ///
-/// The editor supports 17+ programming languages grouped by category:
+/// The editor supports 25 programming languages plus plain text, grouped by category:
 ///
 /// ### Web Development
 /// - `.html` - HTML markup

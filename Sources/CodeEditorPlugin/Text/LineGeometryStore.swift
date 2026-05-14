@@ -128,7 +128,7 @@ public final class LineGeometryStore {
     public var totalHeight: CGFloat { root?.subtreeHeight ?? 0 }
 
     /// Default estimated line height used when no font is provided.
-    private let defaultEstimatedHeight: CGFloat
+    public let defaultEstimatedHeight: CGFloat
 
     /// Cached last lookup for hot-path optimization.
     private var lastLookupNode: Node?

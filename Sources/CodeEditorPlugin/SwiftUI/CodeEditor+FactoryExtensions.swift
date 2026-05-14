@@ -1,5 +1,5 @@
 #if canImport(SwiftUI)
-@preconcurrency import SwiftUI
+import SwiftUI
 
 // MARK: - Convenience Factory Methods
 

@@ -122,7 +122,7 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             newGeometries.append(LineGeometry(
                 utf16Length: utf16Length,
                 lineEndingLength: lineEndingLength,
-                estimatedHeight: geometryStore.lineGeometry(at: lineIndex)?.estimatedHeight ?? 17.0
+                estimatedHeight: geometryStore.lineGeometry(at: lineIndex)?.estimatedHeight ?? geometryStore.defaultEstimatedHeight
             ))
 
             lineIndex += 1
@@ -133,13 +133,13 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             newGeometries.append(LineGeometry(
                 utf16Length: 0,
                 lineEndingLength: 0,
-                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? 17.0
+                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? geometryStore.defaultEstimatedHeight
             ))
         } else if scanEnd == length, newGeometries.last?.lineEndingLength ?? 0 > 0 {
             newGeometries.append(LineGeometry(
                 utf16Length: 0,
                 lineEndingLength: 0,
-                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? 17.0
+                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? geometryStore.defaultEstimatedHeight
             ))
         }
 

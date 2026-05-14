@@ -1,5 +1,5 @@
 #if canImport(SwiftUI)
-@preconcurrency import SwiftUI
+import SwiftUI
 
 /// Modern, idiomatic SwiftUI code editor with declarative configuration.
 ///

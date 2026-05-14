@@ -15,9 +15,9 @@ struct CodeEditorSampleApp: App {
         WindowGroup("CodeEditorSample") {
             RootWindow(appState: appState)
                 .frame(minWidth: 980, minHeight: 640)
-                .frame(width: 1_380, height: 880)
         }
-        .windowResizability(.contentSize)
+        .defaultSize(width: 1_380, height: 880)
+        .windowResizability(.contentMinSize)
         .commands {
             // Single source of truth for sample keyboard shortcuts.
             // Each command mutates the shared `AppState` directly so

@@ -351,11 +351,8 @@ struct DurationRow: View {
         )
     }
 
-    /// Duration → milliseconds as Double.
     private static func milliseconds(_ duration: Duration) -> Double {
-        let attos = duration.components.attoseconds
-        let seconds = Double(duration.components.seconds)
-        return seconds * 1_000 + Double(attos) / 1_000_000_000_000_000
+        duration.totalMilliseconds
     }
 }
 

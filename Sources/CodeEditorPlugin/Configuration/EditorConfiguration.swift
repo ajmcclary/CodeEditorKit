@@ -64,10 +64,9 @@ import Foundation
 /// if errors.isEmpty {
 ///     config.apply(to: editor)
 /// } else {
-///     // Handle configuration errors appropriately
-///     print("Configuration errors: \(errors)")
+///     // Surface validation failures via your app's logging or UI.
 /// }
-/// 
+///
 /// // Or throw on validation failure
 /// try config.validateAndThrow()
 /// ```
