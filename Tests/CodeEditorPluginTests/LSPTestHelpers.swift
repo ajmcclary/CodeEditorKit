@@ -6,8 +6,13 @@ import Foundation
 
 // MARK: - LSP Test Helpers
 
-/// Adapter to bridge LSP completion items with the completion system for testing
-struct CompletionItemAdapter {
+/// Adapter to bridge LSP completion items with the completion system for testing.
+///
+/// Renamed from `CompletionItemAdapter` (LSP-test-local) to avoid colliding
+/// with the framework's internal `CompletionItemAdapter` (`@testable import`
+/// brings the framework type into scope; unqualified resolution otherwise
+/// preferred this helper). Only used inside this file.
+struct LSPTestCompletionItem {
     let model: CompletionItemModel
 
     init(label: String, kind: CompletionItemKind = .text) {
@@ -30,7 +35,7 @@ struct MockLSPCompletionItem {
     let item: Any
 
     init(label: String, kind: CompletionItemKind = .text) {
-        self.item = CompletionItemAdapter(label: label, kind: kind)
+        self.item = LSPTestCompletionItem(label: label, kind: kind)
     }
 }
 

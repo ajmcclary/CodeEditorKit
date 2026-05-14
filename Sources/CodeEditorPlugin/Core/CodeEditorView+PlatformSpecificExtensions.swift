@@ -180,6 +180,10 @@ extension CodeEditorView {
         let textToInsert: String
         if let adapter = item as? CompletionItemAdapter {
             textToInsert = adapter.model.insertText
+            // Auto-record the acceptance so the manager's frequency cache
+            // reflects user behavior without forcing the host to wire it up
+            // manually. See spec 2026-05-14-completion-ranking-unification.
+            completionManager.recordSelection(adapter.model)
         } else {
             // Fallback - use a default or empty string
             textToInsert = ""
