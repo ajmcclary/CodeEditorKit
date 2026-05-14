@@ -47,6 +47,13 @@ public struct CodeEditorEnvironment: Sendable {
     /// source for runtime dependencies.
     public var runtimeDependencies: EditorRuntimeDependencies?
 
+    /// Optional performance observation. When set, the editor's effective
+    /// configuration receives `observation.system` as its
+    /// `performance.unifiedPerformanceSystem`, so framework producers
+    /// (e.g. AsyncSyntaxHighlighter) record metrics into the system the
+    /// host observes. Paired with the `.performanceObserver(_:)` modifier.
+    public var performanceObservation: PerformanceObservation?
+
     /// Creates a new CodeEditor environment configuration
     public init(
         language: Language = .plainText,
@@ -56,7 +63,8 @@ public struct CodeEditorEnvironment: Sendable {
         workspaceRoot: URL? = nil,
         memoryMonitor: MemoryMonitor? = nil,
         eventSystem: UnifiedEventSystem? = nil,
-        runtimeDependencies: EditorRuntimeDependencies? = nil
+        runtimeDependencies: EditorRuntimeDependencies? = nil,
+        performanceObservation: PerformanceObservation? = nil
     ) {
         self.language = language
         self.theme = theme
@@ -66,6 +74,7 @@ public struct CodeEditorEnvironment: Sendable {
         self.memoryMonitor = memoryMonitor
         self.eventSystem = eventSystem
         self.runtimeDependencies = runtimeDependencies
+        self.performanceObservation = performanceObservation
     }
 
     /// Default environment configuration
@@ -80,7 +89,8 @@ public struct CodeEditorEnvironment: Sendable {
         workspaceRoot: URL? = nil,
         memoryMonitor: MemoryMonitor? = nil,
         eventSystem: UnifiedEventSystem? = nil,
-        runtimeDependencies: EditorRuntimeDependencies? = nil
+        runtimeDependencies: EditorRuntimeDependencies? = nil,
+        performanceObservation: PerformanceObservation? = nil
     ) -> Self {
         Self(
             language: language ?? self.language,
@@ -90,7 +100,8 @@ public struct CodeEditorEnvironment: Sendable {
             workspaceRoot: workspaceRoot ?? self.workspaceRoot,
             memoryMonitor: memoryMonitor ?? self.memoryMonitor,
             eventSystem: eventSystem ?? self.eventSystem,
-            runtimeDependencies: runtimeDependencies ?? self.runtimeDependencies
+            runtimeDependencies: runtimeDependencies ?? self.runtimeDependencies,
+            performanceObservation: performanceObservation ?? self.performanceObservation
         )
     }
 }
@@ -152,6 +163,12 @@ extension EnvironmentValues {
         set { codeEditorEnvironment = codeEditorEnvironment.with(eventSystem: newValue) }
     }
 
+    /// Legacy: Access the performance observation directly
+    public var codeEditorPerformanceObservation: PerformanceObservation? {
+        get { codeEditorEnvironment.performanceObservation }
+        set { codeEditorEnvironment = codeEditorEnvironment.with(performanceObservation: newValue) }
+    }
+
     /// Legacy: Access the workspace root directly
     public var codeEditorWorkspaceRoot: URL? {
         get { codeEditorEnvironment.workspaceRoot }
@@ -190,7 +207,8 @@ extension View {
         workspaceRoot: URL? = nil,
         memoryMonitor: MemoryMonitor? = nil,
         eventSystem: UnifiedEventSystem? = nil,
-        runtimeDependencies: EditorRuntimeDependencies? = nil
+        runtimeDependencies: EditorRuntimeDependencies? = nil,
+        performanceObservation: PerformanceObservation? = nil
     ) -> some View {
         transformEnvironment(\.codeEditorEnvironment) { env in
             env = env.with(
@@ -201,7 +219,8 @@ extension View {
                 workspaceRoot: workspaceRoot,
                 memoryMonitor: memoryMonitor,
                 eventSystem: eventSystem,
-                runtimeDependencies: runtimeDependencies
+                runtimeDependencies: runtimeDependencies,
+                performanceObservation: performanceObservation
             )
         }
     }

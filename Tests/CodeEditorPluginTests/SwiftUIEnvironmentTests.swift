@@ -44,6 +44,31 @@ final class SwiftUIEnvironmentTests: XCTestCase {
         XCTAssertEqual(env.language, .plainText)
     }
 
+    @MainActor
+    func testCodeEditorEnvironmentCarriesPerformanceObservation() {
+        let env = CodeEditorEnvironment()
+        XCTAssertNil(env.performanceObservation)
+
+        let observation = PerformanceObservation()
+        let updated = env.with(performanceObservation: observation)
+
+        XCTAssertIdentical(updated.performanceObservation, observation)
+        // Original is unchanged.
+        XCTAssertNil(env.performanceObservation)
+    }
+
+    @MainActor
+    func testCodeEditorPerformanceObservationEnvKeyRoundTrips() {
+        var values = EnvironmentValues()
+        XCTAssertNil(values.codeEditorPerformanceObservation)
+
+        let observation = PerformanceObservation()
+        values.codeEditorPerformanceObservation = observation
+
+        XCTAssertIdentical(values.codeEditorEnvironment.performanceObservation, observation)
+        XCTAssertIdentical(values.codeEditorPerformanceObservation, observation)
+    }
+
     func testBecomeFirstResponderOption() {
         let env = CodeEditorEnvironment()
 
