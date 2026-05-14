@@ -329,6 +329,18 @@ public final class EditorController {
     /// Install a data source on the underlying `CodeEditorView` and
     /// trigger an annotation reload. The view holds the source weakly,
     /// so callers must keep their own strong reference.
+    ///
+    /// - Important: This method is a no-op when the controller is
+    ///   unattached (`isAttached == false`). To install a data source
+    ///   from a host's `init` — before the SwiftUI representable has
+    ///   created the underlying view — use `onAttach(_:)`:
+    ///
+    ///   ```swift
+    ///   attachToken = controller.onAttach { [weak hub] ctrl in
+    ///       guard let hub else { return }
+    ///       ctrl.setAnnotationsDataSource(hub)
+    ///   }
+    ///   ```
     public func setAnnotationsDataSource(_ source: any AnnotationsDataSource) {
         codeEditorView?.annotationsDataSource = source
         codeEditorView?.reloadAnnotations()
