@@ -58,4 +58,40 @@ final class EditorControllerOnAttachTests: XCTestCase {
         XCTAssertEqual(fireCount, 1, "Detach must not fire onAttach handlers.")
         _ = token
     }
+
+    func testHandlerNotFiredOnRedundantAttach() {
+        let controller = EditorController()
+        let view = CodeEditorView(frame: .zero)
+        var fireCount = 0
+
+        let token = controller.onAttach { _ in fireCount += 1 }
+        controller.attach(to: view)
+        controller.attach(to: view) // same view — must not re-fire
+        controller.attach(to: view) // again — still must not re-fire
+
+        XCTAssertEqual(
+            fireCount,
+            1,
+            "Attaching the same view repeatedly must fire onAttach handlers exactly once."
+        )
+        _ = token
+    }
+
+    func testHandlerFiredOnDifferentView() {
+        let controller = EditorController()
+        let viewA = CodeEditorView(frame: .zero)
+        let viewB = CodeEditorView(frame: .zero)
+        var fireCount = 0
+
+        let token = controller.onAttach { _ in fireCount += 1 }
+        controller.attach(to: viewA)
+        controller.attach(to: viewB)
+
+        XCTAssertEqual(
+            fireCount,
+            2,
+            "Switching to a different view must re-fire onAttach handlers."
+        )
+        _ = token
+    }
 }

@@ -158,6 +158,7 @@ public final class EditorController {
     /// Internal wiring hook — not for host use. Called from the SwiftUI
     /// representable on `make…`/`update…`/`dismantle…`.
     func attach(to view: CodeEditorView?) {
+        let previousView = codeEditorView
         codeEditorView = view
         if let view {
             symbolNavigator.attach(to: view)
@@ -179,12 +180,16 @@ public final class EditorController {
             eventBusInstaller = installer
             #endif
 
-            // Fire registered onAttach handlers. Snapshot first so a
-            // handler that calls onAttach again doesn't mutate the
-            // in-flight iteration.
-            let snapshot = attachHandlers
-            for (_, handler) in snapshot {
-                handler(self)
+            // Fire registered onAttach handlers only on a real view
+            // transition (nil → A, A → B, nil → A after detach). The
+            // SwiftUI representable calls `attach(to: sameView)` on every
+            // update, so skipping the same-view case keeps handlers from
+            // firing on every keystroke.
+            if view !== previousView {
+                let snapshot = attachHandlers
+                for (_, handler) in snapshot {
+                    handler(self)
+                }
             }
         } else {
             symbolSubscription?.cancel()
