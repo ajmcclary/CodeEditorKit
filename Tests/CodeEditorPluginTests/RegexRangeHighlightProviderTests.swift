@@ -253,14 +253,22 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
     }
 
     @MainActor
-    func testParsePerformance100KLines() async throws {
+    func testParseBailsOutForVeryLargeFiles() async throws {
+        // `RegexIncrementalRangeQueryParser.maxSyncContentLength` (1 MB UTF-8)
+        // is an intentional ceiling — files past it return empty captures
+        // immediately rather than block the main actor on a multi-second
+        // parse. A 100K-line JS fixture is roughly ~3 MB and trips this
+        // guard.
         let source = javascriptFixture(lineCount: 100_000)
+        XCTAssertGreaterThan(source.utf8.count, 1_000_000, "fixture should exceed the parser's sync cap")
+
         let parser = RegexIncrementalRangeQueryParser()
         try await parser.setLanguage(.javascript)
 
         let result = try await parser.parse(source: source)
-        XCTAssertLessThan(result.parseDuration, 5.0, "100K-line parse should complete in < 5 s")
-        XCTAssertGreaterThan(result.captures.count, 1_000, "100K-line JS should produce > 1000 captures")
+        XCTAssertTrue(result.captures.isEmpty, "Files above the cap should bail out with no captures")
+        XCTAssertEqual(result.parseDuration, 0, "Bail-out path is constant time")
+        XCTAssertEqual(result.queryDuration, 0, "Bail-out path is constant time")
     }
 
     @MainActor
@@ -298,15 +306,19 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
     // MARK: - Phase 6a: Multi-language Tests
 
     @MainActor
-    func testAllLanguagesWithParserNameProduceProvider() {
-        let languagesWithParserAlias = Language.allCases.filter {
-            LanguageDescriptor.descriptor(for: $0)?.parserName != nil
+    func testAllLanguagesUsingRegexHighlighterProduceProvider() {
+        // `makeProvider` is gated on `usesRegexHighlighter` — languages whose
+        // descriptor opts out (Swift via SwiftSyntax, JSON via FastJSONTokenizer,
+        // plain text) intentionally return nil, so filter by that flag rather
+        // than `parserName != nil`.
+        let languagesUsingRegex = Language.allCases.filter {
+            LanguageDescriptor.descriptor(for: $0)?.usesRegexHighlighter == true
         }
 
-        XCTAssertFalse(languagesWithParserAlias.isEmpty, "Should have languages with parser aliases")
-        XCTAssertGreaterThan(languagesWithParserAlias.count, 20, "Should have > 20 languages with parser aliases")
+        XCTAssertFalse(languagesUsingRegex.isEmpty, "Should have languages using the regex pipeline")
+        XCTAssertGreaterThan(languagesUsingRegex.count, 20, "Should have > 20 languages on the regex pipeline")
 
-        for language in languagesWithParserAlias {
+        for language in languagesUsingRegex {
             let provider = RegexRangeHighlightProvider.makeProvider(for: language)
             XCTAssertNotNil(provider, "Should create internal provider for \(language.name)")
         }
@@ -329,6 +341,10 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
 
     @MainActor
     func testParseMultiLanguageSmallFiles() async throws {
+        // JSON is intentionally absent: it opts out of the regex pipeline
+        // (`usesRegexHighlighter == false`) and routes through
+        // `FastJSONTokenizer` instead, so the range-query parser has
+        // nothing to produce for it.
         let fixtures: [(Language, String)] = [
             (.python, "def greet(name, times=1):\n    return f'Hello, {name}!'\n\nprint(greet('Ada', 2))\n"),
             (.typescript, "interface Person {\n    name: string;\n    age: number;\n}\n\nconst p: Person = { name: 'Ada', age: 30 };\n"),
@@ -346,7 +362,6 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
             (.yaml, "name: test\nversion: 1.0\n\nitems:\n  - name: alpha\n    value: 42\n  - name: beta\n    value: 88\n"),
             (.xml, "<?xml version=\"1.0\"?>\n<root>\n    <item id=\"1\">Alpha</item>\n    <item id=\"2\">Beta</item>\n</root>\n"),
             (.markdown, "# Hello\n\nThis is **bold** and *italic*.\n\n```js\nconst x = 1;\n```\n"),
-            (.json, "{\"name\": \"test\", \"values\": [1, 2, 3], \"active\": true}\n"),
             (.lua, "function greet(name, times)\n    for i = 1, times do\n        print('Hello, ' .. name)\n    end\nend\n\ngreet('Ada', 2)\n"),
             (.csharp, "using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine(\"Hello\");\n    }\n}\n"),
             (.kotlin, "fun main() {\n    val name = \"Ada\"\n    println(\"Hello, $name\")\n}\n"),

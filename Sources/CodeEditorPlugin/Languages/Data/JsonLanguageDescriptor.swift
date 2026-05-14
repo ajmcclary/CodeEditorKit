@@ -7,7 +7,10 @@ extension LanguageDescriptor {
             displayName: "JSON",
             fileExtensions: ["json", "jsonc"],
             lspIdentifier: "json",
-            usesRegexHighlighter: true,
+            // JSON is routed to `FastJSONTokenizer` by `HighlightingStrategyExecutor`
+            // and the regex pipeline never sees it. Mirrors Swift, which has
+            // its own SwiftSyntax-backed strategy.
+            usesRegexHighlighter: false,
             lineComment: nil,
             blockCommentStart: nil,
             blockCommentEnd: nil,

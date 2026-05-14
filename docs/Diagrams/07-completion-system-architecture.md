@@ -20,23 +20,7 @@ classDiagram
         +handleError() async
     }
 
-    %% Core Orchestration Layer (ENHANCED)
-    class SmartCompletionEngine {
-        <<intelligent orchestrator>>
-        -sessionTracker SessionTracker
-        -rankingModel CompletionRankingModel
-        -memoryMonitor MemoryMonitor
-        -debouncer CompletionDebouncer
-        -actorCoordinator ActorCoordinator
-        -fuzzyMatcher FuzzyMatcher
-        -settings SmartCompletionSettings
-        +requestCompletions() async
-        +recordSelection()
-        +getSmartSuggestions() async
-        +clearAllData()
-        +performCleanup() async
-    }
-
+    %% Core Orchestration Layer
     class CompletionManager {
         <<production coordinator>>
         -providers [String: CompletionProvider]
@@ -177,21 +161,11 @@ classDiagram
     }
 
     class OptimizedFuzzyMatcher {
-        <<optimized matching>>
-        -algorithm FuzzyAlgorithm
-        -characterWeights CharacterWeights
-        -positionBias PositionBias
-        -cacheEnabled Bool
-        +match() FuzzyScore
-        +batchMatch() [FuzzyScore]
-        +optimizeForLanguage()
-    }
-
-    class FuzzyMatcher {
-        <<standard fuzzy matching>>
-        +match() [FuzzyMatchResult]
-        +calculateScore() Double
-        +isMatch() Bool
+        <<fuzzy matching>>
+        +configuration Configuration
+        +match(pattern, candidates) async
+        +matchParallel() async
+        +matchSequential()
     }
 
     %% Cross-Platform UI Components (ENHANCED)
@@ -339,11 +313,10 @@ classDiagram
     }
 
     %% Key Relationships
-    ActorCoordinator --> SmartCompletionEngine : coordinates
-    SmartCompletionEngine --> CompletionManager : delegates to
-    SmartCompletionEngine --> MemoryMonitor : manages memory
-    SmartCompletionEngine --> FuzzyMatcher : uses
-    
+    ActorCoordinator --> CompletionManager : coordinates
+    CompletionManager --> MemoryMonitor : registers cleanup handlers
+    CompletionManager --> CompletionDebouncer : debounces requests
+
     CompletionManager --> CompletionProviderRegistry : queries
     CompletionManager --> LRUCache : caches results
     CompletionManager --> CompletionStatistics : tracks metrics
@@ -363,7 +336,6 @@ classDiagram
     MemoryMonitor --> CompletionCacheManager : cleanup target
     
     CompletionRankingModel --> OptimizedFuzzyMatcher : uses
-    CompletionRankingModel --> FuzzyMatcher : fallback
     
     CompletionViewController --> CompletionViewControllerBase : extends
     CompletionViewController --> CompletionCellConfigurator : uses
@@ -391,7 +363,6 @@ classDiagram
     classDef builder fill:#00C7BE25,stroke:#00C7BE,stroke-width:2px,color:#1D1D1F
 
     class ActorCoordinator actor
-    class SmartCompletionEngine engine
     class CompletionManager engine
     class CompletionProviderRegistry registry
     class LanguageMetadataRegistry registry
@@ -404,7 +375,6 @@ classDiagram
     class MemoryMonitor memory
     class CompletionRankingModel ranking
     class OptimizedFuzzyMatcher ranking
-    class FuzzyMatcher ranking
     class CompletionViewController ui
     class CompletionViewControllerBase ui
     class CompletionCellConfigurator ui
@@ -427,7 +397,6 @@ sequenceDiagram
     participant User
     participant TextView
     participant ActorCoordinator
-    participant SmartEngine as SmartCompletionEngine
     participant CompletionManager
     participant Registry as CompletionProviderRegistry
     participant Provider as UniversalCompletionProvider
@@ -437,20 +406,19 @@ sequenceDiagram
     participant UI as CompletionViewController
 
     User->>TextView: Type character
-    TextView->>SmartEngine: Trigger completion
-    SmartEngine->>ActorCoordinator: Coordinate background processing
-    ActorCoordinator->>SmartEngine: Text processing complete
-    
-    SmartEngine->>CompletionManager: Request completions
+    TextView->>CompletionManager: Trigger completion
+    CompletionManager->>ActorCoordinator: Coordinate background processing
+    ActorCoordinator-->>CompletionManager: Text processing complete
+
     CompletionManager->>Cache: Check cache with context
-    
+
     alt Cache hit with valid data
         Cache-->>CompletionManager: Return cached results
     else Cache miss or expired
         CompletionManager->>Registry: Get providers for language
         Registry-->>CompletionManager: Return provider list
         CompletionManager->>Provider: Request completions async
-        
+
         par Concurrent provider queries
             Provider-->>CompletionManager: Language-specific completions
         and LSP provider (if available)
@@ -459,26 +427,23 @@ sequenceDiagram
             Memory->>Cache: Check memory pressure
             Memory->>Cache: Cleanup if needed
         end
-        
+
         CompletionManager->>Cache: Store raw results
     end
-    
+
     CompletionManager->>Ranking: Rank and score completions
     Ranking->>Ranking: Apply fuzzy matching
     Ranking->>Ranking: Context analysis
     Ranking->>Ranking: Frequency scoring
-    Ranking->>Ranking: ML preprocessing (if available)
     Ranking-->>CompletionManager: Return scored completions
-    
+
     CompletionManager->>UI: Show completion window
     UI->>UI: Configure cells with icons/details
     UI->>UI: Apply accessibility labels
-    
+
     User->>UI: Select completion
-    UI->>SmartEngine: Apply selected completion
-    SmartEngine->>Cache: Record selection for learning
-    SmartEngine->>ActorCoordinator: Track performance metrics
-    SmartEngine->>TextView: Insert completion text
+    UI->>CompletionManager: Apply selected completion
+    CompletionManager->>TextView: Insert completion text
 ```
 
 ## Memory Management Integration

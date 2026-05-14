@@ -23,7 +23,12 @@ struct LSPSampleCoordinatorStateTests {
         await coordinator.start(workspaceRoot: nil)
 
         if case .failed(let message) = coordinator.state {
-            #expect(message.lowercased().contains("sourcekit-lsp"))
+            // The coordinator renders `CodeEditorError.languageServerNotAvailable("Swift")`
+            // with its built-in `recoverySuggestion`, so the failure message
+            // names the language and points at language-server configuration.
+            let lowered = message.lowercased()
+            #expect(lowered.contains("language server"))
+            #expect(message.contains("Swift"))
         } else {
             Issue.record("expected .failed, got \(coordinator.state)")
         }

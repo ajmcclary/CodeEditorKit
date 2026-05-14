@@ -46,9 +46,9 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 1. **`AppState` is a god object.** It owns theme, configuration, documents, editor controller, annotations, find state, performance observation, and a host of coordinators. Split into feature-scoped `@Observable` models (`ThemeModel`, `ConfigurationModel`, `FindReplaceModel`, etc.) — the `pfw-observable-models` and `pfw-dependencies` conventions favor this, and the framework's DI story is "no singletons."
 
-2. **`PresetCatalog.swift` likely duplicates framework presets.** Verify it uses `EditorConfiguration.minimal`/`.readOnly()`/`.markdown()`/`.presentation()` directly rather than reconstructing them; the sample should be the canonical demonstration of how presets compose.
+2. ~~**`PresetCatalog.swift` likely duplicates framework presets.**~~ Verified: already uses `EditorConfiguration.default` / `.minimal` / `.readOnly` / `.markdown` / `.presentation` / `.macOS` / `.iOS` / `.platformOptimized` directly. Smoke-tested in `SwitcherCatalogTests`.
 
-3. **`GotoSymbolSheet.swift`** — if it's static, replace with `SymbolNavigator` + `DocumentSymbolProvider` so the sheet *is* the API demo.
+3. ~~**`GotoSymbolSheet.swift`**~~ Verified: already reads from `controller.symbols` (`SymbolNavigator`-backed) and calls `controller.gotoSymbol(_:)` — no static stub to replace.
 
 4. **Find/Replace overlay** should call `SearchReplaceEngine` for both navigation and decoration, not maintain its own match counter logic.
 
@@ -62,7 +62,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 9. **`canImport(AppKit)` switching is fine, but `RootWindow.swift`/`WindowBody.swift`/`IOSRootView.swift` re-implement layout twice.** Extract a shared `EditorWorkspaceScene` view that composes sidebars + main editor and let each platform supply its own chrome.
 
-10. **Sample tests.** `Sources/CodeEditorSampleTests` exists per `Package.swift`; the sample's `EditorDocuments` extensions (`openFile`, `save`, `resetToSample`, `setLanguageRenaming`), `AnnotationsHub`, and switcher catalogs should have at least smoke tests using `pfw-testing` and `pfw-snapshot-testing` conventions — the sample is the de facto integration test for the public API.
+10. ~~**Sample tests.**~~ Smoke coverage landed for the no-design path: `EditorDocumentsOpenFileTests` (`openFile` / `save` / `newTab`), `EditorDocumentsSampleExtrasTests` (`resetToSample`, `setLanguageRenaming`), `SwitcherCatalogTests` (`PresetCatalog` / `LanguageCatalog` / `ThemeCatalog`), `AnnotationsHubInstallTests`, `AnnotationsHubDiagnosticsTests`. Snapshot-test conventions still to apply for inspector panels.
 
 ---
 
@@ -81,8 +81,8 @@ After the SwiftUI modifier return-types migration, `CodeEditorIntent.completionP
 ### B.3 `EditorState.isDirty` and `EditorState.hardwareAccelerationActive` never written
 The framework's `EditorState` mirror writes `language`, `selection`, and `lineCount`; the remaining two fields (`isDirty`, `hardwareAccelerationActive`) have no writer. `isDirty` needs an initial-text tracking design; `hardwareAccelerationActive` needs adaptive-perf-mode bridging.
 
-### B.4 JSON `usesRegexHighlighter` redundancy
-After the language descriptor cleanup, `JSON.usesRegexHighlighter == true` even though `HighlightingStrategyExecutor` routes JSON to `FastJSONTokenizer`. The flag is still load-bearing for `RegexRangeHighlightProvider.makeProvider(for: .json)` (range-based highlighting). Verify whether the range-based path is needed for JSON and flip the flag if not.
+### B.4 ~~JSON `usesRegexHighlighter` redundancy~~ — done
+JSON now opts out of the regex pipeline (`usesRegexHighlighter: false`) to match the descriptor's own docstring and the actual routing in `HighlightingStrategyExecutor` (`.json` → `FastJSONTokenizer`). `RegexRangeHighlightProvider.makeProvider` has no production callers; the multi-language regex test was updated to filter on the flag.
 
 ### B.5 NSRulerView gutter TextKit 1 island
 `Sources/CodeEditorPlugin/Layout/CodeEditorContainerView+AppKitExtensions.swift:drawHashMarksAndLabels(in:)` still reads `textView.layoutManager` for `glyphRange(forBoundingRect:in:)` enumeration, which triggers AppKit's TK1 compatibility shim. In production this means the editor flips to TK1 at first paint; in the headless test fixtures (no window) the TK2 stack is preserved. Rewrite the gutter against `NSTextLayoutManager.enumerateTextLayoutFragments(from:options:using:)` (or equivalent).
@@ -94,10 +94,8 @@ Sample-side. `EditorDocuments.save(_:)` covers tabs that already have URLs. Save
 
 ## C. Stale documentation diagrams
 
-These Mermaid diagrams in `docs/Diagrams/` still reference symbols that no longer exist post-refactor. Low priority — they're architecture aids, not API docs — but worth a sweep:
-
-- **`07-completion-system-architecture.md`** — still classes `SmartCompletionEngine`, `FuzzyMatcher` (both deleted in the completion ranking unification batch and non-design remainder batch respectively). `CompletionManager` is now the single funnel; rewrite the central class diagram.
-- **`14-symbol-navigation-intelligence.md`** — references `FuzzyMatcher` as a fallback for `OptimizedFuzzyMatcher`. Only `OptimizedFuzzyMatcher` remains.
+- ~~**`07-completion-system-architecture.md`**~~ — `SmartCompletionEngine` and `FuzzyMatcher` removed; class + sequence diagram rewritten around `CompletionManager` as the single funnel and `OptimizedFuzzyMatcher` as the lone matcher.
+- ~~**`14-symbol-navigation-intelligence.md`**~~ — verified clean (only `OptimizedFuzzyMatcher` references).
 
 The standing CLAUDE.md / AGENTS.md note about stale-claim symbols in older diagrams (`depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`, `CodeEditorSwiftUITheme`, `EditorTheme`, `LanguageConfig`, `CodeEditorLayoutManager`, `ConfigurationValidator`, `EditorConfigurationBuilder`, `ConfigurationMigrator`, `ConfigurationHotReload`, `PluginAPI`, `PluginContext`, `MarkdownPlugin`) still applies — no full diagram rewrite has happened.
 
@@ -109,13 +107,11 @@ These were observed during the review pass and reproduce on bare `main`. Not int
 
 | Test | Symptom |
 |---|---|
-| `RegexRangeHighlightProviderTests.testParsePerformance100KLines` | Flake on slower machines / under `--parallel` load |
+| ~~`RegexRangeHighlightProviderTests.testParsePerformance100KLines`~~ | Fixed: not a flake — fixture exceeded the parser's intentional 1 MB sync cap, so it returned 0 captures fast. Renamed to `testParseBailsOutForVeryLargeFiles` and rewritten to validate the cap contract. |
 | `LineGeometryStoreBenchmarkTests.testFuzzIncrementalEditCorrectness` | Flake under parallel load; passes in isolation |
 | `ScrollPositionPreservationTests.testScrollPositionPreservedWhenTogglingWordWrap` | Consistent failure on `main` — not investigated |
 | `EditorStatusBarSnapshots/*` | SIGSEGV/SIGBUS under `swift test --parallel` — swift-testing helper launching XCTest snapshot suites in parallel |
 | `PerformanceObservationTests.restartAfterStopResumesRefreshTicks` | Flake under parallel load; passes in isolation |
 | `PerformanceInsightsRealMetricsTests.currentFPSReflectsInjectedMonitor` | FPS counter doesn't run in headless test env |
-| `DemoCompletionProviderTests.returnsThreeDemoItemsOnAnyLanguage` | Test rot — asserts 3 labels but `DemoCompletionProvider` now ships 5 after the SnippetTemplate migration |
-| `LSPSampleCoordinatorStateTests.resolverFailureTransitionsToFailed` | Test rot — asserts error message contains `"sourcekit-lsp"` but the framework-error migration now uses `CodeEditorError.languageServerNotAvailable("Swift")` whose copy doesn't include that substring |
-
-The last two (`db5c824`-vintage sample-test rot) are the easiest wins — just update the assertions to match the migrated source.
+| ~~`DemoCompletionProviderTests.returnsThreeDemoItemsOnAnyLanguage`~~ | Already updated in tree to `returnsFullCatalogue` (asserts the 5-label `SnippetTemplate` catalogue). |
+| ~~`LSPSampleCoordinatorStateTests.resolverFailureTransitionsToFailed`~~ | Fixed: now asserts the message contains "language server" + "Swift" to match `CodeEditorError.languageServerNotAvailable("Swift")`'s `errorDescription` + `recoverySuggestion`. |
