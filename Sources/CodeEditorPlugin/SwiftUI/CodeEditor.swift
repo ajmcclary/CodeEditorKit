@@ -353,6 +353,38 @@ public struct CodeEditor: View {
         return stored
     }
 
+    // MARK: - Intent-driven callback wrapping
+
+    /// Builds the `onTextChange` / `onSelectionChange` closures that
+    /// `body` passes to the representable, given the env-supplied
+    /// intent and the effective text binding.
+    ///
+    /// `selectionCallback` converts `NSRange` → `Range<String.Index>?`
+    /// against the binding's current value; ranges that fail to map
+    /// (e.g., past-end selections) silently drop. This matches the
+    /// pre-migration behavior of `handleSelectionChange`.
+    ///
+    /// Extracted as a `static` helper so it's unit-testable without
+    /// rendering the view.
+    static func makeRepresentableCallbacks(
+        from intent: CodeEditorIntent,
+        textBinding: Binding<String>
+    ) -> (
+        textCallback: ((String) -> Void)?,
+        selectionCallback: ((NSRange) -> Void)?
+    ) {
+        let textCallback: ((String) -> Void)? = intent.onTextChange.map { handler in
+            { newText in handler(newText) }
+        }
+        let selectionCallback: ((NSRange) -> Void)? = intent.onSelectionChange.map { handler in
+            { nsRange in
+                guard let range = Range(nsRange, in: textBinding.wrappedValue) else { return }
+                handler(range)
+            }
+        }
+        return (textCallback, selectionCallback)
+    }
+
     // MARK: - Body
 
     public var body: some View {
