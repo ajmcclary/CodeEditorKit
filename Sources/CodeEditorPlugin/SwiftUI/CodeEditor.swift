@@ -136,13 +136,23 @@ public struct CodeEditor: View {
     @Environment(\.codeEditorEnvironment) private var environment
 
     // Shared editor state surfaced by chrome (status bar, breadcrumb, title).
-    // Defaults to a throwaway instance per `EditorStateKey.defaultValue` when
-    // the host does not inject one — the coordinator holds it weakly so the
-    // throwaway deallocates and writes no-op for hosts without chrome.
+    // Defaults to the process-wide sentinel `EditorStateEnvironmentKey.defaultValue`
+    // when the host does not inject one — writes against the sentinel are
+    // inert (no chrome view reads it) and the coordinator holds it weakly.
     @Environment(\.editorState) private var hostEditorState
 
     // Default memory monitor created on MainActor
     @State private var defaultMemoryMonitor = MemoryMonitor()
+
+    // Fallback runtime dependencies used when the host hasn't injected one
+    // via `\.codeEditorEnvironment.runtimeDependencies`. Cached in `@State`
+    // so heavy components inside `EditorRuntimeDependencies.live()`
+    // (MemoryMonitor, ActorCoordinator, UnifiedPerformanceSystem, etc.)
+    // are constructed once per editor lifetime rather than once per body
+    // call. Per-render env overrides (workspaceRoot, eventSystem,
+    // memoryMonitor) are applied on a local copy so the cached struct
+    // isn't mutated and stays stable across calls.
+    @State private var fallbackRuntimeDependencies: EditorRuntimeDependencies = .live()
 
     // Initial values from convenience initializers
     private var initialLanguage: Language?
@@ -274,12 +284,23 @@ public struct CodeEditor: View {
         let effectiveLanguage = initialLanguage ?? environment.language
         let effectiveTheme = initialTheme ?? environment.theme
 
-        var effectiveRuntimeDependencies = environment.runtimeDependencies
-            ?? EditorRuntimeDependencies.live(workspaceRoot: environment.workspaceRoot, eventSystem: environment.eventSystem)
-        if let memoryMonitor = environment.memoryMonitor {
-            effectiveRuntimeDependencies.memoryMonitor = memoryMonitor
-        } else if environment.runtimeDependencies == nil {
-            effectiveRuntimeDependencies.memoryMonitor = defaultMemoryMonitor
+        var effectiveRuntimeDependencies: EditorRuntimeDependencies
+        if let provided = environment.runtimeDependencies {
+            effectiveRuntimeDependencies = provided
+            if let memoryMonitor = environment.memoryMonitor {
+                effectiveRuntimeDependencies.memoryMonitor = memoryMonitor
+            }
+        } else {
+            // Reuse cached components (MemoryMonitor, ActorCoordinator, etc.)
+            // and overlay the per-render env knobs onto a local copy.
+            effectiveRuntimeDependencies = fallbackRuntimeDependencies
+            effectiveRuntimeDependencies.workspaceRoot = environment.workspaceRoot
+            effectiveRuntimeDependencies.eventSystem = environment.eventSystem
+            if let memoryMonitor = environment.memoryMonitor {
+                effectiveRuntimeDependencies.memoryMonitor = memoryMonitor
+            } else {
+                effectiveRuntimeDependencies.memoryMonitor = defaultMemoryMonitor
+            }
         }
 
         // Use configuration's debounce interval when no explicit override was passed.
