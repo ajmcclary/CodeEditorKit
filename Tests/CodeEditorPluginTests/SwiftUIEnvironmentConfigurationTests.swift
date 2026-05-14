@@ -719,4 +719,21 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         XCTAssertEqual(cleared.language, env.language, "Untouched fields must be preserved.")
         XCTAssertEqual(cleared.theme, env.theme, "Untouched fields must be preserved.")
     }
+
+    // MARK: - CodeEditorEnvironmentClearing(_:) modifier tests
+    // Spec: docs/superpowers/specs/2026-05-14-codeeditor-environment-clearing-design.md
+
+    @MainActor
+    func testCodeEditorEnvironmentClearingModifierChainCompiles() {
+        let binding = Binding<String>(get: { "" }, set: { _ in })
+        let url = URL(fileURLWithPath: "/tmp/codeeditor-test")
+
+        // Verify the modifier chain shape advertised in the spec.
+        // If anything refuses to type-check, this expression won't compile.
+        let view = CodeEditor(text: binding)
+            .codeEditorEnvironment(workspaceRoot: url)
+            .codeEditorEnvironmentClearing(\.workspaceRoot)
+
+        XCTAssertNotNil(view, "Modifier chain must produce a non-nil view.")
+    }
 }

@@ -283,6 +283,30 @@ extension View {
             )
         }
     }
+
+    /// Clears the given optional field on the inherited
+    /// `CodeEditorEnvironment`.
+    ///
+    /// Call-order semantics match the existing
+    /// `.codeEditorEnvironment(...)` modifier family — clearing applies
+    /// to whatever value was set up to this point in the modifier chain.
+    /// Use this when the bulk `.codeEditorEnvironment(workspaceRoot:…)`
+    /// modifier cannot express "clear this field" because passing `nil`
+    /// is treated as "no change".
+    ///
+    /// ```swift
+    /// CodeEditor(text: $text)
+    ///     .codeEditorEnvironment(workspaceRoot: url)
+    ///     // …conditional logic that no longer wants a workspace root…
+    ///     .codeEditorEnvironmentClearing(\.workspaceRoot)
+    /// ```
+    public func codeEditorEnvironmentClearing<T>(
+        _ keyPath: WritableKeyPath<CodeEditorEnvironment, T?>
+    ) -> some View {
+        transformEnvironment(\.codeEditorEnvironment) { env in
+            env = env.clearing(keyPath)
+        }
+    }
 }
 
 // MARK: - Result Builder
