@@ -18,15 +18,15 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 **File tree / workspace browser.** Workspace root is configurable but nothing displays its contents. A `FileSystemActor`-backed file tree in the left sidebar would close the loop.
 
-**Document persistence.** ⌘S/⌘O are no-ops per `DocumentStore.swift`. With `FileSystemActor` available, this should actually save.
+**Document persistence — partial (2026-05-14).** `⌘S` now writes through `DocumentStore.save(_:)` with `SaveOutcome` routing (sample coverage gaps batch). Still open: `⌘O` is still a no-op and Save-As for `Untitled-*` tabs was deliberately deferred — needs an NSSavePanel flow (and an iOS document-picker variant).
 
-**CodeEditorUI components underused.** `EditorBreadcrumbView`/`BreadcrumbComponent`, `EditorSidebarShell`, `EditorTitleBar`, `EditorTrafficLights`, and `PlatformGlassSurface` aren't exercised. A breadcrumb row between tabs and editor is the easiest win.
+**CodeEditorUI components underused — mostly complete (2026-05-14).** `EditorTitleBar`, `EditorTrafficLights`, `EditorBreadcrumbView`, and `PlatformGlassSurface` are now exercised via `.windowStyle(.hiddenTitleBar)` + `RootWindow` chrome (sample coverage gaps batch). Only `EditorSidebarShell` remains unconsumed.
 
 **Theme authoring.** Only the bundled `zed-trek` family is shown. Loading a user-supplied Zed JSON from disk would showcase `ThemeFamily.bundled(...)` as well as the JSON pipeline.
 
 **Custom syntax highlighter.** `SyntaxHighlighter` / `HighlightingStrategy` protocols — no example of plugging one in.
 
-**Error recovery UI.** `CodeEditorError`, `ErrorRecoveryCoordinator`, `RecoverableAsyncError` — no demo error state, no recovery affordance.
+**Error recovery UI — partial (2026-05-14).** `CodeEditorError.languageServerNotAvailable` / `.languageServerCommunicationFailed` now surface in `LSPSampleCoordinator` via a `userFacingMessage(for:)` helper that concatenates `errorDescription` + `recoverySuggestion`. Still open: `ErrorRecoveryCoordinator` and `RecoverableAsyncError` are unexercised — no demo error state with a user-triggered recovery affordance.
 
 **Find/Replace match highlighting.** `EditorActions/FindReplaceOverlay.swift` tracks counts but doesn't decorate matches in the text. `SearchReplaceEngine` supports this.
 
@@ -41,7 +41,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 | `EventLogPanel` | Inspector sidebar | Tail of `EditorEvent` stream with filtering |
 | `WorkspaceFileTreeSidebar` | New left-rail above settings, or as a Switcher tab | Tree from `workspaceRoot` via `FileSystemActor` |
 | `ProjectSearchSidebar` | New left section | Cross-file find using `PortableProjectSearchAdapter` |
-| `BreadcrumbBar` between tabs and editor | `WindowBody.swift` | `EditorBreadcrumbView` |
+| ~~`BreadcrumbBar` between tabs and editor~~ ✅ | `RootWindow.swift` | `EditorBreadcrumbView` reading `\.editorState.breadcrumbPath` |
 | ~~`DiagnosticsGutterDemo`~~ ✅ | Wire `AnnotationsDataSource` to LSP `Diagnostic` | Live error/warning badges (included in LSP work) |
 | ~~`CompletionInspectorPanel`~~ ✅ | Inspector sidebar | Register built-in + custom `CompletionProvider`s, show registered list + recent fires |
 | `ThemeImporter` | Switchers | Load Zed JSON from disk |
