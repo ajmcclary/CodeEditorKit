@@ -61,12 +61,17 @@ public final class PerformanceObservation {
     /// this — used by `startIsIdempotent` to avoid timing flakiness.
     internal private(set) var refreshTaskSpawnCount: Int = 0
 
-    /// `nonisolated(unsafe)` so `deinit` (which runs in a nonisolated
-    /// context) can cancel it. Writes happen only from `@MainActor`
-    /// (`start` / `stop`); the deinit read happens-after the last
-    /// `@MainActor` reference is released. Mirrors the pattern in
-    /// `MemoryMonitor.monitoringTask`.
-    nonisolated(unsafe) private var refreshTask: Task<Void, Never>?
+    /// `@ObservationIgnored` takes the property out of the `@Observable`
+    /// macro's tracking expansion (internal task state shouldn't drive
+    /// SwiftUI invalidation). Under strict concurrency the `Task<Void,
+    /// Never>` storage is implicitly nonisolated because the type is
+    /// `Sendable`; deinit (which runs in a nonisolated context) can
+    /// cancel the task directly without a `nonisolated(unsafe)`
+    /// annotation. Writes happen only from `@MainActor` (`start` /
+    /// `stop`), so the deinit read happens-after the last `@MainActor`
+    /// reference is released.
+    @ObservationIgnored
+    private var refreshTask: Task<Void, Never>?
 
     /// Creates a new performance observation.
     ///
