@@ -38,6 +38,17 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// on `dismantle…`.
     weak var editorController: EditorController?
 
+    /// Host-provided `EditorState` plucked from the SwiftUI environment.
+    ///
+    /// `EditorState`'s doc contract is that the editor target writes
+    /// `selection`, `language`, and `lineCount`; the host writes the rest.
+    /// We hold a weak reference so an env default (a throwaway returned by
+    /// `EditorStateKey.defaultValue`) can deallocate immediately and writes
+    /// no-op for hosts without chrome. Hosts that wire chrome retain their
+    /// own `EditorState` via `@State` and inject it with
+    /// `.environment(\.editorState, _:)`.
+    weak var hostEditorState: EditorState?
+
     /// Additional callbacks for extended functionality
     var onTextChangeCallback: ((String) -> Void)?
     var onSelectionChangeCallback: ((NSRange) -> Void)?
@@ -107,6 +118,18 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         if currentConfiguration != configuration {
             currentConfiguration = configuration
         }
+
+        // Mirror into the host's shared `EditorState`, if any. Status bar
+        // and other chrome read these fields out of the SwiftUI environment.
+        if let hostEditorState {
+            if hostEditorState.language != language {
+                hostEditorState.language = language
+            }
+            let lineCount = EditorStateBridge.lineCount(of: text)
+            if hostEditorState.lineCount != lineCount {
+                hostEditorState.lineCount = lineCount
+            }
+        }
     }
 
     // MARK: - Text Change Handling
@@ -164,7 +187,19 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     func handleSelectionChange(_ range: NSRange) {
         onSelectionChange?(range)
         onSelectionChangeCallback?(range)
-        updateInteractionStateCursor(from: range)
+
+        // Derive only when someone consumes it — deriveSelection walks the
+        // UTF-16 view from the start, so we skip the work for hosts with
+        // neither chrome nor interaction-state restore.
+        guard hostEditorState != nil || interactionStateBinding != nil else { return }
+
+        let selection = EditorStateBridge.deriveSelection(from: range, in: currentText)
+
+        if let hostEditorState, hostEditorState.selection != selection {
+            hostEditorState.selection = selection
+        }
+
+        updateInteractionStateCursor(from: selection)
     }
 
     func updateInteractionStateBinding(_ binding: Binding<EditorInteractionState>) {
@@ -183,9 +218,8 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         textView.setSelectedRangeWithoutScrolling(targetRange)
     }
 
-    private func updateInteractionStateCursor(from range: NSRange) {
+    private func updateInteractionStateCursor(from selection: SelectionState) {
         guard var state = interactionStateBinding?.wrappedValue else { return }
-        let selection = EditorStateBridge.deriveSelection(from: range, in: currentText)
         let cursor = EditorCursorPosition(line: selection.line, column: selection.column)
         guard state.cursorPositions != [cursor] else { return }
         state.cursorPositions = [cursor]

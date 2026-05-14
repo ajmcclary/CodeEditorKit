@@ -30,6 +30,7 @@ enum CodeEditorRepresentableHelper {
         let runtimeDependencies: EditorRuntimeDependencies
         let interactionState: Binding<EditorInteractionState>
         let editorController: EditorController?
+        let hostEditorState: EditorState
         let onTextChange: ((String) -> Void)?
         let onSelectionChange: ((NSRange) -> Void)?
     }
@@ -42,6 +43,7 @@ enum CodeEditorRepresentableHelper {
         let runtimeDependencies: EditorRuntimeDependencies
         let interactionState: Binding<EditorInteractionState>
         let editorController: EditorController?
+        let hostEditorState: EditorState
         let environment: EnvironmentValues
     }
 
@@ -55,6 +57,7 @@ enum CodeEditorRepresentableHelper {
         let container = CodeEditorContainerView()
 
         coordinator.updateInteractionStateBinding(parameters.interactionState)
+        coordinator.hostEditorState = parameters.hostEditorState
         coordinator.setupContainer(
             container,
             text: parameters.text,
@@ -92,6 +95,7 @@ enum CodeEditorRepresentableHelper {
         container.apply(theme: parameters.theme)
 
         coordinator.updateInteractionStateBinding(parameters.interactionState)
+        coordinator.hostEditorState = parameters.hostEditorState
         coordinator.updateContainer(
             container,
             text: parameters.text,

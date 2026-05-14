@@ -135,6 +135,12 @@ public struct CodeEditor: View {
     // Environment - Using consolidated environment
     @Environment(\.codeEditorEnvironment) private var environment
 
+    // Shared editor state surfaced by chrome (status bar, breadcrumb, title).
+    // Defaults to a throwaway instance per `EditorStateKey.defaultValue` when
+    // the host does not inject one — the coordinator holds it weakly so the
+    // throwaway deallocates and writes no-op for hosts without chrome.
+    @Environment(\.editorState) private var hostEditorState
+
     // Default memory monitor created on MainActor
     @State private var defaultMemoryMonitor = MemoryMonitor()
 
@@ -289,6 +295,7 @@ public struct CodeEditor: View {
             textDebounceInterval: effectiveDebounceInterval,
             interactionState: interactionState,
             editorController: editorController,
+            hostEditorState: hostEditorState,
             onTextChange: handleTextChange,
             onSelectionChange: handleSelectionChange
         )

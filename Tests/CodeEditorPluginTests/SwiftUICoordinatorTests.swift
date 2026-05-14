@@ -358,6 +358,97 @@ final class SwiftUICoordinatorTests: XCTestCase {
         XCTAssertNotNil(coordinator)
     }
 
+    // MARK: - Host EditorState Mirroring
+
+    @MainActor
+    func testHostEditorStateMirroredOnSetupAndUpdate() {
+        let textBinding = Binding<String>(get: { "" }, set: { _ in })
+        let coordinator = CodeEditorCoordinator(
+            text: textBinding,
+            onTextChange: nil,
+            onSelectionChange: nil
+        )
+        let hostEditorState = EditorState()
+        coordinator.hostEditorState = hostEditorState
+
+        let container = CodeEditorContainerView()
+        let runtimeDependencies = EditorRuntimeDependencies(memoryMonitor: MemoryMonitor())
+
+        coordinator.setupContainer(
+            container,
+            text: "line 1\nline 2\nline 3",
+            language: .swift,
+            theme: .default,
+            configuration: .default,
+            runtimeDependencies: runtimeDependencies,
+            onTextChange: nil,
+            onSelectionChange: nil
+        )
+
+        XCTAssertEqual(hostEditorState.language, .swift)
+        XCTAssertEqual(hostEditorState.lineCount, 3)
+
+        coordinator.updateContainer(
+            container,
+            text: "only one line",
+            language: .python,
+            theme: .default,
+            configuration: .default,
+            runtimeDependencies: runtimeDependencies
+        )
+
+        XCTAssertEqual(hostEditorState.language, .python)
+        XCTAssertEqual(hostEditorState.lineCount, 1)
+    }
+
+    @MainActor
+    func testHostEditorStateSelectionMirroredOnSelectionChange() {
+        let textBinding = Binding<String>(get: { "abc\ndef" }, set: { _ in })
+        let coordinator = CodeEditorCoordinator(
+            text: textBinding,
+            onTextChange: nil,
+            onSelectionChange: nil
+        )
+        // currentText backs deriveSelection; seed it directly since we're not
+        // round-tripping through the container in this test.
+        coordinator.currentText = "abc\ndef"
+
+        let hostEditorState = EditorState()
+        coordinator.hostEditorState = hostEditorState
+
+        coordinator.handleSelectionChange(NSRange(location: 5, length: 0))
+
+        XCTAssertEqual(hostEditorState.selection?.line, 2)
+        XCTAssertEqual(hostEditorState.selection?.column, 2)
+        XCTAssertEqual(hostEditorState.selection?.selectionLength, 0)
+    }
+
+    @MainActor
+    func testHostEditorStateNoMirrorWhenUnset() {
+        let textBinding = Binding<String>(get: { "" }, set: { _ in })
+        let coordinator = CodeEditorCoordinator(
+            text: textBinding,
+            onTextChange: nil,
+            onSelectionChange: nil
+        )
+        // Deliberately do NOT set hostEditorState; should be a no-op path.
+
+        let container = CodeEditorContainerView()
+        let runtimeDependencies = EditorRuntimeDependencies(memoryMonitor: MemoryMonitor())
+        coordinator.setupContainer(
+            container,
+            text: "line 1\nline 2",
+            language: .python,
+            theme: .default,
+            configuration: .default,
+            runtimeDependencies: runtimeDependencies,
+            onTextChange: nil,
+            onSelectionChange: nil
+        )
+
+        XCTAssertNil(coordinator.hostEditorState)
+    }
+
     // MARK: - Integration Tests
 
     @MainActor
