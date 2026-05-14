@@ -6,7 +6,6 @@ import Testing
 @Suite("LSP types instantiate on iOS")
 @MainActor
 struct LSPManagerIOSCoverageTests {
-
     @Test("LSPManager initializes on iOS")
     func lspManagerInitializesOnIOS() {
         let memoryMonitor = MemoryMonitor.mock()

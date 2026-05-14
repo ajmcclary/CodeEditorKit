@@ -93,8 +93,14 @@ struct IOSRootView: View {
                 The LSP, Completion, Performance, and Annotations inspectors \
                 live in `Sources/CodeEditorSample/Sidebars/` and are gated to \
                 AppKit. The underlying CodeEditorPlugin APIs (LSPManager, \
-                CompletionManager, PerformanceInsights, AnnotationsHub) all \
-                work on iOS — only the sample's inspector chrome is desktop-only.
+                CompletionManager, PerformanceInsights, AnnotationsHub) work \
+                on iOS — only the sample's inspector chrome is desktop-only.
+
+                Remote LSP servers work on iOS: use \
+                `LanguageServerConfig.remote(url:)` with `LSPManager` to wire \
+                up a WebSocket-backed language server. Local servers require \
+                AppKit's `Process` API (macOS only) and throw an `LSPError` \
+                at start time on iOS.
                 """
             )
         }

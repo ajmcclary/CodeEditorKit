@@ -18,26 +18,38 @@ import Combine
 /// ## Basic Usage
 ///
 /// ```swift
-/// let lspManager = LSPManager(workspaceRoot: projectURL)
+/// let lspManager = LSPManager(memoryMonitor: memoryMonitor, workspaceRoot: projectURL)
 ///
-/// // Configure a language server
-/// let swiftConfig = LanguageServerConfig(
+/// // Local server (macOS only).
+/// lspManager.registerLanguageServer(.local(
 ///     languageId: "swift",
 ///     serverPath: "/usr/bin/sourcekit-lsp",
 ///     fileExtensions: ["swift"]
-/// )
-/// lspManager.registerLanguageServer(swiftConfig)
+/// ))
 ///
-/// // Open a document
+/// // Remote server (all platforms — WebSocket).
+/// lspManager.registerLanguageServer(.remote(
+///     languageId: "python",
+///     url: URL(string: "wss://lsp.example.com/python")!,
+///     fileExtensions: ["py"]
+/// ))
+///
+/// // Open a document.
 /// try await lspManager.openDocument(filePath: "/path/to/file.swift", content: sourceCode)
 ///
-/// // Request code completion
+/// // Request code completion.
 /// let completions = try await lspManager.requestCompletion(
 ///     filePath: "/path/to/file.swift",
 ///     line: 10,
 ///     character: 15
 /// )
 /// ```
+///
+/// ## Platform Support
+///
+/// - macOS: Full support (local + remote servers)
+/// - iOS / iPadOS: Remote servers only (via WebSocket transport).
+///   Local-server registrations succeed but throw `LSPError` at start time.
 ///
 /// ## Supported Features
 ///

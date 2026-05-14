@@ -22,19 +22,27 @@ import Foundation
 ///
 /// ## Platform Support
 /// - macOS: Full support (local + remote servers)
-/// - iOS: Remote servers only
+/// - iOS: Remote servers only — local servers require the `Process` API (AppKit)
 ///
 /// ## Example Usage
 /// ```swift
-/// // Local server (macOS only)
-/// #if canImport(AppKit)
-/// let localConfig = LSPServerConfiguration.local(...)
-/// #endif
+/// // Construct via LanguageServerConfig (the public-facing path).
+/// let manager = LSPManager(memoryMonitor: memoryMonitor, workspaceRoot: projectURL)
 ///
-/// // Remote server (all platforms)
-/// let remoteConfig = LSPServerConfiguration.remote(...)
-/// let client = LSPClient()
-/// try await client.connect(configuration: remoteConfig)
+/// // Local server (macOS only). Throws LSPError on iOS at startLanguageServer time.
+/// manager.registerLanguageServer(.local(
+///     languageId: "swift",
+///     serverPath: "/usr/bin/sourcekit-lsp",
+///     fileExtensions: ["swift"]
+/// ))
+///
+/// // Remote server (all platforms).
+/// manager.registerLanguageServer(.remote(
+///     languageId: "swift",
+///     url: URL(string: "wss://lsp.example.com/swift")!,
+///     fileExtensions: ["swift"],
+///     authentication: .bearerToken("token")
+/// ))
 /// ```
 @MainActor
 public final class LSPClient: ObservableObject {
@@ -535,43 +543,3 @@ public final class LSPClient: ObservableObject {
         }
     }
 }
-
-// MARK: - Conditional Extensions for Process-based LSP
-
-#if canImport(AppKit)
-extension LSPClient {
-    /// Legacy process-based connection for backward compatibility
-    /// Use LSPServerConfiguration instead for new code
-    func connectLegacy(configuration: ServerConfiguration) async throws {
-        try LSPConnectionManager.validateCanConnect(currentState: connectionState)
-
-        connectionState = .connecting
-        logger.info("Connecting to LSP server (legacy): \(configuration.serverPath)")
-
-        do {
-            try processManager.startServerProcess(configuration: configuration)
-
-            connectionState = .initializing
-            serverCapabilities = try await LSPConnectionManager.initializeServer(
-                configuration: configuration,
-                sendRequest: { [weak self] method, params in
-                    guard let self else { throw LSPError.notConnected }
-                    return try await self.sendRequest(method: method, params: params)
-                },
-                sendNotification: { [weak self] method, params in
-                    guard let self else { throw LSPError.notConnected }
-                    try await self.sendNotification(method: method, params: params)
-                }
-            )
-
-            connectionState = .initialized
-            logger.info("Successfully connected and initialized LSP server (legacy)")
-        } catch {
-            connectionState = .error
-            logger.error("Failed to connect to LSP server: \(error.localizedDescription)")
-            disconnect()
-            throw error
-        }
-    }
-}
-#endif
