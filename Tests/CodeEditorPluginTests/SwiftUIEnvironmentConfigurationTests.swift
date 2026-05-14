@@ -333,9 +333,12 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
                 // In real usage, this would be called when selection changes
             }
 
+        // Post-2026-05-14: .onTextChange/.onSelectionChange return `some
+        // View`; storage is in the codeEditorIntent env value, not on the
+        // CodeEditor struct. Functional coverage is in
+        // IntentCoordinatorWiringTests. Here we only assert the chain
+        // type-checks and produces a non-nil view.
         XCTAssertNotNil(editor)
-        XCTAssertNotNil(editor.onTextChange)
-        XCTAssertNotNil(editor.onSelectionChange)
 
         wait(for: [expectation], timeout: 0.1)
     }
@@ -363,21 +366,15 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
                 ]
             }
 
+        // Post-2026-05-14: .codeCompletion returns `some View`; the
+        // provider closure lives in the codeEditorIntent env value, not on
+        // the CodeEditor struct. The SwiftUI provider is *also* not yet
+        // consumed by the editor itself — see the note on .codeCompletion
+        // in CodeEditor+ModifiersExtensions.swift. This test now only
+        // asserts that the chain type-checks; provider-invocation coverage
+        // belongs in a future end-to-end test once the SwiftUI provider
+        // is wired into the completion pipeline.
         XCTAssertNotNil(editor)
-        XCTAssertNotNil(editor.completionProvider)
-
-        // Test completion provider
-        if let provider = editor.completionProvider {
-            let context = SwiftUICompletionContext(
-                text: "let x = ",
-                cursorPosition: 8,
-                language: .swift
-            )
-
-            let completions = await provider(context)
-            XCTAssertEqual(completions.count, 1)
-            XCTAssertEqual(completions.first?.label, "test")
-        }
     }
 
     // MARK: - Debounce Configuration Tests
@@ -473,10 +470,12 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
 
         let editor = baseEditor.codeEditorEnvironment(environment)
 
+        // Post-2026-05-14: closures live in the codeEditorIntent env value
+        // (not on the CodeEditor struct). Asserting type-check is enough
+        // here; functional coverage of intent propagation is in
+        // IntentCoordinatorWiringTests / ModifierChainCompositionTests.
         XCTAssertNotNil(editor)
-        XCTAssertNotNil(baseEditor.onTextChange)
-        XCTAssertNotNil(baseEditor.onSelectionChange)
-        XCTAssertNotNil(baseEditor.completionProvider)
+        XCTAssertNotNil(baseEditor)
     }
 
     // MARK: - Environment Update Tests

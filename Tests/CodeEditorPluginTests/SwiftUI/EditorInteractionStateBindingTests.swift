@@ -7,26 +7,19 @@ import Testing
 
 @Suite("EditorInteractionState binding surface")
 struct EditorInteractionStateBindingTests {
-    @Test("CodeEditor with no interaction state binding uses constant default")
-    @MainActor
-    func defaultBinding() {
-        let editor = CodeEditor(text: .constant("hello"))
-        // The internal binding exists and is a constant
-        let state = editor.interactionState.wrappedValue
-        #expect(state.cursorPositions == nil)
-    }
-
-    @Test("editorInteractionState modifier sets custom binding")
-    @MainActor
-    func modifierSetsBinding() {
-        let editor = CodeEditor(text: .constant("hello"))
-        let customBinding = Binding<EditorInteractionState>(
-            get: { EditorInteractionState(cursorPositions: [EditorCursorPosition(line: 1, column: 1)]) },
-            set: { _ in }
-        )
-        let modified = editor.editorInteractionState(customBinding)
-        #expect(modified.interactionState.wrappedValue.cursorPositions?.first?.line == 1)
-    }
+    // Removed `defaultBinding` and `modifierSetsBinding` (2026-05-14):
+    // pre-migration the interaction-state binding was a stored property on
+    // the CodeEditor struct; these tests inspected it directly. Post-migration
+    // (see docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md)
+    // the binding lives in the internal `codeEditorIntent` env value and
+    // .editorInteractionState(_:) returns `some View`. Equivalent coverage:
+    //   - CodeEditorIntentTests.testDefaultIntentHasAllFieldsNil
+    //     (intent.interactionState defaults nil → body falls back to constant)
+    //   - ModifierChainCompositionTests.testLineNumbersBeforeEditorInteractionState
+    //     (modifier exists and the chain compiles)
+    //   - The two coordinator-level tests below (`coordinatorWritesCursorPosition`
+    //     and `coordinatorAppliesExternalCursorPosition`) cover the end-to-end
+    //     behavior with a real binding.
 
     @Test("EditorInteractionState is Sendable")
     func sendableConformance() {

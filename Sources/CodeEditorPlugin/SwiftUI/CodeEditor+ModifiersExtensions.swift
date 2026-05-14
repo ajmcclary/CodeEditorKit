@@ -137,6 +137,132 @@ extension View {
     public func becomeFirstResponder(_ shouldBecomeFirstResponder: Bool) -> some View {
         environment(\.codeEditorBecomeFirstResponder, shouldBecomeFirstResponder)
     }
+
+    /// Adds a text change handler.
+    ///
+    /// - Parameter action: Closure called when the editor's text content changes.
+    /// - Returns: A view with the text change handler attached.
+    ///
+    /// The handler fires for every text change (subject to the editor's
+    /// debounce interval, which is set via the initializer's
+    /// `debounceInterval` parameter).
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Use default debouncing (100ms)
+    /// CodeEditor(text: $code)
+    ///     .onTextChange { newText in
+    ///         print("Text changed: \(newText.count) characters")
+    ///     }
+    ///
+    /// // Or specify custom debouncing in initializer
+    /// CodeEditor(text: $code, debounceInterval: .milliseconds(500))
+    ///     .onTextChange { newText in
+    ///         saveToDatabase(newText)
+    ///     }
+    /// ```
+    public func onTextChange(
+        perform action: @escaping @Sendable (String) -> Void
+    ) -> some View {
+        transformEnvironment(\.codeEditorIntent) { $0.onTextChange = action }
+    }
+
+    /// Adds a selection change handler.
+    ///
+    /// - Parameter action: Closure called when the text selection changes.
+    /// - Returns: A view with the selection change handler attached.
+    ///
+    /// The handler provides the selected range as `Range<String.Index>` or `nil`
+    /// if no text is selected. Selection changes are not debounced.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .onSelectionChange { range in
+    ///         if let range = range {
+    ///             let selectedText = String(code[range])
+    ///             print("Selected: \(selectedText)")
+    ///         } else {
+    ///             print("No selection")
+    ///         }
+    ///     }
+    /// ```
+    public func onSelectionChange(
+        perform action: @escaping @Sendable (Range<String.Index>?) -> Void
+    ) -> some View {
+        transformEnvironment(\.codeEditorIntent) { $0.onSelectionChange = action }
+    }
+
+    /// Configures a custom code completion provider.
+    ///
+    /// - Parameter provider: Async closure that returns completion items.
+    /// - Returns: A view with the completion provider attached.
+    ///
+    /// The provider is called when the user triggers code completion and receives
+    /// a `SwiftUICompletionContext` with the current text, cursor position, and language.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .codeCompletion { context in
+    ///         let items = await fetchCompletions(
+    ///             for: context.language,
+    ///             at: context.cursorPosition,
+    ///             in: context.text
+    ///         )
+    ///         return items.map { item in
+    ///             SwiftUICompletionItem(
+    ///                 label: item.label,
+    ///                 kind: item.kind,
+    ///                 insertText: item.insertText
+    ///             )
+    ///         }
+    ///     }
+    /// ```
+    ///
+    /// - Note: As of 2026-05-14 the SwiftUI provider closure is stored
+    ///   on `CodeEditorIntent` but not yet consumed by the editor. A
+    ///   separate follow-up wires it through the completion pipeline.
+    public func codeCompletion(
+        provider: @escaping @Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem]
+    ) -> some View {
+        transformEnvironment(\.codeEditorIntent) { $0.completionProvider = provider }
+    }
+
+    /// Binds editor interaction state for persistence and restoration.
+    ///
+    /// The current implementation provides two-way cursor-position sync:
+    /// selection changes update `cursorPositions`, and external writes to
+    /// `cursorPositions` move the editor caret. Other fields are retained
+    /// for host persistence and future editor integrations.
+    public func editorInteractionState(
+        _ binding: Binding<EditorInteractionState>
+    ) -> some View {
+        transformEnvironment(\.codeEditorIntent) { $0.interactionState = binding }
+    }
+
+    /// Attaches a host-owned `EditorController` so the host can drive
+    /// find/replace, folding, line/symbol navigation, and the annotations
+    /// data source through a single façade. The controller weakly
+    /// references the underlying `CodeEditorView` for its lifetime.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @State private var controller = EditorController()
+    ///
+    /// var body: some View {
+    ///     CodeEditor(text: $code)
+    ///         .editorController(controller)
+    ///     Button("Fold All") { controller.foldAll() }
+    /// }
+    /// ```
+    public func editorController(_ controller: EditorController) -> some View {
+        transformEnvironment(\.codeEditorIntent) { $0.editorController = controller }
+    }
 }
 
 @available(macOS 13.0, iOS 16.0, *)
@@ -177,104 +303,6 @@ extension CodeEditor {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.behavior.isEditable = isEditable
         }
-    }
-
-    /// Adds a text change handler with optional debouncing.
-    ///
-    /// - Parameters:
-    ///   - action: Closure called when text changes
-    /// - Returns: A new view with the text change handler attached
-    ///
-    /// The handler is called whenever the text content changes. Use debouncing
-    /// to reduce the frequency of calls for performance-sensitive operations.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// // Use default debouncing (100ms)
-    /// CodeEditor(text: $code)
-    ///     .onTextChange { newText in
-    ///         print("Text changed: \(newText.count) characters")
-    ///     }
-    /// 
-    /// // Or specify custom debouncing in initializer
-    /// CodeEditor(text: $code, debounceInterval: .milliseconds(500))
-    ///     .onTextChange { newText in
-    ///         saveToDatabase(newText)
-    ///     }
-    /// ```
-    public func onTextChange(
-        perform action: @escaping @Sendable (String) -> Void
-    ) -> CodeEditor {
-        var copy = self
-        copy.onTextChange = action
-        // Note: If a custom debounce is needed, users should pass it to the initializer
-        // This avoids recreating the view and losing other modifier state
-        return copy
-    }
-
-    /// Adds a selection change handler.
-    ///
-    /// - Parameter action: Closure called when the text selection changes
-    /// - Returns: A new view with the selection change handler attached
-    ///
-    /// The handler provides the selected range as `Range<String.Index>` or `nil`
-    /// if no text is selected. Selection changes are not debounced.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// CodeEditor(text: $code)
-    ///     .onSelectionChange { range in
-    ///         if let range = range {
-    ///             let selectedText = String(code[range])
-    ///             print("Selected: \(selectedText)")
-    ///         } else {
-    ///             print("No selection")
-    ///         }
-    ///     }
-    /// ```
-    public func onSelectionChange(
-        perform action: @escaping @Sendable (Range<String.Index>?) -> Void
-    ) -> CodeEditor {
-        var copy = self
-        copy.onSelectionChange = action
-        return copy
-    }
-
-    /// Configures a custom code completion provider.
-    ///
-    /// - Parameter provider: Async closure that returns completion items
-    /// - Returns: A new view with the completion provider attached
-    ///
-    /// The provider is called when the user triggers code completion and receives
-    /// a `SwiftUICompletionContext` with the current text, cursor position, and language.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// CodeEditor(text: $code)
-    ///     .codeCompletion { context in
-    ///         let items = await fetchCompletions(
-    ///             for: context.language,
-    ///             at: context.cursorPosition,
-    ///             in: context.text
-    ///         )
-    ///         return items.map { item in
-    ///             SwiftUICompletionItem(
-    ///                 label: item.label,
-    ///                 kind: item.kind,
-    ///                 insertText: item.insertText
-    ///             )
-    ///         }
-    ///     }
-    /// ```
-    public func codeCompletion(
-        provider: @escaping @Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem]
-    ) -> CodeEditor {
-        var copy = self
-        copy.completionProvider = provider
-        return copy
     }
 
     /// Configures the font size for the editor text.

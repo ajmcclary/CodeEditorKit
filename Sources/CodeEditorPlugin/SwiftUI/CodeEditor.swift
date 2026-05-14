@@ -163,18 +163,13 @@ public struct CodeEditor: View {
     private var initialLanguage: Language?
     private var initialTheme: Theme?
 
-    // Callbacks
-    internal var onTextChange: (@Sendable (String) -> Void)?
-    internal var onSelectionChange: (@Sendable (Range<String.Index>?) -> Void)?
-    internal var completionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
-
-    // Interaction state (opt-in, two-way binding)
-    internal var interactionState: Binding<EditorInteractionState> = .constant(EditorInteractionState())
-
-    // Imperative command façade (opt-in). When set, the SwiftUI representable
-    // weakly assigns the underlying CodeEditorView into the controller so
-    // host code can call find/fold/goto/etc. through the controller's API.
-    internal var editorController: EditorController?
+    // Intent populated by the modifier chain (.onTextChange,
+    // .editorController, …). Read by body to wire callbacks and
+    // references into the representable. Replaces the five stored
+    // properties (onTextChange, onSelectionChange, completionProvider,
+    // editorController, interactionState) that previously lived on
+    // this struct. See docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md.
+    @Environment(\.codeEditorIntent) private var codeEditorIntent
 
     // Debouncing
     private let textDebounceInterval: Duration?
@@ -261,42 +256,6 @@ public struct CodeEditor: View {
         self.textDebounceInterval = debounceInterval
         self.initialLanguage = language
         self.initialTheme = theme
-    }
-
-    // MARK: - Modifiers
-
-    /// Binds editor interaction state for persistence and restoration.
-    ///
-    /// The current implementation provides two-way cursor-position sync:
-    /// selection changes update `cursorPositions`, and external writes to
-    /// `cursorPositions` move the editor caret. Other fields are retained
-    /// for host persistence and future editor integrations.
-    public func editorInteractionState(_ binding: Binding<EditorInteractionState>) -> Self {
-        var copy = self
-        copy.interactionState = binding
-        return copy
-    }
-
-    /// Attaches a host-owned `EditorController` so the host can drive
-    /// find/replace, folding, line/symbol navigation, and the annotations
-    /// data source through a single façade. The controller weakly
-    /// references the underlying `CodeEditorView` for its lifetime.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// @State private var controller = EditorController()
-    ///
-    /// var body: some View {
-    ///     CodeEditor(text: $code)
-    ///         .editorController(controller)
-    ///     Button("Fold All") { controller.foldAll() }
-    /// }
-    /// ```
-    public func editorController(_ controller: EditorController) -> Self {
-        var copy = self
-        copy.editorController = controller
-        return copy
     }
 
     // MARK: - Configuration overlay
@@ -422,9 +381,16 @@ public struct CodeEditor: View {
             stored: $text,
             manager: activeDocumentManager
         )
+        let storedInteraction = codeEditorIntent.interactionState
+            ?? .constant(EditorInteractionState())
         let effectiveInteractionBinding = Self.resolveInteractionBinding(
-            stored: interactionState,
+            stored: storedInteraction,
             manager: activeDocumentManager
+        )
+
+        let (textCallback, selectionCallback) = Self.makeRepresentableCallbacks(
+            from: codeEditorIntent,
+            textBinding: effectiveTextBinding
         )
 
         return CodeEditorRepresentable(
@@ -435,10 +401,10 @@ public struct CodeEditor: View {
             runtimeDependencies: effectiveRuntimeDependencies,
             textDebounceInterval: effectiveDebounceInterval,
             interactionState: effectiveInteractionBinding,
-            editorController: editorController,
+            editorController: codeEditorIntent.editorController,
             hostEditorState: hostEditorState,
-            onTextChange: handleTextChange,
-            onSelectionChange: handleSelectionChange
+            onTextChange: textCallback,
+            onSelectionChange: selectionCallback
         )
         // No `.searchable(...)` here on purpose. The old wrapper added a
         // toolbar search field that competes for first responder on macOS,
@@ -448,7 +414,7 @@ public struct CodeEditor: View {
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, effectiveConfiguration)
-        .environment(\.editorEventBus, editorController?.editorEventBus)
+        .environment(\.editorEventBus, codeEditorIntent.editorController?.editorEventBus)
         .onAppear {
             // Start monitoring if using default memory monitor
             if environment.memoryMonitor == nil && environment.runtimeDependencies == nil {
@@ -463,21 +429,9 @@ public struct CodeEditor: View {
         }
     }
 
-    // MARK: - Private Methods
-
-    private func handleTextChange(_ newText: String) {
-        // The coordinator will handle this, so this can be simplified
-        // The text binding is updated directly by the coordinator
-        onTextChange?(newText)
-    }
-
-    private func handleSelectionChange(_ selection: NSRange) {
-        // Convert NSRange to Range<String.Index>
-        guard let range = Range(selection, in: text) else { return }
-        onSelectionChange?(range)
-    }
-
-    // View modifiers have been moved to CodeEditor+Modifiers.swift
+    // View modifiers have been moved to CodeEditor+ModifiersExtensions.swift.
+    // Callback wrapping for the representable lives in
+    // `makeRepresentableCallbacks(from:textBinding:)` above.
 }
 
 // Factory methods have been moved to CodeEditor+Factory.swift
