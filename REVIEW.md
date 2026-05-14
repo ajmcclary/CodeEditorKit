@@ -309,6 +309,31 @@ Modified — `Sources/CodeEditorPlugin/SwiftUI/CodeEditorEnvironment+Extensions.
 
 The two `db5c824`-vintage sample-test failures should be cleaned up in a follow-up sweep — they're test rot, not behavior regressions.
 
+### `EditorDocument` + `EditorDocuments` batch (landed 2026-05-14)
+
+Closes sample-driven API gap #3 (`EditorDocument` recipe). Spec at `docs/superpowers/specs/2026-05-14-editor-document-design.md`; implementation plan at `docs/superpowers/plans/2026-05-14-editor-document.md`.
+
+| Item | Status | What landed |
+|---|---|---|
+| `EditorDocument` value type | ✅ Done | New `public struct EditorDocument: Hashable, Identifiable, Sendable, Codable` composing `TabModel` + `text` + `interactionState`. Forwarding accessors keep call sites terse (`doc.name`, `doc.url`, `doc.language`, `doc.isDirty`); `id` forwards to `tab.id`. `Codable` auto-synthesizes via the three stored properties (`TabModel` and `Language` adopted `Codable` in the same commit; all stored fields are already Codable). Lives at `Sources/CodeEditorPlugin/Documents/EditorDocument.swift`. |
+| `EditorDocuments` observable manager | ✅ Done | `@MainActor @Observable public final class EditorDocuments` owning `[EditorDocument]` (`private(set)`) + `activeID`. CRUD: `open` / `close` / `closeAll` / `setActive`. Bindings: `textBinding(for:)`, `interactionBinding(for:)`, `tabsBinding` (diff-by-id on set). Dirty tracking is automatic via the text binding's setter; `markClean(_:)` resets. Public `update(_:with:)` hook for in-tree extensions (the sample uses it for `resetToSample` / `setLanguageRenaming`). No file I/O. Lives at `Sources/CodeEditorPlugin/Documents/EditorDocuments.swift`. |
+| `.activeDocument(in:)` modifier | ✅ Done | `extension View { func activeDocument(in: EditorDocuments) -> some View }` installs the manager into `\.activeDocumentManager` and applies `.codeLanguage(documents.active?.language ?? .plainText)`. `CodeEditor.body` reads the env value; when present with a non-nil `activeID`, its text and interaction-state bindings are overridden by the manager's per-active-id bindings via static `resolveTextBinding` / `resolveInteractionBinding` helpers. |
+| No-arg `CodeEditor()` initializer | ✅ Done | New `public init()` that defaults the internal text Binding to `.constant("")`. Designed for use with `.activeDocument(in:)`; standalone usage renders a read-only placeholder. |
+| Sample migration | ✅ Done | `Sources/CodeEditorSample/Documents/DocumentStore.swift` deleted (228 lines). Sample-only concerns (file I/O via `openFile`/`save`/`SaveOutcome`, Untitled-N naming via `newTab`, sample-catalog `resetToSample`, extension-follows-language `setLanguageRenaming`) moved to `Sources/CodeEditorSample/Documents/EditorDocuments+SampleExtras.swift`. Nine sample files migrated to the new surface; `WindowBody.editorPane` and `IOSRootView.editor` collapse to the `.activeDocument(in:)` modifier (six modifiers per pane → two CodeEditor-typed pre-modifiers + the chain). Note: `CodeEditor`-typed methods (`editorController`, `onTextChange`) must precede `.activeDocument(in:)` since the modifier returns `some View`. |
+
+**Files touched (this batch — 11 modified, 5 added, 2 deleted):**
+Added — `Sources/CodeEditorPlugin/Documents/EditorDocument.swift`, `Sources/CodeEditorPlugin/Documents/EditorDocuments.swift`, `Sources/CodeEditorPlugin/SwiftUI/CodeEditor+DocumentsExtensions.swift`, `Sources/CodeEditorSample/Documents/EditorDocuments+SampleExtras.swift`, `Tests/CodeEditorPluginTests/Documents/EditorDocumentTests.swift`, `Tests/CodeEditorPluginTests/Documents/EditorDocumentsTests.swift`, `Tests/CodeEditorPluginTests/Documents/EditorDocumentsBindingTests.swift`, `Tests/CodeEditorPluginTests/Documents/ActiveDocumentModifierTests.swift`.
+Modified — `Sources/CodeEditorPlugin/Core/TabModel.swift` (Codable conformance), `Sources/CodeEditorPlugin/SyntaxHighlighting/SyntaxHighlightingCoordinator.swift` (`Language: Codable`), `Sources/CodeEditorPlugin/SwiftUI/CodeEditor.swift`, plus 9 sample files (`App/AppState.swift`, `App/WindowBody.swift`, `App/RootWindow.swift`, `App/CodeEditorSampleApp.swift`, `App/LSP/LSPSampleCoordinator.swift`, `iOS/IOSRootView.swift`, `CommandPalette/CommandPaletteCatalog.swift`, `Switchers/SwitcherSection.swift`, `Sidebars/InspectorSidebar.swift`).
+Deleted — `Sources/CodeEditorSample/Documents/DocumentStore.swift`, `Tests/CodeEditorSampleTests/DocumentStoreOpenFileTests.swift` (renamed to `EditorDocumentsOpenFileTests.swift`).
+
+**Tests added:** 38 cases across four files — 7 XCTest cases on `EditorDocument` (forwarding accessors, Codable round-trip), 17 XCTest cases on `EditorDocuments` CRUD + `update(_:with:)`, 15 XCTest cases on text/interaction/tabs bindings + dirty semantics, 7 Swift Testing cases on `resolveTextBinding` / `resolveInteractionBinding` + modifier chain composition. Plus the renamed `EditorDocumentsOpenFileTests` (5 sample-side cases on the new `openFile` / `save` / `newTab`).
+
+**Public API impact.** Strictly additive on the framework: two new types in a new `Documents/` directory, one new `View` modifier, one new no-arg `CodeEditor()` initializer, one new env key, one new public `update(_:with:)` method. `Codable` adoption on `TabModel` and `Language` is also strictly additive (both are existing public types; conformance comes for free via auto-synthesis / `RawRepresentable`).
+
+Source-breaking inside the sample only: `DocumentStore` is deleted and replaced. No external consumers exist (sample is in-tree).
+
+Build: green. SwiftLint: 0 violations. The three test failures observed under `swift test --filter "Document|CodeEditor|Editor"` are all pre-existing and documented in earlier Status sections (`DemoCompletionProviderTests.returnsThreeDemoItemsOnAnyLanguage`, `LSPSampleCoordinatorStateTests.resolverFailureTransitionsToFailed`, `EditorStatusBarSnapshots/*` parallel SIGSEGV).
+
 
 
 ## Top-level take
@@ -453,7 +478,7 @@ All landed in the Sample coverage gaps batch on 2026-05-14:
 
 All remaining items require a design conversation before any code lands:
 
-- **Sample-driven API gaps #3, #5, #6, #7** — `EditorDocument` recipe, `EditorController.onAttach`, `CompletionEvent` AsyncStream, `.performanceObserver(_:)` modifier.
+- **Sample-driven API gaps #5, #6** — `EditorController.onAttach`, `CompletionEvent` AsyncStream. (#3 `EditorDocument` recipe and #7 `.performanceObserver(_:)` modifier — landed.)
 - **LSP iOS coverage** — docs claim "remote servers on iOS" but the implementation is gated to `#if canImport(AppKit)`. Either add iOS support or rewrite the docs.
 - **Three completion ranking pipelines disagree** — `CompletionManager.sortAndDeduplicateItems` vs `CompletionRankingModel.rank` vs `SmartCompletionEngine.rerank`. Pick one canonical scoring algorithm.
 - **`SmartEditingEngine.attach` overwrites the delegate** — needs a multiplexer (LSP / completion / folding all want the slot). Generalising the `TextEditEventObserving` pattern from `CodeFoldingEngine` is the suggested template in "Patterns worth codifying".
