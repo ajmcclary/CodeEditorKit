@@ -264,18 +264,38 @@ extension GutterView {
         let fillBackground = true // UIKit needs background fill
         #endif
 
+        let activeLineNumber = Self.computeActiveLineNumber(for: textView)
+
         // Use the renderer to draw line numbers
         renderer.draw(
             in: rect,
             context: context,
             textView: textView,
             gutterBounds: bounds,
-            fillBackground: fillBackground
+            fillBackground: fillBackground,
+            activeLineNumber: activeLineNumber
         )
 
         // Update accessibility elements for visible lines
         #if canImport(UIKit)
         updateAccessibilityElements()
+        #endif
+    }
+
+    /// Resolves the 1-based line index containing the caret. Returns `nil`
+    /// when no selection is set or the geometry store is empty. Used for
+    /// active-line line-number coloring.
+    private static func computeActiveLineNumber(for textView: CodeEditorView) -> Int? {
+        #if canImport(AppKit)
+        let location = textView.selectedRange().location
+        guard location != NSNotFound,
+              textView.lineGeometryStore.lineCount > 0 else { return nil }
+        return textView.lineGeometryStore.lineIndex(forUtf16Offset: location) + 1
+        #else
+        guard let selectedTextRange = textView.selectedTextRange else { return nil }
+        let location = textView.offset(from: textView.beginningOfDocument, to: selectedTextRange.start)
+        guard textView.lineGeometryStore.lineCount > 0 else { return nil }
+        return textView.lineGeometryStore.lineIndex(forUtf16Offset: location) + 1
         #endif
     }
 }
