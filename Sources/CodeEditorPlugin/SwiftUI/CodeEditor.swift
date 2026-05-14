@@ -414,7 +414,9 @@ public struct CodeEditor: View {
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, effectiveConfiguration)
+        #if canImport(AppKit)
         .environment(\.editorEventBus, codeEditorIntent.editorController?.editorEventBus)
+        #endif
         .onAppear {
             // Start monitoring if using default memory monitor
             if environment.memoryMonitor == nil && environment.runtimeDependencies == nil {
