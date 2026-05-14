@@ -26,14 +26,24 @@ import Combine
 /// ```
 public struct LanguageServerConfig: Sendable {
     public let languageId: String
-    public let serverPath: String
-    public let serverArguments: [String]
     public let fileExtensions: [String]
     public let capabilities: ClientCapabilities
     public let autoStart: Bool
-    public let enablePathResolution: Bool
     public let retryConfiguration: LSPRetryConfiguration
 
+    // Local-server fields. `serverPath == ""` on remote-shaped configs.
+    public let serverPath: String
+    public let serverArguments: [String]
+    public let enablePathResolution: Bool
+
+    // Remote-server fields. `remoteURL == nil` on local-shaped configs.
+    public let remoteURL: URL?
+    public let remoteHeaders: [String: String]
+    public let remoteAuthentication: LSPAuthentication?
+    public let remoteTransportConfiguration: LSPTransportConfiguration?
+
+    /// Existing positional initializer — kept for source compatibility.
+    /// Constructs a local-shaped config (`remoteURL == nil`).
     public init(
         languageId: String,
         serverPath: String,
@@ -52,6 +62,84 @@ public struct LanguageServerConfig: Sendable {
         self.autoStart = autoStart
         self.enablePathResolution = enablePathResolution
         self.retryConfiguration = retryConfiguration
+        self.remoteURL = nil
+        self.remoteHeaders = [:]
+        self.remoteAuthentication = nil
+        self.remoteTransportConfiguration = nil
+    }
+
+    /// Construct a local LSP server configuration. Process-based; macOS only at start time.
+    public static func local(
+        languageId: String,
+        serverPath: String,
+        fileExtensions: [String],
+        serverArguments: [String] = [],
+        capabilities: ClientCapabilities = .default,
+        autoStart: Bool = true,
+        enablePathResolution: Bool = true,
+        retryConfiguration: LSPRetryConfiguration = .default
+    ) -> Self {
+        Self(
+            languageId: languageId,
+            serverPath: serverPath,
+            fileExtensions: fileExtensions,
+            serverArguments: serverArguments,
+            capabilities: capabilities,
+            autoStart: autoStart,
+            enablePathResolution: enablePathResolution,
+            retryConfiguration: retryConfiguration
+        )
+    }
+
+    /// Construct a remote LSP server configuration. Uses WebSocket transport on all platforms.
+    public static func remote(
+        languageId: String,
+        url: URL,
+        fileExtensions: [String],
+        headers: [String: String] = [:],
+        authentication: LSPAuthentication? = nil,
+        transportConfiguration: LSPTransportConfiguration? = nil,
+        capabilities: ClientCapabilities = .default,
+        autoStart: Bool = true,
+        retryConfiguration: LSPRetryConfiguration = .default
+    ) -> Self {
+        Self(
+            languageId: languageId,
+            fileExtensions: fileExtensions,
+            capabilities: capabilities,
+            autoStart: autoStart,
+            retryConfiguration: retryConfiguration,
+            remoteURL: url,
+            remoteHeaders: headers,
+            remoteAuthentication: authentication,
+            remoteTransportConfiguration: transportConfiguration
+        )
+    }
+
+    /// Internal designated initializer used by `.remote(...)`. Not public — callers go through the factories.
+    private init(
+        languageId: String,
+        fileExtensions: [String],
+        capabilities: ClientCapabilities,
+        autoStart: Bool,
+        retryConfiguration: LSPRetryConfiguration,
+        remoteURL: URL,
+        remoteHeaders: [String: String],
+        remoteAuthentication: LSPAuthentication?,
+        remoteTransportConfiguration: LSPTransportConfiguration?
+    ) {
+        self.languageId = languageId
+        self.serverPath = ""
+        self.serverArguments = []
+        self.fileExtensions = fileExtensions
+        self.capabilities = capabilities
+        self.autoStart = autoStart
+        self.enablePathResolution = false
+        self.retryConfiguration = retryConfiguration
+        self.remoteURL = remoteURL
+        self.remoteHeaders = remoteHeaders
+        self.remoteAuthentication = remoteAuthentication
+        self.remoteTransportConfiguration = remoteTransportConfiguration
     }
 }
 
