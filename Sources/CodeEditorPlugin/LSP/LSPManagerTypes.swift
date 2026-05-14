@@ -143,6 +143,41 @@ public struct LanguageServerConfig: Sendable {
     }
 }
 
+extension LanguageServerConfig {
+    /// Translate this configuration into the transport-typed `LSPServerConfiguration`
+    /// that `LSPClient.connect(configuration:, languageId:)` consumes.
+    ///
+    /// - Parameter workspaceRoot: workspace directory used by local-server transports.
+    ///   Ignored for remote configurations.
+    /// - Throws: `LSPError.serverError` on iOS for local-shaped configurations.
+    ///   Local LSP servers require AppKit's `Process` API.
+    internal func makeServerConfiguration(workspaceRoot: URL) throws -> LSPServerConfiguration {
+        if let remoteURL {
+            return .remote(RemoteLSPConfiguration(
+                serverURL: remoteURL,
+                authentication: remoteAuthentication,
+                customHeaders: remoteHeaders,
+                transportConfiguration: remoteTransportConfiguration
+            ))
+        }
+
+        #if canImport(AppKit)
+        return .local(LocalLSPConfiguration(
+            executablePath: serverPath,
+            arguments: serverArguments,
+            workingDirectory: workspaceRoot,
+            environment: [:]
+        ))
+        #else
+        throw LSPError.serverError(
+            code: -1,
+            message: "Local language servers require AppKit (macOS). Use LanguageServerConfig.remote(url:) for iOS.",
+            data: nil
+        )
+        #endif
+    }
+}
+
 // MARK: - Document Types
 
 /// Represents an open document in the LSP manager

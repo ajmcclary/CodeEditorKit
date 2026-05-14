@@ -69,4 +69,78 @@ struct LanguageServerConfigFactoryTests {
         }
         #expect(config.remoteTransportConfiguration?.autoReconnect == false)
     }
+
+    @Test("`makeServerConfiguration` on `.remote` returns `.remote(_)` regardless of platform")
+    func makeServerConfigurationRemoteShape() throws {
+        let url = try #require(URL(string: "wss://lsp.example.com/swift"))
+        let config = LanguageServerConfig.remote(
+            languageId: "swift",
+            url: url,
+            fileExtensions: ["swift"],
+            authentication: .bearerToken("xyz")
+        )
+
+        let server = try config.makeServerConfiguration(
+            workspaceRoot: URL(fileURLWithPath: "/tmp")
+        )
+
+        guard case .remote(let remote) = server else {
+            Issue.record("Expected .remote, got \(server)")
+            return
+        }
+        #expect(remote.serverURL == url)
+        if case .bearerToken(let token) = remote.authentication {
+            #expect(token == "xyz")
+        } else {
+            Issue.record("Expected bearer-token authentication on the translated remote config")
+        }
+    }
+
+    #if canImport(AppKit)
+    @Test("`makeServerConfiguration` on `.local` returns `.local(_)` on macOS")
+    func makeServerConfigurationLocalShapeOnMac() throws {
+        let config = LanguageServerConfig.local(
+            languageId: "swift",
+            serverPath: "/usr/bin/sourcekit-lsp",
+            fileExtensions: ["swift"],
+            serverArguments: ["--log-file", "/tmp/x.log"]
+        )
+
+        let server = try config.makeServerConfiguration(
+            workspaceRoot: URL(fileURLWithPath: "/tmp")
+        )
+
+        guard case .local(let local) = server else {
+            Issue.record("Expected .local, got \(server)")
+            return
+        }
+        #expect(local.executablePath == "/usr/bin/sourcekit-lsp")
+        #expect(local.arguments == ["--log-file", "/tmp/x.log"])
+        #expect(local.workingDirectory == URL(fileURLWithPath: "/tmp"))
+    }
+    #else
+    @Test("`makeServerConfiguration` on `.local` throws on iOS")
+    func makeServerConfigurationLocalThrowsOnIOS() {
+        let config = LanguageServerConfig.local(
+            languageId: "swift",
+            serverPath: "/usr/bin/sourcekit-lsp",
+            fileExtensions: ["swift"]
+        )
+
+        do {
+            _ = try config.makeServerConfiguration(
+                workspaceRoot: URL(fileURLWithPath: "/tmp")
+            )
+            Issue.record("Expected throw; got success")
+        } catch let error as LSPError {
+            if case .serverError(_, let message, _) = error {
+                #expect(message.contains("AppKit") || message.contains("remote"))
+            } else {
+                Issue.record("Expected LSPError.serverError, got \(error)")
+            }
+        } catch {
+            Issue.record("Expected LSPError, got \(error)")
+        }
+    }
+    #endif
 }
