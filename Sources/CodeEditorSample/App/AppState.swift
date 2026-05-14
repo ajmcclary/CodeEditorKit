@@ -20,10 +20,13 @@ final class AppState {
     /// Workspace root for runtime-only LSP/file integrations.
     var workspaceRoot: URL?
 
-    /// Multi-tab document store backing `EditorTabStrip` and the editor
-    /// pane. Lives here (rather than as `@State` inside `RootWindow`) so
-    /// the Settings window can observe and mutate the active language.
-    let documents = DocumentStore()
+    /// Multi-tab document collection backing `EditorTabStrip` and the
+    /// editor pane. Lives here (rather than as `@State` inside
+    /// `RootWindow`) so the Settings window can observe and mutate the
+    /// active language. Framework type; sample-side file I/O and
+    /// Untitled-N naming come from
+    /// `Sources/CodeEditorSample/Documents/EditorDocuments+SampleExtras.swift`.
+    let documents = EditorDocuments()
 
     /// Imperative editor façade. Attached to the live `CodeEditor` via
     /// the `.editorController(_:)` modifier; sample features (find,
@@ -107,7 +110,7 @@ final class AppState {
         ) { [weak coordinator, weak documentsRef] in
             guard let coordinator,
                   let documents = documentsRef,
-                  let activeID = documents.activeTabID,
+                  let activeID = documents.activeID,
                   let url = coordinator.mirrorURL(for: activeID) else { return nil }
             return "file://" + url.path
         }
@@ -142,7 +145,7 @@ final class AppState {
     /// `DocumentStore` so the document model stays free of CrossPlatformLogger
     /// (the store is consumed by tests that don't want platform logging
     /// pulled in).
-    func handleSaveOutcome(_ outcome: DocumentStore.SaveOutcome) {
+    func handleSaveOutcome(_ outcome: EditorDocuments.SaveOutcome) {
         let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorSample", category: "DocumentStore")
         switch outcome {
         case let .saved(url):

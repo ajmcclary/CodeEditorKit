@@ -28,7 +28,7 @@ struct RootWindow: View {
                 // modifier transitively, so all three components are exercised
                 // by the sample.
                 EditorTitleBar(
-                    title: documents.tabs.first { $0.id == documents.activeTabID }?.name ?? "CodeEditorSample",
+                    title: documents.active?.name ?? "CodeEditorSample",
                     trafficLights: TrafficLightsConfiguration(
                         onClose: { NSApp.keyWindow?.performClose(nil) },
                         onMinimize: { NSApp.keyWindow?.performMiniaturize(nil) },
@@ -36,8 +36,8 @@ struct RootWindow: View {
                     )
                 )
                 EditorTabStrip(
-                    tabs: $documents.tabs,
-                    activeTabID: $documents.activeTabID
+                    tabs: documents.tabsBinding,
+                    activeTabID: $documents.activeID
                 )
                 // Breadcrumb trail from CodeEditorUI. Reads `\.editorState`
                 // which the framework now populates automatically (language,

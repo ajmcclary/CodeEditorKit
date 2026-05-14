@@ -274,8 +274,8 @@ final class LSPSampleCoordinator {
     }
 
     /// Closure injected by `AppState` so the coordinator can open a tab via
-    /// `DocumentStore` without depending on it directly. Returns the new
-    /// tab's id when the open succeeded.
+    /// the app's `EditorDocuments` without depending on it directly.
+    /// Returns the new document's id when the open succeeded.
     var onRequestOpen: ((URL) -> UUID?)?
 
     /// Closure injected by `AppState` to scroll the active tab to a line.

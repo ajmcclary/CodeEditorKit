@@ -33,7 +33,7 @@ struct CodeEditorSampleApp: App {
                 .keyboardShortcut("t", modifiers: .command)
 
                 Button("Close Tab") {
-                    if let id = appState.documents.activeTabID {
+                    if let id = appState.documents.activeID {
                         appState.documents.close(id)
                     }
                 }

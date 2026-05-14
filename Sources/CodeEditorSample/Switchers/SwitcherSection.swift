@@ -6,7 +6,7 @@ import SwiftUI
 struct SwitcherSection: View {
     @Binding var theme: Theme
     @Binding var configuration: EditorConfiguration
-    @Bindable var documents: DocumentStore
+    @Bindable var documents: EditorDocuments
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,7 +26,7 @@ struct SwitcherSection: View {
                 options: LanguageCatalog.all,
                 optionLabel: { $0.name },
                 selection: languageBinding,
-                disabled: documents.activeTabID == nil
+                disabled: documents.activeID == nil
             )
 
             divider
@@ -69,10 +69,10 @@ struct SwitcherSection: View {
 
     private var languageBinding: Binding<Language> {
         Binding(
-            get: { documents.activeLanguage ?? LanguageCatalog.default },
+            get: { documents.active?.language ?? LanguageCatalog.default },
             set: { newValue in
-                guard let id = documents.activeTabID else { return }
-                documents.setLanguage(newValue, of: id)
+                guard let id = documents.activeID else { return }
+                documents.setLanguageRenaming(newValue, of: id)
             }
         )
     }

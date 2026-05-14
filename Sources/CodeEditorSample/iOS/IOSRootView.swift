@@ -7,7 +7,7 @@ import SwiftUI
 /// The macOS sample uses a custom three-pane shell from `CodeEditorUI`
 /// (`EditorSidebarShell`, `EditorTabStrip`, `EditorCommandPalette`) — those
 /// components are AppKit-only by design. On iOS we use a `NavigationSplitView`
-/// with the same `DocumentStore` and `EditorConfiguration` so the
+/// with the same `EditorDocuments` and `EditorConfiguration` so the
 /// underlying state model is shared.
 struct IOSRootView: View {
     @Bindable var appState: AppState
@@ -64,8 +64,7 @@ struct IOSRootView: View {
     private func title(for section: IOSSidebarSection) -> String {
         switch section {
         case .editor:
-            guard let id = appState.documents.activeTabID else { return "Editor" }
-            return appState.documents.tabs.first { $0.id == id }?.name ?? "Editor"
+            return appState.documents.active?.name ?? "Editor"
 
         case .settings:
             return "Editor Settings"
@@ -103,23 +102,15 @@ struct IOSRootView: View {
 
     @ViewBuilder
     private var editor: some View {
-        if let activeID = appState.documents.activeTabID {
-            // Demonstrates `CodeEditor.withConfiguration` — one of the public
-            // factory methods that bundle language + configuration + theme.
-            CodeEditor.withConfiguration(
-                appState.documents.textBinding(for: activeID),
-                configuration: appState.configuration,
-                language: appState.documents.activeLanguage ?? .plainText,
-                theme: appState.theme
-            )
-            .onTextChange { newText in
-                appState.documents.markDirty(activeID, newText: newText)
-            }
-            .editorController(appState.editorController)
-            .editorInteractionState(appState.documents.interactionBinding(for: activeID))
-            .codeWorkspaceRoot(appState.workspaceRoot)
-            .becomeFirstResponder()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if appState.documents.active != nil {
+            CodeEditor()
+                .editorController(appState.editorController)
+                .activeDocument(in: appState.documents)
+                .environment(\.codeEditorConfiguration, appState.configuration)
+                .codeTheme(appState.theme)
+                .codeWorkspaceRoot(appState.workspaceRoot)
+                .becomeFirstResponder()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ContentUnavailableView(
                 "No tabs open",
@@ -160,15 +151,15 @@ struct IOSRootView: View {
 
     @ViewBuilder
     private var languagePanel: some View {
-        if let activeID = appState.documents.activeTabID {
+        if let activeID = appState.documents.activeID {
             List {
                 ForEach(LanguageCatalog.all, id: \.self) { language in
                     Button {
-                        appState.documents.setLanguage(language, of: activeID)
+                        appState.documents.setLanguageRenaming(language, of: activeID)
                     } label: {
                         Label(
                             language.name,
-                            systemImage: language == appState.documents.activeLanguage ? "checkmark.circle.fill" : "circle"
+                            systemImage: language == appState.documents.active?.language ? "checkmark.circle.fill" : "circle"
                         )
                     }
                 }
@@ -183,7 +174,7 @@ struct IOSRootView: View {
     }
 
     @ToolbarContentBuilder
-    private func toolbar(documents: DocumentStore) -> some ToolbarContent {
+    private func toolbar(documents: EditorDocuments) -> some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Button {
                 documents.newTab()

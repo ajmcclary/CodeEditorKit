@@ -43,35 +43,35 @@ struct WindowBody: View {
 
     @ViewBuilder
     private var editorPane: some View {
-        if let activeID = appState.documents.activeTabID {
-            CodeEditor(text: appState.documents.textBinding(for: activeID))
+        if appState.documents.active != nil {
+            CodeEditor()
+                .editorController(appState.editorController)
                 .onTextChange { newText in
                     MainActor.assumeIsolated {
-                        appState.documents.markDirty(activeID, newText: newText)
                         #if canImport(AppKit)
-                        appState.lsp.handleTextChange(id: activeID, newText: newText)
+                        if let activeID = appState.documents.activeID {
+                            appState.lsp.handleTextChange(id: activeID, newText: newText)
+                        }
                         #endif
                     }
                 }
-                .editorController(appState.editorController)
-                .editorInteractionState(appState.documents.interactionBinding(for: activeID))
-                // Individual environment modifiers — exercises the smaller
-                // public API instead of the bulk `.codeEditorEnvironment(...)`.
-                // Configuration knobs that don't have their own dedicated
-                // modifier flow through the environment key directly.
-                .codeLanguage(appState.documents.activeLanguage ?? .plainText)
+                .activeDocument(in: appState.documents)
                 .codeWorkspaceRoot(appState.workspaceRoot)
-                .lineNumbers(appState.configuration.display.isLineNumbersEnabled)
                 .environment(\.codeEditorConfiguration, appState.configuration)
+                .lineNumbers(appState.configuration.display.isLineNumbersEnabled)
                 .becomeFirstResponder()
                 .performanceObserver(appState.performanceObservation)
                 #if canImport(AppKit)
                 .onTextHover { position in
-                    await appState.lsp.handleHover(at: position, in: activeID)
+                    if let activeID = await appState.documents.activeID {
+                        await appState.lsp.handleHover(at: position, in: activeID)
+                    }
                 }
                 .onCommandClick { position in
-                    Task {
-                        await appState.lsp.jumpToDefinition(at: position, in: activeID)
+                    Task { @MainActor in
+                        if let activeID = appState.documents.activeID {
+                            await appState.lsp.jumpToDefinition(at: position, in: activeID)
+                        }
                     }
                 }
                 .popover(item: Binding(

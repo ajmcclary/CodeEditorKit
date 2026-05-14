@@ -47,7 +47,7 @@ struct InspectorSidebar: View {
             counts: appState.lsp.diagnosticCounts,
             serverPath: appState.lsp.resolvedServerPath,
             lastError: appState.lsp.lastError,
-            isSwiftActive: appState.documents.activeLanguage == .swift,
+            isSwiftActive: appState.documents.active?.language == .swift,
             onToggle: handleToggle
         )
     }
@@ -135,9 +135,8 @@ struct InspectorSidebar: View {
                 await appState.lsp.start(workspaceRoot: appState.workspaceRoot)
                 // Open every Swift tab into the freshly started session.
                 if case .running = appState.lsp.state {
-                    for tab in appState.documents.tabs where tab.language == .swift {
-                        let text = appState.documents.textBinding(for: tab.id).wrappedValue
-                        await appState.lsp.openTab(id: tab.id, text: text, language: .swift)
+                    for doc in appState.documents.documents where doc.language == .swift {
+                        await appState.lsp.openTab(id: doc.id, text: doc.text, language: .swift)
                     }
                 }
 

@@ -27,8 +27,8 @@ enum CommandPaletteCatalog {
             // "Language: X" preserves the buffer — switches highlighter only.
             let setLanguage = CommandPaletteItem(title: "Language: \(language.name)", kind: .setting)
             actions[setLanguage.id] = {
-                guard let id = appState.documents.activeTabID else { return }
-                appState.documents.setLanguage(language, of: id)
+                guard let id = appState.documents.activeID else { return }
+                appState.documents.setLanguageRenaming(language, of: id)
             }
             items.append(setLanguage)
 
@@ -36,7 +36,7 @@ enum CommandPaletteCatalog {
             // canonical demo snippet for that language.
             let resetSample = CommandPaletteItem(title: "Sample: \(language.name)", kind: .setting)
             actions[resetSample.id] = {
-                guard let id = appState.documents.activeTabID else { return }
+                guard let id = appState.documents.activeID else { return }
                 appState.documents.resetToSample(language, of: id)
             }
             items.append(resetSample)
@@ -88,7 +88,7 @@ enum CommandPaletteCatalog {
 
         let closeTab = CommandPaletteItem(title: "Close Tab", kind: .action, shortcut: "⌘W")
         actions[closeTab.id] = {
-            if let id = appState.documents.activeTabID { appState.documents.close(id) }
+            if let id = appState.documents.activeID { appState.documents.close(id) }
         }
         items.append(closeTab)
 
