@@ -121,11 +121,24 @@ final class EditorEventBusInstaller: NSObject {
 
     /// Translate a text-view-local point into a zero-based `SourcePosition`.
     /// Returns nil when the point falls outside the text region.
+    ///
+    /// Fast path: when the text view is a `CodeEditorView`, the incremental
+    /// `LineGeometryStore` gives O(log n) line + column lookup. Falls back
+    /// to a UTF-16 walk for plain `NSTextView` instances (tests, embedded
+    /// non-editor uses).
     static func sourcePosition(for point: NSPoint, in textView: NSTextView) -> SourcePosition? {
         let index = textView.characterIndexForInsertion(at: point)
-        let utf16 = textView.string.utf16
-        guard index <= utf16.count else { return nil }
+        let utf16Length = textView.string.utf16.count
+        guard index <= utf16Length else { return nil }
 
+        if let editor = textView as? CodeEditorView, editor.lineGeometryStore.lineCount > 0 {
+            let line = editor.lineGeometryStore.lineIndex(forUtf16Offset: index)
+            let lineStart = editor.lineGeometryStore.utf16Offset(forLineIndex: line)
+            let character = max(0, index - lineStart)
+            return SourcePosition(line: line, character: character)
+        }
+
+        let utf16 = textView.string.utf16
         var line = 0
         var lineStart = 0
         var pos = 0
