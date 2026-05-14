@@ -411,7 +411,7 @@ These are what the sample had to *invent* to integrate the framework — the fra
 2. **`Annotation` has no public `kind` field.** Sample fakes severity by content-prefix smuggling: `"ERROR: breakpoint"`, `"TODO: demo annotation"` (`EditorActions/AnnotationsHub.swift:114-138`). Add an `AnnotationKind` to the public `Annotation` struct.
 3. **No first-class "document" recipe.** Sample reinvents `DocumentStore`, `TabModel`, dirty tracking, per-tab `EditorInteractionState`, language inference (`Documents/DocumentStore.swift`). At minimum, document the recipe in `CodeEditorPlugin.swift`'s quick-start; better, ship an `EditorDocument` value type.
 4. **`AnnotationsDataSource` is `weak`** so hosts must retain it themselves (the only reason `AnnotationsHub` is owned by `AppState`). Either let the framework own it or document the weak ownership at the API call site.
-5. **Three-way `EditorController` wiring is hidden in `AppState.init`** (`AppState.swift:93-118`): `.editorController(_:)` modifier + injection into `AnnotationsHub` + injection into `LSPSampleCoordinator`. Consider `EditorController.onAttach { ... }`.
+5. ~~**Three-way `EditorController` wiring is hidden in `AppState.init`** (`AppState.swift:93-118`): `.editorController(_:)` modifier + injection into `AnnotationsHub` + injection into `LSPSampleCoordinator`. Consider `EditorController.onAttach { ... }`.~~ ✅ Done in the `EditorController.onAttach` batch on 2026-05-14. Closes the silent-no-op bug where `setAnnotationsDataSource(hub)` was called on an unattached controller. Spec at `docs/superpowers/specs/2026-05-14-editor-controller-onattach-design.md`; plan at `docs/superpowers/plans/2026-05-14-editor-controller-onattach.md`.
 6. **No telemetry hook on `CompletionProvider`.** Sample wraps every provider in `TelemetryCompletionProvider` (`App/Completion/TelemetryCompletionProvider.swift`). Expose `AsyncStream<CompletionEvent>` on `CompletionManager`.
 7. **`UnifiedPerformanceSystem` dual wiring** — assigned to config *and* polled via `generateInsights()` separately (`AppState.swift:136`, `PerformanceSampleCoordinator.swift:111`). Add `.performanceObserver(_:)` modifier that does both.
 8. **`FrameworkEdgeInsets` lacks per-edge writable subscripts** — `LayoutKnobsSection.swift:64-79` had to rebuild the whole struct per set.
@@ -478,7 +478,7 @@ All landed in the Sample coverage gaps batch on 2026-05-14:
 
 All remaining items require a design conversation before any code lands:
 
-- **Sample-driven API gaps #5, #6** — `EditorController.onAttach`, `CompletionEvent` AsyncStream. (#3 `EditorDocument` recipe and #7 `.performanceObserver(_:)` modifier — landed.)
+- **Sample-driven API gap #6** — `CompletionEvent` AsyncStream. (#3 `EditorDocument` recipe, #5 `EditorController.onAttach`, and #7 `.performanceObserver(_:)` modifier — landed.)
 - **LSP iOS coverage** — docs claim "remote servers on iOS" but the implementation is gated to `#if canImport(AppKit)`. Either add iOS support or rewrite the docs.
 - **Three completion ranking pipelines disagree** — `CompletionManager.sortAndDeduplicateItems` vs `CompletionRankingModel.rank` vs `SmartCompletionEngine.rerank`. Pick one canonical scoring algorithm.
 - **`SmartEditingEngine.attach` overwrites the delegate** — needs a multiplexer (LSP / completion / folding all want the slot). Generalising the `TextEditEventObserving` pattern from `CodeFoldingEngine` is the suggested template in "Patterns worth codifying".
