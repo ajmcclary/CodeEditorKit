@@ -287,6 +287,18 @@ custom_rules:
     message: "Do not assign to textView.delegate. Register as a TextViewDelegateParticipant via CodeEditorView.addDelegateParticipant(_:phase:). The sole legitimate install site is TextKitSetupHelper.setupTextKit."
     severity: error
 
+  forbidden_swiftui_extension_codeeditor:
+    included: 'Sources/CodeEditorPlugin/SwiftUI/.*\.swift'
+    excluded: 'Sources/CodeEditorPlugin/SwiftUI/CodeEditor\+FactoryExtensions\.swift'
+    name: "Forbidden extension CodeEditor"
+    # Public modifiers on CodeEditor must declare 'extension View' to keep
+    # chain composition order-independent. See
+    # docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md.
+    # Exception: CodeEditor+FactoryExtensions.swift (static factories).
+    regex: '^extension CodeEditor \{'
+    message: "Public modifiers on CodeEditor must declare 'extension View' to keep chain composition order-independent. Move new modifiers to an existing 'extension View' block in CodeEditor+ModifiersExtensions.swift. See docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md."
+    severity: error
+
 # ===========================
 # MARK: - Configuration
 # ===========================
