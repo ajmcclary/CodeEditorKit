@@ -160,4 +160,33 @@ public final class EditorDocuments {
         guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
         documents[index].tab.isDirty = false
     }
+
+    // MARK: - Chrome integration
+
+    /// Mutable `Binding<[TabModel]>` for chrome (e.g., `EditorTabStrip`).
+    ///
+    /// The getter returns the `tabs` projection. The setter diffs the
+    /// incoming array against the current one by id:
+    /// - Any id missing from the new array dispatches `close(_:)`.
+    /// - Indices that have moved cause `documents` to be reordered.
+    /// - Ids in the new array that aren't already present in `documents`
+    ///   are ignored — the strip can only remove or reorder, never
+    ///   invent a document.
+    public var tabsBinding: Binding<[TabModel]> {
+        Binding(
+            get: { [weak self] in self?.tabs ?? [] },
+            set: { [weak self] newTabs in
+                guard let self else { return }
+                let newIDs = Set(newTabs.map(\.id))
+                let toClose = self.documents.filter { !newIDs.contains($0.id) }.map(\.id)
+                for id in toClose {
+                    self.close(id)
+                }
+                let documentsByID = Dictionary(
+                    uniqueKeysWithValues: self.documents.map { ($0.id, $0) }
+                )
+                self.documents = newTabs.compactMap { documentsByID[$0.id] }
+            }
+        )
+    }
 }

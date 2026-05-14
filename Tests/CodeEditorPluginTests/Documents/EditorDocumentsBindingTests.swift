@@ -98,4 +98,42 @@ final class EditorDocumentsBindingTests: XCTestCase {
         XCTAssertEqual(firstBinding.wrappedValue, "first text")
         XCTAssertEqual(secondBinding.wrappedValue, "second text")
     }
+
+    func testTabsBindingGetReturnsTabs() {
+        let first = EditorDocument(name: "first.swift")
+        let second = EditorDocument(name: "second.swift")
+        let documents = EditorDocuments(documents: [first, second])
+        let binding = documents.tabsBinding
+        XCTAssertEqual(binding.wrappedValue.map(\.id), [first.id, second.id])
+    }
+
+    func testTabsBindingSetRemovesMissingId() {
+        let first = EditorDocument(name: "first.swift")
+        let second = EditorDocument(name: "second.swift")
+        let documents = EditorDocuments(documents: [first, second], activeID: second.id)
+        let binding = documents.tabsBinding
+        binding.wrappedValue = [first.tab]
+        XCTAssertEqual(documents.documents.map(\.id), [first.id])
+        XCTAssertEqual(documents.activeID, first.id)
+    }
+
+    func testTabsBindingSetReordersDocuments() {
+        let first = EditorDocument(name: "first.swift", text: "first")
+        let second = EditorDocument(name: "second.swift", text: "second")
+        let third = EditorDocument(name: "third.swift", text: "third")
+        let documents = EditorDocuments(documents: [first, second, third])
+        let binding = documents.tabsBinding
+        binding.wrappedValue = [third.tab, first.tab, second.tab]
+        XCTAssertEqual(documents.documents.map(\.id), [third.id, first.id, second.id])
+        XCTAssertEqual(documents.documents.first?.text, "third")
+    }
+
+    func testTabsBindingSetIgnoresUnknownIds() {
+        let first = EditorDocument(name: "first.swift")
+        let documents = EditorDocuments(documents: [first])
+        let phantom = TabModel(name: "phantom.swift")
+        let binding = documents.tabsBinding
+        binding.wrappedValue = [first.tab, phantom]
+        XCTAssertEqual(documents.documents.map(\.id), [first.id])
+    }
 }
