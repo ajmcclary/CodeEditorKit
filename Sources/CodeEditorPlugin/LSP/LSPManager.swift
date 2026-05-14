@@ -1,6 +1,3 @@
-#if canImport(AppKit)
-// LSP functionality is only available on macOS
-
 import Foundation
 #if canImport(Combine)
 import Combine
@@ -425,5 +422,3 @@ public final class LSPManager: ObservableObject {
         serverConfigurations = clientRegistry.serverConfigurations
     }
 }
-
-#endif // canImport(AppKit)

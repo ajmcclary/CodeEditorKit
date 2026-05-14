@@ -1,6 +1,3 @@
-#if canImport(AppKit)
-// LSP functionality is only available on macOS
-
 import Foundation
 
 /// Manages the lifecycle of LSP clients and language server operations
@@ -23,8 +20,10 @@ final class LSPClientRegistry {
     /// Logger for debugging
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClientRegistry")
 
-    /// Path resolver for finding language server executables
+    /// Path resolver for finding language server executables (macOS only — iOS apps are sandboxed).
+    #if canImport(AppKit)
     private let pathResolver = LSPPathResolver()
+    #endif
 
     /// Test-only client factory. Production uses `LSPClient.createAndSetup()`.
     private let clientFactory: @MainActor () async -> LSPClient
@@ -466,5 +465,3 @@ extension LSPClientRegistry {
         }
     }
 }
-
-#endif // canImport(AppKit)

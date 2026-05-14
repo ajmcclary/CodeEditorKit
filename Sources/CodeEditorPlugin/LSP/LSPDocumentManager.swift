@@ -1,6 +1,3 @@
-#if canImport(AppKit)
-// LSP functionality is only available on macOS
-
 import Foundation
 
 /// Manages document synchronization with LSP servers
@@ -192,5 +189,3 @@ final class LSPDocumentManager {
         return clientRegistry?.languageId(for: fileExtension)
     }
 }
-
-#endif // canImport(AppKit)

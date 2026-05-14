@@ -1,7 +1,7 @@
 #if canImport(AppKit)
+@testable import CodeEditorPlugin
 import Foundation
 import XCTest
-@testable import CodeEditorPlugin
 
 /// Verifies LSPClientRegistry's migration off the process-only legacy connect path.
 ///
@@ -12,7 +12,6 @@ import XCTest
 /// real WebSocket or Process.
 @MainActor
 final class LSPClientRegistryRemoteFlowTests: XCTestCase {
-
     func testRemoteConfigRoutesToRemotePayload() async throws {
         let url = try XCTUnwrap(URL(string: "wss://lsp.example.com/swift"))
         let recordedConfig = LSPClientRegistryRemoteFlowRecorder()

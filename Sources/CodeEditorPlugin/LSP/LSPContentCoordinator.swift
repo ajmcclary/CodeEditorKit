@@ -1,5 +1,3 @@
-#if canImport(AppKit)
-
 import Foundation
 
 // MARK: - LSP Content Coordinator
@@ -220,5 +218,3 @@ final class LSPContentCoordinator {
 
 extension LSPContentCoordinator: WillEditEventObserving {}
 extension LSPContentCoordinator: TextEditEventObserving {}
-
-#endif // canImport(AppKit)

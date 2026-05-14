@@ -1,6 +1,3 @@
-#if canImport(AppKit)
-// LSP functionality is only available on macOS
-
 import Foundation
 
 /// LSP-based completion provider that integrates with the CodeEditorView completion system
@@ -423,5 +420,3 @@ extension CompletionItemKind {
         }
     }
 }
-
-#endif

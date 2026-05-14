@@ -1,5 +1,3 @@
-#if canImport(AppKit)
-
 import Foundation
 
 // MARK: - LSP Semantic Token Provider
@@ -289,5 +287,3 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
         return line
     }
 }
-
-#endif // canImport(AppKit)

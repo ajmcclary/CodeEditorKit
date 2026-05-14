@@ -1,10 +1,9 @@
+@testable import CodeEditorPlugin
 import Foundation
 import Testing
-@testable import CodeEditorPlugin
 
 @Suite("LanguageServerConfig factory invariants")
 struct LanguageServerConfigFactoryTests {
-
     @Test("`.local(...)` factory produces a local-shaped config")
     func localFactoryProducesLocalShape() {
         let config = LanguageServerConfig.local(
@@ -28,7 +27,7 @@ struct LanguageServerConfigFactoryTests {
             fileExtensions: ["swift"]
         )
 
-        #expect(config.serverPath == "")
+        #expect(config.serverPath.isEmpty)
         #expect(config.remoteURL == url)
         #expect(config.remoteHeaders.isEmpty)
         #expect(config.remoteAuthentication == nil)
