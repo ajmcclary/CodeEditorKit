@@ -559,4 +559,82 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
 
         XCTAssertNotNil(editor)
     }
+
+    // MARK: - Legacy setter clears-on-nil regression tests
+    // Spec: docs/superpowers/specs/2026-05-14-codeeditor-environment-clearing-design.md
+
+    @MainActor
+    func testCodeEditorMemoryMonitorSetterClearsOnNil() {
+        var values = EnvironmentValues()
+        let monitor = MemoryMonitor()
+
+        values.codeEditorMemoryMonitor = monitor
+        XCTAssertNotNil(values.codeEditorMemoryMonitor, "Sanity: setter installs value.")
+
+        values.codeEditorMemoryMonitor = nil
+        XCTAssertNil(
+            values.codeEditorMemoryMonitor,
+            "Writing nil through the legacy setter must clear the underlying field."
+        )
+    }
+
+    @MainActor
+    func testCodeEditorEventSystemSetterClearsOnNil() {
+        var values = EnvironmentValues()
+        let system = UnifiedEventSystem()
+
+        values.codeEditorEventSystem = system
+        XCTAssertNotNil(values.codeEditorEventSystem, "Sanity: setter installs value.")
+
+        values.codeEditorEventSystem = nil
+        XCTAssertNil(
+            values.codeEditorEventSystem,
+            "Writing nil through the legacy setter must clear the underlying field."
+        )
+    }
+
+    @MainActor
+    func testCodeEditorPerformanceObservationSetterClearsOnNil() {
+        var values = EnvironmentValues()
+        let observation = PerformanceObservation()
+
+        values.codeEditorPerformanceObservation = observation
+        XCTAssertNotNil(values.codeEditorPerformanceObservation, "Sanity: setter installs value.")
+
+        values.codeEditorPerformanceObservation = nil
+        XCTAssertNil(
+            values.codeEditorPerformanceObservation,
+            "Writing nil through the legacy setter must clear the underlying field."
+        )
+    }
+
+    @MainActor
+    func testCodeEditorWorkspaceRootSetterClearsOnNil() {
+        var values = EnvironmentValues()
+        let url = URL(fileURLWithPath: "/tmp/codeeditor-test-workspace")
+
+        values.codeEditorWorkspaceRoot = url
+        XCTAssertEqual(values.codeEditorWorkspaceRoot, url, "Sanity: setter installs value.")
+
+        values.codeEditorWorkspaceRoot = nil
+        XCTAssertNil(
+            values.codeEditorWorkspaceRoot,
+            "Writing nil through the legacy setter must clear the underlying field."
+        )
+    }
+
+    @MainActor
+    func testCodeEditorRuntimeDependenciesSetterClearsOnNil() {
+        var values = EnvironmentValues()
+        let deps = EditorRuntimeDependencies.live()
+
+        values.codeEditorRuntimeDependencies = deps
+        XCTAssertNotNil(values.codeEditorRuntimeDependencies, "Sanity: setter installs value.")
+
+        values.codeEditorRuntimeDependencies = nil
+        XCTAssertNil(
+            values.codeEditorRuntimeDependencies,
+            "Writing nil through the legacy setter must clear the underlying field."
+        )
+    }
 }

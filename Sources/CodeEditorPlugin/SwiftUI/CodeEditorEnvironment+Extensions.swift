@@ -151,34 +151,71 @@ extension EnvironmentValues {
         set { codeEditorEnvironment = codeEditorEnvironment.with(becomeFirstResponder: newValue ? .yes : .no) }
     }
 
-    /// Legacy: Access the memory monitor directly
+    /// Legacy: Access the memory monitor directly.
+    ///
+    /// Writing `nil` clears the underlying field on the
+    /// `CodeEditorEnvironment`. (The setter writes the field directly
+    /// instead of routing through `with(_:)`, which treats `nil` as
+    /// "no change".)
     public var codeEditorMemoryMonitor: MemoryMonitor? {
         get { codeEditorEnvironment.memoryMonitor }
-        set { codeEditorEnvironment = codeEditorEnvironment.with(memoryMonitor: newValue) }
+        set {
+            var env = codeEditorEnvironment
+            env.memoryMonitor = newValue
+            codeEditorEnvironment = env
+        }
     }
 
-    /// Legacy: Access the event system directly
+    /// Legacy: Access the event system directly.
+    ///
+    /// Writing `nil` clears the underlying field on the
+    /// `CodeEditorEnvironment`.
     public var codeEditorEventSystem: UnifiedEventSystem? {
         get { codeEditorEnvironment.eventSystem }
-        set { codeEditorEnvironment = codeEditorEnvironment.with(eventSystem: newValue) }
+        set {
+            var env = codeEditorEnvironment
+            env.eventSystem = newValue
+            codeEditorEnvironment = env
+        }
     }
 
-    /// Legacy: Access the performance observation directly
+    /// Legacy: Access the performance observation directly.
+    ///
+    /// Writing `nil` clears the underlying field on the
+    /// `CodeEditorEnvironment`.
     public var codeEditorPerformanceObservation: PerformanceObservation? {
         get { codeEditorEnvironment.performanceObservation }
-        set { codeEditorEnvironment = codeEditorEnvironment.with(performanceObservation: newValue) }
+        set {
+            var env = codeEditorEnvironment
+            env.performanceObservation = newValue
+            codeEditorEnvironment = env
+        }
     }
 
-    /// Legacy: Access the workspace root directly
+    /// Legacy: Access the workspace root directly.
+    ///
+    /// Writing `nil` clears the underlying field on the
+    /// `CodeEditorEnvironment`.
     public var codeEditorWorkspaceRoot: URL? {
         get { codeEditorEnvironment.workspaceRoot }
-        set { codeEditorEnvironment = codeEditorEnvironment.with(workspaceRoot: newValue) }
+        set {
+            var env = codeEditorEnvironment
+            env.workspaceRoot = newValue
+            codeEditorEnvironment = env
+        }
     }
 
     /// Access complete runtime dependencies directly.
+    ///
+    /// Writing `nil` clears the underlying field on the
+    /// `CodeEditorEnvironment`.
     public var codeEditorRuntimeDependencies: EditorRuntimeDependencies? {
         get { codeEditorEnvironment.runtimeDependencies }
-        set { codeEditorEnvironment = codeEditorEnvironment.with(runtimeDependencies: newValue) }
+        set {
+            var env = codeEditorEnvironment
+            env.runtimeDependencies = newValue
+            codeEditorEnvironment = env
+        }
     }
 }
 
