@@ -266,7 +266,7 @@ extension View {
 }
 
 @available(macOS 13.0, iOS 16.0, *)
-extension CodeEditor {
+extension View {
     /// Configures highlighting of the currently selected line.
     ///
     /// - Parameter highlight: Whether to highlight the selected line (default: true)
