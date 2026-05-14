@@ -87,7 +87,7 @@ final class TextKitBridge {
 
 ### Contract notes
 
-- **`addAttributes` semantics change.** Before, attributes persisted into the underlying `NSAttributedString` (visible via `attributedSubstring(from:)` and copy/paste). After, they're rendering-only and don't survive serialisation. For a code editor this is correct — syntax highlighting is rendering, not document content — but any caller that reads back its previously-applied colours via `textStorage.attribute(_:at:effectiveRange:)` will see nothing.
+- **`addAttributes` semantics change.** Before, attributes persisted into the underlying `NSAttributedString` (visible via `attributedSubstring(from:)` and copy/paste). After, they're rendering-only and don't survive serialisation. For a code editor this is correct — syntax highlighting is rendering, not document content — but any caller that reads back its previously-applied colors via `textStorage.attribute(_:at:effectiveRange:)` will see nothing.
 - **Single internal reader.** `private var safeTextStorage` is the only place in the framework that reads `textContentStorage?.textStorage`. Everything else goes through the bridge. After the migration, `git grep 'textStorage' Sources/CodeEditorPlugin` should show only `TextKitBridge.swift` and the few places where the framework genuinely owns an `NSTextStorage` (e.g., test fixtures).
 
 ## Migration sweep — who calls what, what changes
@@ -99,7 +99,7 @@ The current ~60 `textView.textStorage` callsites collapse against the new bridge
 Three sites. Fixed first, smallest blast radius.
 
 - `Core/CodeEditorView+SetupExtensions.swift:99-109` — `rebuildLineGeometryStoreFromCurrentTextStorage()` reads through `textContentStorage?.textStorage`. `LineGeometryStore.build(from: NSTextStorage)` keeps its existing signature; only the *source* of the storage changes.
-- `Core/TextKitSetupHelper.swift:184,187,207` — notification observer wiring. Drop the `object:` filter on the `NSTextStorage.didProcessEditingNotification` observer (the handler already validates the sender), or — if the filter is load-bearing — switch to `textView.textContentStorage?.textStorage`. Recommended: drop the filter, since text storage replacement is rare in this codebase.
+- `Core/TextKitSetupHelper.swift:184,187,207` — notification observer wiring. Drop the `object:` filter on the `NSTextStorage.didProcessEditingNotification` observer; the handler already validates the sender, and text storage replacement is rare enough in this codebase that the filter does not earn its cost. Same change at the cleanup callsite (`:207`).
 - `Text/LineGeometryEditHandler.swift:41` — post-edit rebuild fallback. Reads through `textView.textContentStorage?.textStorage`.
 
 ### Group B — Read-only consumers
@@ -115,9 +115,9 @@ Mechanical replacement; no semantic change. Each consumer already has a `CodeEdi
 
 ### Group C — Attribute writers (the highlighting hot path)
 
-~6 sites: `SyntaxHighlighting/RangeAttributeApplier.swift:76,94`, `SyntaxHighlighting/AsyncSyntaxHighlighter.swift:381,455`, `SyntaxHighlighting/RangeBasedHighlightingController` (colour application), `Text/ModernTextKit2Bridge.swift:308,337`. These currently call `textStorage.beginEditing()/addAttributes(_:range:)/endEditing()` for syntax highlighting. They become `bridge.addAttributes(_:range:)`, which under the hood calls `setRenderingAttributes(_:for:)`.
+~6 sites: `SyntaxHighlighting/RangeAttributeApplier.swift:76,94`, `SyntaxHighlighting/AsyncSyntaxHighlighter.swift:381,455`, `SyntaxHighlighting/RangeBasedHighlightingController` (color application), `Text/ModernTextKit2Bridge.swift:308,337`. These currently call `textStorage.beginEditing()/addAttributes(_:range:)/endEditing()` for syntax highlighting. They become `bridge.addAttributes(_:range:)`, which under the hood calls `setRenderingAttributes(_:for:)`.
 
-**This is the only group with a behaviour change** — colours no longer mutate the underlying attributed string. Plain-text colour set at config time (font, foreground in `setupDefaultTheme`) stays on the text-storage path because it's document-level, not range-level highlighting; those go through `replaceCharacters` / `setupDefaultTheme` and aren't affected.
+**This is the only group with a behaviour change** — colors no longer mutate the underlying attributed string. Plain-text color set at config time (font, foreground in `setupDefaultTheme`) stays on the text-storage path because it's document-level, not range-level highlighting; those go through `replaceCharacters` / `setupDefaultTheme` and aren't affected.
 
 ### Group D — Mutators that genuinely need NSTextStorage editing transactions
 
@@ -177,14 +177,14 @@ Located at `Tests/CodeEditorPluginTests/SyntaxHighlighting/SyntaxHighlightingRen
 
 ### Out of scope for testing
 
-No per-feature TK2-mode suite, no rendering-output snapshot tests of highlighting colours across the 25 languages, no UI-level integration tests in `CodeEditorSample`.
+No per-feature TK2-mode suite, no rendering-output snapshot tests of highlighting colors across the 25 languages, no UI-level integration tests in `CodeEditorSample`.
 
 ## Risks & mitigations
 
-1. **Rendering attributes don't survive every code path the highlighter relies on.** `setRenderingAttributes(_:for:)` is invalidated when the underlying text mutates in a way that crosses the attribute range — and the highlighter caches its applied state internally. If the cache thinks "I already highlighted lines 5-12 green" but the rendering attributes were silently dropped by an unrelated edit, lines 5-12 render uncoloured until the next reflow.
+1. **Rendering attributes don't survive every code path the highlighter relies on.** `setRenderingAttributes(_:for:)` is invalidated when the underlying text mutates in a way that crosses the attribute range — and the highlighter caches its applied state internally. If the cache thinks "I already highlighted lines 5-12 green" but the rendering attributes were silently dropped by an unrelated edit, lines 5-12 render uncolored until the next reflow.
    **Mitigation:** the highlighter's "did I already do this range?" logic invalidates on `NSTextLayoutManager.didChangeContents` rather than on the previous `NSTextStorage.didProcessEditingNotification` only. Verify the two notifications are compatible or wire the new one explicitly during the sweep.
-2. **`addAttributes` semantic change breaks any consumer that reads back its applied highlighting.** Most likely victim: the minimap (`RangeBasedHighlightingController.styleDataSource`). If the minimap reads `textStorage.attribute(.foregroundColor, at:)` to mirror colours, after the migration it reads `nil`.
-   **Mitigation:** explicit grep for `textStorage.attribute(` and `textStorage.attributes(` during the sweep; rewire any reader to consult the `RangeStore`-backed colour cache or to query `textLayoutManager.renderingAttributes(in:)`.
+2. **`addAttributes` semantic change breaks any consumer that reads back its applied highlighting.** Most likely victim: the minimap (`RangeBasedHighlightingController.styleDataSource`). If the minimap reads `textStorage.attribute(.foregroundColor, at:)` to mirror colors, after the migration it reads `nil`.
+   **Mitigation:** explicit grep for `textStorage.attribute(` and `textStorage.attributes(` during the sweep; rewire any reader to consult the `RangeStore`-backed color cache or to query `textLayoutManager.renderingAttributes(in:)`.
 3. **`replaceCharacters` write path's `NSTextContentStorageBreakOnEnumerateWhileEditing` invariant.** `Core/CodeEditorView+SyntaxHighlightingExtensions.swift:25-76` and `Core/CodeEditorView+ConfigurationExtensions.swift:108` already document this hazard — running editing transactions inside an outer `NSTextContentStorage.performEditingTransaction` trips the assert.
    **Mitigation:** the bridge's `replaceCharacters` does *not* wrap in `performEditingTransaction` itself; callers that need to batch use the existing `performEditingTransaction(_:)` extension on `NSTextContentManager`, and the bridge's edit is the inner call.
 
@@ -202,7 +202,7 @@ No per-feature TK2-mode suite, no rendering-output snapshot tests of highlightin
   - `Sources/CodeEditorPlugin/Core/TextKitSetupHelper.swift` (drop `object:` filter on the notification observer)
   - `Sources/CodeEditorPlugin/Text/LineGeometryEditHandler.swift`
   - Group B consumers (~14 files: `SyntaxHighlighterRangeAdapter`, `VisibleRangeProvider`, `RangeBasedHighlightingController`, `SearchReplaceEngine`, `SymbolNavigator`, `CodeFoldingEngine`, `AutoBracketingEngine`, `SmartIndentationEngine`, `MultiCursorEditor`, `LSPSemanticTokenProvider`, `LSPContentCoordinator`, `GutterView+AccessibilityExtensions`, `TextKitLineNumberHelper`, `CodeEditorContainerView+AppKitExtensions`)
-  - Group C consumers (~4 files: `RangeAttributeApplier`, `AsyncSyntaxHighlighter`, `RangeBasedHighlightingController` colour application, `ModernTextKit2Bridge`)
+  - Group C consumers (~4 files: `RangeAttributeApplier`, `AsyncSyntaxHighlighter`, `RangeBasedHighlightingController` color application, `ModernTextKit2Bridge`)
   - Group D consumers (~4 files: `SearchReplaceEngine` replace path, `MultiCursorEditor` apply path, `AutoBracketingEngine` replace path, SwiftUI `text` setter)
   - `Tests/CodeEditorPluginTests/AnnotationTests.swift` (drop `XCTSkipIf`)
 - **Added (2 files):**
