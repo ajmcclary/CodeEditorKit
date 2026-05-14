@@ -403,8 +403,8 @@ extension LineNumberRulerView {
             return
         }
 
-        // Find which line was clicked
-        if let lineNumber = lineNumber(at: point) {
+        // Find which line was clicked via the TextKit 2 helper.
+        if let lineNumber = resolveLineNumber(at: point) {
             if textView.isFoldable(at: lineNumber) {
                 _ = textView.toggleFold(at: lineNumber)
                 needsDisplay = true
@@ -414,30 +414,12 @@ extension LineNumberRulerView {
         super.mouseDown(with: event)
     }
 
-    private func lineNumber(at point: NSPoint) -> Int? {
-        guard let textView,
-              let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else {
-            return nil
-        }
-
-        // Convert point to text view coordinates
+    /// Resolves the 1-based line number at a ruler-local point through the
+    /// TextKit 2 helper. Never reads `NSTextView.layoutManager`.
+    private func resolveLineNumber(at point: NSPoint) -> Int? {
+        guard let textView = self.textView as? CodeEditorView else { return nil }
         let textPoint = textView.convert(point, from: self)
-
-        // Get character index at point
-        let index = layoutManager.characterIndex(for: textPoint, in: textContainer, fractionOfDistanceBetweenInsertionPoints: nil)
-
-        // Count lines up to this index
-        let text = textView.string
-        var lineNumber = 1
-
-        // swiftlint:disable:next legacy_objc_type
-        let nsString = (text as NSString)
-        nsString.enumerateSubstrings(in: NSRange(location: 0, length: min(index, text.count)), options: [.byLines, .substringNotRequired]) { _, _, _, _ in
-            lineNumber += 1
-        }
-
-        return lineNumber
+        return TextKitLineNumberHelper(textView: textView).lineNumber(at: textPoint)
     }
 }
 
