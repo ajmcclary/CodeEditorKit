@@ -100,7 +100,8 @@ public final class SmartCompletionEngine: ObservableObject {
                 case .failure:
                     // If debouncer fails, perform completion directly
                     if let self {
-                        await self.performCompletion(session: session, context: context, completion: completion)
+                        let result = await self.performCompletion(session: session, context: context)
+                        completion(result)
                     } else {
                         // Engine was deallocated, return empty result
                         completion(CompletionResult(
@@ -188,13 +189,13 @@ public final class SmartCompletionEngine: ObservableObject {
             // Create a session for this debounced request
             let session = CompletionSession(id: UUID(), context: context)
 
-            return try await withCheckedThrowingContinuation { continuation in
-                Task { @MainActor in
-                    await self.performCompletion(session: session, context: context) { result in
-                        continuation.resume(returning: result)
-                    }
-                }
-            }
+            // Direct async chain — no continuation. Previously this wrapped
+            // `performCompletion` (which used a completion callback) in
+            // `withCheckedThrowingContinuation`, but if the inner Task ever
+            // failed to invoke the callback the caller would hang. Returning
+            // the result through async makes cancellation propagate naturally
+            // and removes the resume-once invariant.
+            return await self.performCompletion(session: session, context: context)
         }
     }
 
@@ -216,20 +217,19 @@ public final class SmartCompletionEngine: ObservableObject {
 
     private func performCompletion(
         session: CompletionSession,
-        context: CompletionContextModel,
-        completion: @escaping (CompletionResult) -> Void
-    ) async {
+        context: CompletionContextModel
+    ) async -> CompletionResult {
+        let emptyResult = CompletionResult(
+            items: [],
+            context: context,
+            isIncomplete: false,
+            processingTime: 0
+        )
+
         // Check if session is still current
         guard currentSession?.id == session.id else {
             logger.debug("Completion session cancelled")
-            // Always call completion to avoid hanging
-            completion(CompletionResult(
-                items: [],
-                context: context,
-                isIncomplete: false,
-                processingTime: 0
-            ))
-            return
+            return emptyResult
         }
 
         let startTime = CFAbsoluteTimeGetCurrent()
@@ -238,13 +238,7 @@ public final class SmartCompletionEngine: ObservableObject {
         let provider = providers[context.language.identifier] ?? providers["default"]
 
         guard let provider else {
-            completion(CompletionResult(
-                items: [],
-                context: context,
-                isIncomplete: false,
-                processingTime: 0
-            ))
-            return
+            return emptyResult
         }
 
         do {
@@ -283,16 +277,10 @@ public final class SmartCompletionEngine: ObservableObject {
             metrics.averageCompletionTime = (metrics.averageCompletionTime * Double(metrics.totalRequests) + duration) / Double(metrics.totalRequests + 1)
             metrics.totalRequests += 1
 
-            // Return result
-            completion(result)
+            return result
         } catch {
             logger.error("Completion failed: \(error)")
-            completion(CompletionResult(
-                items: [],
-                context: context,
-                isIncomplete: false,
-                processingTime: 0
-            ))
+            return emptyResult
         }
     }
 
