@@ -49,15 +49,26 @@ public final class SmartEditingEngine: NSObject, ObservableObject {
         setupDefaultRules()
     }
 
-    /// Attach to a text view
+    /// Attach to a text view by registering as a behavior-phase
+    /// delegate participant.
+    ///
+    /// The framework's `TextViewDelegateMultiplexer` is the sole owner
+    /// of `textView.delegate`; registering at `.behavior` means smart-
+    /// editing interception (auto-bracket, auto-indent, multi-cursor)
+    /// runs *after* host gating. A host's `CodeEditorViewDelegate`
+    /// returning `false` from `shouldChangeTextIn` short-circuits
+    /// before this engine's intercept fires.
     public func attach(to textView: CodeEditorView) {
         self.textView = textView
+        textView.addDelegateParticipant(self, phase: .behavior)
+    }
 
-        // Set self as delegate to intercept text changes
-        if textView.delegate != nil {
-            logger.warning("Replacing existing text view delegate")
-        }
-        textView.delegate = self
+    /// Detach from the previously-attached text view, removing the
+    /// engine from the delegate multiplexer. Idempotent — calling
+    /// `detach()` without a prior `attach(to:)` is a no-op.
+    public func detach() {
+        textView?.removeDelegateParticipant(self)
+        textView = nil
     }
 
     private func setupDefaultRules() {
@@ -144,35 +155,33 @@ public final class SmartEditingEngine: NSObject, ObservableObject {
     }
 }
 
-// MARK: - Text View Delegate
+// MARK: - TextViewDelegateParticipant
 
-#if canImport(AppKit)
-extension SmartEditingEngine: NSTextViewDelegate {
-    public func textView(_ textView: NSTextView, shouldChangeTextIn range: NSRange, replacementString text: String?) -> Bool {
-        guard let codeEditorView = textView as? CodeEditorView else { return true }
+extension SmartEditingEngine: TextViewDelegateParticipant {
+    public func textView(
+        _ textView: CodeEditorView,
+        shouldChangeTextIn range: NSRange,
+        replacementString: String?
+    ) -> Bool {
+        guard let text = replacementString else { return true }
 
-        guard let text else {
-            // Replacement string is nil, fall through to default behavior
-            return true
-        }
-
-        // Handle multi-cursor input
+        // Handle multi-cursor input.
         if isMultiCursorMode && !text.isEmpty {
             return !handleMultiCursorInput(text)
         }
 
-        // Handle auto-bracket insertion
+        // Handle auto-bracket insertion.
         if text.count == 1 {
             if handleCharacterInsertion(text, at: range) {
                 return false
             }
         }
 
-        // Handle enter key for auto-indentation
+        // Handle enter key for auto-indentation.
         if text == "\n" && configuration.isAutoIndentEnabled {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
-                codeEditorView.textKitBridge.replaceCharacters(
+                textView.textKitBridge.replaceCharacters(
                     in: range,
                     with: "\n" + indentation
                 )
@@ -183,71 +192,14 @@ extension SmartEditingEngine: NSTextViewDelegate {
         return true
     }
 
-    public func textViewDidChangeSelection(_ notification: Notification) {
-        guard let textView = notification.object as? NSTextView,
-              let codeEditorView = textView as? CodeEditorView else { return }
-        // Update multi-cursor mode if needed
+    public func textViewDidChangeSelection(_ codeEditorView: CodeEditorView) {
+        // Update multi-cursor mode if needed.
         if isMultiCursorMode && codeEditorView.selectedRange.length > 0 {
             // Selection made, might want to exit multi-cursor mode
-            // or update cursor positions
+            // or update cursor positions.
         }
-    }
-
-    // MARK: - Other delegate methods with default implementations
-
-    public func undoManager(for _: NSTextView) -> UndoManager? { nil }
-
-    public func textViewWillChangeText(_: Notification) {}
-
-    public func textViewDidChangeText(_: Notification) {}
-}
-#else
-extension SmartEditingEngine: UITextViewDelegate {
-    public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        guard let codeEditorView = textView as? CodeEditorView else { return true }
-
-        // Handle multi-cursor input
-        if isMultiCursorMode && !text.isEmpty {
-            return !handleMultiCursorInput(text)
-        }
-
-        // Handle auto-bracket insertion
-        if text.count == 1 {
-            if handleCharacterInsertion(text, at: range) {
-                return false
-            }
-        }
-
-        // Handle enter key for auto-indentation
-        if text == "\n" && configuration.isAutoIndentEnabled {
-            let indentation = calculateIndentation(at: range.location)
-            if !indentation.isEmpty {
-                codeEditorView.textKitBridge.replaceCharacters(
-                    in: range,
-                    with: "\n" + indentation
-                )
-                return false
-            }
-        }
-
-        return true
-    }
-
-    public func textViewDidChangeSelection(_ textView: UITextView) {
-        guard let codeEditorView = textView as? CodeEditorView else { return }
-
-        // Update multi-cursor mode if needed
-        if isMultiCursorMode && codeEditorView.selectedRange.length > 0 {
-            // Selection made, might want to exit multi-cursor mode
-            // or update cursor positions
-        }
-    }
-
-    public func textViewDidChange(_: UITextView) {
-        // This is the correct UITextViewDelegate method name
     }
 }
-#endif
 
 // MARK: - Supporting Types
 
