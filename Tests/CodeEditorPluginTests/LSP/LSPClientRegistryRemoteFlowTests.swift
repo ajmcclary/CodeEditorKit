@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 @testable import CodeEditorPlugin
 import Foundation
 import XCTest
@@ -39,6 +38,7 @@ final class LSPClientRegistryRemoteFlowTests: XCTestCase {
         XCTAssertEqual(snapshot.languageId, "swift")
     }
 
+    #if canImport(AppKit)
     func testLocalConfigRoutesToLocalPayloadOnMac() async throws {
         let recordedConfig = LSPClientRegistryRemoteFlowRecorder()
         let registry = LSPClientRegistry(clientFactory: recordedConfig.makeRecordingClient)
@@ -63,6 +63,7 @@ final class LSPClientRegistryRemoteFlowTests: XCTestCase {
         }
         XCTAssertEqual(payload.executablePath, "/usr/bin/sourcekit-lsp")
     }
+    #endif
 }
 
 /// Records the configuration last passed to `connect(configuration:, languageId:)`.
@@ -94,4 +95,3 @@ actor LSPClientRegistryRemoteFlowRecorder {
         self.lastLanguageId = languageId
     }
 }
-#endif
