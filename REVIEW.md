@@ -4,7 +4,7 @@ Synthesis of four parallel reviewer passes covering the entire `Sources/` tree, 
 
 ## Status (2026-05-14)
 
-All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), and the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
+All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`), and the SwiftUI hot path + env hygiene batch (`CodeEditor.body` runtime-deps caching, `EditorEventBusInstaller.sourcePosition` LineGeometryStore fast path, `EditorState` env default shared sentinel, `SwiftUICompletionItem`/`CompletionKind` `Sendable`). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
 
 | # | Issue | Status | Notes |
 |---|---|---|---|
@@ -167,6 +167,24 @@ Build: green. SwiftLint: 0 violations. Targeted suite `SwiftUICoordinatorTests` 
 
 **Still open from the "Concurrency & lifecycle" Important list:** `ProcessTransport.availableData` busy-poll (`ProcessTransport.swift:233-256`) — wants `readabilityHandler`/`DispatchIO`. Only remaining item in that section.
 
+### SwiftUI hot path + env hygiene batch (landed 2026-05-14)
+
+Four items from the "API correctness" + "Cross-cutting" Important lists. All small, no design pass needed — natural follow-up to the EditorState mirror work.
+
+| Item | Status | What landed |
+|---|---|---|
+| `CodeEditor.body` reallocates `EditorRuntimeDependencies.live(...)` per render (`SwiftUI/CodeEditor.swift:271-277` + `Core/EditorRuntime.swift:46-64`) | ✅ Done | Added `@State private var fallbackRuntimeDependencies: EditorRuntimeDependencies = .live()`. The body now reads from the cached value when `environment.runtimeDependencies == nil` and overlays per-render env knobs (`workspaceRoot`, `eventSystem`, `memoryMonitor`) on a local copy. `MemoryMonitor`, `ActorCoordinator`, `UnifiedPerformanceSystem`, etc. are built once per editor lifetime instead of once per body call. Hosts that already inject `runtimeDependencies` are unaffected. |
+| `EditorEventBusInstaller.sourcePosition` O(n) UTF-16 walk per hover/⌘-click (`Layout/EditorEventBusInstaller.swift:124-144`) | ✅ Done | `sourcePosition(for:in:)` now fast-paths through `(textView as? CodeEditorView)?.lineGeometryStore` for O(log n) line + column lookup. Falls back to the existing UTF-16 walk for plain `NSTextView` (the existing test fixtures use one) so `EditorEventBusInstallerTests` (2 tests) keeps passing without modification. |
+| `EditorState` env default allocates a fresh instance per read (`SwiftUI/EditorState+Environment.swift:13`) | ✅ Done | Switched `EditorStateEnvironmentKey.defaultValue` from a computed `var` returning `EditorState()` to a `static let` shared sentinel. Hosts without chrome no longer allocate an `EditorState` on every body call that reads `\.editorState`. Writes against the sentinel (from the framework's coordinator mirror) are inert because no chrome view reads it — chrome consumers always inject an explicit `EditorState` per the doc contract. Coordinator's `hostEditorState` comment updated to drop the "throwaway deallocates immediately" claim. |
+| `SwiftUICompletionItem` not `Sendable` despite being returned from a `@Sendable` async closure (`SwiftUI/CodeEditor+CompletionExtensions.swift:36`) | ✅ Done | Marked `SwiftUICompletionItem: Sendable` and `CompletionKind: Sendable`. Both are value types with `Sendable` stored properties (or no associated values), so synthesized conformance suffices. No source-breaking impact. |
+
+**Files touched (this batch — 4 modified):**
+`Sources/CodeEditorPlugin/SwiftUI/CodeEditor.swift`, `Sources/CodeEditorPlugin/SwiftUI/CodeEditor+CompletionExtensions.swift`, `Sources/CodeEditorPlugin/SwiftUI/CodeEditor+CoordinatorsExtensions.swift` (comment-only), `Sources/CodeEditorPlugin/SwiftUI/EditorState+Environment.swift`, `Sources/CodeEditorPlugin/Layout/EditorEventBusInstaller.swift`.
+
+**Public API impact.** Strictly additive: two new `Sendable` conformances; an internal env-default semantics change that's not observable through the public API (consumers that read `\.editorState` without injecting one previously got a fresh-per-access instance; now they get the shared sentinel — same fields, same `@Observable` behavior).
+
+Build: green. SwiftLint: 0 violations. Targeted suites pass — `SwiftUICoordinatorTests` (14 tests), `EditorEventBusInstallerTests` (2 tests).
+
 
 
 ## Top-level take
@@ -211,12 +229,12 @@ The most important strategic finding is from the sample review: **the API gaps r
 - `EditorConfiguration.Layout.Codable` drops 5 fields silently (`Configuration/EditorConfiguration+LayoutExtensions.swift:66-116`) — `annotationBadgeSize`, `annotationBadgePadding`, `minimapWidth`, `foldingControlSize`, `foldingControlPadding`. Data loss on persistence round-trip.
 - `EditorConfiguration.Performance.usesRangeBasedHighlighting` is missing from `CodingKeys` and `==` (`+PerformanceExtensions.swift:22 / 128–142 / 194–209`).
 - `CodeEditorEnvironment.with(...)` cannot clear optional fields — `nil` is collapsed to "no change" (`SwiftUI/CodeEditorEnvironment+Extensions.swift:84-95, 185-207`).
-- `EditorState` env default allocates a fresh instance per read (`SwiftUI/EditorState+Environment.swift:13`). Writes silently no-op.
-- `CodeEditor.body` reallocates `EditorRuntimeDependencies.live(...)` per render — `MemoryMonitor`, `ActorCoordinator`, etc. all rebuilt (`SwiftUI/CodeEditor.swift:271-277` + `Core/EditorRuntime.swift:46-64`).
+- ~~`EditorState` env default allocates a fresh instance per read (`SwiftUI/EditorState+Environment.swift:13`). Writes silently no-op.~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (shared sentinel; writes against it are inert).
+- ~~`CodeEditor.body` reallocates `EditorRuntimeDependencies.live(...)` per render — `MemoryMonitor`, `ActorCoordinator`, etc. all rebuilt (`SwiftUI/CodeEditor.swift:271-277` + `Core/EditorRuntime.swift:46-64`).~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (`@State`-cached fallback; env overrides applied to a local copy).
 - Inconsistent SwiftUI modifier return types: some return `some View`, others return `CodeEditor` (`SwiftUI/CodeEditor+ModifiersExtensions.swift`). Chains break once a host hits a `some View` modifier before a `CodeEditor`-typed one.
 - `SmartEditingEngine.attach` overwrites `textView.delegate` with a warning log (`Features/SmartEditingEngine.swift:53-61`). With LSP/completion/folding all wanting hooks, last wins.
 - `SearchReplaceEngine` and `SmartEditingEngine` are `public class` (non-`final`) — open subclassing.
-- `SwiftUICompletionItem` not `Sendable` despite being returned from a `@Sendable` async closure (`SwiftUI/CodeEditor+CompletionExtensions.swift:36`).
+- ~~`SwiftUICompletionItem` not `Sendable` despite being returned from a `@Sendable` async closure (`SwiftUI/CodeEditor+CompletionExtensions.swift:36`).~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (`SwiftUICompletionItem: Sendable` + `CompletionKind: Sendable`).
 
 ### Language/highlighting/completion correctness
 - LSP iOS coverage is fictional: `LSPClient` docs claim "remote servers on iOS," but `LSPManager`, `LSPCompletionProvider`, `LSPSemanticTokenProvider`, `LSPDocumentManager`, `LSPClientRegistry`, `LSPContentCoordinator`, `LSPPathResolver` are all wrapped in `#if canImport(AppKit)`.
@@ -230,7 +248,7 @@ The most important strategic finding is from the sample review: **the API gaps r
 ### Cross-cutting
 - `CrossPlatformLogger.osLogger.log(level:, "\(message)")` (`Utilities/CrossPlatformLogger.swift:100`) defeats OSLog format-string privacy/redaction — call sites already interpolated state. Privacy annotations are lost; arbitrary state may leak into release logs.
 - `CodeEditorDependencies` reads `DependencyValues._current.codeEditorMemoryMonitor()` instead of the `@Dependency` property wrapper (`Core/CodeEditorDependencies.swift:9`). `withDependencies { }` overrides won't flow through actor hops reliably.
-- `EditorEventBusInstaller.sourcePosition` is O(n) per hover/⌘-click via UTF-16 walk (`Layout/EditorEventBusInstaller.swift:124-144`). Use `LineGeometryStore`.
+- ~~`EditorEventBusInstaller.sourcePosition` is O(n) per hover/⌘-click via UTF-16 walk (`Layout/EditorEventBusInstaller.swift:124-144`). Use `LineGeometryStore`.~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (fast-path via `(textView as? CodeEditorView)?.lineGeometryStore`; UTF-16 walk retained as fallback for non-editor `NSTextView`s).
 - `PlatformEventFilter.shouldAllow` always returns `true` (`Core/UnifiedEventSystem.swift:241-244`). Dead.
 - `EditorTrafficLights` hardcodes RGB outside the token system (`Sources/CodeEditorUI/Window/EditorTrafficLights.swift:41-48`).
 
