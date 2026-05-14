@@ -38,7 +38,8 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             return
         }
 
-        guard let textView, let textStorage = textView.textStorage else {
+        guard let textView,
+              let textStorage = textView.textContentStorage?.textStorage else {
             // Fall back to full rebuild if text view is unavailable.
             textView?.rebuildLineGeometryStoreFromCurrentTextStorage()
             return

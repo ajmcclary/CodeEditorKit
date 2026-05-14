@@ -97,15 +97,15 @@ extension CodeEditorView {
     }
 
     internal func rebuildLineGeometryStoreFromCurrentTextStorage() {
-        #if canImport(AppKit)
-        guard let textStorage else {
+        // Read text through the TK2-safe accessor; reading `self.textStorage`
+        // directly triggers Apple's TK1 compatibility shim and clears
+        // `textLayoutManager`. See `CodeEditorViewTextKit2InitTests` for the
+        // load-bearing invariant.
+        guard let textStorage = textContentStorage?.textStorage else {
             lineGeometryStore.reset()
             return
         }
         lineGeometryStore.build(from: textStorage)
-        #else
-        lineGeometryStore.build(from: textStorage)
-        #endif
     }
 
     internal func updateCompletionTriggerCharacters() {

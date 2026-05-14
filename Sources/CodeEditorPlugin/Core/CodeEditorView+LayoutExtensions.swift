@@ -23,25 +23,22 @@ extension CodeEditorView {
             font: font
         )
 
-        // Apply the paragraph style to all text
-        #if canImport(AppKit)
-        if let textStorage = self.textStorage {
+        // Apply the paragraph style to all text. Read through the TK2-safe
+        // accessor; `self.textStorage` triggers Apple's TK1 compatibility shim.
+        if let textStorage = textContentStorage?.textStorage {
             let range = NSRange(location: 0, length: textStorage.length)
             textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
 
+            #if canImport(AppKit)
             // Set as default paragraph style for new text
             defaultParagraphStyle = paragraphStyle
+            #else
+            // Set as typing attributes for new text
+            var typingAttrs = typingAttributes
+            typingAttrs[.paragraphStyle] = paragraphStyle
+            typingAttributes = typingAttrs
+            #endif
         }
-        #else
-        let textStorage = self.textStorage
-        let range = NSRange(location: 0, length: textStorage.length)
-        textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
-
-        // Set as typing attributes for new text
-        var typingAttrs = typingAttributes
-        typingAttrs[.paragraphStyle] = paragraphStyle
-        typingAttributes = typingAttrs
-        #endif
 
         // Force text view to relayout and redraw
         #if canImport(AppKit)

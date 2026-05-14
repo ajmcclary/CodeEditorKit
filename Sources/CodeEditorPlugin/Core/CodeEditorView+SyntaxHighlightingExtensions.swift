@@ -13,8 +13,12 @@ extension CodeEditorView {
 
     @objc
     internal func handleTextStorageDidProcessEditing(_ notification: Notification) {
+        // The observer is registered without an `object:` filter (see
+        // `TextKitSetupHelper.setupNotifications` — filtering on
+        // `textView.textStorage` would trigger Apple's TK1 compatibility
+        // shim). Validate the sender against the TK2-safe accessor here.
         guard let textStorage = notification.object as? NSTextStorage,
-              textStorage === self.textStorage
+              textStorage === self.textContentStorage?.textStorage
         else {
             return
         }
@@ -128,11 +132,7 @@ extension CodeEditorView {
     internal func applySyntaxHighlighting() {
         updateRangeBasedHighlightingConfiguration()
         let syntaxService = featureDependencies.syntaxHighlightingService
-        #if canImport(AppKit)
-        let textLength = textStorage?.length ?? 0
-        #else
-        let textLength = textStorage.length
-        #endif
+        let textLength = textKitBridge.documentLength
 
         // Update adaptive performance mode based on file size
         adaptivePerformanceMode.updateMode(for: textLength, language: language)
@@ -187,11 +187,7 @@ extension CodeEditorView {
         if isRangeStorePrimary { return }
 
         let syntaxService = featureDependencies.syntaxHighlightingService
-        #if canImport(AppKit)
-        let textLength = textStorage?.length ?? 0
-        #else
-        let textLength = textStorage.length
-        #endif
+        let textLength = textKitBridge.documentLength
 
         guard syntaxService.isValidHighlightingRange(range, textLength: textLength) else {
             return

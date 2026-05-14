@@ -178,12 +178,15 @@ public enum TextKitSetupHelper {
     private static func setupNotifications(for textView: CodeEditorView) {
         let notificationCenter = NotificationCenter.default
 
-        // Text storage notifications
+        // Text storage notifications. The `object:` filter is intentionally
+        // omitted — passing `textView.textStorage` here would trigger Apple's
+        // TK1 compatibility shim and clear `textLayoutManager`. The handler
+        // (`handleTextStorageDidProcessEditing(_:)`) validates the sender.
         notificationCenter.addObserver(
             textView,
             selector: #selector(textView.handleTextStorageDidProcessEditing(_:)),
             name: NSTextStorage.didProcessEditingNotification,
-            object: textView.textStorage
+            object: nil
         )
 
         #if canImport(AppKit)
@@ -204,7 +207,7 @@ public enum TextKitSetupHelper {
         NotificationCenter.default.removeObserver(
             textView,
             name: NSTextStorage.didProcessEditingNotification,
-            object: textView.textStorage
+            object: nil
         )
 
         #if canImport(AppKit)

@@ -197,23 +197,21 @@ extension CodeEditorView {
     // MARK: - Layout Manager Settings
 
     private func updateLayoutManagerSettings() {
-        #if canImport(AppKit)
-        layoutManager?.showsInvisibleCharacters = isInvisibleCharactersEnabled
-        #else
-        // UITextView's layout manager doesn't support showsInvisibleCharacters directly
-        // For iOS, we need to implement custom rendering
-        // This is a known limitation - invisible characters require custom drawing on iOS
-        #endif
+        // `NSLayoutManager.showsInvisibleCharacters` is TK1-only; reading the
+        // legacy `layoutManager` property on a TK2-initialized NSTextView
+        // triggers Apple's TK1 compatibility shim and clears
+        // `textLayoutManager`. Showing invisible characters under TK2 requires
+        // a separate rendering-attribute-based implementation and is currently
+        // not wired up. Tracked as a known gap; the property setter is a
+        // deliberate no-op so we don't re-arm the coercion.
     }
 
     // MARK: - Syntax Highlighting Toggle
 
     internal func removeSyntaxHighlighting() {
-        #if canImport(AppKit)
-        guard let textStorage = self.textStorage else { return }
-        #else
-        let textStorage = self.textStorage
-        #endif
+        // Read through the TK2-safe accessor; `self.textStorage` triggers
+        // Apple's TK1 compatibility shim.
+        guard let textStorage = textContentStorage?.textStorage else { return }
 
         // Cancel any in-progress highlighting first
         asyncHighlighter.cancelAllHighlighting()

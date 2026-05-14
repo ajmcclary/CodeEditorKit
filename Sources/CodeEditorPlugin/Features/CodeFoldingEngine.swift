@@ -303,14 +303,13 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
             return
         }
 
-        #if canImport(AppKit)
-        guard let text = textView.textStorage?.string else {
+        // Read through the TK2-safe accessor; `textView.textStorage` triggers
+        // Apple's TK1 compatibility shim.
+        let text = textView.textKitBridge.documentString
+        guard !text.isEmpty else {
             foldableRegions = []
             return
         }
-        #else
-        let text = textView.textStorage.string
-        #endif
 
         let startTime = CFAbsoluteTimeGetCurrent()
 
