@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import Combine
 import Foundation
 import Observation
 
@@ -32,6 +33,13 @@ final class AppState {
     /// the `.editorController(_:)` modifier; sample features (find,
     /// goto, fold, annotations) all dispatch through this.
     let editorController = EditorController()
+
+    /// Retains the `editorController.onAttach` subscription that wires
+    /// the annotations data source after the SwiftUI representable
+    /// attaches the underlying view. Dropping this would cancel the
+    /// registration; we keep it for the lifetime of `AppState`.
+    @ObservationIgnored
+    private var attachToken: AnyCancellable?
 
     /// Annotations data source backing both the breakpoint-toggle demo
     /// and the TODO/FIXME knobs. Held strongly here because
@@ -99,7 +107,15 @@ final class AppState {
         let hub = AnnotationsHub()
         self.annotationsHub = hub
         hub.controller = editorController
-        editorController.setAnnotationsDataSource(hub)
+        // The controller is freshly constructed above — its
+        // codeEditorView is nil, so a direct call to
+        // setAnnotationsDataSource here would be a silent no-op.
+        // Defer the install until the SwiftUI representable attaches
+        // the underlying view.
+        attachToken = editorController.onAttach { [weak hub] ctrl in
+            guard let hub else { return }
+            ctrl.setAnnotationsDataSource(hub)
+        }
         #if canImport(AppKit)
         let coordinator = LSPSampleCoordinator(memoryMonitor: memoryMonitor)
         self.lsp = coordinator
