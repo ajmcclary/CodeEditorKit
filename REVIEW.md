@@ -4,7 +4,7 @@ Synthesis of four parallel reviewer passes covering the entire `Sources/` tree, 
 
 ## Status (2026-05-14)
 
-All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`), and the SwiftUI hot path + env hygiene batch (`CodeEditor.body` runtime-deps caching, `EditorEventBusInstaller.sourcePosition` LineGeometryStore fast path, `EditorState` env default shared sentinel, `SwiftUICompletionItem`/`CompletionKind` `Sendable`). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
+All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`), the SwiftUI hot path + env hygiene batch (`CodeEditor.body` runtime-deps caching, `EditorEventBusInstaller.sourcePosition` LineGeometryStore fast path, `EditorState` env default shared sentinel, `SwiftUICompletionItem`/`CompletionKind` `Sendable`), and the Language descriptor cleanup batch (dropped dead `highlightingStrategy` field, added explicit `usesRegexHighlighter` flag, hoisted `HTMLSymbolProvider` attribute regexes). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
 
 | # | Issue | Status | Notes |
 |---|---|---|---|
@@ -185,6 +185,23 @@ Four items from the "API correctness" + "Cross-cutting" Important lists. All sma
 
 Build: green. SwiftLint: 0 violations. Targeted suites pass — `SwiftUICoordinatorTests` (14 tests), `EditorEventBusInstallerTests` (2 tests).
 
+### Language descriptor cleanup batch (landed 2026-05-14)
+
+Three items from the "Language/highlighting/completion correctness" Important list and the Minor section — all naming-hygiene / dead-data / regex-hoist work, no semantic change.
+
+| Item | Status | What landed |
+|---|---|---|
+| `descriptor.highlightingStrategy` is dead data — every descriptor sets it, nothing reads it (`HighlightingStrategyExecutor.determineStrategy:47-61` hardcodes the routing) | ✅ Done | Dropped the `highlightingStrategy: HighlightingStrategy` field from `LanguageDescriptor` and the corresponding `LanguageDescriptor.highlightingStrategy(for:)` static helper. Removed the parameter from the init signature and the argument from all 26 descriptor data files. The `HighlightingStrategy` enum itself stays — `HighlightingStrategyExecutor` still uses it internally as the return type of `determineStrategy(for:)`. |
+| `parserName` doubles as a "use regex highlighter" gate (`RegexSyntaxHighlighter+LanguagesExtensions.swift:35,46`, `RegexRangeHighlightProvider.swift:319`); misleading because `parserName` is a tree-sitter grammar id | ✅ Done | Added explicit `usesRegexHighlighter: Bool` to `LanguageDescriptor`. Three call sites converted from `descriptor.parserName != nil` to `descriptor.usesRegexHighlighter`. Behavior preserved exactly: the flag is `true` for every language that previously had `parserName != nil` (24 of 26 — everyone except Swift and PlainText), including JSON. JSON inclusion looks redundant (the executor routes JSON to `FastJSONTokenizer`, not the regex pipeline) but range-based highlighting (`RegexRangeHighlightProvider.makeProvider(for: .json)`) still goes through it, so flipping JSON to `false` would be a behavior change deferred to its own follow-up. `parserName` remains as a tree-sitter grammar id used by `LanguageDetectionService` for filetype lookup. |
+| `HTMLSymbolProvider.extractAttribute` compiles a regex per call (`HTMLSymbolProvider.swift:92-93`) | ✅ Done | Hoisted both attribute regexes (`id`, `class`) to `static let` on the type. The function now takes a precompiled `NSRegularExpression?` instead of an attribute name. `NSRegularExpression` is thread-safe per Apple's docs, so static sharing is correct; Swift's strict concurrency accepts the static-let form. |
+
+**Files touched (this batch — 31 modified):**
+`Sources/CodeEditorPlugin/Languages/LanguageDescriptor.swift` (field swap + helper removal), `Sources/CodeEditorPlugin/Languages/Data/*LanguageDescriptor.swift` (26 files — argument rename via sed), `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexSyntaxHighlighter+LanguagesExtensions.swift`, `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/RegexRangeHighlightProvider.swift`, `Sources/CodeEditorPlugin/Languages/HTMLSymbolProvider.swift`.
+
+**Public API impact.** None. `LanguageDescriptor` is `internal`; the field rename is invisible to public consumers. The HTML provider change is implementation-detail.
+
+Build: green. SwiftLint: 0 violations. Targeted run with `--filter "Highlight|Symbol|Language"` (~18 suites, all related to the touched areas) passes without regressions.
+
 
 
 ## Top-level take
@@ -239,8 +256,8 @@ The most important strategic finding is from the sample review: **the API gaps r
 ### Language/highlighting/completion correctness
 - LSP iOS coverage is fictional: `LSPClient` docs claim "remote servers on iOS," but `LSPManager`, `LSPCompletionProvider`, `LSPSemanticTokenProvider`, `LSPDocumentManager`, `LSPClientRegistry`, `LSPContentCoordinator`, `LSPPathResolver` are all wrapped in `#if canImport(AppKit)`.
 - Three independent completion ranking pipelines disagree: `CompletionManager.sortAndDeduplicateItems:289-311`, `CompletionRankingModel.rank:33-64`, `SmartCompletionEngine.rerank`.
-- `descriptor.highlightingStrategy` is dead data — every descriptor sets it; nothing reads it (`HighlightingStrategyExecutor.determineStrategy:47-61` hardcodes the routing).
-- `parserName` (a tree-sitter grammar id) doubles as a "use regex highlighter" gate (`RegexSyntaxHighlighter+LanguagesExtensions.swift:35,46`, `RegexRangeHighlightProvider.swift:319`). Misleading; introduce explicit `usesRegexHighlighter`.
+- ~~`descriptor.highlightingStrategy` is dead data — every descriptor sets it; nothing reads it (`HighlightingStrategyExecutor.determineStrategy:47-61` hardcodes the routing).~~ ✅ Done in the Language descriptor cleanup batch on 2026-05-14 (field + static helper deleted).
+- ~~`parserName` (a tree-sitter grammar id) doubles as a "use regex highlighter" gate (`RegexSyntaxHighlighter+LanguagesExtensions.swift:35,46`, `RegexRangeHighlightProvider.swift:319`). Misleading; introduce explicit `usesRegexHighlighter`.~~ ✅ Done in the Language descriptor cleanup batch on 2026-05-14 (`usesRegexHighlighter: Bool` added; three call sites switched).
 - Stale language count: `SyntaxHighlightingCoordinator.swift:167` says "17+ languages" — CLAUDE.md is canonical at 25 + plain text.
 - Two parallel fuzzy matchers: `FuzzyMatcher` (`FuzzyMatcher.swift:4`, non-`Sendable`) and `OptimizedFuzzyMatcher` (Sendable). `SmartCompletionEngine.swift:54` uses the non-`Sendable` one.
 - `RegexBackedRangeQueryParser` invalidates the entire document on every edit (`RegexRangeHighlightProvider.swift:88-92`). Unused; delete to prevent confusion.
@@ -286,7 +303,7 @@ These are what the sample had to *invent* to integrate the framework — the fra
 - `TestEnvironmentDetector.isRunningInTests` checks `XCTestConfigurationFilePath` only — wrong for Swift Testing (`Utilities/TestEnvironmentDetector.swift:39-41`). Worse, the env-detection branching in `MemoryManagementCoordinator.setupMemoryMonitoring:119` hides lifecycle bugs from tests.
 - Magic `17.0` line-height in `LineGeometryEditHandler.swift:125-126,136,142`.
 - `FastJSONTokenizer` round-trips color → `TokenType` to rebuild `HighlightedToken` (`HighlightingStrategyExecutor.highlightJSON:87-97`). Defeats theme overrides.
-- `HTMLSymbolProvider.extractAttribute` compiles a regex per call (`HTMLSymbolProvider.swift:92-93`).
+- ~~`HTMLSymbolProvider.extractAttribute` compiles a regex per call (`HTMLSymbolProvider.swift:92-93`).~~ ✅ Done in the Language descriptor cleanup batch on 2026-05-14 (hoisted both regexes to `static let`).
 - `CompletionDebouncer.executeRequest` cancels prior tasks but `withCheckedThrowingContinuation` in `SmartCompletionEngine` doesn't get resumed — caller can hang (`CompletionDebouncer.swift:196-221`, `SmartCompletionEngine:191-198`).
 - `EditorConfiguration.swift:68` doc comment teaches `print("Configuration errors: \(errors)")` — exempt by lint but bad pedagogy.
 - `CodeEditorUI/CodeEditorUI.swift:11` uses `## Topics` DocC directive — project has no DocC catalog.
