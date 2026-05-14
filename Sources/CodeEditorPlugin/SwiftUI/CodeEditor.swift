@@ -141,6 +141,11 @@ public struct CodeEditor: View {
     // inert (no chrome view reads it) and the coordinator holds it weakly.
     @Environment(\.editorState) private var hostEditorState
 
+    // EditorDocuments manager wired by `.activeDocument(in:)`. When set,
+    // body uses the manager's text and interaction-state bindings instead
+    // of the receiver's stored ones.
+    @Environment(\.activeDocumentManager) private var activeDocumentManager
+
     // Default memory monitor created on MainActor
     @State private var defaultMemoryMonitor = MemoryMonitor()
 
@@ -175,6 +180,22 @@ public struct CodeEditor: View {
     private let textDebounceInterval: Duration?
 
     // MARK: - Initialization
+
+    /// Creates a new code editor with no explicit text binding.
+    ///
+    /// Use with `.activeDocument(in:)` to drive the text and interaction
+    /// state from an `EditorDocuments` collection; the modifier supplies
+    /// the bindings through the environment, and `body` reads them
+    /// instead of this receiver's placeholder bindings.
+    ///
+    /// Standalone usage (without `.activeDocument(in:)`) renders an
+    /// empty, read-only editor — useful only as a placeholder.
+    public init() {
+        self._text = .constant("")
+        self.textDebounceInterval = nil
+        self.initialLanguage = nil
+        self.initialTheme = nil
+    }
 
     /// Creates a new code editor with text binding and optional debouncing.
     ///
@@ -302,6 +323,36 @@ public struct CodeEditor: View {
         return configuration
     }
 
+    // MARK: - Active-document binding resolution
+
+    /// Returns the text `Binding` `body` should pass downstream.
+    ///
+    /// When `manager` is non-nil and has an `activeID`, returns
+    /// `manager.textBinding(for: activeID)`. Otherwise returns `stored`.
+    /// Extracted as a `static` helper so it's unit-testable without
+    /// rendering the view.
+    static func resolveTextBinding(
+        stored: Binding<String>,
+        manager: EditorDocuments?
+    ) -> Binding<String> {
+        if let manager, let activeID = manager.activeID {
+            return manager.textBinding(for: activeID)
+        }
+        return stored
+    }
+
+    /// Returns the interaction-state `Binding` `body` should pass
+    /// downstream. Same resolution rules as `resolveTextBinding`.
+    static func resolveInteractionBinding(
+        stored: Binding<EditorInteractionState>,
+        manager: EditorDocuments?
+    ) -> Binding<EditorInteractionState> {
+        if let manager, let activeID = manager.activeID {
+            return manager.interactionBinding(for: activeID)
+        }
+        return stored
+    }
+
     // MARK: - Body
 
     public var body: some View {
@@ -335,14 +386,23 @@ public struct CodeEditor: View {
         let effectiveDebounceInterval = textDebounceInterval
             ?? effectiveConfiguration.performance.textChangeDebounceInterval
 
+        let effectiveTextBinding = Self.resolveTextBinding(
+            stored: $text,
+            manager: activeDocumentManager
+        )
+        let effectiveInteractionBinding = Self.resolveInteractionBinding(
+            stored: interactionState,
+            manager: activeDocumentManager
+        )
+
         return CodeEditorRepresentable(
-            text: $text,  // Pass the binding directly
+            text: effectiveTextBinding,
             language: effectiveLanguage,
             theme: effectiveTheme,
             configuration: effectiveConfiguration,
             runtimeDependencies: effectiveRuntimeDependencies,
             textDebounceInterval: effectiveDebounceInterval,
-            interactionState: interactionState,
+            interactionState: effectiveInteractionBinding,
             editorController: editorController,
             hostEditorState: hostEditorState,
             onTextChange: handleTextChange,
@@ -391,5 +451,23 @@ public struct CodeEditor: View {
 // Factory methods have been moved to CodeEditor+Factory.swift
 
 // Completion types have been moved to CodeEditor+Completion.swift
+
+// MARK: - ActiveDocument environment key
+
+@available(macOS 13.0, iOS 16.0, *)
+private struct ActiveDocumentManagerEnvironmentKey: EnvironmentKey {
+    static let defaultValue: EditorDocuments? = nil
+}
+
+@available(macOS 13.0, iOS 16.0, *)
+extension EnvironmentValues {
+    /// Active `EditorDocuments` manager installed by `.activeDocument(in:)`.
+    /// `CodeEditor.body` reads this to override the receiver's stored text
+    /// and interaction bindings with the manager's per-active-id bindings.
+    var activeDocumentManager: EditorDocuments? {
+        get { self[ActiveDocumentManagerEnvironmentKey.self] }
+        set { self[ActiveDocumentManagerEnvironmentKey.self] = newValue }
+    }
+}
 
 #endif
