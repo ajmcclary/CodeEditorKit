@@ -399,6 +399,30 @@ final class EditorDocumentsTests: XCTestCase {
         documents.setLanguage(.python, of: UUID())
         XCTAssertEqual(documents.documents.first?.language, .swift)
     }
+
+    func testUpdateAppliesMutationInPlace() {
+        let document = EditorDocument(name: "x.swift", text: "old")
+        let documents = EditorDocuments(documents: [document])
+        documents.update(document.id) { mutable in
+            mutable.text = "new"
+            mutable.tab.name = "renamed.py"
+            mutable.tab.language = .python
+            mutable.tab.isDirty = false
+        }
+        XCTAssertEqual(documents.documents.first?.text, "new")
+        XCTAssertEqual(documents.documents.first?.name, "renamed.py")
+        XCTAssertEqual(documents.documents.first?.language, .python)
+        XCTAssertFalse(documents.documents.first?.isDirty ?? true)
+    }
+
+    func testUpdateUnknownIdNoOp() {
+        let document = EditorDocument(name: "x.swift", text: "original")
+        let documents = EditorDocuments(documents: [document])
+        documents.update(UUID()) { mutable in
+            mutable.text = "should not apply"
+        }
+        XCTAssertEqual(documents.documents.first?.text, "original")
+    }
 }
 ```
 
@@ -503,8 +527,20 @@ public final class EditorDocuments {
     /// the file extension to follow the language change should do that
     /// on their side. No-op if `id` is not present.
     public func setLanguage(_ language: Language, of id: EditorDocument.ID) {
+        update(id) { $0.tab.language = language }
+    }
+
+    /// Mutate the document with the given id in place. The closure
+    /// receives an `inout` reference; any mutations propagate through
+    /// the manager's `@Observable` storage. No-op if `id` is not present.
+    ///
+    /// Hosts that need to change multiple fields atomically (e.g., the
+    /// sample's `resetToSample`) reach for this method. Use the focused
+    /// helpers (`setLanguage(_:of:)`, `markClean(_:)`) for single-field
+    /// changes.
+    public func update(_ id: EditorDocument.ID, with mutate: (inout EditorDocument) -> Void) {
         guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
-        documents[index].tab.language = language
+        mutate(&documents[index])
     }
 }
 ```
@@ -512,7 +548,7 @@ public final class EditorDocuments {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `swift test --filter EditorDocumentsTests`
-Expected: PASS, 15 tests.
+Expected: PASS, 17 tests.
 
 - [ ] **Step 5: Lint and commit**
 
@@ -1470,12 +1506,13 @@ extension EditorDocuments {
     /// the given language and switch the document's language to match.
     /// Destructive — wipes `isDirty` and clears any prior content.
     func resetToSample(_ language: Language, of id: EditorDocument.ID) {
-        guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
-        documents[index].tab.language = language
-        documents[index].tab.name = Self.renamedDocumentName(documents[index].tab.name, for: language)
-        documents[index].tab.isDirty = false
-        documents[index].text = SampleCodeCatalog.text(for: language)
-        documents[index].interactionState = EditorInteractionState()
+        update(id) { document in
+            document.tab.language = language
+            document.tab.name = Self.renamedDocumentName(document.tab.name, for: language)
+            document.tab.isDirty = false
+            document.text = SampleCodeCatalog.text(for: language)
+            document.interactionState = EditorInteractionState()
+        }
     }
 
     // MARK: - Language switch with extension rename
@@ -1483,9 +1520,10 @@ extension EditorDocuments {
     /// Set the language of a document and rename its file extension to
     /// match the language's primary extension.
     func setLanguageRenaming(_ language: Language, of id: EditorDocument.ID) {
-        guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
-        documents[index].tab.language = language
-        documents[index].tab.name = Self.renamedDocumentName(documents[index].tab.name, for: language)
+        update(id) { document in
+            document.tab.language = language
+            document.tab.name = Self.renamedDocumentName(document.tab.name, for: language)
+        }
     }
 
     /// Replace the file extension on `name` with the language's primary
@@ -1506,40 +1544,7 @@ extension EditorDocuments {
 
 Note on the access modifier choice: the extension members are not marked `public`. They live alongside the sample target and only need to be visible to other sample sources; default internal visibility is correct.
 
-The extension assigns to `documents[index].tab.language` etc. directly, but `documents` is `private(set)` on the framework class. To allow the extension to mutate, add a small `internal` mutating helper on `EditorDocuments`. Modify `Sources/CodeEditorPlugin/Documents/EditorDocuments.swift` and add this method inside the class, just after `setLanguage(_:of:)`:
-
-```swift
-    /// Internal mutation hook for in-tree extensions (e.g., the sample's
-    /// `EditorDocuments+SampleExtras`). External hosts mutate through the
-    /// public CRUD + binding API and have no need for this.
-    func withDocument(at index: Int, _ mutate: (inout EditorDocument) -> Void) {
-        guard documents.indices.contains(index) else { return }
-        mutate(&documents[index])
-    }
-```
-
-Then rewrite `resetToSample` and `setLanguageRenaming` in the extension to go through `withDocument(at:)`:
-
-```swift
-    func resetToSample(_ language: Language, of id: EditorDocument.ID) {
-        guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
-        withDocument(at: index) { document in
-            document.tab.language = language
-            document.tab.name = Self.renamedDocumentName(document.tab.name, for: language)
-            document.tab.isDirty = false
-            document.text = SampleCodeCatalog.text(for: language)
-            document.interactionState = EditorInteractionState()
-        }
-    }
-
-    func setLanguageRenaming(_ language: Language, of id: EditorDocument.ID) {
-        guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
-        withDocument(at: index) { document in
-            document.tab.language = language
-            document.tab.name = Self.renamedDocumentName(document.tab.name, for: language)
-        }
-    }
-```
+The extension uses `documents.update(_:with:)` (added in Task 2) for the multi-field `resetToSample` and `setLanguageRenaming` mutations. No additional framework changes are required.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
