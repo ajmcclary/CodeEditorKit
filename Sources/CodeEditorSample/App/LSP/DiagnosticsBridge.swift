@@ -49,10 +49,13 @@ final class DiagnosticsBridge {
     }
 
     func start() {
+        // Don't rely on `receive(on: DispatchQueue.main)` + `assumeIsolated` —
+        // DispatchQueue.main isolation is not statically equivalent to MainActor
+        // and the assumption only holds by convention. Hop into MainActor
+        // explicitly via a Task so the isolation is checked by the compiler.
         subscription = diagnosticsPublisher
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] dict in
-                MainActor.assumeIsolated {
+                Task { @MainActor [weak self] in
                     self?.handle(dict)
                 }
             }

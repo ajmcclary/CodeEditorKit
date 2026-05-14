@@ -13,7 +13,7 @@ import UIKit
 /// - `SmartIndentationEngine`: Calculates automatic indentation
 /// - `SmartSelectionExpander`: Expands selections to logical boundaries
 @MainActor
-public class SmartEditingEngine: NSObject, ObservableObject {
+public final class SmartEditingEngine: NSObject, ObservableObject {
     #if canImport(AppKit)
     public typealias PlatformTextViewDelegate = NSTextViewDelegate
     #else

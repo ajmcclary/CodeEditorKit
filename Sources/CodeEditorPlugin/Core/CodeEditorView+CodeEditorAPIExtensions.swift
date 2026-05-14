@@ -85,24 +85,23 @@ extension CodeEditorView {
     }
     #endif
 
-    /// Replace text in range
-    public func replaceText(in range: Range<String.Index>, with text: String) {
-        let nsRange = NSRange(range, in: content)
+    /// Replace text in the UTF-16 range
+    public func replaceText(in range: NSRange, with text: String) {
         #if canImport(AppKit)
-        insertText(text, replacementRange: nsRange)
+        insertText(text, replacementRange: range)
         #else
         // For UIKit, we need to replace the text differently
         if let textRange = self.textRange(
-            from: self.position(from: self.beginningOfDocument, offset: nsRange.location) ?? self.beginningOfDocument,
-            to: self.position(from: self.beginningOfDocument, offset: nsRange.location + nsRange.length) ?? self.beginningOfDocument
+            from: self.position(from: self.beginningOfDocument, offset: range.location) ?? self.beginningOfDocument,
+            to: self.position(from: self.beginningOfDocument, offset: range.location + range.length) ?? self.beginningOfDocument
         ) {
             self.replace(textRange, withText: text)
         }
         #endif
     }
 
-    /// Delete text in range
-    public func deleteText(in range: Range<String.Index>) {
+    /// Delete text in the UTF-16 range
+    public func deleteText(in range: NSRange) {
         replaceText(in: range, with: "")
     }
 
@@ -120,24 +119,28 @@ extension CodeEditorView {
         selectedRange = NSRange(location: currentPosition, length: 0)
     }
 
-    /// Move cursor to position
-    public func moveCursor(to position: String.Index) {
-        let location = content.distance(from: content.startIndex, to: position)
-        selectedRange = NSRange(location: location, length: 0)
+    /// Move cursor to a UTF-16 offset
+    public func moveCursor(to position: Int) {
+        // swiftlint:disable:next legacy_objc_type
+        let utf16Length = (content as NSString).length
+        let clamped = max(0, min(utf16Length, position))
+        selectedRange = NSRange(location: clamped, length: 0)
     }
 
     /// Move cursor by offset
     public func moveCursor(by offset: Int) {
+        // swiftlint:disable:next legacy_objc_type
+        let utf16Length = (content as NSString).length
         let currentPosition = selectedRange.location
-        let newPosition = max(0, min(currentPosition + offset, content.count))
+        let newPosition = max(0, min(currentPosition + offset, utf16Length))
         selectedRange = NSRange(location: newPosition, length: 0)
     }
 
     // MARK: - Search & Replace
 
-    /// Find text in editor
-    public func find(_ text: String, options: FindOptions) -> [Range<String.Index>] {
-        var ranges: [Range<String.Index>] = []
+    /// Find text in editor, returning UTF-16 ranges
+    public func find(_ text: String, options: FindOptions) -> [NSRange] {
+        var ranges: [NSRange] = []
         // swiftlint:disable:next legacy_objc_type
         var searchOptions: NSString.CompareOptions = []
 
@@ -159,9 +162,7 @@ extension CodeEditorView {
                 break
             }
 
-            if let range = Range(foundRange, in: content) {
-                ranges.append(range)
-            }
+            ranges.append(foundRange)
 
             searchRange.location = foundRange.location + foundRange.length
             searchRange.length = nsContent.length - searchRange.location
@@ -184,13 +185,12 @@ extension CodeEditorView {
 
     // MARK: - Scrolling
 
-    /// Scroll to make range visible
-    public func scrollToVisible(_ range: Range<String.Index>) {
+    /// Scroll to make UTF-16 range visible
+    public func scrollToVisible(_ range: NSRange) {
         // Only scroll if autoScrollToCursor is enabled
         guard configuration.behavior.autoScrollToCursor else { return }
 
-        let nsRange = NSRange(range, in: content)
-        scrollRangeToVisible(nsRange)
+        scrollRangeToVisible(range)
     }
 
     /// Scroll to line number
@@ -203,30 +203,6 @@ extension CodeEditorView {
         }
     }
 
-    /// Get currently visible range
-    public func visibleRange() -> Range<String.Index>? {
-        #if canImport(AppKit)
-        let visibleRect = visibleRect
-        guard let textContainer,
-              let layoutManager else { return nil }
-
-        let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-        let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
-
-        return Range(characterRange, in: content)
-        #else
-        // iOS: Access layoutManager directly
-        let visibleRect = bounds
-        let textContainer = self.textContainer
-        let layoutManager = self.layoutManager
-
-        let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-        let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
-
-        return Range(characterRange, in: content)
-        #endif
-    }
-
     // MARK: - Annotations
 
     // annotations property is already implemented in CodeEditorView with public private(set)
@@ -234,19 +210,17 @@ extension CodeEditorView {
 
     // MARK: - Line Information
 
-    /// Get 1-based line number for a String.Index position.
-    public func lineNumber(at position: String.Index) -> Int {
-        let offset = content.utf16.distance(from: content.utf16.startIndex, to: position)
-        return lineGeometryStore.lineIndex(forUtf16Offset: offset) + 1
+    /// Get 1-based line number for a UTF-16 offset.
+    public func lineNumber(at position: Int) -> Int {
+        lineGeometryStore.lineIndex(forUtf16Offset: position) + 1
     }
 
-    /// Get line range for a 1-based line number.
-    public func lineRange(for lineNumber: Int) -> Range<String.Index>? {
+    /// Get UTF-16 line range for a 1-based line number.
+    public func lineRange(for lineNumber: Int) -> NSRange? {
         let idx = lineNumber - 1
         guard let geom = lineGeometryStore.lineGeometry(at: idx) else { return nil }
         let offset = lineGeometryStore.utf16Offset(forLineIndex: idx)
-        let nsRange = NSRange(location: offset, length: geom.utf16Length)
-        return Range(nsRange, in: content)
+        return NSRange(location: offset, length: geom.utf16Length)
     }
 
     /// Total number of lines in the document.

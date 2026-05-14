@@ -477,23 +477,6 @@ public enum TokenType: String, CaseIterable, Sendable {
         }
     }
 
-    /// Convert from color to closest token type
-    static func fromColor(_ color: PlatformColor, scheme: SyntaxColorScheme) -> Self {
-        // Compare with scheme colors to find best match
-        if color == scheme.keyword { return .keyword }
-        if color == scheme.string { return .string }
-        if color == scheme.number { return .number }
-        if color == scheme.comment { return .comment }
-        if color == scheme.type { return .type }
-        if color == scheme.function { return .function }
-        if color == scheme.property { return .property }
-        if color == scheme.operator { return .operator }
-        if color == scheme.punctuation { return .punctuation }
-        if color == scheme.preprocessor { return .preprocessor }
-        if color == scheme.error { return .unknown }
-        return .identifier // Default
-    }
-
     /// Convert from SwiftSyntax token type
     init(fromSwiftType swiftType: SwiftTokenType) {
         switch swiftType {

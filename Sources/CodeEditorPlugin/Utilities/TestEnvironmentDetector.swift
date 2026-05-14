@@ -7,9 +7,10 @@ public enum TestEnvironmentDetector {
     // MARK: - Test Environment Detection
 
     /// Detects if the code is currently running in a test environment
-    /// 
-    /// This method checks for the presence of the XCTestConfigurationFilePath environment variable,
-    /// which is set by Xcode when running tests.
+    ///
+    /// Covers both XCTest (env var + dynamically-loaded `XCTestCase` class) and
+    /// Swift Testing (loaded framework bundle). The XCTest env var alone misses
+    /// pure swift-testing bundles run through alternative test drivers.
     ///
     /// - Returns: `true` if running in a test environment, `false` otherwise
     ///
@@ -37,7 +38,17 @@ public enum TestEnvironmentDetector {
     /// - Preventing resource-intensive operations during test runs
     ///
     public static var isRunningInTests: Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            return true
+        }
+        if NSClassFromString("XCTestCase") != nil {
+            return true
+        }
+        // Swift Testing loads its framework bundle into the test runner process.
+        return Bundle.allFrameworks.contains { bundle in
+            let path = bundle.bundlePath
+            return path.contains("/swift-testing") || path.hasSuffix("Testing.framework")
+        }
     }
 
     /// Detects if the code is NOT running in a test environment

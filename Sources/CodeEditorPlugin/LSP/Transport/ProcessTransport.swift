@@ -37,8 +37,7 @@ public actor ProcessTransport: LSPTransport {
     private var stderrPipe: Pipe?
 
     private var dataHandler: (@Sendable (Data) async -> Void)?
-    private var readTask: Task<Void, Never>?
-    private var stderrTask: Task<Void, Never>?
+    private var stdoutReading: Bool = false
 
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "ProcessTransport")
 
@@ -109,10 +108,7 @@ public actor ProcessTransport: LSPTransport {
             }
 
             // Monitor stderr for debugging
-            stderrTask?.cancel()
-            stderrTask = Task { [weak self] in
-                await self?.monitorStderr()
-            }
+            attachStderrLogging()
         } catch {
             self.process = nil
             self.stdinPipe = nil
@@ -125,10 +121,11 @@ public actor ProcessTransport: LSPTransport {
     public func disconnect() async {
         logger.info("Stopping LSP process")
 
-        readTask?.cancel()
-        readTask = nil
-        stderrTask?.cancel()
-        stderrTask = nil
+        // Detach kernel-driven readers before terminating to avoid the
+        // background queue racing the cleanup that follows.
+        stdoutPipe?.fileHandleForReading.readabilityHandler = nil
+        stderrPipe?.fileHandleForReading.readabilityHandler = nil
+        stdoutReading = false
 
         process?.terminate()
 
@@ -222,57 +219,56 @@ public actor ProcessTransport: LSPTransport {
     // MARK: - Private Methods
 
     private func startReading() {
-        readTask?.cancel()
+        guard !stdoutReading, let stdoutPipe else { return }
+        stdoutReading = true
+        logger.debug("Started reading from LSP process")
 
-        readTask = Task {
-            logger.debug("Started reading from LSP process")
-
-            guard let stdoutPipe else { return }
-            let fileHandle = stdoutPipe.fileHandleForReading
-
-            while !Task.isCancelled && process?.isRunning == true {
-                do {
-                    let data = fileHandle.availableData
-                    if !data.isEmpty {
-                        if let handler = dataHandler {
-                            await handler(data)
-                        }
-                    } else {
-                        // No data available might mean process terminated
-                        if process?.isRunning == false {
-                            logger.info("LSP process terminated")
-                            break
-                        }
-                        // Small delay to avoid busy waiting
-                        try await Task.sleep(nanoseconds: 10_000_000) // 10ms
-                    }
-                } catch {
-                    logger.error("Error reading from LSP process: \(error)")
-                    break
-                }
+        // The kernel notifies us via `readabilityHandler` whenever data is
+        // available — no need to busy-poll. The handler runs on a private
+        // background queue; we hop back into the actor to deliver bytes to
+        // the handler and to mutate any actor state.
+        stdoutPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            guard let self else { return }
+            Task { [data] in
+                await self.deliverStdoutData(data)
             }
-
-            logger.debug("Stopped reading from LSP process")
         }
     }
 
-    private func monitorStderr() async {
-        guard let stderrPipe else { return }
-        let fileHandle = stderrPipe.fileHandleForReading
+    private func deliverStdoutData(_ data: Data) async {
+        // Empty data signals EOF on the pipe — the process closed stdout.
+        guard !data.isEmpty else {
+            if process?.isRunning == false {
+                logger.info("LSP process terminated")
+            }
+            stdoutPipe?.fileHandleForReading.readabilityHandler = nil
+            stdoutReading = false
+            return
+        }
+        if let handler = dataHandler {
+            await handler(data)
+        }
+    }
 
-        while !Task.isCancelled && process?.isRunning == true {
-            let data = fileHandle.availableData
-            if !data.isEmpty, let string = String(data: data, encoding: .utf8) {
+    private func attachStderrLogging() {
+        guard let stderrPipe else { return }
+        let logger = self.logger
+        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            if data.isEmpty {
+                handle.readabilityHandler = nil
+                return
+            }
+            if let string = String(data: data, encoding: .utf8) {
                 logger.debug("LSP stderr: \(string)")
-            } else {
-                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
             }
         }
     }
 
     deinit {
-        readTask?.cancel()
-        stderrTask?.cancel()
+        stdoutPipe?.fileHandleForReading.readabilityHandler = nil
+        stderrPipe?.fileHandleForReading.readabilityHandler = nil
         if process?.isRunning == true {
             logger.warning("ProcessTransport deallocated while process still running")
             process?.terminate()

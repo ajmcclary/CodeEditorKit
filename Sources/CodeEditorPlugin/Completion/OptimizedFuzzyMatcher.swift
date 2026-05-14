@@ -93,6 +93,16 @@ public struct OptimizedFuzzyMatcher: Sendable {
         }
     }
 
+    /// Synchronous sequential match for callers that can't await (e.g. MainActor query handlers).
+    public func matchSequential(pattern: String, candidates: [String]) -> [MatchResult] {
+        guard !pattern.isEmpty else {
+            return candidates.prefix(configuration.maxResults).map { MatchResult(item: $0, score: 0, matchedRanges: []) }
+        }
+        let patternLower = Array(pattern.lowercased())
+        let viableCandidates = candidates.filter { $0.count >= patternLower.count }
+        return matchSequential(pattern: patternLower, candidates: viableCandidates)
+    }
+
     // MARK: - Private Methods
 
     private func matchSequential(pattern: [Character], candidates: [String]) -> [MatchResult] {

@@ -7,7 +7,7 @@ import UIKit
 
 /// Search and replace engine for the code editor
 @MainActor
-public class SearchReplaceEngine: ObservableObject {
+public final class SearchReplaceEngine: ObservableObject {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "SearchReplaceEngine")
 
     // MARK: - Published Properties

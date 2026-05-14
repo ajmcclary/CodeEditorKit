@@ -61,18 +61,18 @@ public actor PerformanceMonitor {
     // MARK: - Initialization
 
     /// Creates a new performance monitor instance.
-    public init() {
-        // Start periodic cleanup task
-        Task {
-            await startPeriodicCleanup()
-        }
-    }
+    ///
+    /// The periodic cleanup task does not start until the first measurement is
+    /// recorded — keeping unused monitors free of background work.
+    public init() {}
 
     // MARK: - Public Methods
 
     /// Start measuring a performance metric
     @discardableResult
     public func startMeasuring(_ name: String) -> MeasurementToken {
+        ensureCleanupTaskStarted()
+
         let token = MeasurementToken(id: UUID(), name: name, startTime: CFAbsoluteTimeGetCurrent())
 
         metrics[token.id] = MonitoringPerformanceMetric(
@@ -190,7 +190,8 @@ public actor PerformanceMonitor {
 
     // MARK: - Private Methods
 
-    private func startPeriodicCleanup() {
+    private func ensureCleanupTaskStarted() {
+        guard cleanupTask == nil else { return }
         cleanupTask = Task { [weak self] in
             while !Task.isCancelled {
                 // Wait for cleanup interval (every 5 minutes)

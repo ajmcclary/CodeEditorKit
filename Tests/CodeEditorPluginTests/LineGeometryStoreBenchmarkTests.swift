@@ -1182,7 +1182,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
     func testCodeEditorViewInitializesAndRebuildsGeometryForProgrammaticText() {
         let textView = CodeEditorView(frame: .zero)
         XCTAssertEqual(textView.lineCount, 1)
-        XCTAssertEqual(textView.lineRange(for: 1), textView.content.startIndex..<textView.content.endIndex)
+        XCTAssertEqual(textView.lineRange(for: 1), NSRange(location: 0, length: 0))
 
         #if canImport(AppKit)
         textView.string = "a😀b\nsecond\n"
@@ -1191,7 +1191,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         #endif
 
         XCTAssertEqual(textView.lineCount, 3)
-        XCTAssertEqual(textView.lineNumber(at: textView.content.startIndex), 1)
+        XCTAssertEqual(textView.lineNumber(at: 0), 1)
         XCTAssertNotNil(textView.lineRange(for: 2))
         XCTAssertNotNil(textView.lineRange(for: 3))
     }

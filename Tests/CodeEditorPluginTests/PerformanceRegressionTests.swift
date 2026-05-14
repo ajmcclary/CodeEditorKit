@@ -83,31 +83,31 @@ final class PerformanceRegressionTests: CleanupTestCase {
         )
     }
 
-    // MARK: - FuzzyMatcher Tests
+    // MARK: - OptimizedFuzzyMatcher Tests
 
     @MainActor
     func testFuzzyMatcherRegressionCheck() throws {
-        let matcher = FuzzyMatcher()
+        let matcher = OptimizedFuzzyMatcher()
         let candidates = (0..<10_000).map { "function\($0)WithLongName" }
 
         measure(metrics: [XCTClockMetric()]) {
             let patterns = ["func", "with", "name", "f100", "fwln"]
             for pattern in patterns {
-                let results = matcher.match(pattern: pattern, candidates: candidates)
-                XCTAssertFalse(results.isEmpty, "FuzzyMatcher should return results for pattern: \(pattern)")
+                let results = matcher.matchSequential(pattern: pattern, candidates: candidates)
+                XCTAssertFalse(results.isEmpty, "OptimizedFuzzyMatcher should return results for pattern: \(pattern)")
             }
         }
     }
 
     @MainActor
     func testFuzzyMatcherPerformanceBaseline() throws {
-        let matcher = FuzzyMatcher()
+        let matcher = OptimizedFuzzyMatcher()
         let candidates = (0..<10_000).map { "function\($0)WithLongName" }
 
-        var results: [FuzzyMatcher.MatchResult] = []
+        var results: [OptimizedFuzzyMatcher.MatchResult] = []
 
         measureAgainstBudget("fuzzy_search") {
-            results = matcher.match(pattern: "func", candidates: candidates)
+            results = matcher.matchSequential(pattern: "func", candidates: candidates)
         }
 
         XCTAssertFalse(results.isEmpty)
@@ -219,7 +219,7 @@ final class PerformanceRegressionTests: CleanupTestCase {
         // This test simulates a realistic usage scenario
         let editor = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 800, height: 600))
         let asyncManager = AsyncOperationManager()
-        let fuzzyMatcher = FuzzyMatcher()
+        let fuzzyMatcher = OptimizedFuzzyMatcher()
         let navigator = SymbolNavigator()
 
         // Set up large code file
@@ -249,7 +249,7 @@ final class PerformanceRegressionTests: CleanupTestCase {
 
         // 2. Perform completions
         let candidates = ["processData", "processInput", "processOutput", "handleProcess"]
-        _ = fuzzyMatcher.match(pattern: "proc", candidates: candidates)
+        _ = fuzzyMatcher.matchSequential(pattern: "proc", candidates: candidates)
 
         // 3. Debounced operations
         for index in 0..<10 {

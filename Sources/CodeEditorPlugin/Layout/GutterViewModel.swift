@@ -545,9 +545,7 @@ extension GutterViewModel {
         // Integrate with text view selection - select the entire line
         if let textView,
            let lineRange = textView.lineRange(for: lineNumber) {
-            // Convert Range<String.Index> to NSRange
-            let nsRange = NSRange(lineRange, in: textView.text ?? "")
-            textView.selectedRange = nsRange
+            textView.selectedRange = lineRange
         }
 
         updateVisibleLineNumbers()

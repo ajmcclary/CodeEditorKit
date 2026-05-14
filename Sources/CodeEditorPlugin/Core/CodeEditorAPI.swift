@@ -89,41 +89,42 @@ public protocol CodeEditorAPI: AnyObject {
     /// Insert text at current cursor position
     func insertText(_ text: String)
 
-    /// Replace text in range
-    func replaceText(in range: Range<String.Index>, with text: String)
+    /// Replace text in the UTF-16 range
+    func replaceText(in range: NSRange, with text: String)
 
-    /// Delete text in range
-    func deleteText(in range: Range<String.Index>)
+    /// Delete text in the UTF-16 range
+    func deleteText(in range: NSRange)
 
     // MARK: - Selection Operations
 
     /// Select all text
     func selectAll()
 
-    /// Move cursor to position
-    func moveCursor(to position: String.Index)
+    /// Move cursor to a UTF-16 offset
+    func moveCursor(to position: Int)
 
     /// Move cursor by offset
     func moveCursor(by offset: Int)
 
     // MARK: - Search & Replace
 
-    /// Find text in editor
-    func find(_ text: String, options: FindOptions) -> [Range<String.Index>]
+    /// Find text in editor, returning UTF-16 ranges
+    func find(_ text: String, options: FindOptions) -> [NSRange]
 
     /// Replace all occurrences
     func replaceAll(_ searchText: String, with replacement: String, options: FindOptions) -> Int
 
     // MARK: - Scrolling
 
-    /// Scroll to make range visible
-    func scrollToVisible(_ range: Range<String.Index>)
+    /// Scroll to make UTF-16 range visible
+    func scrollToVisible(_ range: NSRange)
 
     /// Scroll to line number
     func scrollToLine(_ lineNumber: Int)
 
-    /// Get currently visible range
-    func visibleRange() -> Range<String.Index>?
+    /// Get currently visible UTF-16 range. Returns an empty range when no layout
+    /// has happened yet.
+    func visibleRange() -> NSRange
 
     // MARK: - Annotations
 
@@ -138,11 +139,11 @@ public protocol CodeEditorAPI: AnyObject {
 
     // MARK: - Line Information
 
-    /// Get line number for position
-    func lineNumber(at position: String.Index) -> Int
+    /// Get line number for a UTF-16 offset
+    func lineNumber(at position: Int) -> Int
 
-    /// Get line range for line number
-    func lineRange(for lineNumber: Int) -> Range<String.Index>?
+    /// Get UTF-16 line range for line number
+    func lineRange(for lineNumber: Int) -> NSRange?
 
     /// Total number of lines
     var lineCount: Int { get }
@@ -250,9 +251,11 @@ extension CodeEditorAPI {
     }
 
     func moveCursor(by offset: Int) {
-        guard let currentPosition = Range(selectedRange, in: content)?.lowerBound else { return }
-        let index = content.index(currentPosition, offsetBy: offset, limitedBy: content.endIndex) ?? content.endIndex
-        moveCursor(to: index)
+        // swiftlint:disable:next legacy_objc_type
+        let utf16Length = (content as NSString).length
+        let current = selectedRange.location
+        let next = max(0, min(utf16Length, current + offset))
+        moveCursor(to: next)
     }
 
     func scrollToLine(_ lineNumber: Int) {
@@ -264,38 +267,42 @@ extension CodeEditorAPI {
         content.components(separatedBy: .newlines).count
     }
 
-    func lineNumber(at position: String.Index) -> Int {
-        let substring = content[..<position]
-        return substring.components(separatedBy: .newlines).count
+    func lineNumber(at position: Int) -> Int {
+        // swiftlint:disable:next legacy_objc_type
+        let nsString = content as NSString
+        let clamped = max(0, min(nsString.length, position))
+        var count = 1
+        var index = 0
+        while index < clamped {
+            var lineStart = 0
+            var lineEnd = 0
+            var contentsEnd = 0
+            nsString.getLineStart(&lineStart, end: &lineEnd, contentsEnd: &contentsEnd, for: NSRange(location: index, length: 0))
+            if lineEnd > clamped { break }
+            index = lineEnd
+            if index <= clamped { count += 1 }
+        }
+        return count
     }
 
-    func lineRange(for lineNumber: Int) -> Range<String.Index>? {
-        let lines = content.components(separatedBy: .newlines)
-        guard lineNumber > 0, lineNumber <= lines.count else { return nil }
-
-        var currentIndex = content.startIndex
-        for (index, line) in lines.enumerated() {
-            if index == lineNumber - 1 {
-                let endIndex = content.index(currentIndex, offsetBy: line.count)
-                return currentIndex..<endIndex
+    func lineRange(for lineNumber: Int) -> NSRange? {
+        guard lineNumber > 0 else { return nil }
+        // swiftlint:disable:next legacy_objc_type
+        let nsString = content as NSString
+        var index = 0
+        var line = 1
+        while index < nsString.length {
+            var lineStart = 0
+            var lineEnd = 0
+            var contentsEnd = 0
+            nsString.getLineStart(&lineStart, end: &lineEnd, contentsEnd: &contentsEnd, for: NSRange(location: index, length: 0))
+            if line == lineNumber {
+                return NSRange(location: lineStart, length: contentsEnd - lineStart)
             }
-            currentIndex = content.index(currentIndex, offsetBy: line.count + 1) // +1 for newline
+            index = lineEnd
+            line += 1
         }
         return nil
-    }
-}
-
-@MainActor
-extension CodeEditorAPI {
-    /// Convert NSRange to Range<String.Index>
-    func range(from nsRange: NSRange) -> Range<String.Index>? {
-        guard let range = Range(nsRange, in: content) else { return nil }
-        return range
-    }
-
-    /// Convert Range<String.Index> to NSRange
-    func nsRange(from range: Range<String.Index>) -> NSRange {
-        NSRange(range, in: content)
     }
 }
 
@@ -304,7 +311,8 @@ extension CodeEditorAPI {
     /// Set content and place cursor at end
     func setContent(_ text: String) {
         content = text
-        moveCursor(to: content.endIndex)
+        // swiftlint:disable:next legacy_objc_type
+        moveCursor(to: (content as NSString).length)
     }
 
     /// Append text to end of content
@@ -319,7 +327,9 @@ extension CodeEditorAPI {
 
     /// Get selected text
     var selectedText: String? {
-        guard let range = Range(selectedRange, in: content) else { return nil }
-        return String(content[range])
+        // swiftlint:disable:next legacy_objc_type
+        let nsString = content as NSString
+        guard selectedRange.location + selectedRange.length <= nsString.length else { return nil }
+        return nsString.substring(with: selectedRange)
     }
 }

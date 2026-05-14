@@ -40,7 +40,7 @@ RegexQuery/
 
 2. **Move Tree-sitter files** from `CodeEditorPlugin/SyntaxHighlighting/RegexQuery/` to the new target.
 
-3. **Swap `RegexBackedRangeQueryParser`** for a real C Tree-sitter parser that loads grammar binaries and runs `highlights.scm` queries.
+3. **Swap `RegexIncrementalRangeQueryParser`** for a real C Tree-sitter parser that loads grammar binaries and runs `highlights.scm` queries.
 
 4. **Add as optional dependency** in consumer `Package.swift`:
    ```swift

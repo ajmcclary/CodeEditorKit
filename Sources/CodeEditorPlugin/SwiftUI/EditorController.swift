@@ -217,8 +217,7 @@ public final class EditorController {
     /// the line into view.
     public func gotoLine(_ lineNumber: Int) {
         guard let view = codeEditorView, lineNumber >= 1 else { return }
-        guard let stringRange = view.lineRange(for: lineNumber) else { return }
-        let nsRange = NSRange(stringRange, in: view.content)
+        guard let nsRange = view.lineRange(for: lineNumber) else { return }
         let caret = NSRange(location: nsRange.location, length: 0)
         view.setSelectedRangeWithoutScrolling(caret)
         view.scrollRangeToVisible(caret)
@@ -301,10 +300,7 @@ public final class EditorController {
     /// no view is attached or the selection is out of range.
     public var currentLineNumber: Int? {
         guard let view = codeEditorView else { return nil }
-        let selection = view.selectedRange
-        let content = view.content
-        guard let stringRange = Range(selection, in: content) else { return nil }
-        return view.lineNumber(at: stringRange.lowerBound)
+        return view.lineNumber(at: view.selectedRange.location)
     }
 
     /// The editor's adaptive performance mode controller.
@@ -323,18 +319,15 @@ public final class EditorController {
     /// the line number is out of range.
     public func textRange(forLine lineNumber: Int) -> NSTextRange? {
         guard let view = codeEditorView,
-              let stringRange = view.lineRange(for: lineNumber),
+              let nsRange = view.lineRange(for: lineNumber),
               let storage = view.textContentStorage else { return nil }
-        let nsRange = NSRange(stringRange, in: view.content)
         return TextRangeUtilities.convert(nsRange, in: storage)
     }
 
     /// Build a UTF-16 `NSRange` covering line `lineNumber` (1-based).
     /// This is the preferred range representation for `Annotation` storage.
     public func nsRange(forLine lineNumber: Int) -> NSRange? {
-        guard let view = codeEditorView,
-              let stringRange = view.lineRange(for: lineNumber) else { return nil }
-        return NSRange(stringRange, in: view.content)
+        codeEditorView?.lineRange(for: lineNumber)
     }
 
     // MARK: - LSP coordinate conversion
@@ -351,9 +344,7 @@ public final class EditorController {
         guard let view = codeEditorView,
               line >= 0,
               character >= 0 else { return nil }
-        guard let stringRange = view.lineRange(for: line + 1) else { return nil }
-        let content = view.content
-        let lineNSRange = NSRange(stringRange, in: content)
+        guard let lineNSRange = view.lineRange(for: line + 1) else { return nil }
         let candidate = lineNSRange.location + character
         return min(candidate, NSMaxRange(lineNSRange))
     }

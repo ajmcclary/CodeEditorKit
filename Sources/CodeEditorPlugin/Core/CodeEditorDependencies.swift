@@ -6,40 +6,48 @@ import Foundation
 enum CodeEditorDependencies {
     @MainActor
     static func makeMemoryMonitor() -> MemoryMonitor {
-        DependencyValues._current.codeEditorMemoryMonitor()
+        @Dependency(\.codeEditorMemoryMonitor) var factory
+        return factory()
     }
 
     @MainActor
     static func makePlatformCapabilities() -> PlatformCapabilities {
-        DependencyValues._current.codeEditorPlatformCapabilities()
+        @Dependency(\.codeEditorPlatformCapabilities) var factory
+        return factory()
     }
 
     @MainActor
     static func makePlatformServiceLayer() -> PlatformServiceLayer {
-        DependencyValues._current.codeEditorPlatformServiceLayer()
+        @Dependency(\.codeEditorPlatformServiceLayer) var factory
+        return factory()
     }
 
     @MainActor
     static func makePlatformDeviceService() -> PlatformDeviceService {
-        DependencyValues._current.codeEditorPlatformDeviceService()
+        @Dependency(\.codeEditorPlatformDeviceService) var factory
+        return factory()
     }
 
     @MainActor
     static func makeLanguageMetadataRegistry() -> LanguageMetadataRegistry {
-        DependencyValues._current.codeEditorLanguageMetadataRegistry()
+        @Dependency(\.codeEditorLanguageMetadataRegistry) var factory
+        return factory()
     }
 
     @MainActor
     static func makeUnifiedPerformanceSystem() -> UnifiedPerformanceSystem {
-        DependencyValues._current.codeEditorUnifiedPerformanceSystem()
+        @Dependency(\.codeEditorUnifiedPerformanceSystem) var factory
+        return factory()
     }
 
     static func makeParagraphStyleCache() -> ParagraphStyleCache {
-        DependencyValues._current.codeEditorParagraphStyleCache()
+        @Dependency(\.codeEditorParagraphStyleCache) var factory
+        return factory()
     }
 
     static func makeProductionPerformanceMetrics() -> ProductionPerformanceMetrics {
-        DependencyValues._current.codeEditorProductionPerformanceMetrics()
+        @Dependency(\.codeEditorProductionPerformanceMetrics) var factory
+        return factory()
     }
 }
 

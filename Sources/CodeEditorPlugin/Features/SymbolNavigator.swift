@@ -281,11 +281,11 @@ public class SymbolNavigator: ObservableObject {
     public func searchSymbols(query: String) -> [DocumentSymbol] {
         guard !query.isEmpty else { return flattenedSymbols }
 
-        let fuzzyMatcher = FuzzyMatcher()
+        let fuzzyMatcher = OptimizedFuzzyMatcher()
         let allSymbols = flattenedSymbols
         let symbolNames = allSymbols.map { $0.name }
 
-        let matches = fuzzyMatcher.match(pattern: query, candidates: symbolNames)
+        let matches = fuzzyMatcher.matchSequential(pattern: query, candidates: symbolNames)
 
         return matches.compactMap { match in
             allSymbols.first { $0.name == match.item }

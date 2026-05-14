@@ -51,7 +51,7 @@ public final class SmartCompletionEngine: ObservableObject {
     public var settings = SmartCompletionSettings()
 
     /// Fuzzy matcher for intelligent completion matching
-    private let fuzzyMatcher = FuzzyMatcher()
+    private let fuzzyMatcher = OptimizedFuzzyMatcher()
 
     // MARK: - Initialization
 
@@ -322,8 +322,8 @@ public final class SmartCompletionEngine: ObservableObject {
         // Extract labels for fuzzy matching
         let labels = items.map { $0.label }
 
-        // Perform fuzzy matching
-        let fuzzyResults = fuzzyMatcher.match(pattern: pattern, candidates: labels)
+        // Perform fuzzy matching (sequential — `combineAndRank` is sync MainActor)
+        let fuzzyResults = fuzzyMatcher.matchSequential(pattern: pattern, candidates: labels)
 
         // Create a mapping of labels to fuzzy scores
         var scoreMap: [String: Double] = [:]

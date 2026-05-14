@@ -41,9 +41,9 @@ final class ComprehensivePerformanceTests: XCTestCase {
 
     @MainActor
     func testSmartCompletionEnginePerformance() throws {
-        // Test the FuzzyMatcher component instead, which is a key part of SmartCompletionEngine
-        // The SmartCompletionEngine itself has complex async initialization that's hard to test in isolation
-        let fuzzyMatcher = FuzzyMatcher()
+        // Test the fuzzy matcher component, which is a key part of SmartCompletionEngine.
+        // The engine itself has complex async initialization that's hard to test in isolation.
+        let fuzzyMatcher = OptimizedFuzzyMatcher()
         _ = SmartCompletionEngine(memoryMonitor: MemoryMonitor()) // Test that it can be instantiated
 
         // Generate test data
@@ -51,9 +51,8 @@ final class ComprehensivePerformanceTests: XCTestCase {
         let pattern = "Str"
 
         measure(options: Self.standardMeasureOptions) {
-            // Test fuzzy matching performance directly
             for _ in 0..<100 {
-                let results = fuzzyMatcher.match(pattern: pattern, candidates: candidates)
+                let results = fuzzyMatcher.matchSequential(pattern: pattern, candidates: candidates)
                 XCTAssertFalse(results.isEmpty)
             }
         }
@@ -61,7 +60,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
 
     @MainActor
     func testFuzzyMatcherPerformance() throws {
-        let matcher = FuzzyMatcher()
+        let matcher = OptimizedFuzzyMatcher()
 
         // Generate candidates
         let candidates = (0..<10_000).map { "function\($0)WithLongName" }
@@ -70,7 +69,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
             // Test multiple patterns in single measure block
             let patterns = ["func", "with", "name", "f100", "fwln"]
             for pattern in patterns {
-                let results = matcher.match(pattern: pattern, candidates: candidates)
+                let results = matcher.matchSequential(pattern: pattern, candidates: candidates)
                 XCTAssertFalse(results.isEmpty)
             }
         }

@@ -3,7 +3,7 @@ import XCTest
 
 /// Phase 5 spike: benchmark regex range query vs. direct regex highlighting.
 ///
-/// The spike uses `RegexBackedRangeQueryParser` which wraps our existing regex
+/// The spike uses `RegexIncrementalRangeQueryParser` which wraps our existing regex
 /// engine through the regex range query pipeline. This proves the architecture works
 /// and establishes baseline numbers for the range-highlighting path.
 final class RegexRangeHighlightProviderTests: XCTestCase {
@@ -102,7 +102,7 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
             return
         }
 
-        let parser = RegexBackedRangeQueryParser()
+        let parser = RegexIncrementalRangeQueryParser()
         try await parser.setLanguage(.javascript)
 
         let result = try await parser.parse(source: source)
@@ -237,7 +237,7 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
     @MainActor
     func testParsePerformance10KLines() async throws {
         let source = javascriptFixture(lineCount: 10_000)
-        let parser = RegexBackedRangeQueryParser()
+        let parser = RegexIncrementalRangeQueryParser()
         try await parser.setLanguage(.javascript)
 
         measure(options: Self.standardMeasureOptions) {
@@ -255,7 +255,7 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
     @MainActor
     func testParsePerformance100KLines() async throws {
         let source = javascriptFixture(lineCount: 100_000)
-        let parser = RegexBackedRangeQueryParser()
+        let parser = RegexIncrementalRangeQueryParser()
         try await parser.setLanguage(.javascript)
 
         let result = try await parser.parse(source: source)
@@ -280,7 +280,7 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
         let regexDuration = Date().timeIntervalSince(regexStart)
 
         // Regex range query pipeline
-        let queryParser = RegexBackedRangeQueryParser()
+        let queryParser = RegexIncrementalRangeQueryParser()
         try await queryParser.setLanguage(.javascript)
 
         let tsStart = Date()
@@ -355,7 +355,7 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
         ]
 
         for (language, source) in fixtures {
-            let parser = RegexBackedRangeQueryParser()
+            let parser = RegexIncrementalRangeQueryParser()
             do {
                 try await parser.setLanguage(language)
                 let result = try await parser.parse(source: source)

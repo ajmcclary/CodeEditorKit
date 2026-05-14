@@ -85,14 +85,38 @@ internal struct HighlightingStrategyExecutor {
 
     /// Highlights JSON using the specialized tokenizer
     private func highlightJSON(source: String) -> [HighlightedToken] {
-        let tokens = fastJSONTokenizer.tokenize(source)
-        let colorScheme = SyntaxColorScheme.default
-        let attributes = fastJSONTokenizer.highlightingAttributes(for: tokens, colorScheme: colorScheme)
+        fastJSONTokenizer.tokenize(source).compactMap { token in
+            guard let type = mapJSONTokenType(token.type) else { return nil }
+            return HighlightedToken(range: token.range, type: type, text: "")
+        }
+    }
 
-        return attributes.map { range, attrs in
-            let color = attrs[.foregroundColor] as? PlatformColor ?? colorScheme.plain
-            let type = TokenType.fromColor(color, scheme: colorScheme)
-            return HighlightedToken(range: range, type: type, text: "")
+    /// Maps the tokenizer's internal classification to the framework's `TokenType`
+    /// without round-tripping through a `PlatformColor`. The previous color-based
+    /// detour collapsed any theme override that mapped two categories to the same
+    /// hue.
+    private func mapJSONTokenType(_ tokenizerType: FastJSONTokenizer.TokenType) -> TokenType? {
+        switch tokenizerType {
+        case .string:
+            return .string
+
+        case .number:
+            return .number
+
+        case .boolean, .null:
+            return .keyword
+
+        case .key:
+            return .property
+
+        case .openBrace, .closeBrace, .openBracket, .closeBracket, .comma, .colon:
+            return .punctuation
+
+        case .invalid:
+            return .unknown
+
+        case .whitespace:
+            return nil
         }
     }
 
