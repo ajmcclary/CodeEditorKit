@@ -77,6 +77,11 @@ extension EditorConfiguration.Layout: Codable {
         case lineHeightMultiple
         case characterSpacing
         case textContainerWidthFraction
+        case annotationBadgeSize
+        case annotationBadgePadding
+        case minimapWidth
+        case foldingControlSize
+        case foldingControlPadding
     }
 
     public init(from decoder: Decoder) throws {
@@ -96,6 +101,11 @@ extension EditorConfiguration.Layout: Codable {
         lineHeightMultiple = try container.decodeIfPresent(CGFloat.self, forKey: .lineHeightMultiple) ?? 1.2
         characterSpacing = try container.decodeIfPresent(CGFloat.self, forKey: .characterSpacing) ?? 0
         textContainerWidthFraction = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerWidthFraction) ?? 1.0
+        annotationBadgeSize = try container.decodeIfPresent(CGFloat.self, forKey: .annotationBadgeSize) ?? 16.0
+        annotationBadgePadding = try container.decodeIfPresent(CGFloat.self, forKey: .annotationBadgePadding) ?? 4.0
+        minimapWidth = try container.decodeIfPresent(CGFloat.self, forKey: .minimapWidth) ?? 120.0
+        foldingControlSize = try container.decodeIfPresent(CGFloat.self, forKey: .foldingControlSize) ?? 14.0
+        foldingControlPadding = try container.decodeIfPresent(CGFloat.self, forKey: .foldingControlPadding) ?? 2.0
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -112,5 +122,10 @@ extension EditorConfiguration.Layout: Codable {
         try container.encode(lineHeightMultiple, forKey: .lineHeightMultiple)
         try container.encode(characterSpacing, forKey: .characterSpacing)
         try container.encode(textContainerWidthFraction, forKey: .textContainerWidthFraction)
+        try container.encode(annotationBadgeSize, forKey: .annotationBadgeSize)
+        try container.encode(annotationBadgePadding, forKey: .annotationBadgePadding)
+        try container.encode(minimapWidth, forKey: .minimapWidth)
+        try container.encode(foldingControlSize, forKey: .foldingControlSize)
+        try container.encode(foldingControlPadding, forKey: .foldingControlPadding)
     }
 }

@@ -179,12 +179,33 @@ public final class LSPClient: ObservableObject {
     public func disconnect() {
         logger.info("Disconnecting from LSP server")
 
-        // Send shutdown request if connected
-        if connectionState == .initialized {
+        // Already torn down — nothing to do. Without this guard a second
+        // `disconnect()` would re-spawn transport teardown and re-fail an
+        // already-empty pending-request map.
+        if connectionState == .disconnected {
+            return
+        }
+
+        let wasInitialized = (connectionState == .initialized)
+
+        // Capture in-flight request continuations BEFORE clearing the map.
+        // CheckedContinuations must be resumed exactly once — dropping the
+        // closures would leave awaiters hanging forever (in production) or
+        // trap (in DEBUG with strict-concurrency checks). Failing them with
+        // `.notConnected` lets callers observe the disconnect deterministically.
+        let pendingToFail = pendingRequests
+        pendingRequests.removeAll()
+        serverCapabilities = nil
+        diagnostics.removeAll()
+
+        if wasInitialized {
             connectionState = .shuttingDown
 
             Task { [weak self] in
-                guard let self else { return }
+                guard let self else {
+                    Self.failPending(pendingToFail)
+                    return
+                }
 
                 do {
                     try await LSPConnectionManager.sendShutdownRequest(
@@ -204,23 +225,34 @@ public final class LSPClient: ObservableObject {
                 } else {
                     self.processManager.terminateServerProcess()
                 }
+
+                self.connectionState = .disconnected
+                Self.failPending(pendingToFail)
             }
         } else {
+            // Not initialized (e.g. `.connecting`, `.initializing`, `.error`):
+            // skip the shutdown request and tear the transport down directly.
             if let transport {
-                Task {
+                Task { [weak self] in
                     await transport.disconnect()
+                    self?.connectionState = .disconnected
+                    Self.failPending(pendingToFail)
                 }
             } else {
                 processManager.terminateServerProcess()
+                connectionState = .disconnected
+                Self.failPending(pendingToFail)
             }
         }
+    }
 
-        // Clean up state
-        serverCapabilities = nil
-        diagnostics.removeAll()
-        pendingRequests.removeAll()
-
-        connectionState = .disconnected
+    /// Fail any captured pending request continuations. Called after transport
+    /// teardown so awaiters do not observe a `.notConnected` failure while the
+    /// transport is still draining.
+    private static func failPending(_ pending: [Int: LSPRequestCompletion]) {
+        for completion in pending.values {
+            completion(.failure(.notConnected))
+        }
     }
 
     // MARK: - Document Management

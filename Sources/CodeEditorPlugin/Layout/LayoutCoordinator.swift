@@ -35,12 +35,10 @@ public final class LayoutCoordinator {
         }
 
         isPerformingLayout = true
-        defer {
-            isPerformingLayout = false
-            processPendingOperations()
-        }
+        defer { isPerformingLayout = false }
 
         operation()
+        drainPendingOperations()
     }
 
     /// Perform layout with animation
@@ -98,15 +96,17 @@ public final class LayoutCoordinator {
 
     // MARK: - Private Methods
 
-    private func processPendingOperations() {
-        guard !pendingLayoutOperations.isEmpty else { return }
-
-        let operations = pendingLayoutOperations
-        pendingLayoutOperations.removeAll()
-
-        // Process pending operations
-        for operation in operations {
-            performLayout(operation)
+    /// Iteratively drains queued layout operations while a layout pass is in
+    /// progress. Operations queued during the drain (via `performLayout`'s
+    /// `isPerformingLayout` guard) are picked up by subsequent loop
+    /// iterations instead of recursing back through `performLayout`.
+    private func drainPendingOperations() {
+        while !pendingLayoutOperations.isEmpty {
+            let batch = pendingLayoutOperations
+            pendingLayoutOperations.removeAll()
+            for operation in batch {
+                operation()
+            }
         }
     }
 }

@@ -127,6 +127,7 @@ extension EditorConfiguration {
 extension EditorConfiguration.Performance: Codable {
     private enum CodingKeys: String, CodingKey {
         case maxSyntaxHighlightingLength
+        case usesRangeBasedHighlighting
         case useHardwareAcceleration
         case renderingUpdateStrategy
         case maxVisibleLines
@@ -144,6 +145,7 @@ extension EditorConfiguration.Performance: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         maxSyntaxHighlightingLength = try container.decodeIfPresent(Int.self, forKey: .maxSyntaxHighlightingLength) ?? 500_000
+        usesRangeBasedHighlighting = try container.decodeIfPresent(Bool.self, forKey: .usesRangeBasedHighlighting) ?? false
         useHardwareAcceleration = try container.decodeIfPresent(Bool.self, forKey: .useHardwareAcceleration) ?? true
         renderingUpdateStrategy = try container.decodeIfPresent(RenderingUpdateStrategy.self, forKey: .renderingUpdateStrategy) ?? .adaptive
         maxVisibleLines = try container.decodeIfPresent(Int.self, forKey: .maxVisibleLines) ?? 1_000
@@ -173,6 +175,7 @@ extension EditorConfiguration.Performance: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(maxSyntaxHighlightingLength, forKey: .maxSyntaxHighlightingLength)
+        try container.encode(usesRangeBasedHighlighting, forKey: .usesRangeBasedHighlighting)
         try container.encode(useHardwareAcceleration, forKey: .useHardwareAcceleration)
         try container.encode(renderingUpdateStrategy, forKey: .renderingUpdateStrategy)
         try container.encode(maxVisibleLines, forKey: .maxVisibleLines)
@@ -194,6 +197,7 @@ extension EditorConfiguration.Performance: Codable {
 extension EditorConfiguration.Performance: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.maxSyntaxHighlightingLength == rhs.maxSyntaxHighlightingLength &&
+        lhs.usesRangeBasedHighlighting == rhs.usesRangeBasedHighlighting &&
         lhs.useHardwareAcceleration == rhs.useHardwareAcceleration &&
         lhs.renderingUpdateStrategy == rhs.renderingUpdateStrategy &&
         lhs.maxVisibleLines == rhs.maxVisibleLines &&

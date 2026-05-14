@@ -211,11 +211,17 @@ public final class MemoryMonitor: ObservableObject {
     /// Registered cleanup handlers
     private var cleanupHandlers: [String: CleanupHandler] = [:]
 
-    /// Memory monitoring task
-    private var monitoringTask: Task<Void, Never>?
+    /// Memory monitoring task.
+    ///
+    /// `nonisolated(unsafe)` so `deinit` (which runs in a nonisolated context)
+    /// can cancel it. Writes happen only from `@MainActor` (`startMonitoring`
+    /// / `stopMonitoring`); deinit reads only after all `@MainActor`
+    /// references are released, so the read happens-after the last write.
+    nonisolated(unsafe) private var monitoringTask: Task<Void, Never>?
 
-    /// Periodic cleanup task
-    private var cleanupTask: Task<Void, Never>?
+    /// Periodic cleanup task. Same `nonisolated(unsafe)` discipline as
+    /// `monitoringTask`.
+    nonisolated(unsafe) private var cleanupTask: Task<Void, Never>?
 
     /// Logger
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")
@@ -226,8 +232,13 @@ public final class MemoryMonitor: ObservableObject {
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []
 
-    /// Observer for app termination to ensure cleanup
-    private var terminationObserver: NSObjectProtocol?
+    /// Observer for app termination to ensure cleanup.
+    ///
+    /// `nonisolated(unsafe)` so `deinit` can pass it to
+    /// `NotificationCenter.removeObserver(_:)`. Writes happen only in
+    /// `registerForTermination()` (called from the `@MainActor` `init`);
+    /// the deinit read happens-after the last reference is released.
+    nonisolated(unsafe) private var terminationObserver: NSObjectProtocol?
 
     // MARK: - Initialization
 
@@ -247,12 +258,22 @@ public final class MemoryMonitor: ObservableObject {
     }
 
     deinit {
-        // Note: We cannot safely access @MainActor properties from deinit
-        // as it may be called from any thread. The tasks will be automatically
-        // cancelled when they are deallocated.
-        // Users should call stopMonitoring() explicitly before releasing the monitor
-        // to ensure proper cleanup.
-        // The termination observer will be removed when the object is deallocated.
+        // Cancel pending monitoring/cleanup tasks. Without this, the tasks
+        // keep their `[weak self]` closures alive in the runtime task queue
+        // until their next `Task.sleep` wakes up — visible as zombie work in
+        // multi-window or test scenarios where many monitors come and go.
+        monitoringTask?.cancel()
+        cleanupTask?.cancel()
+
+        // Remove the NotificationCenter observer registered in
+        // `registerForTermination()`. The observer block holds only
+        // `[weak self]`, so it does not retain the monitor — but the
+        // observer entry itself accumulates in NotificationCenter until
+        // explicitly removed, which leaks NotificationCenter slots across
+        // tests/windows. `removeObserver` is thread-safe.
+        if let terminationObserver {
+            NotificationCenter.default.removeObserver(terminationObserver)
+        }
     }
 
     /// Register for app termination notifications to ensure cleanup

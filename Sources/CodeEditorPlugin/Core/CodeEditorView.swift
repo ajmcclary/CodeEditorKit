@@ -535,10 +535,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         lspContentCoordinator = nil
         #endif
 
-        // Clean up syntax highlighting
-        Task {
-            await syntaxHighlighter.cancelHighlighting()
-        }
+        // Clean up syntax highlighting synchronously so the cancellation is
+        // visible before the next view (or the next teardown phase) wires up.
+        // The previous fire-and-forget `Task { ... }` could arrive after a
+        // replacement editor had already started highlighting.
+        syntaxHighlighter.cancelHighlighting()
 
         // Remove any gutter view
         #if canImport(AppKit)

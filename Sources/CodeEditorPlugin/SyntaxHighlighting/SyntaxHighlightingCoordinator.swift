@@ -12,18 +12,38 @@ import AppKit
 
 // MARK: - HighlightingTaskManager
 
-/// Actor for managing highlighting tasks with thread safety
-private actor HighlightingTaskManager {
+/// Lock-protected holder for the active highlighting task.
+///
+/// Replaces a previous `actor`-based implementation so that `cancelCurrent()`
+/// can be called synchronously from non-async contexts (notably
+/// `CodeEditorView.removeFromSuperview`, which runs on `@MainActor` and
+/// needs cancellation to happen *before* the next editor view is wired up).
+/// `Task` cancellation is itself thread-safe, so the lock only guards the
+/// optional reference; the cancel call happens outside the critical section.
+private final class HighlightingTaskManager: @unchecked Sendable {
+    private let lock = NSLock()
     private var currentTask: Task<[HighlightedToken], Never>?
 
-    func setCurrentTask(_ task: Task<[HighlightedToken], Never>?) {
-        currentTask?.cancel()
+    /// Atomically replace the active task, cancelling whatever was there.
+    /// Returns the previous task (so callers may, e.g., test ordering).
+    @discardableResult
+    func setCurrentTask(_ task: Task<[HighlightedToken], Never>?) -> Task<[HighlightedToken], Never>? {
+        lock.lock()
+        let previous = currentTask
         currentTask = task
+        lock.unlock()
+        previous?.cancel()
+        return previous
     }
 
+    /// Synchronously cancel the active task, if any. Safe to call from any
+    /// isolation domain.
     func cancelCurrent() {
-        currentTask?.cancel()
+        lock.lock()
+        let previous = currentTask
         currentTask = nil
+        lock.unlock()
+        previous?.cancel()
     }
 }
 
@@ -36,11 +56,11 @@ private actor HighlightingTaskManager {
 ///   value-semantic helpers (`SwiftSyntaxHighlighter`, `RegexSyntaxHighlighter`,
 ///   `FastJSONTokenizer`, `PerformanceMonitor`, `HighlightingStrategyExecutor`).
 /// - Cancellation/active-task state lives inside the private
-///   `HighlightingTaskManager` actor (declared above) — every mutation crosses
-///   that actor boundary via `await taskManager.cancelCurrent()` /
-///   `setCurrentTask(_:)`. The actor is the synchronization mechanism.
+///   `HighlightingTaskManager` (declared above), which uses an `NSLock` to
+///   serialize mutations to the optional `Task` reference. `Task.cancel()`
+///   is itself thread-safe.
 /// - Why not synthesized: the type is publicly subclassable in spirit (final
-///   class with reference semantics) and Swift cannot prove the actor-only
+///   class with reference semantics) and Swift cannot prove the lock-only
 ///   discipline statically. The convention is enforced by the API: callers
 ///   never reach into mutable state directly.
 public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
@@ -85,18 +105,16 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
 
     /// Highlight source code asynchronously with cancellation support
     public func highlightAsync(source: String, language: Language) async -> [HighlightedToken] {
-        // Cancel any existing highlighting task
-        await taskManager.cancelCurrent()
-
         // Capture the executor for use in the task
         let executor = strategyExecutor
 
-        // Create new task for highlighting
+        // Create the new task and atomically swap it in. `setCurrentTask`
+        // cancels whatever was active before — a single atomic swap replaces
+        // the prior cancel-then-set sequence.
         let task = Task<[HighlightedToken], Never> {
             executor.highlight(source: source, language: language)
         }
-
-        await taskManager.setCurrentTask(task)
+        taskManager.setCurrentTask(task)
         return await task.value
     }
 
@@ -143,9 +161,13 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         return Array(Set(extensions)).sorted()
     }
 
-    /// Cancel any in-progress highlighting
-    public func cancelHighlighting() async {
-        await taskManager.cancelCurrent()
+    /// Cancel any in-progress highlighting.
+    ///
+    /// Synchronous so that view-lifecycle paths (`removeFromSuperview`,
+    /// `deinit`) can cancel highlighting before subsequent work observes
+    /// stale tokens.
+    public func cancelHighlighting() {
+        taskManager.cancelCurrent()
     }
 
     deinit {
