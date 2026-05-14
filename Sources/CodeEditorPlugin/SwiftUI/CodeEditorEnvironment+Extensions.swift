@@ -80,7 +80,13 @@ public struct CodeEditorEnvironment: Sendable {
     /// Default environment configuration
     public static let `default` = Self()
 
-    /// Creates a copy with updated values
+    /// Creates a copy with updated values.
+    ///
+    /// This builder is set-only. Passing `nil` for any optional
+    /// parameter is treated as "no change" — the existing value is
+    /// preserved. To clear an optional field, use ``clearing(_:)``
+    /// or write the field directly on a `var` copy of the
+    /// environment.
     public func with(
         language: Language? = nil,
         theme: Theme? = nil,
