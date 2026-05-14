@@ -188,6 +188,19 @@ enum ContainerViewInitializer {
                 name: NSText.didChangeNotification,
                 object: textView
             )
+
+            // Redraw the active-line color when the caret crosses a line.
+            // Synchronous delivery: NSTextView.didChangeSelectionNotification
+            // is posted on the main thread and our handler is non-blocking.
+            NotificationCenter.default.addObserver(
+                forName: NSTextView.didChangeSelectionNotification,
+                object: textView,
+                queue: nil
+            ) { [weak rulerView] _ in
+                MainActor.assumeIsolated {
+                    rulerView?.selectionDidChange()
+                }
+            }
         }
     }
     #else

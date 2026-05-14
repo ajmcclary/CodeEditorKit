@@ -98,5 +98,81 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
             "Fold-control click read textView.layoutManager and flipped the editor off TextKit 2."
         )
     }
+
+    func testSelectionChangeOnNewLineUpdatesLastActiveLine() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        let container = CodeEditorContainerView(frame: window.contentLayoutRect)
+        container.textView.string = "alpha\nbeta\ngamma"
+        window.contentView = container
+        window.makeKeyAndOrderFront(nil)
+        defer { window.close() }
+
+        let scrollView = try XCTUnwrap(container.textView.enclosingScrollView)
+        let ruler = try XCTUnwrap(scrollView.verticalRulerView as? LineNumberRulerView)
+
+        // Move caret to start so the seed draw establishes line 1.
+        container.textView.setSelectedRange(NSRange(location: 0, length: 0))
+        // Drain any pending notifications from the string-assignment path.
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+
+        // Seed lastActiveLineNumber by drawing once.
+        let rep = try XCTUnwrap(ruler.bitmapImageRepForCachingDisplay(in: ruler.bounds))
+        let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        NSGraphicsContext.restoreGraphicsState()
+        XCTAssertEqual(ruler.lastActiveLineNumber, 1, "Initial selection at offset 0 is line 1")
+
+        // Caret jumps to line 2 (offset 6, just past "alpha\n").
+        container.textView.setSelectedRange(NSRange(location: 6, length: 0))
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+        XCTAssertEqual(ruler.lastActiveLineNumber, 2, "Selection at offset 6 is line 2")
+    }
+
+    func testSelectionChangeOnSameLineKeepsLastActiveLineStable() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        let container = CodeEditorContainerView(frame: window.contentLayoutRect)
+        container.textView.string = "alphabetagamma"
+        window.contentView = container
+        window.makeKeyAndOrderFront(nil)
+        defer { window.close() }
+
+        let scrollView = try XCTUnwrap(container.textView.enclosingScrollView)
+        let ruler = try XCTUnwrap(scrollView.verticalRulerView as? LineNumberRulerView)
+
+        container.textView.setSelectedRange(NSRange(location: 2, length: 0))
+        let rep = try XCTUnwrap(ruler.bitmapImageRepForCachingDisplay(in: ruler.bounds))
+        let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        NSGraphicsContext.restoreGraphicsState()
+        XCTAssertEqual(ruler.lastActiveLineNumber, 1)
+
+        // Drain pending notifications, then snapshot needsDisplay state.
+        let drain = expectation(description: "drain main queue")
+        DispatchQueue.main.async { drain.fulfill() }
+        wait(for: [drain], timeout: 1.0)
+        ruler.needsDisplay = false
+
+        // Caret moves within line 1 — selectionDidChange should short-circuit.
+        container.textView.setSelectedRange(NSRange(location: 5, length: 0))
+        let drain2 = expectation(description: "drain after same-line move")
+        DispatchQueue.main.async { drain2.fulfill() }
+        wait(for: [drain2], timeout: 1.0)
+        XCTAssertEqual(ruler.lastActiveLineNumber, 1)
+        XCTAssertFalse(ruler.needsDisplay, "Same-line caret move must not dirty the ruler")
+    }
 }
 #endif

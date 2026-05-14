@@ -20,8 +20,9 @@ class LineNumberRulerView: NSRulerView {
     let renderer = GutterViewRenderer()
 
     /// Last line index containing the caret, used to short-circuit redraws on
-    /// intra-line caret movement.
-    private var lastActiveLineNumber: Int?
+    /// intra-line caret movement. Internal so tests can observe state changes
+    /// driven by the selection observer.
+    internal private(set) var lastActiveLineNumber: Int?
 
     // MARK: - Initialization
 
@@ -206,6 +207,16 @@ extension CodeEditorContainerView {
                 let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
                 rulerView.textView = textView
                 scrollView.verticalRulerView = rulerView
+
+                NotificationCenter.default.addObserver(
+                    forName: NSTextView.didChangeSelectionNotification,
+                    object: textView,
+                    queue: nil
+                ) { [weak rulerView] _ in
+                    MainActor.assumeIsolated {
+                        rulerView?.selectionDidChange()
+                    }
+                }
             }
 
             if let rulerView = scrollView.verticalRulerView as? LineNumberRulerView {
