@@ -16,11 +16,6 @@ import UIKit
 public class GutterViewRenderer {
     // MARK: - Properties
 
-    /// The color used for inactive line numbers. Defaults to the system
-    /// secondary label; replaced by `themedLineNumberColor` after a theme
-    /// is applied.
-    private var textColor: PlatformColor = PlatformColors.secondaryLabel
-
     /// Padding from the right edge of the gutter
     private let rightPadding: CGFloat = 8
 
@@ -55,7 +50,13 @@ public class GutterViewRenderer {
         themedLineNumberColor = PlatformColor(tokens: theme.style.editor.lineNumber)
         themedActiveLineNumberColor = PlatformColor(tokens: theme.style.editor.activeLineNumber)
         themedBackgroundFillColor = PlatformColor(tokens: theme.style.editor.gutterBackground)
-        textColor = themedLineNumberColor
+    }
+
+    /// Resolves the line-number color for a given 1-based line index. Returns
+    /// `themedActiveLineNumberColor` when the line matches `activeLineNumber`;
+    /// `themedLineNumberColor` otherwise.
+    public func color(forLineNumber lineNumber: Int, activeLineNumber: Int?) -> PlatformColor {
+        lineNumber == activeLineNumber ? themedActiveLineNumberColor : themedLineNumberColor
     }
 
     // MARK: - Public Interface
@@ -67,12 +68,15 @@ public class GutterViewRenderer {
     ///   - textView: The text view to draw line numbers for
     ///   - gutterBounds: The bounds of the gutter view
     ///   - fillBackground: Whether to fill the background (UIKit only)
+    ///   - activeLineNumber: 1-based line index containing the caret, or
+    ///     `nil` to draw every line in the inactive color.
     public func draw(
         in rect: CGRect,
         context: CGContext,
         textView: CodeEditorView,
         gutterBounds: CGRect,
-        fillBackground: Bool = false
+        fillBackground: Bool = false,
+        activeLineNumber: Int? = nil
     ) {
         // Fill background if requested (UIKit needs this). Theme-applied
         // gutters use the editor's gutter background color; otherwise fall
@@ -111,6 +115,7 @@ public class GutterViewRenderer {
             drawLineNumber(
                 lineNumber,
                 for: lineRange,
+                color: color(forLineNumber: lineNumber, activeLineNumber: activeLineNumber),
                 context: drawingContext
             )
 
@@ -142,6 +147,7 @@ public class GutterViewRenderer {
     private func drawLineNumber(
         _ lineNumber: Int,
         for lineRange: NSRange,
+        color: PlatformColor,
         context: LineDrawingContext
     ) {
         // Calculate Y position directly from line number and actual text layout
@@ -160,7 +166,7 @@ public class GutterViewRenderer {
             lineNumber,
             at: drawingPoint,
             font: context.font,
-            color: textColor,
+            color: color,
             alignment: .right,
             maxWidth: context.gutterBounds.width - rightPadding
         )
