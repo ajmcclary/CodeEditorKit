@@ -80,4 +80,20 @@ struct ActiveDocumentModifierTests {
     func noArgInitConstructs() {
         _ = CodeEditor()
     }
+
+    @Test(".activeDocument(in:) modifier chain compiles")
+    func activeDocumentModifierChainCompiles() {
+        let document = EditorDocument(name: "x.swift", text: "active")
+        let documents = EditorDocuments(documents: [document])
+
+        // Verify the modifier chain shape advertised in the doc comment.
+        let view = CodeEditor()
+            .activeDocument(in: documents)
+            .codeLanguage(.swift)
+
+        // Touch body to materialize env modifiers; if anything refuses
+        // to type-check, this expression won't compile.
+        _ = view
+        #expect(documents.active?.text == "active")
+    }
 }
