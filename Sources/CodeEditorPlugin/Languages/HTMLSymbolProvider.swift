@@ -2,6 +2,21 @@ import Foundation
 
 /// HTML symbol provider for detecting HTML elements and structure
 struct HTMLSymbolProvider: DocumentSymbolProvider {
+    /// Pre-compiled regex for the only two attributes this provider ever
+    /// extracts — `id` and `class`. Previously the pattern was rebuilt and
+    /// the regex re-compiled on every call to `extractAttribute(_:from:)`,
+    /// once per HTML line in the document. `NSRegularExpression` is
+    /// documented as thread-safe and the patterns are static, so a
+    /// `static let` is correct here.
+    private static let idAttributeRegex: NSRegularExpression? = try? NSRegularExpression(
+        pattern: "id\\s*=\\s*[\"']([^\"']*)[\"']",
+        options: .caseInsensitive
+    )
+    private static let classAttributeRegex: NSRegularExpression? = try? NSRegularExpression(
+        pattern: "class\\s*=\\s*[\"']([^\"']*)[\"']",
+        options: .caseInsensitive
+    )
+
     func detectSymbols(in text: String) async -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
         let lines = text.components(separatedBy: .newlines)
@@ -49,9 +64,9 @@ struct HTMLSymbolProvider: DocumentSymbolProvider {
 
         // Extract id or class for better identification
         var detail = tagName
-        if let idMatch = extractAttribute("id", from: line) {
+        if let idMatch = extractAttribute(matching: Self.idAttributeRegex, from: line) {
             detail += "#\(idMatch)"
-        } else if let classMatch = extractAttribute("class", from: line) {
+        } else if let classMatch = extractAttribute(matching: Self.classAttributeRegex, from: line) {
             detail += ".\(classMatch.components(separatedBy: " ").first ?? classMatch)"
         }
 
@@ -88,11 +103,8 @@ struct HTMLSymbolProvider: DocumentSymbolProvider {
         }
     }
 
-    private func extractAttribute(_ attributeName: String, from line: String) -> String? {
-        let pattern = "\(attributeName)\\s*=\\s*[\"']([^\"']*)[\"']"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
-            return nil
-        }
+    private func extractAttribute(matching regex: NSRegularExpression?, from line: String) -> String? {
+        guard let regex else { return nil }
 
         let range = NSRange(location: 0, length: TextRangeUtilities.utf16Length(of: line))
         guard let match = regex.firstMatch(in: line, options: [], range: range),
