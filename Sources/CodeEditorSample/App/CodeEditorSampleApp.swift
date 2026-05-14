@@ -16,6 +16,9 @@ struct CodeEditorSampleApp: App {
             RootWindow(appState: appState)
                 .frame(minWidth: 980, minHeight: 640)
         }
+        // Hide the standard NSWindow title bar so the embedded
+        // `EditorTitleBar` chrome owns the top of the window.
+        .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1_380, height: 880)
         .windowResizability(.contentMinSize)
         .commands {
@@ -35,6 +38,15 @@ struct CodeEditorSampleApp: App {
                     }
                 }
                 .keyboardShortcut("w", modifiers: .command)
+
+                // ⌘S — save the active tab back to its on-disk URL.
+                // `Untitled-*` tabs have no URL and currently fall through to
+                // a logger message (Save-As is out of scope for the demo).
+                Button("Save") {
+                    let outcome = appState.documents.save()
+                    appState.handleSaveOutcome(outcome)
+                }
+                .keyboardShortcut("s", modifiers: .command)
             }
 
             CommandGroup(after: .textEditing) {

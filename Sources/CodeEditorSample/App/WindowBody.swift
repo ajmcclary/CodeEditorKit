@@ -55,12 +55,15 @@ struct WindowBody: View {
                 }
                 .editorController(appState.editorController)
                 .editorInteractionState(appState.documents.interactionBinding(for: activeID))
-                .codeEditorEnvironment(
-                    language: appState.documents.activeLanguage ?? .plainText,
-                    configuration: appState.configuration,
-                    becomeFirstResponder: .yes,
-                    workspaceRoot: appState.workspaceRoot
-                )
+                // Individual environment modifiers — exercises the smaller
+                // public API instead of the bulk `.codeEditorEnvironment(...)`.
+                // Configuration knobs that don't have their own dedicated
+                // modifier flow through the environment key directly.
+                .codeLanguage(appState.documents.activeLanguage ?? .plainText)
+                .codeWorkspaceRoot(appState.workspaceRoot)
+                .lineNumbers(appState.configuration.display.isLineNumbersEnabled)
+                .environment(\.codeEditorConfiguration, appState.configuration)
+                .becomeFirstResponder()
                 #if canImport(AppKit)
                 .onTextHover { position in
                     await appState.lsp.handleHover(at: position, in: activeID)

@@ -23,10 +23,31 @@ struct RootWindow: View {
         )
         return ZStack {
             VStack(spacing: 0) {
+                // Custom title bar from CodeEditorUI. This brings in
+                // `EditorTrafficLights` and the `.platformGlassSurface(.titleBar)`
+                // modifier transitively, so all three components are exercised
+                // by the sample.
+                EditorTitleBar(
+                    title: documents.tabs.first { $0.id == documents.activeTabID }?.name ?? "CodeEditorSample",
+                    trafficLights: TrafficLightsConfiguration(
+                        onClose: { NSApp.keyWindow?.performClose(nil) },
+                        onMinimize: { NSApp.keyWindow?.performMiniaturize(nil) },
+                        onZoom: { NSApp.keyWindow?.performZoom(nil) }
+                    )
+                )
                 EditorTabStrip(
                     tabs: $documents.tabs,
                     activeTabID: $documents.activeTabID
                 )
+                // Breadcrumb trail from CodeEditorUI. Reads `\.editorState`
+                // which the framework now populates automatically (language,
+                // selection, line count). Cosmetic — kept inert (no tap
+                // callback) so the sample doesn't have to define a nav model.
+                EditorBreadcrumbView()
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .platformGlassSurface(.tabBar)
                 WindowBody(
                     appState: appState,
                     settingsVisible: $settingsVisible,

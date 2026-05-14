@@ -77,14 +77,51 @@ final class DocumentStore {
         activeTabID = id
     }
 
+    /// Save the active (or specified) tab's contents back to its on-disk URL.
+    ///
+    /// Returns `.saved` on success, `.untitled` when the tab has no backing
+    /// URL (the host should follow up with "Save As…"), `.noTab` when the id
+    /// is unknown, or `.failed(error)` when the write itself errored.
+    ///
+    /// On success the tab's `isDirty` flag is cleared.
+    @discardableResult
+    func save(_ id: TabModel.ID? = nil) -> SaveOutcome {
+        let target = id ?? activeTabID
+        guard let target,
+              let index = tabs.firstIndex(where: { $0.id == target }) else {
+            return .noTab
+        }
+        guard let url = tabs[index].url else {
+            return .untitled
+        }
+        let text = texts[target] ?? ""
+        do {
+            try text.write(to: url, atomically: true, encoding: .utf8)
+            tabs[index].isDirty = false
+            return .saved(url: url)
+        } catch {
+            return .failed(error: error)
+        }
+    }
+
+    /// Outcome of a `save(_:)` call. Modelled as an enum so the host can
+    /// surface "no URL" (which needs a Save-As panel) separately from a real
+    /// write failure.
+    enum SaveOutcome {
+        case saved(url: URL)
+        case untitled
+        case noTab
+        case failed(error: Error)
+    }
+
     /// Open a file from disk into a new tab and activate it. If a tab is
     /// already open for the same URL, activates that tab instead. Returns
     /// the tab id, or nil when the file cannot be read.
     ///
     /// Sample-internal: used by the LSP definition-jump path to surface
     /// cross-file Swift navigation results. The opened tab carries the
-    /// source URL on `TabModel.url`; persistence (write-back) is out of
-    /// scope for this iteration.
+    /// source URL on `TabModel.url`; `save(_:)` writes back through the
+    /// same URL.
     @discardableResult
     func openFile(url: URL) -> TabModel.ID? {
         if let existing = tabs.first(where: { $0.url == url }) {

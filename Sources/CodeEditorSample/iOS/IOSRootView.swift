@@ -55,6 +55,9 @@ struct IOSRootView: View {
 
         case .languages:
             languagePanel
+
+        case .inspectors:
+            inspectorsUnavailable
         }
     }
 
@@ -72,25 +75,51 @@ struct IOSRootView: View {
 
         case .languages:
             return "Languages"
+
+        case .inspectors:
+            return "Inspectors"
+        }
+    }
+
+    /// Explains why the LSP / completion / performance / annotations inspectors
+    /// are absent on iOS. The sample's inspector panels live in `Sidebars/`
+    /// behind `#if canImport(AppKit)` — they depend on AppKit pasteboard APIs
+    /// and macOS-only chrome (`EditorSidebarShell`).
+    private var inspectorsUnavailable: some View {
+        ContentUnavailableView {
+            Label("Inspectors are macOS-only", systemImage: "macwindow.badge.plus")
+        } description: {
+            Text(
+                """
+                The LSP, Completion, Performance, and Annotations inspectors \
+                live in `Sources/CodeEditorSample/Sidebars/` and are gated to \
+                AppKit. The underlying CodeEditorPlugin APIs (LSPManager, \
+                CompletionManager, PerformanceInsights, AnnotationsHub) all \
+                work on iOS — only the sample's inspector chrome is desktop-only.
+                """
+            )
         }
     }
 
     @ViewBuilder
     private var editor: some View {
         if let activeID = appState.documents.activeTabID {
-            CodeEditor(text: appState.documents.textBinding(for: activeID))
-                .onTextChange { newText in
-                    appState.documents.markDirty(activeID, newText: newText)
-                }
-                .editorController(appState.editorController)
-                .editorInteractionState(appState.documents.interactionBinding(for: activeID))
-                .codeEditorEnvironment(
-                    language: appState.documents.activeLanguage ?? .plainText,
-                    configuration: appState.configuration,
-                    becomeFirstResponder: .yes,
-                    workspaceRoot: appState.workspaceRoot
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Demonstrates `CodeEditor.withConfiguration` — one of the public
+            // factory methods that bundle language + configuration + theme.
+            CodeEditor.withConfiguration(
+                appState.documents.textBinding(for: activeID),
+                configuration: appState.configuration,
+                language: appState.documents.activeLanguage ?? .plainText,
+                theme: appState.theme
+            )
+            .onTextChange { newText in
+                appState.documents.markDirty(activeID, newText: newText)
+            }
+            .editorController(appState.editorController)
+            .editorInteractionState(appState.documents.interactionBinding(for: activeID))
+            .codeWorkspaceRoot(appState.workspaceRoot)
+            .becomeFirstResponder()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ContentUnavailableView(
                 "No tabs open",
@@ -170,6 +199,7 @@ private enum IOSSidebarSection: String, Identifiable, CaseIterable {
     case settings
     case themes
     case languages
+    case inspectors
 
     var id: String { rawValue }
 
@@ -179,6 +209,7 @@ private enum IOSSidebarSection: String, Identifiable, CaseIterable {
         case .settings: "Editor Settings"
         case .themes: "Themes"
         case .languages: "Languages"
+        case .inspectors: "Inspectors"
         }
     }
 
@@ -188,6 +219,7 @@ private enum IOSSidebarSection: String, Identifiable, CaseIterable {
         case .settings: "slider.horizontal.3"
         case .themes: "paintpalette"
         case .languages: "text.alignleft"
+        case .inspectors: "magnifyingglass"
         }
     }
 }

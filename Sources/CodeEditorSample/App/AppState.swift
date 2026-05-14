@@ -136,4 +136,26 @@ final class AppState {
         completionCoordinator.attach(controller: editorController)
         #endif
     }
+
+    /// Logs the result of a `DocumentStore.save(_:)` call so the user sees
+    /// feedback when ⌘S fires from the menu. Kept on `AppState` rather than
+    /// `DocumentStore` so the document model stays free of CrossPlatformLogger
+    /// (the store is consumed by tests that don't want platform logging
+    /// pulled in).
+    func handleSaveOutcome(_ outcome: DocumentStore.SaveOutcome) {
+        let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorSample", category: "DocumentStore")
+        switch outcome {
+        case let .saved(url):
+            logger.info("Saved \(url.path)")
+
+        case .untitled:
+            logger.warning("Tab is untitled — Save-As is not implemented in the demo.")
+
+        case .noTab:
+            logger.warning("Save invoked with no active tab.")
+
+        case let .failed(error):
+            logger.error("Save failed: \(error.localizedDescription)")
+        }
+    }
 }

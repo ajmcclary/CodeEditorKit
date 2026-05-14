@@ -44,6 +44,9 @@ final class LSPSampleCoordinator {
     private var bridge: DiagnosticsBridge?
 
     @ObservationIgnored
+    private var lspCompletionProvider: LSPCompletionProvider?
+
+    @ObservationIgnored
     private weak var controller: EditorController?
 
     @ObservationIgnored
@@ -81,8 +84,11 @@ final class LSPSampleCoordinator {
         state = .starting
 
         guard let serverURL = await serverResolver() else {
-            let message = "sourcekit-lsp not found. Install Xcode or run xcode-select."
-            state = .failed(message: message)
+            // Surface a `CodeEditorError` with a built-in recovery suggestion.
+            // The framework's `LocalizedError` conformance carries the user-
+            // facing copy; the coordinator just renders it.
+            let error = CodeEditorError.languageServerNotAvailable("Swift")
+            state = .failed(message: Self.userFacingMessage(for: error))
             resolvedServerPath = nil
             return
         }
@@ -114,13 +120,26 @@ final class LSPSampleCoordinator {
         do {
             try await manager.startLanguageServer(for: "swift")
         } catch {
-            lastError = "\(error)"
+            // Map low-level errors back through `CodeEditorError` so the
+            // inspector can show the framework's recoverySuggestion alongside
+            // the raw cause.
+            let wrapped = CodeEditorError.languageServerCommunicationFailed(error.localizedDescription)
+            lastError = Self.userFacingMessage(for: wrapped)
             state = .failed(message: error.localizedDescription)
             return
         }
 
         let caps = ServerCapabilitiesSummary(manager.client(for: "swift")?.serverCapabilities)
         state = .running(capabilities: caps)
+
+        // Register the framework's `LSPCompletionProvider` with the editor's
+        // completion manager so trigger characters fire LSP-backed
+        // completions in the running session.
+        if let controller {
+            let provider = LSPCompletionProvider(lspManager: manager, supportedLanguages: [.swift])
+            controller.registerCompletionProvider(provider)
+            self.lspCompletionProvider = provider
+        }
 
         // Mirror Swift documents under the same root so the LSP's idea of
         // the workspace and the on-disk shadow files agree.
@@ -157,6 +176,10 @@ final class LSPSampleCoordinator {
         guard state != .off else { return }
         bridge?.stop()
         bridge = nil
+        if let provider = lspCompletionProvider {
+            controller?.unregisterCompletionProvider(withId: provider.id)
+            lspCompletionProvider = nil
+        }
         mirror = nil
         manager?.stopLanguageServer(for: "swift")
         manager = nil
@@ -181,6 +204,9 @@ final class LSPSampleCoordinator {
             return nil
         }
         try? await manager.openDocument(filePath: url.path, content: text, languageId: "swift")
+        // Point the LSP completion provider at the freshly-opened shadow so
+        // trigger-character completions land in the right file.
+        lspCompletionProvider?.updateContext(filePath: url.path, text: text)
         return url
     }
 
@@ -193,6 +219,8 @@ final class LSPSampleCoordinator {
         Task { [weak self] in
             try? await self?.manager?.updateDocument(filePath: url.path, content: newText)
         }
+        // Keep the LSP completion provider's cached text in sync.
+        lspCompletionProvider?.updateContext(filePath: url.path, text: newText)
     }
 
     /// Tear down a tab from the LSP session and delete its shadow file.
@@ -316,6 +344,16 @@ final class LSPSampleCoordinator {
         } else {
             hoverSession.dismiss()
         }
+    }
+
+    /// Renders a `CodeEditorError` as a user-facing string that includes the
+    /// `recoverySuggestion` when one is available. Centralised here so all
+    /// LSP failure paths surface the same shape of message.
+    private static func userFacingMessage(for error: CodeEditorError) -> String {
+        if let suggestion = error.recoverySuggestion, !suggestion.isEmpty {
+            return "\(error.errorDescription ?? "\(error)") — \(suggestion)"
+        }
+        return error.errorDescription ?? "\(error)"
     }
 
     /// Default `xcrun --find sourcekit-lsp` lookup. Replaced in tests via

@@ -72,7 +72,16 @@ struct InspectorSidebar: View {
             onDisappear: { appState.performance.stop() }
         )
         .sheet(isPresented: $showingPerformanceReport) {
-            DetailedPerformanceReportView(insights: appState.performance.performanceInsights)
+            VStack(spacing: 16) {
+                // Framework's compact `PerformanceInsightsPanel` (the "documentation
+                // by example" view) — shown alongside the richer report so the
+                // built-in card is exercised by the sample.
+                PerformanceInsightsPanel(insights: appState.performance.performanceInsights)
+                    .padding([.horizontal, .top])
+
+                DetailedPerformanceReportView(insights: appState.performance.performanceInsights)
+            }
+            .frame(minWidth: 520, minHeight: 540)
         }
     }
 
