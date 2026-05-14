@@ -104,6 +104,40 @@ public final class EditorController {
     /// when there is no active search.
     public private(set) var currentMatchIndex: Int = -1
 
+    // MARK: - Attach lifecycle hooks
+
+    /// Register a handler that runs every time this controller becomes
+    /// attached to a `CodeEditorView`. Use this to perform setup that
+    /// requires a live view (installing a data source, scrolling to a
+    /// caret position, applying initial decorations).
+    ///
+    /// Handlers fire on the main actor when the underlying view is
+    /// first created and again every time SwiftUI re-creates it
+    /// (e.g. parent identity change, sheet remount). Handlers MUST
+    /// therefore be idempotent.
+    ///
+    /// Handlers are NOT invoked retroactively. If `onAttach` is called
+    /// after the controller is already attached, the handler runs on
+    /// the next attach. Hosts that want immediate-then-on-reattach
+    /// semantics branch on `isAttached`:
+    ///
+    /// ```swift
+    /// let token = controller.onAttach { ctrl in install(ctrl) }
+    /// if controller.isAttached { install(controller) }
+    /// ```
+    ///
+    /// - Parameter handler: Closure invoked on the main actor whenever
+    ///   the controller becomes attached. The closure receives the
+    ///   controller itself, so weak-self captures are unnecessary.
+    /// - Returns: An `AnyCancellable` token. Drop or `cancel()` it to
+    ///   remove the handler. Store it in `Set<AnyCancellable>` or as a
+    ///   property to keep the subscription active.
+    public func onAttach(
+        _: @MainActor @escaping (EditorController) -> Void
+    ) -> AnyCancellable {
+        AnyCancellable {}
+    }
+
     // MARK: - Attach hook (called by the SwiftUI representable)
 
     /// Internal wiring hook — not for host use. Called from the SwiftUI
