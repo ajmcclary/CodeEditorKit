@@ -132,7 +132,8 @@ let package = Package(
             ],
             exclude: [
                 "__Snapshots__",
-                "Theming/__Snapshots__"
+                "Theming/__Snapshots__",
+                "Layout/__Snapshots__"
             ],
             swiftSettings: swiftSettings
         ),
