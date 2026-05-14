@@ -281,4 +281,46 @@ final class CompletionEventStreamTests: XCTestCase {
         defer { _ = nextStream }
         XCTAssertEqual(manager.testOnlyBroadcaster.subscriberCount, 1, "Resubscribing must register exactly one new continuation.")
     }
+
+    func testBufferDropsOldestWhenSubscriberLags() async throws {
+        let manager = makeManager()
+        let counter = AtomicCounter()
+        let provider = StubCompletionProvider(
+            behavior: .counter(counter),
+            id: "swift.lag",
+            supportedLanguages: [.swift]
+        )
+        manager.registerProvider(provider)
+
+        let stream = manager.events()
+
+        for _ in 0..<300 {
+            _ = try await manager.requestCompletions(for: makeContext())
+        }
+
+        XCTAssertEqual(counter.get(), 300, "All 300 fires should have hit the provider before we drain.")
+
+        // Drain whatever survives in the buffer. Once we've taken 256, stop —
+        // the buffer cap should be exactly 256.
+        let drainTask = Task<[CompletionEvent], Never> {
+            var collected: [CompletionEvent] = []
+            for await event in stream {
+                collected.append(event)
+                if collected.count >= 256 { break }
+            }
+            return collected
+        }
+        let timeout = Task<Void, Never> {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            drainTask.cancel()
+        }
+        let drained = await drainTask.value
+        timeout.cancel()
+
+        XCTAssertEqual(drained.count, 256, "Buffer must cap at 256 events; saw \(drained.count).")
+
+        // Events must surface in publish order.
+        let timestamps = drained.map(\.timestamp)
+        XCTAssertEqual(timestamps, timestamps.sorted(), "Drained events must be timestamp-monotonic.")
+    }
 }
