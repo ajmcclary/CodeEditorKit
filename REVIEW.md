@@ -4,7 +4,7 @@ Synthesis of four parallel reviewer passes covering the entire `Sources/` tree, 
 
 ## Status (2026-05-14)
 
-All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`), the SwiftUI hot path + env hygiene batch (`CodeEditor.body` runtime-deps caching, `EditorEventBusInstaller.sourcePosition` LineGeometryStore fast path, `EditorState` env default shared sentinel, `SwiftUICompletionItem`/`CompletionKind` `Sendable`), and the Language descriptor cleanup batch (dropped dead `highlightingStrategy` field, added explicit `usesRegexHighlighter` flag, hoisted `HTMLSymbolProvider` attribute regexes). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
+All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`), the SwiftUI hot path + env hygiene batch (`CodeEditor.body` runtime-deps caching, `EditorEventBusInstaller.sourcePosition` LineGeometryStore fast path, `EditorState` env default shared sentinel, `SwiftUICompletionItem`/`CompletionKind` `Sendable`), the Language descriptor cleanup batch (dropped dead `highlightingStrategy` field, added explicit `usesRegexHighlighter` flag, hoisted `HTMLSymbolProvider` attribute regexes), and the Logger privacy + tokens + continuation batch (explicit `.public` OSLog privacy, `Tokens.Palette.TrafficLight.*`, `SmartCompletionEngine` continuation dropped). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
 
 | # | Issue | Status | Notes |
 |---|---|---|---|
@@ -202,6 +202,26 @@ Three items from the "Language/highlighting/completion correctness" Important li
 
 Build: green. SwiftLint: 0 violations. Targeted run with `--filter "Highlight|Symbol|Language"` (~18 suites, all related to the touched areas) passes without regressions.
 
+### Logger privacy + tokens + completion continuation batch (landed 2026-05-14)
+
+Three items from the Cross-cutting Important list and the Minor section — privacy hygiene, design-token routing, and a defensive async restructure.
+
+| Item | Status | What landed |
+|---|---|---|
+| `CrossPlatformLogger.osLogger.log(level:, "\(message)")` defeats OSLog format-string privacy/redaction (`Utilities/CrossPlatformLogger.swift:100`) | ✅ Done | Made privacy explicit: the inner OSLog call now uses `"\(message, privacy: .public)"` instead of relying on the default. The wrapper takes a pre-interpolated `String`, so OSLog can't redact individual substitutions anyway — the whole message is one opaque value at the boundary. Choosing `.public` keeps production logs readable (the previous default could redact useful diagnostics to `<private>`). Doc comment now spells out the privacy contract: callers must redact sensitive data at the interpolation site before passing the string here. |
+| `EditorTrafficLights` hardcodes RGB outside the token system (`Sources/CodeEditorUI/Window/EditorTrafficLights.swift:41-48`) | ✅ Done | Added `Tokens.Palette.TrafficLight.{close, minimize, zoom}` with `0xFF5D57` / `0xFEBC2E` / `0x28C840` (the precise hex equivalents of the prior `Color(red:green:blue:)` literals — confirmed by channel × 255 conversion). The view now reads these via `Color(tokens: ...)`. Hairline stroke stays as `Color.black.opacity(0.18)` with a comment marking it as a UI-system primitive rather than a brand color. |
+| `CompletionDebouncer.executeRequest` cancels prior tasks but `withCheckedThrowingContinuation` in `SmartCompletionEngine` doesn't get resumed — caller can hang (`Completion/CompletionDebouncer.swift:196-221`, `Completion/SmartCompletionEngine.swift:191-198`) | ✅ Done | Dropped the continuation entirely. `SmartCompletionEngine.performCompletion(session:context:)` is now `async -> CompletionResult` (was `async` with an `@escaping (CompletionResult) -> Void` callback). The debouncer handler in `setupCompletionDebouncer` collapses to `return await self.performCompletion(...)` — no `withCheckedThrowingContinuation`, no inner unstructured `Task`, no resume-once invariant to maintain. The one other caller (the fallback path in `requestCompletions(for:completion:)`) was updated in the same change. Cancellation now propagates naturally through the async chain. |
+
+**Files touched (this batch — 4 modified):**
+`Sources/CodeEditorPlugin/Utilities/CrossPlatformLogger.swift`, `Sources/CodeEditorDesignTokens/Palette.swift`, `Sources/CodeEditorUI/Window/EditorTrafficLights.swift`, `Sources/CodeEditorPlugin/Completion/SmartCompletionEngine.swift`.
+
+**Public API impact.** All additive or implementation-only:
+- New design tokens (`Tokens.Palette.TrafficLight.*`) — additive.
+- `CrossPlatformLogger.Logger` API unchanged; only the inner format string and doc comment changed.
+- `SmartCompletionEngine.performCompletion` is `private`; signature change is invisible outside the file.
+
+Build: green. SwiftLint: 0 violations. Targeted suites (`Completion|Logger|TrafficLight`) pass without regressions.
+
 
 
 ## Top-level take
@@ -263,11 +283,11 @@ The most important strategic finding is from the sample review: **the API gaps r
 - `RegexBackedRangeQueryParser` invalidates the entire document on every edit (`RegexRangeHighlightProvider.swift:88-92`). Unused; delete to prevent confusion.
 
 ### Cross-cutting
-- `CrossPlatformLogger.osLogger.log(level:, "\(message)")` (`Utilities/CrossPlatformLogger.swift:100`) defeats OSLog format-string privacy/redaction — call sites already interpolated state. Privacy annotations are lost; arbitrary state may leak into release logs.
+- ~~`CrossPlatformLogger.osLogger.log(level:, "\(message)")` (`Utilities/CrossPlatformLogger.swift:100`) defeats OSLog format-string privacy/redaction — call sites already interpolated state. Privacy annotations are lost; arbitrary state may leak into release logs.~~ ✅ Done in the Logger privacy + tokens + continuation batch on 2026-05-14 (explicit `.public` privacy + doc comment spelling out the caller-redacts contract).
 - `CodeEditorDependencies` reads `DependencyValues._current.codeEditorMemoryMonitor()` instead of the `@Dependency` property wrapper (`Core/CodeEditorDependencies.swift:9`). `withDependencies { }` overrides won't flow through actor hops reliably.
 - ~~`EditorEventBusInstaller.sourcePosition` is O(n) per hover/⌘-click via UTF-16 walk (`Layout/EditorEventBusInstaller.swift:124-144`). Use `LineGeometryStore`.~~ ✅ Done in the SwiftUI hot path + env hygiene batch on 2026-05-14 (fast-path via `(textView as? CodeEditorView)?.lineGeometryStore`; UTF-16 walk retained as fallback for non-editor `NSTextView`s).
 - `PlatformEventFilter.shouldAllow` always returns `true` (`Core/UnifiedEventSystem.swift:241-244`). Dead.
-- `EditorTrafficLights` hardcodes RGB outside the token system (`Sources/CodeEditorUI/Window/EditorTrafficLights.swift:41-48`).
+- ~~`EditorTrafficLights` hardcodes RGB outside the token system (`Sources/CodeEditorUI/Window/EditorTrafficLights.swift:41-48`).~~ ✅ Done in the Logger privacy + tokens + continuation batch on 2026-05-14 (`Tokens.Palette.TrafficLight.{close, minimize, zoom}` added).
 
 ---
 
@@ -304,7 +324,7 @@ These are what the sample had to *invent* to integrate the framework — the fra
 - Magic `17.0` line-height in `LineGeometryEditHandler.swift:125-126,136,142`.
 - `FastJSONTokenizer` round-trips color → `TokenType` to rebuild `HighlightedToken` (`HighlightingStrategyExecutor.highlightJSON:87-97`). Defeats theme overrides.
 - ~~`HTMLSymbolProvider.extractAttribute` compiles a regex per call (`HTMLSymbolProvider.swift:92-93`).~~ ✅ Done in the Language descriptor cleanup batch on 2026-05-14 (hoisted both regexes to `static let`).
-- `CompletionDebouncer.executeRequest` cancels prior tasks but `withCheckedThrowingContinuation` in `SmartCompletionEngine` doesn't get resumed — caller can hang (`CompletionDebouncer.swift:196-221`, `SmartCompletionEngine:191-198`).
+- ~~`CompletionDebouncer.executeRequest` cancels prior tasks but `withCheckedThrowingContinuation` in `SmartCompletionEngine` doesn't get resumed — caller can hang (`CompletionDebouncer.swift:196-221`, `SmartCompletionEngine:191-198`).~~ ✅ Done in the Logger privacy + tokens + continuation batch on 2026-05-14 (continuation removed; `performCompletion` now returns `CompletionResult` directly).
 - `EditorConfiguration.swift:68` doc comment teaches `print("Configuration errors: \(errors)")` — exempt by lint but bad pedagogy.
 - `CodeEditorUI/CodeEditorUI.swift:11` uses `## Topics` DocC directive — project has no DocC catalog.
 - `PerformanceMonitor` starts a 5-min cleanup task at `init` regardless of usage (`Performance/PerformanceMonitor.swift:64-69`).
