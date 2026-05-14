@@ -59,7 +59,7 @@ public struct LanguageServerConfig: Sendable {
     // Remote-server fields. `remoteURL == nil` on local-shaped configs.
     public let remoteURL: URL?
     public let remoteHeaders: [String: String]
-    public let remoteAuthentication: LSPRemoteAuthentication?
+    public let remoteAuthentication: LSPAuthentication?
     public let remoteTransportConfiguration: LSPTransportConfiguration?
 
     // Existing positional init kept for source compatibility — constructs a local-shaped config.
@@ -91,7 +91,7 @@ public struct LanguageServerConfig: Sendable {
         url: URL,
         fileExtensions: [String],
         headers: [String: String] = [:],
-        authentication: LSPRemoteAuthentication? = nil,
+        authentication: LSPAuthentication? = nil,
         transportConfiguration: LSPTransportConfiguration? = nil,
         capabilities: ClientCapabilities = .default,
         autoStart: Bool = true,
@@ -104,7 +104,7 @@ public struct LanguageServerConfig: Sendable {
 }
 ```
 
-`LSPRemoteAuthentication` and `LSPTransportConfiguration` already exist in `RemoteLSPConfiguration.swift` and `Transport/LSPTransport.swift`; we reuse them.
+`LSPAuthentication` already exists in `RemoteLSPConfiguration.swift` (line 145+; cases include `.noAuth`, `.bearerToken`, `.apiKey`, `.custom`). `LSPTransportConfiguration` already exists in `Transport/LSPTransport.swift` (line 99). `RemoteLSPConfiguration` (line 17) takes `serverURL`, `authentication`, `reconnectPolicy`, `customHeaders`, `transportConfiguration`, etc. — no `languageId` parameter. We reuse them.
 
 ### Gating moves
 
