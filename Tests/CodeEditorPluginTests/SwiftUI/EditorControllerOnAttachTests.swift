@@ -94,4 +94,32 @@ final class EditorControllerOnAttachTests: XCTestCase {
         )
         _ = token
     }
+
+    func testCancellableRemovesHandler() async {
+        let controller = EditorController()
+        let viewA = CodeEditorView(frame: .zero)
+        let viewB = CodeEditorView(frame: .zero)
+        var fireCount = 0
+
+        var token: AnyCancellable? = controller.onAttach { _ in fireCount += 1 }
+
+        // Initial attach fires the handler once.
+        controller.attach(to: viewA)
+        XCTAssertEqual(fireCount, 1, "Handler should fire on the first attach.")
+
+        // Cancel the token. The cancel closure hops to MainActor via a
+        // Task, so yield the runloop once to let it run.
+        token?.cancel()
+        token = nil
+        await Task.yield()
+
+        // After cancellation, a real view transition should NOT fire
+        // the handler again.
+        controller.attach(to: viewB)
+        XCTAssertEqual(
+            fireCount,
+            1,
+            "Cancelled handler must not run on subsequent attaches."
+        )
+    }
 }
