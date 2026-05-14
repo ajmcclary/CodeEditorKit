@@ -49,11 +49,6 @@ final class TextKitBridge {
 
     // MARK: - Text Storage Access
 
-    /// Get the text storage.
-    var textStorage: NSTextStorage? {
-        textView?.textStorage
-    }
-
     /// Get the text content storage.
     var textContentStorage: NSTextContentStorage? {
         #if canImport(AppKit)
@@ -229,30 +224,48 @@ final class TextKitBridge {
         return NSRange(location: startOffset, length: Int(endOffset - startOffset))
     }
 
-    // MARK: - Text Attributes
+    // MARK: - Rendering Attributes
 
-    /// Apply attributes to a range.
+    /// Apply rendering attributes for syntax highlighting (non-destructive;
+    /// TK2-native). Attributes do NOT persist into the underlying
+    /// NSAttributedString — they're applied per-fragment during layout.
+    ///
+    /// Use this for syntax highlighting colors. For attributes that must
+    /// persist (fold marks, search highlights, layout-affecting attributes),
+    /// use `addPersistentAttributes(_:range:)` instead.
     func addAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
-        guard let textStorage else { return }
-
-        textStorage.beginEditing()
-        textStorage.addAttributes(attributes, range: range)
-        textStorage.endEditing()
-
-        ensureLayout(for: range)
+        guard let textLayoutManager = textView?.textLayoutManager,
+              let textRange = textRangeFromNSRange(range) else { return }
+        textLayoutManager.setRenderingAttributes(attributes, for: textRange)
     }
 
-    /// Remove attributes from a range.
+    /// Remove rendering attribute keys from a range. Counterpart to
+    /// `addAttributes(_:range:)`. Use `removePersistentAttribute(_:range:)`
+    /// for text-storage-backed attributes.
     func removeAttributes(_ attributeKeys: [NSAttributedString.Key], range: NSRange) {
-        guard let textStorage else { return }
+        guard let textLayoutManager = textView?.textLayoutManager,
+              let textRange = textRangeFromNSRange(range) else { return }
 
-        textStorage.beginEditing()
-        for key in attributeKeys {
-            textStorage.removeAttribute(key, range: range)
+        // `setRenderingAttributes` replaces (not merges) the attribute set for
+        // a range. To strip specific keys, enumerate the existing rendering
+        // attributes within the target range, filter the unwanted keys, and
+        // re-apply the remainder per fragment.
+        var fragments: [(NSTextRange, [NSAttributedString.Key: Any])] = []
+        textLayoutManager.enumerateRenderingAttributes(
+            from: textRange.location,
+            reverse: false
+        ) { _, attrs, attrRange in
+            guard attrRange.intersects(textRange) else { return true }
+            var filtered = attrs
+            for key in attributeKeys {
+                filtered.removeValue(forKey: key)
+            }
+            fragments.append((attrRange, filtered))
+            return attrRange.endLocation.compare(textRange.endLocation) == .orderedAscending
         }
-        textStorage.endEditing()
-
-        ensureLayout(for: range)
+        for (subRange, attrs) in fragments {
+            textLayoutManager.setRenderingAttributes(attrs, for: subRange)
+        }
     }
 
     // MARK: - Layout Information
@@ -450,7 +463,7 @@ final class TextKitBridge {
     var debugInfo: String {
         var info = "TextKit Configuration:\n"
         info += "  Version: \(version.description)\n"
-        info += "  Text Length: \(textStorage?.length ?? 0) characters\n"
+        info += "  Text Length: \(documentLength) characters\n"
         info += "  TextLayoutManager: \(textView?.textLayoutManager != nil)\n"
         info += "  TextContentStorage: \(textContentStorage != nil)\n"
         return info
