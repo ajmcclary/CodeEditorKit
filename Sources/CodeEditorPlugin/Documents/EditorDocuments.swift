@@ -105,4 +105,59 @@ public final class EditorDocuments {
         guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
         mutate(&documents[index])
     }
+
+    // MARK: - Bindings
+
+    /// Text `Binding` for the document with the given id.
+    ///
+    /// Reads return the document's stored text, or `""` if `id` is not
+    /// present (defensive default for stale bindings after a `close`).
+    /// Writes update the stored text and, when the new value differs
+    /// from the previous stored value, flip `isDirty` to `true`. Writing
+    /// the same value through the binding is a no-op for the dirty bit.
+    public func textBinding(for id: EditorDocument.ID) -> Binding<String> {
+        Binding(
+            get: { [weak self] in
+                self?.documents.first { $0.id == id }?.text ?? ""
+            },
+            set: { [weak self] newValue in
+                guard let self,
+                      let index = self.documents.firstIndex(where: { $0.id == id }) else {
+                    return
+                }
+                let previous = self.documents[index].text
+                self.documents[index].text = newValue
+                if previous != newValue {
+                    self.documents[index].tab.isDirty = true
+                }
+            }
+        )
+    }
+
+    /// `EditorInteractionState` `Binding` for the document with the given id.
+    ///
+    /// Reads return the stored state, or a default `EditorInteractionState()`
+    /// if `id` is not present. Writes update the stored state.
+    public func interactionBinding(for id: EditorDocument.ID) -> Binding<EditorInteractionState> {
+        Binding(
+            get: { [weak self] in
+                self?.documents.first { $0.id == id }?.interactionState
+                    ?? EditorInteractionState()
+            },
+            set: { [weak self] newValue in
+                guard let self,
+                      let index = self.documents.firstIndex(where: { $0.id == id }) else {
+                    return
+                }
+                self.documents[index].interactionState = newValue
+            }
+        )
+    }
+
+    /// Reset `isDirty` on the document with the given id. No-op if `id`
+    /// is not present. Typically called by hosts after a successful save.
+    public func markClean(_ id: EditorDocument.ID) {
+        guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
+        documents[index].tab.isDirty = false
+    }
 }
