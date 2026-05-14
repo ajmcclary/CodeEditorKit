@@ -19,7 +19,7 @@ This package targets the current Apple OS family deliberately:
 
 The floor is intentional, not aspirational — the editor uses APIs introduced in this release window and exercising them on older OSes would require deprecation paths the project explicitly rejected during the most recent remediation pass. If you need broader OS coverage, pin a future LTS tag rather than building from `main`.
 
-**Mac Catalyst is not supported** as of 0.2.0. The framework is pure SwiftUI plus native AppKit (macOS) / UIKit (iOS) — Catalyst's UIKit-on-Mac hosting layer added compilation and maintenance complexity without any feature the native paths don't already provide. See `CHANGELOG.md` for the rationale.
+**Mac Catalyst is not supported** as of 0.2.0. The framework is pure SwiftUI plus native AppKit (macOS) / UIKit (iOS) — Catalyst's UIKit-on-Mac hosting layer added compilation and maintenance complexity without any feature the native paths don't already provide.
 
 ## Distribution
 

@@ -65,7 +65,7 @@ flowchart TB
     end
 
     subgraph "Documents"
-        DocStore[DocumentStore]
+        DocStore["EditorDocuments<br/>(framework + sample extras)"]
         Catalog[SampleCodeCatalog]
     end
 

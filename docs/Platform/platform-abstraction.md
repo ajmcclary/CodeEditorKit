@@ -4,7 +4,7 @@ Learn how CodeEditorPlugin's abstraction layer enables true cross-platform devel
 
 ## Overview
 
-The platform abstraction system goes beyond simple conditional compilation to provide a unified API that automatically adapts to each platform while maintaining native performance and feel. As of 0.2.0, the framework targets **macOS and iOS / iPadOS only** — Mac Catalyst was retired (see [CHANGELOG](../../CHANGELOG.md) for the rationale). The abstractions described here are correspondingly simpler: every cross-platform branch is a clean two-way split between AppKit and UIKit.
+The platform abstraction system goes beyond simple conditional compilation to provide a unified API that automatically adapts to each platform while maintaining native performance and feel. As of 0.2.0, the framework targets **macOS and iOS / iPadOS only** — Mac Catalyst was retired. The abstractions described here are correspondingly simpler: every cross-platform branch is a clean two-way split between AppKit and UIKit.
 
 ## Design Principles
 

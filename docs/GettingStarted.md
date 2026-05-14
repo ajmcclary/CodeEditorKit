@@ -1,6 +1,6 @@
 # Getting Started
 
-A modern, cross-platform code editor for macOS and iOS / iPadOS. Built on TextKit2 with Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a feature-based source tree designed for extension. (Mac Catalyst was retired in 0.2.0 — see [CHANGELOG](../CHANGELOG.md).)
+A modern, cross-platform code editor for macOS and iOS / iPadOS. Built on TextKit2 with Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a feature-based source tree designed for extension. (Mac Catalyst was retired in 0.2.0.)
 
 ## Platform Requirements
 

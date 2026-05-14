@@ -1,10 +1,10 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/test%20files-116-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/test%20files-168-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
 [![Swift](https://img.shields.io/badge/Swift-6.3%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS-lightgrey)](#requirements)
-[![Files](https://img.shields.io/badge/source%20files-513-blue)](#architecture)
+[![Files](https://img.shields.io/badge/source%20files-543-blue)](#architecture)
 
 A powerful, production-ready code editor component for native macOS and iOS / iPadOS. Built with Swift 6.3 and featuring syntax highlighting for 25 concrete languages plus plain text, comprehensive theming, and a modern architecture designed for performance and extensibility.
 
@@ -97,6 +97,7 @@ Sources/CodeEditorPlugin/
 ├── Languages/         # Language providers (25 concrete languages + plain text)
 ├── Theming/           # Theme system and bundled theme loading
 ├── Completion/        # Code completion
+├── Documents/         # EditorDocument + EditorDocuments value/observable types
 ├── Features/          # Folding, smart editing, search/replace, feature helpers
 ├── SwiftUI/           # SwiftUI integration
 ├── Platform/          # Cross-platform abstractions
@@ -113,7 +114,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in [`docs/`](docs/README.md), organized by topic.
 
-20 top-level main-target directories, 453 Swift files in the main target, and 513 Swift files under `Sources/`.
+21 top-level main-target directories, 469 Swift files in the main target, and 543 Swift files under `Sources/`.
 
 ### Core Components
 
@@ -229,7 +230,7 @@ try await client.connect(configuration: server, language: .swift)
 
 ## 🧪 Testing
 
-The package includes 4 test targets and 116 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
+The package includes 4 test targets and 168 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
 
 ```bash
 # Run tests in parallel (faster)
@@ -252,15 +253,6 @@ DocC toolchain needed. Start with:
 - [SwiftUI integration](docs/SwiftUI/integration.md)
 - [Platform abstraction](docs/Platform/platform-abstraction.md)
 - [Architecture decisions](docs/Architecture/README.md) and [diagrams](docs/Diagrams/README.md)
-
-## 🎯 Recent Improvements
-
-- **Directory Reorganization**: Main target is organized into 20 feature-oriented top-level directories
-- **Unified Text Handling**: Consolidated TextKit, TextLayout, and TextProcessing into single `Text/` directory
-- **Business Logic Services**: Introduced service layer for better separation of concerns
-- **Swift 6 Concurrency**: Full actor isolation with zero concurrency warnings
-- **Performance**: Parallel test execution, optimized syntax highlighting with caching
-- **API Refinement**: Cleaner public API surface with internal implementation details hidden
 
 ## 📄 License
 

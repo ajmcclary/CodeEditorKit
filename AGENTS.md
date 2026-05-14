@@ -59,6 +59,7 @@ Sources/CodeEditorPlugin/
 ├── Languages/               # Language-specific providers (25 concrete languages + plain text)
 ├── Theming/                 # Theme system, color tokens, appearance
 ├── Completion/              # Code completion providers
+├── Documents/               # EditorDocument value type + EditorDocuments observable manager
 ├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
 ├── SwiftUI/                 # SwiftUI wrappers and modifiers
 ├── Platform/                # Cross-platform color/font/view abstractions
@@ -75,7 +76,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-20 top-level directories, 453 Swift source files in the main target, and 513 Swift source files under `Sources/`.
+21 top-level directories, 469 Swift source files in the main target, and 543 Swift source files under `Sources/`.
 
 Other source roots:
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
