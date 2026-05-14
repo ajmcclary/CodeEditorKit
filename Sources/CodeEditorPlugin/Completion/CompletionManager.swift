@@ -392,6 +392,182 @@ public final class CompletionManager {
         frequencyCache.removeAll()
     }
 
+    // MARK: - Ranking
+
+    /// Canonical six-tier sort applied to combined provider results.
+    ///
+    /// Tier order (each tier is a tiebreaker for the previous):
+    /// 1. `sortText` ascending when both items have it; item-with-sortText
+    ///    wins in mixed pairs; both-nil falls through.
+    /// 2. `priority` descending.
+    /// 3a. session-frequency descending (`usageCount`).
+    /// 3b. recency descending (`lastUsed`) when frequencies tie.
+    /// 4. `relevance(item:context:)` descending.
+    /// 5. `kind.defaultPriority` descending.
+    /// 6. `label.localizedCaseInsensitiveCompare` ascending.
+    ///
+    /// Dedup key is `"\(label):\(kind.rawValue)"` — kind-aware so
+    /// `Float` (type) and `Float()` (initializer) both survive.
+    private func rankCombined(
+        _ items: [CompletionItemModel],
+        context: CompletionContextModel
+    ) -> [CompletionItemModel] {
+        // Stage 1: dedup
+        var seen = Set<String>()
+        let unique = items.filter { item in
+            let key = "\(item.label):\(item.kind.rawValue)"
+            return seen.insert(key).inserted
+        }
+
+        // Stage 2: pre-compute the per-language frequency snapshot once.
+        // Build both maps in a single walk — `usageCount` for tier 3a and
+        // `lastUsed` for tier 3b (recency tiebreaker).
+        //
+        // Note: `LRUCache.get` promotes keys to MRU as a side effect. That's
+        // fine here because we never use LRU position for ordering — `lastUsed`
+        // captures recency explicitly. The promotion is harmless: it only
+        // affects which key gets evicted next when the cache hits capacity.
+        let prefix = "\(context.language.identifier):"
+        var freq: [String: Int] = [:]
+        var lastUsed: [String: Date] = [:]
+        for key in frequencyCache.allKeys where key.hasPrefix(prefix) {
+            guard let entry = frequencyCache.get(key) else { continue }
+            let label = String(key.dropFirst(prefix.count))
+            freq[label] = entry.usageCount
+            lastUsed[label] = entry.lastUsed
+        }
+
+        // Stage 3: sort
+        let sorted = unique.sorted { lhs, rhs in
+            // 1. sortText asc — mixed pair: item with sortText wins.
+            switch (lhs.sortText, rhs.sortText) {
+            case let (lhsText?, rhsText?) where lhsText != rhsText:
+                return lhsText < rhsText
+
+            case (.some, .none):
+                return true
+
+            case (.none, .some):
+                return false
+
+            default:
+                break
+            }
+
+            // 2. priority desc
+            if lhs.priority != rhs.priority {
+                return lhs.priority > rhs.priority
+            }
+
+            // 3a. frequency desc
+            let lhsFreq = freq[lhs.label] ?? 0
+            let rhsFreq = freq[rhs.label] ?? 0
+            if lhsFreq != rhsFreq {
+                return lhsFreq > rhsFreq
+            }
+
+            // 3b. recency desc when frequencies tie (and at least one item
+            // has been selected before). Items that have never been selected
+            // are equal at this sub-tier and fall through to relevance.
+            if let lhsDate = lastUsed[lhs.label], let rhsDate = lastUsed[rhs.label], lhsDate != rhsDate {
+                return lhsDate > rhsDate
+            }
+            if lastUsed[lhs.label] != nil && lastUsed[rhs.label] == nil {
+                return true
+            }
+            if lastUsed[lhs.label] == nil && lastUsed[rhs.label] != nil {
+                return false
+            }
+
+            // 4. relevance desc
+            let lhsRelevance = relevance(for: lhs, context: context)
+            let rhsRelevance = relevance(for: rhs, context: context)
+            if lhsRelevance != rhsRelevance {
+                return lhsRelevance > rhsRelevance
+            }
+
+            // 5. kind.defaultPriority desc
+            if lhs.kind.defaultPriority != rhs.kind.defaultPriority {
+                return lhs.kind.defaultPriority > rhs.kind.defaultPriority
+            }
+
+            // 6. label asc
+            return lhs.label.localizedCaseInsensitiveCompare(rhs.label) == .orderedAscending
+        }
+
+        // Stage 4: cap
+        return Array(sorted.prefix(maxCompletions))
+    }
+
+    /// Additive of three relevance signals. Constants are duplicated from
+    /// `CompletionRankingModel.RankingWeights` (a private nested enum, not
+    /// accessible from outside that type). Drift between the two is
+    /// intentional only if a future tier needs to diverge.
+    private func relevance(
+        for item: CompletionItemModel,
+        context: CompletionContextModel
+    ) -> Double {
+        let word = context.currentWord.lowercased()
+        let label = item.label.lowercased()
+        var score = 0.0
+
+        if !word.isEmpty {
+            if label.hasPrefix(word) {
+                score += 1.0
+            }
+            if label.contains(word) {
+                score += 0.5
+            }
+        }
+
+        // Kind-contextual heuristics.
+        switch item.kind {
+        case .method, .function:
+            if context.lineText.contains("(") {
+                score += 0.3
+            }
+
+        case .property, .variable:
+            if context.lineText.contains(".") {
+                score += 0.3
+            }
+
+        case .keyword:
+            if context.lineTextBeforeCursor.trimmingCharacters(in: .whitespaces).isEmpty {
+                score += 0.3
+            }
+
+        case .class, .struct, .enum:
+            if context.lineText.contains(":") || context.lineText.contains("<") {
+                score += 0.3
+            }
+
+        default:
+            break
+        }
+
+        return score
+    }
+
+    // MARK: - Test Hooks
+
+    /// Internal test hook — exposes `rankCombined` so unit tests can
+    /// exercise the sort key in isolation from the request pipeline.
+    /// Not part of the public API.
+    internal func testOnly_rankCombined(
+        _ items: [CompletionItemModel],
+        context: CompletionContextModel
+    ) -> [CompletionItemModel] {
+        rankCombined(items, context: context)
+    }
+
+    /// Internal test hook — seeds `lastContext` without going through
+    /// `requestCompletions(for:)`. Lets learning tests drive the frequency
+    /// cache deterministically.
+    internal func testOnly_setLastContext(_ context: CompletionContextModel) {
+        lastContext = context
+    }
+
     // MARK: - Private Methods
 
     private func sortAndDeduplicateItems(_ items: [CompletionItemModel]) -> [CompletionItemModel] {
