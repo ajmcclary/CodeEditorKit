@@ -4,7 +4,7 @@ Synthesis of four parallel reviewer passes covering the entire `Sources/` tree, 
 
 ## Status (2026-05-14)
 
-All 7 Critical fixes have landed on `main` (uncommitted). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
+All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), and the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
 
 | # | Issue | Status | Notes |
 |---|---|---|---|
@@ -97,6 +97,34 @@ Build: green. SwiftLint: 0 violations. Public-API changes are strictly additive 
 - #7 `.performanceObserver(_:)` SwiftUI modifier — `UnifiedPerformanceSystem` is dual-wired (config + polled). Folding both into one modifier is a small refactor but interacts with the SwiftUI runtime-rebuild issue (`EditorRuntimeDependencies.live(...)` per body call), so it's worth waiting until that's addressed.
 
 **Coverage gaps from REVIEW.md "Coverage gaps the sample fails to demonstrate" — still untouched.** Same story as before — they're sample updates that demonstrate already-public APIs (`.codeLanguage(_:)`, `.showsLineNumbers(_:)`, factories, snippet templates, `LSPCompletionProvider` registration, `CodeEditorError` recovery, the duplicated `PerformanceInspectorPanel` redundancy). Not blocking, but worth a small follow-up to make the sample a fuller "documentation by example".
+
+### Concurrency / lifecycle batch + Codable sweep (landed 2026-05-14)
+
+Steps 3 and 4 from the "Suggested ordering" section landed as one pass. Five issues, four files in `Sources/CodeEditorPlugin/`, plus one call-site update.
+
+| Item | Status | What landed |
+|---|---|---|
+| `MemoryMonitor` observer leak + uncancelled tasks (`Performance/MemoryMonitor.swift:259-285`) | ✅ Done | `deinit` now cancels `monitoringTask` and `cleanupTask` and removes the `NSApplication.willTerminateNotification` / `UIApplication.willTerminateNotification` observer. The three relevant properties are `nonisolated(unsafe)` with rationale comments — `Task<Void, Never>` is Sendable, and `NSObjectProtocol` writes only happen from the `@MainActor` `init`, so the deinit read is happens-after the last MainActor write. NotificationCenter slots and zombie monitor tasks no longer accumulate across multi-window / test cycles. |
+| `CodeEditorView.removeFromSuperview` async cancellation race (`Core/CodeEditorView.swift:533-535`) | ✅ Done | `SyntaxHighlightingCoordinator.cancelHighlighting()` is now synchronous (see below); `removeFromSuperview` calls it directly instead of spawning `Task { await … }`. Cancellation is now visible before the next editor wires up. |
+| `SyntaxHighlightingCoordinator.HighlightingTaskManager` actor → lock (`SyntaxHighlighting/SyntaxHighlightingCoordinator.swift:13-49, 86-101, 147-153`) | ✅ Done (refactor) | Replaced the private `actor` with a `final class: @unchecked Sendable` wrapping an `NSLock` + optional `Task`. `cancelCurrent()` is now sync from any isolation domain. `highlightAsync` collapsed `await cancelCurrent` + `await setCurrentTask` into a single atomic swap. Top-of-file `@unchecked Sendable` rationale comment updated to describe the lock invariant instead of the (now-removed) actor. |
+| `LayoutCoordinator.processPendingOperations` unbounded recursion (`Layout/LayoutCoordinator.swift:101-111`) | ✅ Done | `performLayout` now runs the operation, then iteratively drains the pending queue via a `while !pendingLayoutOperations.isEmpty` loop. `isPerformingLayout` stays `true` across the entire drain (so operations enqueued mid-drain queue correctly and are picked up by the next iteration instead of recursing back through `performLayout`'s defer). |
+| `LSPClient.disconnect()` continuation leak + late-response drop (`LSP/LSPClient.swift:178-249`) | ✅ Done | `disconnect()` now (a) bails out early when `connectionState == .disconnected` so the path is idempotent, (b) captures `pendingRequests` into a local `pendingToFail` before clearing the dictionary, and (c) fails each captured continuation with `.notConnected` after the transport teardown completes. Continuations are no longer dropped (which under strict-concurrency `withCheckedThrowingContinuation` traps in DEBUG and hangs awaiters in release). State is also cleaned up in a consistent order: capture pending → clear sync state → fire shutdown task → tear transport → fail pending → set `.disconnected`. |
+| `EditorConfiguration.Layout.Codable` drops 5 fields (`Configuration/EditorConfiguration+LayoutExtensions.swift:66-130`) | ✅ Done | Added `annotationBadgeSize`, `annotationBadgePadding`, `minimapWidth`, `foldingControlSize`, `foldingControlPadding` to `CodingKeys`, `init(from:)`, and `encode(to:)`. `Equatable` is synthesized and already covered them. Defaults match the property defaults so old persisted JSON keeps decoding. |
+| `EditorConfiguration.Performance.usesRangeBasedHighlighting` missing from Codable + Equatable (`Configuration/EditorConfiguration+PerformanceExtensions.swift:128-210`) | ✅ Done | Added the case to `CodingKeys`, `init(from:)`, `encode(to:)`, and `==`. Default in decoder matches the struct default (`false`). |
+
+**Files touched (this batch — 6 modified):**
+`Sources/CodeEditorPlugin/Performance/MemoryMonitor.swift`, `Sources/CodeEditorPlugin/Core/CodeEditorView.swift`, `Sources/CodeEditorPlugin/SyntaxHighlighting/SyntaxHighlightingCoordinator.swift`, `Sources/CodeEditorPlugin/Layout/LayoutCoordinator.swift`, `Sources/CodeEditorPlugin/LSP/LSPClient.swift`, `Sources/CodeEditorPlugin/Configuration/EditorConfiguration+LayoutExtensions.swift`, `Sources/CodeEditorPlugin/Configuration/EditorConfiguration+PerformanceExtensions.swift`.
+
+Build: green. SwiftLint: 0 violations. Targeted tests for the touched areas (`EditorConfiguration`, `MemoryMonitor`, `LayoutCoordinator`, `LSPClient`, `SyntaxHighlight*`) pass — 20 tests across 6 suites green via `swift test --filter`. Full-suite `swift test` still shows the two pre-existing crashes documented in the Status section (`EditorStatusBarSnapshots` SIGSEGV/SIGBUS under the swift-testing → XCTest snapshot bridge); they reproduce on bare `main` and are out of scope.
+
+**Public API impact.** Strictly additive on the configuration side (the new Codable keys default to existing struct defaults, so previously-persisted JSON keeps decoding identically). `SyntaxHighlightingCoordinator.cancelHighlighting()` lost its `async` keyword — the only in-tree caller was `CodeEditorView.removeFromSuperview`, updated in the same batch. External callers using `await coordinator.cancelHighlighting()` will get a "no async operations" warning, not a compile error.
+
+**Still open from the "Suggested ordering" list:**
+- Step 1 (Critical fixes) and step 2 (sample-driven API gaps first pass) landed earlier in this document.
+- Step 3 / 4 (this batch).
+- Step 5 (minor / dead-code cleanup) — partially landed in the earlier dead-code batch; the remaining "Minor" items below are still open.
+
+The four remaining items from the original "Concurrency & lifecycle" Important list — `EditorEventPublisher.publish` unstructured Task, `ProcessTransport` busy-poll, `completionRequested` lack-of-cancel, the `CodeEditorView` `deinit` analog for highlighting — were not in scope for this batch and remain in the Important section below.
 
 
 
