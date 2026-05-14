@@ -218,4 +218,31 @@ final class CompletionEventStreamTests: XCTestCase {
         // Failure isolation: the throwing provider does not poison the batch.
         XCTAssertEqual(result.items.count, 2, "Successful provider's items must still surface in the merged result.")
     }
+
+    func testMultipleSubscribersEachReceiveEveryEvent() async throws {
+        let manager = makeManager()
+        let provider = StubCompletionProvider(
+            behavior: .returns(itemCount: 1),
+            id: "swift.multi",
+            supportedLanguages: [.swift]
+        )
+        manager.registerProvider(provider)
+
+        let streamA = manager.events()
+        let streamB = manager.events()
+        let context = makeContext()
+
+        async let drainedA = Self.awaitEvents(1, from: streamA)
+        async let drainedB = Self.awaitEvents(1, from: streamB)
+        _ = try await manager.requestCompletions(for: context)
+
+        let eventsA = try await drainedA
+        let eventsB = try await drainedB
+
+        XCTAssertEqual(eventsA.count, 1)
+        XCTAssertEqual(eventsB.count, 1)
+        XCTAssertEqual(eventsA.first?.providerID, "swift.multi")
+        XCTAssertEqual(eventsB.first?.providerID, "swift.multi")
+        XCTAssertEqual(eventsA.first?.id, eventsB.first?.id, "Both subscribers must see the same event instance (UUID).")
+    }
 }
