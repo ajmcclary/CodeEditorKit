@@ -6,7 +6,7 @@ import Foundation
 /// (`EditorTabStrip`) can render uniformly across hosts. `id` is stable
 /// across name and dirty-flag changes; mutate `name`/`url`/`language`/
 /// `isDirty` on the same instance rather than replacing the model.
-public struct TabModel: Hashable, Identifiable, Sendable {
+public struct TabModel: Hashable, Identifiable, Sendable, Codable {
     /// Stable identifier; preserved across in-place mutations.
     public let id: UUID
     /// Display name shown on the tab.

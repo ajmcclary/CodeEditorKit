@@ -236,7 +236,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
 /// ```
 ///
 /// - SeeAlso: `CodeEditorView.language`, `CodeEditorView.setLanguage(fileExtension:)`
-public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
+public enum Language: String, CaseIterable, Equatable, Hashable, Sendable, Codable {
     case swift
     case javascript
     case typescript
