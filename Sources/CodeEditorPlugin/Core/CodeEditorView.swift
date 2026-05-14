@@ -249,6 +249,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// correctness.
     internal let lineGeometryStore = LineGeometryStore()
 
+    /// Shared TextKit 2 access surface for this view. Every framework
+    /// read/write of the editor's text content must go through this bridge
+    /// instead of `self.textStorage`. Reading `NSTextView.textStorage`
+    /// directly on a TK2-initialized view triggers Apple's TK1 compatibility
+    /// shim and clears `textLayoutManager`; the bridge routes through
+    /// `textContentStorage?.textStorage`, which is the TK2-safe accessor.
+    ///
+    /// See `Tests/CodeEditorPluginTests/Core/CodeEditorViewTextKit2InitTests.swift`
+    /// for the load-bearing invariant.
+    internal lazy var textKitBridge = TextKitBridge(textView: self)
+
     /// Handler that keeps `lineGeometryStore` in sync with `NSTextStorage`
     /// after text edits. Registered with `textEditEventHub` during setup.
     internal var lineGeometryEditHandler: LineGeometryEditHandler?
