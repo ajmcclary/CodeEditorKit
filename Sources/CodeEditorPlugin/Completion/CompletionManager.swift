@@ -1,5 +1,16 @@
 import Foundation
 
+// MARK: - Frequency Entry
+
+/// In-memory frequency + recency record for a single label, scoped by
+/// `"\(language.identifier):\(label)"`. Lives only inside `CompletionManager`'s
+/// LRU; never published, never persisted in this round. See the spec's
+/// "Follow-ups (deliberately deferred)" section for persistence design.
+private struct FrequencyEntry: Sendable {
+    var usageCount: Int
+    var lastUsed: Date
+}
+
 // MARK: - Completion Manager
 
 /// Manages code completion requests across multiple providers.
@@ -57,6 +68,27 @@ public final class CompletionManager {
     private let memoryMonitor: MemoryMonitor
     private let broadcaster = CompletionEventBroadcaster()
 
+    /// In-memory frequency/recency cache. Keyed by
+    /// `"\(language.identifier):\(label)"`; capacity matches the legacy
+    /// SmartCompletionEngine setting (500). Cleared on
+    /// `clearLearnedPatterns()` and on the memory-monitor cleanup hook.
+    /// Never persisted in this round; see spec follow-ups.
+    private let frequencyCache: LRUCache<String, FrequencyEntry>
+
+    /// Captured at the top of `requestCompletions(for:)` so
+    /// `recordSelection(_:)` can scope the frequency key by language
+    /// without forcing callers to thread the context through.
+    private var lastContext: CompletionContextModel?
+
+    private let logger = CrossPlatformLogger.logger(
+        subsystem: "com.codeeditor.plugin",
+        category: "CompletionManager"
+    )
+
+    /// Maximum items returned from `requestCompletions(for:)`. Default 50.
+    /// Mutable so hosts can tune per editor without sub-classing or DI.
+    public var maxCompletions: Int = 50
+
     /// Completion request statistics
     public private(set) var statistics = CompletionStatistics()
 
@@ -76,6 +108,7 @@ public final class CompletionManager {
     ) {
         self.memoryMonitor = memoryMonitor
         self.cache = LRUCache(capacity: cacheSize, memoryMonitor: memoryMonitor)
+        self.frequencyCache = LRUCache(capacity: 500, memoryMonitor: memoryMonitor)
         self.cacheExpirationTime = cacheExpirationTime
         self.enableCaching = enableCaching
         self.debouncer = debouncer ?? CompletionDebouncer()
@@ -327,6 +360,36 @@ public final class CompletionManager {
     /// Access to the debouncer for configuration
     public var debouncingConfiguration: CompletionDebouncer {
         debouncer
+    }
+
+    // MARK: - Learning API
+
+    /// Record that the user accepted this item. Updates the in-memory
+    /// frequency/recency cache used by the next `requestCompletions(for:)`
+    /// call's ranking pass.
+    ///
+    /// - Note: No-op if no `requestCompletions(for:)` has fired yet (no
+    ///   `lastContext`) or if it was cancelled via `cancelCurrentRequest()`.
+    /// - SeeAlso: ``clearLearnedPatterns()``, ``maxCompletions``.
+    public func recordSelection(_ item: CompletionItemModel) {
+        guard let language = lastContext?.language else {
+            logger.debug("recordSelection called with no lastContext; ignored")
+            return
+        }
+        let key = "\(language.identifier):\(item.label)"
+        var entry = frequencyCache.get(key) ?? FrequencyEntry(usageCount: 0, lastUsed: Date())
+        entry.usageCount += 1
+        entry.lastUsed = Date()
+        frequencyCache.set(entry, forKey: key)
+    }
+
+    /// Clear in-memory frequency + recency state.
+    ///
+    /// The response cache and registered providers are unaffected — use
+    /// ``clearCache()`` for the former and ``unregisterProvider(withId:)``
+    /// for the latter.
+    public func clearLearnedPatterns() {
+        frequencyCache.removeAll()
     }
 
     // MARK: - Private Methods
