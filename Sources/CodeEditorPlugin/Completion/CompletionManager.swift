@@ -55,6 +55,7 @@ public final class CompletionManager {
     private let enableCaching: Bool
     private let debouncer: CompletionDebouncer
     private let memoryMonitor: MemoryMonitor
+    private let broadcaster = CompletionEventBroadcaster()
 
     /// Completion request statistics
     public private(set) var statistics = CompletionStatistics()
@@ -89,6 +90,24 @@ public final class CompletionManager {
 
         // Register with memory monitor
         registerWithMemoryMonitor()
+    }
+
+    // MARK: - Event Stream
+
+    /// Returns a fresh `AsyncStream` of completion events.
+    ///
+    /// Each call returns an independent stream; every subscriber receives
+    /// every event published while its iterator is alive. The buffer keeps
+    /// the most recent 256 events per subscriber if the consumer falls
+    /// behind — older events are dropped (`.bufferingNewest(256)`).
+    ///
+    /// Events publish for every per-provider `completions(for:)` call —
+    /// `.succeeded(itemCount:)` when the provider returns a result, and
+    /// `.failed(SendableError)` when it throws. Failure events publish
+    /// *before* the existing per-provider failure isolation swallows the
+    /// error to keep the batch alive, so subscribers see every fire.
+    public func events() -> AsyncStream<CompletionEvent> {
+        broadcaster.subscribe()
     }
 
     // MARK: - Provider Management
@@ -194,13 +213,32 @@ public final class CompletionManager {
     ) async -> [CompletionResult] {
         await withTaskGroup(of: CompletionResult?.self) { group in
             for provider in providers {
-                _ = provider.id // Capture the id on the main actor
+                let providerID = provider.id
+                let broadcaster = self.broadcaster
+                let capturedContext = context
                 group.addTask {
+                    let start = Date()
                     do {
-                        return try await provider.completions(for: context)
+                        let result = try await provider.completions(for: capturedContext)
+                        broadcaster.publish(
+                            CompletionEvent(
+                                providerID: providerID,
+                                context: capturedContext,
+                                durationMilliseconds: Date().timeIntervalSince(start) * 1_000,
+                                outcome: .succeeded(itemCount: result.items.count)
+                            )
+                        )
+                        return result
                     } catch {
-                        // Log error but don't fail the entire request
-                        return nil
+                        broadcaster.publish(
+                            CompletionEvent(
+                                providerID: providerID,
+                                context: capturedContext,
+                                durationMilliseconds: Date().timeIntervalSince(start) * 1_000,
+                                outcome: .failed(SendableError(error, domain: "CompletionProvider"))
+                            )
+                        )
+                        return nil   // existing per-provider failure isolation preserved
                     }
                 }
             }

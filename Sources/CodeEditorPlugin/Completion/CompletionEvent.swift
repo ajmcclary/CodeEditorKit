@@ -28,14 +28,14 @@ public struct CompletionEvent: Sendable, Hashable, Identifiable {
     }
 
     public init(
-        id: UUID = UUID(),
         providerID: String,
         language: Language,
         triggerCharacter: String?,
         prefix: String,
         durationMilliseconds: Double,
-        timestamp: Date = Date(),
-        outcome: Outcome
+        outcome: Outcome,
+        id: UUID = UUID(),
+        timestamp: Date = Date()
     ) {
         self.id = id
         self.providerID = providerID
