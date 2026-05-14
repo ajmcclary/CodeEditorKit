@@ -7,8 +7,8 @@ import Testing
 @Suite("DemoCompletionProvider")
 @MainActor
 struct DemoCompletionProviderTests {
-    @Test("returns three demo items on any language")
-    func returnsThreeItems() async throws {
+    @Test("returns the full snippet catalogue on any language")
+    func returnsFullCatalogue() async throws {
         let provider = DemoCompletionProvider()
 
         let context = CompletionContextModel(
@@ -19,7 +19,7 @@ struct DemoCompletionProviderTests {
         let result = try await provider.completions(for: context)
 
         let labels = result.items.map(\.label).sorted()
-        #expect(labels == ["FIXME:", "MARK:", "TODO:"])
+        #expect(labels == ["FIXME:", "MARK:", "NOTE:", "TODO:", "WARNING:"])
     }
 
     @Test("has empty supportedLanguages so it applies to all")
