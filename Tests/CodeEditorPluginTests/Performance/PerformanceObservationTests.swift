@@ -29,16 +29,17 @@ struct PerformanceObservationTests {
     }
 
     @Test("start is idempotent — second start does not spawn a parallel loop")
-    func startIsIdempotent() async throws {
+    func startIsIdempotent() {
         let observation = PerformanceObservation(refreshInterval: .milliseconds(20))
+        #expect(observation.refreshTaskSpawnCount == 0)
         observation.start()
-        observation.start()
-        try await Task.sleep(for: .milliseconds(80))
+        observation.start()  // Immediate second start — must be a no-op.
+        observation.start()  // Triple-start for good measure.
+        #expect(
+            observation.refreshTaskSpawnCount == 1,
+            "Idempotent start() must spawn exactly one refresh task."
+        )
         observation.stop()
-        // A single 20ms loop over 80ms yields ~4 ticks. A doubled loop would
-        // yield ~8. Allow generous slack (≤ 6) for scheduler jitter.
-        #expect(observation.refreshCount <= 6)
-        #expect(observation.refreshCount >= 1)
     }
 
     @Test("stop cancels the refresh task")

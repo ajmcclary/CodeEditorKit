@@ -56,6 +56,11 @@ public final class PerformanceObservation {
     /// (whether driven by the internal loop or called externally).
     internal private(set) var refreshCount: Int = 0
 
+    /// Test/debug probe: counts how many refresh `Task`s have been
+    /// spawned by `start()`. Idempotent `start()` calls must not bump
+    /// this — used by `startIsIdempotent` to avoid timing flakiness.
+    internal private(set) var refreshTaskSpawnCount: Int = 0
+
     /// `nonisolated(unsafe)` so `deinit` (which runs in a nonisolated
     /// context) can cancel it. Writes happen only from `@MainActor`
     /// (`start` / `stop`); the deinit read happens-after the last
@@ -90,6 +95,7 @@ public final class PerformanceObservation {
     /// `refreshInterval` takes effect on the next iteration.
     public func start() {
         guard refreshTask == nil else { return }
+        refreshTaskSpawnCount += 1
         refreshTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let interval = await self?.refreshInterval else { return }
