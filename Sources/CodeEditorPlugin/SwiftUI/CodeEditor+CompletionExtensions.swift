@@ -33,7 +33,7 @@ public struct SwiftUICompletionContext: Sendable {
 /// A code completion item for SwiftUI code editors.
 ///
 /// Represents a single completion suggestion with metadata for display and insertion.
-public struct SwiftUICompletionItem {
+public struct SwiftUICompletionItem: Sendable {
     /// The display label shown in the completion popup
     public let label: String
 
@@ -98,7 +98,7 @@ public struct SwiftUICompletionItem {
 /// ```
 ///
 /// - SeeAlso: ``SwiftUICompletionItem``, ``SwiftUICompletionContext``
-public enum CompletionKind {
+public enum CompletionKind: Sendable {
     /// Programming language keywords (if, for, class, etc.).
     ///
     /// Reserved words in the programming language that have special meaning.
