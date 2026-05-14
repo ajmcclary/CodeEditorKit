@@ -4,7 +4,7 @@ Synthesis of four parallel reviewer passes covering the entire `Sources/` tree, 
 
 ## Status (2026-05-14)
 
-All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), and the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
+All 7 Critical fixes have landed on `main` (uncommitted), along with the dead-code / doc cleanup batch, the first-pass sample-driven API gaps (#1, #2, #4, #8 from the eight numbered items), the concurrency-lifecycle + Codable sweep (`MemoryMonitor` observer leak, `removeFromSuperview` cancellation, `LayoutCoordinator` recursion, `LSPClient.disconnect` continuation leak, `EditorConfiguration.{Layout,Performance}` Codable/Equatable completeness), and the Editor lifecycle + EditorState mirror batch (`CodeEditorView` deinit highlighting cancel, `completionRequested` cancel-before-spawn, `EditorEventPublisher` FIFO delivery, framework-side `EditorState` mirror of `language`/`selection`/`lineCount`). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
 
 | # | Issue | Status | Notes |
 |---|---|---|---|
@@ -146,6 +146,27 @@ Build: green. SwiftLint: 0 violations. Targeted tests for the touched areas (`Ed
 
 The four remaining items from the original "Concurrency & lifecycle" Important list — `EditorEventPublisher.publish` unstructured Task, `ProcessTransport` busy-poll, `completionRequested` lack-of-cancel, the `CodeEditorView` `deinit` analog for highlighting — were not in scope for this batch and remain in the Important section below.
 
+### Editor lifecycle + EditorState mirror batch (landed 2026-05-14)
+
+Picks up three of the four remaining items from the "Concurrency & lifecycle" Important list plus the `EditorState.language` wiring gap surfaced during the TextKit 2 smoke test. Only `ProcessTransport` busy-poll remains in that section after this batch.
+
+| Item | Status | What landed |
+|---|---|---|
+| `CodeEditorView` deinit analog for highlighting cancellation | ✅ Done | `syntaxHighlighter` is now `nonisolated let` (the coordinator is already `Sendable` after the earlier actor→lock refactor, and the property is an immutable reference). `deinit` calls `syntaxHighlighter.cancelHighlighting()` so a view dropped without going through `removeFromSuperview` (tests, atypical host teardown) still cancels in-flight highlighting. Idempotent with the existing `removeFromSuperview` cancel — `cancelCurrent()` nils a possibly-nil task reference. |
+| `completionRequested` does not cancel in-flight task before spawning a new one (`Core/CodeEditorView+CompletionExtensions.swift:100`) | ✅ Done | `requestCompletion(...)` now calls `completionManager.cancelCurrentRequest()` before kicking off the new `Task`. The superseded wrapping Task observes `CancellationError` and exits through a dedicated `catch is CancellationError` branch that suppresses the previously noisy error log. |
+| `EditorEventPublisher.publish` spawns an unstructured `Task` per publish — A/B ordering not preserved (`Core/EditorEventPublisher.swift:98-113`) | ✅ Done | The actor now holds `deliveryTask: Task<Void, Never>?` as the tail of a FIFO chain. Each `publish(_:)` enqueues `Task { @MainActor in await previous?.value; … }`, so handlers see events in publish order. The chain only retains the immediate predecessor while it's in-flight; no task accumulation. |
+| `EditorState.language` never populated by the framework (`Core/EditorState.swift:24`) | ✅ Done | Status bar (`EditorStatusBar.languageBadge`) used to always render "Plain Text" because nothing wrote into the host's shared `\.editorState`. `CodeEditor.body` now reads `\.editorState` from the environment and threads it through the representable to `CodeEditorBaseCoordinator.hostEditorState` (weak ref so env defaults still deallocate). The coordinator mirrors `language` + `lineCount` from `updateState(...)` (covers setup + per-update changes) and `selection` from `handleSelectionChange(...)` via `EditorStateBridge.deriveSelection`. Selection derivation is gated on `hostEditorState != nil || interactionStateBinding != nil` so hosts without chrome avoid the O(n) UTF-16 walk. `isDirty` and `hardwareAccelerationActive` remain unwritten — they want their own design pass (initial-text tracking and adaptive-perf-mode bridging respectively). |
+
+**Files touched (this batch — 8 modified, 1 test file modified):**
+Sources — `Core/CodeEditorView.swift`, `Core/CodeEditorView+CompletionExtensions.swift`, `Core/EditorEventPublisher.swift`, `SwiftUI/CodeEditor.swift`, `SwiftUI/CodeEditor+AppKitExtensions.swift`, `SwiftUI/CodeEditor+UIKitExtensions.swift`, `SwiftUI/CodeEditor+CoordinatorsExtensions.swift`, `SwiftUI/CodeEditorRepresentableHelper.swift`.
+Tests — `Tests/CodeEditorPluginTests/SwiftUICoordinatorTests.swift` (three new tests: `testHostEditorStateMirroredOnSetupAndUpdate`, `testHostEditorStateSelectionMirroredOnSelectionChange`, `testHostEditorStateNoMirrorWhenUnset`).
+
+**Public API impact.** Strictly additive on the coordinator (new weak property; no signature changes). `CodeEditor.body` reads one additional environment value (`\.editorState`). Hosts that already inject `\.editorState` start seeing the framework write `language`/`selection`/`lineCount` automatically; hosts that don't see no behavioral change (env default is a throwaway and the weak ref deallocates immediately).
+
+Build: green. SwiftLint: 0 violations. Targeted suite `SwiftUICoordinatorTests` (14 tests, including the 3 new ones) passes.
+
+**Still open from the "Concurrency & lifecycle" Important list:** `ProcessTransport.availableData` busy-poll (`ProcessTransport.swift:233-256`) — wants `readabilityHandler`/`DispatchIO`. Only remaining item in that section.
+
 
 
 ## Top-level take
@@ -177,13 +198,13 @@ The most important strategic finding is from the sample review: **the API gaps r
 ## Important issues (fix before next merge)
 
 ### Concurrency & lifecycle
-- `CodeEditorView.removeFromSuperview` fires `Task { await syntaxHighlighter.cancelHighlighting() }` (`Core/CodeEditorView.swift:533-535`) — cancellation arrives after the next editor is up; no `deinit` analog.
-- `MemoryMonitor` registers an `NSObjectProtocol` termination observer but never removes it; `Task`s aren't auto-cancelled (`Performance/MemoryMonitor.swift:259-285`). Leaks NotificationCenter slots + live tasks across tests/windows.
-- `EditorEventPublisher.publish` (`Core/EditorEventPublisher.swift:98-113`) spawns an unstructured `Task` per publish — A/B ordering is not preserved despite call-site expectations.
-- `LSPClient.disconnect()` clears state synchronously while shutdown runs detached (`LSP/LSPClient.swift:179-224`); in-flight responses arriving after dictionary clear are silently dropped.
+- ~~`CodeEditorView.removeFromSuperview` fires `Task { await syntaxHighlighter.cancelHighlighting() }` (`Core/CodeEditorView.swift:533-535`) — cancellation arrives after the next editor is up; no `deinit` analog.~~ ✅ Both halves landed (sync cancel in the Concurrency batch on 2026-05-14; `deinit` analog in the Editor lifecycle + EditorState mirror batch on 2026-05-14).
+- ~~`MemoryMonitor` registers an `NSObjectProtocol` termination observer but never removes it; `Task`s aren't auto-cancelled (`Performance/MemoryMonitor.swift:259-285`). Leaks NotificationCenter slots + live tasks across tests/windows.~~ ✅ Done in the 2026-05-14 Concurrency batch.
+- ~~`EditorEventPublisher.publish` (`Core/EditorEventPublisher.swift:98-113`) spawns an unstructured `Task` per publish — A/B ordering is not preserved despite call-site expectations.~~ ✅ Done in the Editor lifecycle + EditorState mirror batch on 2026-05-14 (chain-tail FIFO via `deliveryTask`).
+- ~~`LSPClient.disconnect()` clears state synchronously while shutdown runs detached (`LSP/LSPClient.swift:179-224`); in-flight responses arriving after dictionary clear are silently dropped.~~ ✅ Done in the 2026-05-14 Concurrency batch.
 - `ProcessTransport` busy-polls `availableData` every 10ms and races its `receive()` with `setDataHandler` (`ProcessTransport.swift:233-256`). Use `readabilityHandler`/`DispatchIO`.
-- `LayoutCoordinator.processPendingOperations` can recurse unboundedly via its own `defer` (`Layout/LayoutCoordinator.swift:101-111`). Convert to an iterative drain.
-- `completionRequested` does not cancel in-flight task before spawning a new one (`Core/CodeEditorView+CompletionExtensions.swift:100`).
+- ~~`LayoutCoordinator.processPendingOperations` can recurse unboundedly via its own `defer` (`Layout/LayoutCoordinator.swift:101-111`). Convert to an iterative drain.~~ ✅ Done in the 2026-05-14 Concurrency batch.
+- ~~`completionRequested` does not cancel in-flight task before spawning a new one (`Core/CodeEditorView+CompletionExtensions.swift:100`).~~ ✅ Done in the Editor lifecycle + EditorState mirror batch on 2026-05-14.
 
 ### API correctness
 - `CodeEditorAPI` mixes `Range<String.Index>` and `NSRange` despite claiming the latter is canonical (`Core/CodeEditorAPI.swift:65`, sites 93–145). `String.Index` is unstable across edits. Pick `NSRange`.
@@ -259,7 +280,7 @@ These are what the sample had to *invent* to integrate the framework — the fra
 - `SettingsScene`'s `frame(width: 1380, height: 880)` precedes `windowResizability(.contentSize)` and overrides the min sizes (`App/CodeEditorSampleApp.swift:16-20`).
 - `MainActor.assumeIsolated` after `.receive(on: DispatchQueue.main)` (`DiagnosticsBridge.swift:49-55`) — works only by accident.
 - No `Sources/CodeEditorSample/README.md`; users will keep hitting the `cd CodeEditorSample` trap.
-- **`EditorState.language` is never populated by the framework.** `EditorState.language: Language?` is declared at `Core/EditorState.swift:24` and consumed by `CodeEditorUI/StatusBar/EditorStatusBar.swift:50` (status-bar language badge) — but `EditorContainerViewModel.updateEditorState()` (`Layout/EditorContainerViewModel.swift:370-394`), which owns the EditorState mirror, only writes `characterCount`, `lineCount`, and `visibleRange`. Result: the status bar always shows "Plain Text" regardless of what `CodeEditorView.language` is set to. Discovered 2026-05-14 while smoke-testing the TextKit 2 migration. Fix: have `updateEditorState()` write `editorState.language = textView.language`, and re-call it from `CodeEditorView.language`'s `didSet` (or from the SwiftUI representable's update path). Two-line framework fix.
+- ~~**`EditorState.language` is never populated by the framework.**~~ ✅ Done in the Editor lifecycle + EditorState mirror batch on 2026-05-14. The reviewer's "two-line fix" diagnosis was off — `EditorContainerViewModel.updateEditorState()` writes to a *different* (nested-struct) `EditorState`, not the `@Observable` class the chrome reads. The actual wiring threads the Observable `\.editorState` env value through `CodeEditor.body` → representable → `CodeEditorBaseCoordinator.hostEditorState` (weak), and the coordinator mirrors `language` + `lineCount` from `updateState(...)` and `selection` from `handleSelectionChange(...)`. See the batch section near the top for details and tests.
 
 ---
 
