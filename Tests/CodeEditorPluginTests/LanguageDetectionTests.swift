@@ -191,46 +191,6 @@ final class LanguageDetectionTests: XCTestCase {
         }
     }
 
-    // MARK: - Completion Provider Integration Tests
-
-    @MainActor func testCompletionProvidersRegistration() {
-        let engine = SmartCompletionEngine(memoryMonitor: MemoryMonitor())
-
-        // Test that completion providers are registered for all major languages
-        let testCases: [(language: Language, hasProvider: Bool)] = [
-            (.swift, true),
-            (.javascript, true),
-            (.typescript, true),
-            (.python, true),
-            (.go, true),
-            (.rust, true),
-            (.c, true),
-            (.cpp, true),
-            (.java, true),
-            (.html, true),
-            (.css, true),
-            (.json, true),
-            (.markdown, true),
-            (.yaml, true),
-            (.xml, true),
-            (.sql, true),
-            (.ruby, true),
-            (.php, true),
-            (.shell, true),
-            (.plainText, false) // PlainText typically doesn't have completion
-        ]
-
-        for (language, shouldHaveProvider) in testCases {
-            let hasProvider = engine.hasCompletionProvider(for: language.identifier)
-
-            if shouldHaveProvider {
-                XCTAssertTrue(hasProvider, "Language \(language) should have a completion provider")
-            }
-            // Note: We don't assert false for languages without providers since the engine
-            // may have fallback or generic providers
-        }
-    }
-
     // MARK: - Shebang Detection Tests (Phase 3)
 
     @MainActor
@@ -438,15 +398,5 @@ final class LanguageDetectionTests: XCTestCase {
                 }
             }
         }
-    }
-}
-
-// MARK: - Test Helper Extensions
-
-extension SmartCompletionEngine {
-    func hasCompletionProvider(for _: String) -> Bool {
-        // This is a simplified check - in a real implementation,
-        // you might need to access internal state or provide a public method
-        true // Assuming all registered providers are available
     }
 }

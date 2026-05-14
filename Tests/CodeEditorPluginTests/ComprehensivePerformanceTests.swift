@@ -40,13 +40,12 @@ final class ComprehensivePerformanceTests: XCTestCase {
     // MARK: - Smart Features Performance
 
     @MainActor
-    func testSmartCompletionEnginePerformance() throws {
-        // Test the fuzzy matcher component, which is a key part of SmartCompletionEngine.
-        // The engine itself has complex async initialization that's hard to test in isolation.
+    func testOptimizedFuzzyMatcherShortPatternPerformance() throws {
+        // Lifted from the previous testSmartCompletionEnginePerformance —
+        // the engine instantiation was a no-op; the measurement was on
+        // OptimizedFuzzyMatcher. Engine deleted in the completion-ranking
+        // unification batch; this preserves the perf signal.
         let fuzzyMatcher = OptimizedFuzzyMatcher()
-        _ = SmartCompletionEngine(memoryMonitor: MemoryMonitor()) // Test that it can be instantiated
-
-        // Generate test data
         let candidates = ["String", "StringProtocol", "Substring", "StaticString", "StringLiteralType"]
         let pattern = "Str"
 

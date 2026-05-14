@@ -148,26 +148,3 @@ public final class CompletionRankingModel {
         return score
     }
 }
-
-// MARK: - Machine Learning Integration
-
-/// Protocol for future ML model integration
-public protocol CompletionMLModel {
-    /// Predict relevance scores for completion items
-    /// - Parameters:
-    ///   - items: The completion items
-    ///   - context: The current context
-    /// - Returns: Dictionary mapping item labels to predicted scores
-    func predictScores(for items: [CompletionItemModel], context: CompletionContextModel) async -> [String: Double]
-}
-
-/// Placeholder for neural network-based ranking
-public struct NeuralCompletionRanker: CompletionMLModel {
-    public init() {}
-
-    public func predictScores(for _: [CompletionItemModel], context _: CompletionContextModel) async -> [String: Double] {
-        // TODO: Integrate with CoreML or CreateML model
-        // For now, return empty scores
-        [:]
-    }
-}
