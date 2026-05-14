@@ -459,9 +459,21 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
 
 #elseif canImport(UIKit)
 
-/// iOS-specific coordinator for CodeEditor
+/// iOS-specific coordinator for CodeEditor.
+///
+/// Conforms to `TextViewDelegateParticipant` and registers at
+/// `.behavior` via `setupTextViewDelegate(_:)`. Receives
+/// `textViewDidChangeText` and `textViewDidChangeSelection` from the
+/// multiplexer; mirrors them into the SwiftUI text binding and
+/// selection callback.
+///
+/// The scroll-forwarding methods (`scrollViewDidScroll` etc.) that
+/// previously walked superviews via `findContainer(for:)` are gone —
+/// the container is itself a multiplexer participant after the iOS
+/// container migration, so it receives scroll callbacks directly from
+/// the multiplexer and the coordinator no longer needs to forward.
 @MainActor
-final class CodeEditorCoordinator: CodeEditorBaseCoordinator, UITextViewDelegate {
+final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
     init(
         text: Binding<String>,
         onTextChange: ((String) -> Void)?,
@@ -478,53 +490,17 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator, UITextViewDelegate
     }
 
     func setupTextViewDelegate(_ textView: CodeEditorView) {
-        textView.delegate = self
+        textView.addDelegateParticipant(self, phase: .behavior)
     }
+}
 
-    // MARK: - UITextViewDelegate
-
-    func textViewDidChange(_ textView: UITextView) {
+extension CodeEditorCoordinator: TextViewDelegateParticipant {
+    func textViewDidChangeText(_ textView: CodeEditorView) {
         handleTextChange(textView.text ?? "")
     }
 
-    func textViewDidChangeSelection(_ textView: UITextView) {
+    func textViewDidChangeSelection(_ textView: CodeEditorView) {
         handleSelectionChange(textView.selectedRange)
-    }
-
-    // Forward scroll events to the container
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        if let container = findContainer(for: scrollView) {
-            container.scrollViewDidScroll(scrollView)
-        }
-    }
-
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        if let container = findContainer(for: scrollView) {
-            container.scrollViewWillBeginDragging(scrollView)
-        }
-    }
-
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        if let container = findContainer(for: scrollView) {
-            container.scrollViewDidEndDragging(scrollView, willDecelerate: decelerate)
-        }
-    }
-
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        if let container = findContainer(for: scrollView) {
-            container.scrollViewDidEndDecelerating(scrollView)
-        }
-    }
-
-    private func findContainer(for scrollView: UIScrollView) -> CodeEditorContainerView? {
-        var view = scrollView.superview
-        while view != nil {
-            if let container = view as? CodeEditorContainerView {
-                return container
-            }
-            view = view?.superview
-        }
-        return nil
     }
 }
 
