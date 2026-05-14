@@ -9,20 +9,19 @@ class LineNumberRulerView: NSRulerView {
     /// The text view this ruler is associated with
     weak var textView: NSTextView?
 
-    /// Font for line numbers
-    var font = PlatformFonts.monospacedSystemFont(ofSize: 11, weight: .regular)
-
-    /// Text color for line numbers
-    var textColor = PlatformColors.secondaryLabel
-
     /// Background color
     var backgroundColor = PlatformColors.controlBackground
 
-    /// Right padding for line numbers
-    var rightPadding: CGFloat = 8.0
-
     /// Track last vertical scroll position to avoid unnecessary redraws
     private var lastScrollY: CGFloat = 0
+
+    /// Renderer that owns line-number drawing and themed colors. Allocated
+    /// once per ruler instance; theme updates arrive via `apply(theme:)`.
+    let renderer = GutterViewRenderer()
+
+    /// Last line index containing the caret, used to short-circuit redraws on
+    /// intra-line caret movement.
+    private var lastActiveLineNumber: Int?
 
     // MARK: - Initialization
 
@@ -81,152 +80,68 @@ class LineNumberRulerView: NSRulerView {
         super.init(coder: coder)
     }
 
+    // MARK: - Theme
+
+    /// Forwards a theme to the renderer and triggers a redraw. The ruler's
+    /// own background color is themed elsewhere (configuration path); this
+    /// method exists so `CodeEditorContainerView.apply(theme:)` can fan out
+    /// to the ruler symmetrically with `GutterView.apply(theme:)`.
+    @MainActor
+    func apply(theme: Theme) {
+        renderer.apply(theme: theme)
+        needsDisplay = true
+    }
+
+    // MARK: - Active line
+
+    /// Computes the 1-based line number containing the caret. Returns nil
+    /// when no selection is set or the geometry store is empty.
+    @MainActor
+    private func computeActiveLineNumber(for textView: CodeEditorView) -> Int? {
+        let location = textView.selectedRange().location
+        guard location != NSNotFound,
+              textView.lineGeometryStore.lineCount > 0 else { return nil }
+        return textView.lineGeometryStore.lineIndex(forUtf16Offset: location) + 1
+    }
+
+    /// Recomputes the active line and marks the ruler dirty only when the
+    /// line index changes. Called from the selection-change observer.
+    @MainActor
+    func selectionDidChange() {
+        guard let textView = clientView as? CodeEditorView else { return }
+        let newActive = computeActiveLineNumber(for: textView)
+        if newActive != lastActiveLineNumber {
+            lastActiveLineNumber = newActive
+            needsDisplay = true
+        }
+    }
+
     // MARK: - Drawing
 
     override func drawHashMarksAndLabels(in rect: NSRect) {
-        // Fill background
         backgroundColor.set()
         rect.fill()
 
-        // NOTE: This NSRulerView-based gutter is a TK1-only rendering path
-        // (it depends on `NSLayoutManager.glyphRange(...)`). Reading
-        // `textView.layoutManager` triggers Apple's TK1 compatibility shim —
-        // once the gutter draws, the editor switches from TK2 to TK1. A full
-        // TK2 gutter rewrite is its own design pass. For now, this is a known
-        // TK1 island and the textStorage read below is via the legacy property
-        // because we've already coerced to TK1.
-        guard let textView = self.clientView as? NSTextView,
-              let scrollView = self.scrollView,
-              let textContainer = textView.textContainer,
-              let layoutManager = textView.layoutManager,
-              let textStorage = textView.textStorage else {
+        guard let textView = clientView as? CodeEditorView,
+              let context = NSGraphicsContext.current?.cgContext else {
             return
         }
 
-        // Get the visible rect of the scroll view's content
-        let visibleRect = scrollView.contentView.visibleRect
-        let textVisibleRect = textView.visibleRect
+        let activeLineNumber = computeActiveLineNumber(for: textView)
+        lastActiveLineNumber = activeLineNumber
 
-        // Get the range of characters that are visible
-        let glyphRange = layoutManager.glyphRange(forBoundingRect: textVisibleRect, in: textContainer)
-        var characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+        renderer.draw(
+            in: rect,
+            context: context,
+            textView: textView,
+            gutterBounds: bounds,
+            fillBackground: false,
+            activeLineNumber: activeLineNumber
+        )
 
-        // Ensure the character range doesn't exceed the text length
-        let textLength = textStorage.length
-
-        // Fix for scrolling to bottom: ensure we never go beyond text bounds
-        if characterRange.location >= textLength {
-            // If we're beyond the text, show the last line
-            characterRange = NSRange(location: max(0, textLength - 1), length: 1)
-        } else if characterRange.location + characterRange.length > textLength {
-            // Trim the length to not exceed bounds
-            characterRange.length = textLength - characterRange.location
-        }
-
-        // Handle empty text
-        if textLength == 0 {
-            characterRange = NSRange(location: 0, length: 0)
-        }
-
-        // Calculate line numbers for the visible range
-        let text = textStorage.string
-        let lineRanges = getLineRanges(for: text, in: characterRange)
-
-        // Set up text attributes
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: textColor
-        ]
-
-        // Draw each line number
-        for (lineNumber, lineRange) in lineRanges {
-            let lineString = "\(lineNumber)"
-
-            // Get the rect for this line
-            var lineRect = NSRect.zero
-            if lineRange.length > 0 {
-                let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
-                lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil, withoutAdditionalLayout: true)
-            } else {
-                // Handle empty lines or end of text
-                if lineRange.location < textLength {
-                    let glyphIndex = layoutManager.glyphIndexForCharacter(at: lineRange.location)
-                    lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil, withoutAdditionalLayout: true)
-                } else if textLength > 0 {
-                    // Use the last character's position
-                    let glyphIndex = layoutManager.glyphIndexForCharacter(at: textLength - 1)
-                    lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil, withoutAdditionalLayout: true)
-                    // Add line height for the new line
-                    lineRect.origin.y += lineRect.height
-                }
-            }
-
-            // The ruler view needs to align with the text view's coordinate system
-            // Adjust the Y position based on the scroll offset
-            let scrollOffset = visibleRect.origin.y
-            let adjustedY = lineRect.minY - scrollOffset
-
-            // Draw if visible in the current rect
-            if adjustedY < rect.maxY && adjustedY + lineRect.height > rect.minY {
-                // Draw with right alignment
-                let size = lineString.size(withAttributes: attributes)
-                let drawingPoint = NSPoint(
-                    x: ruleThickness - rightPadding - size.width,
-                    y: adjustedY + (lineRect.height - size.height) / 2
-                )
-
-                lineString.draw(at: drawingPoint, withAttributes: attributes)
-
-                // Draw folding control if enabled
-                if let codeEditor = textView as? CodeEditorView,
-                   codeEditor.configuration.display.isCodeFoldingEnabled &&
-                   codeEditor.configuration.display.areFoldingControlsVisible {
-                    drawFoldingControl(at: lineNumber, in: NSRect(
-                        x: 0,
-                        y: adjustedY,
-                        width: ruleThickness,
-                        height: lineRect.height
-                    ))
-                }
-            }
-        }
-
-        // Draw a separator line on the right edge
         PlatformColors.separator.set()
         let separatorRect = NSRect(x: ruleThickness - 1, y: rect.minY, width: 1, height: rect.height)
         separatorRect.fill()
-    }
-
-    // MARK: - Helper Methods
-
-    private func getLineRanges(for text: String, in visibleRange: NSRange) -> [(lineNumber: Int, range: NSRange)] {
-        var lineRanges: [(Int, NSRange)] = []
-        var lineNumber = 1
-
-        // If empty text, return single line
-        if text.isEmpty {
-            return [(1, NSRange(location: 0, length: 0))]
-        }
-
-        // Count lines up to visible range
-        // swiftlint:disable:next legacy_objc_type
-        let nsString = (text as NSString)
-        nsString.enumerateSubstrings(in: NSRange(location: 0, length: visibleRange.location), options: [.byLines, .substringNotRequired]) { _, _, _, _ in
-            lineNumber += 1
-        }
-
-        // Collect visible lines
-        nsString.enumerateSubstrings(in: visibleRange, options: [.byLines, .substringNotRequired]) { _, range, _, _ in
-            lineRanges.append((lineNumber, range))
-            lineNumber += 1
-        }
-
-        // If no lines found (e.g., empty line at end), add current line
-        if lineRanges.isEmpty && visibleRange.location <= text.count {
-            lineRanges.append((lineNumber, visibleRange))
-        }
-
-        return lineRanges
     }
 }
 // MARK: - MacOS Extensions
@@ -469,62 +384,6 @@ extension CodeEditorContainerView {
 
 // MARK: - Folding support for macOS
 extension LineNumberRulerView {
-    /// Draw folding control for a line
-    func drawFoldingControl(at lineNumber: Int, in lineRect: NSRect) {
-        guard let textView = textView as? CodeEditorView else { return }
-
-        // Check if this line can be folded
-        guard textView.isFoldable(at: lineNumber) else { return }
-
-        let controlSize: CGFloat = 12.0
-        let controlPadding: CGFloat = 4.0
-
-        // Calculate control position (left side of line numbers)
-        let controlRect = NSRect(
-            x: controlPadding,
-            y: lineRect.minY + (lineRect.height - controlSize) / 2,
-            width: controlSize,
-            height: controlSize
-        )
-
-        // Draw background circle
-        let backgroundPath = NSBezierPath(ovalIn: controlRect)
-        PlatformColors.tertiaryLabel.withAlphaComponent(0.2).setFill()
-        backgroundPath.fill()
-
-        // Draw border
-        PlatformColors.tertiaryLabel.setStroke()
-        backgroundPath.lineWidth = 0.5
-        backgroundPath.stroke()
-
-        // Check if folded
-        let isFolded = textView.isFolded(at: lineNumber)
-
-        // Draw the triangle icon
-        drawFoldingIcon(in: controlRect.insetBy(dx: controlSize * 0.25, dy: controlSize * 0.25), isFolded: isFolded)
-    }
-
-    private func drawFoldingIcon(in rect: NSRect, isFolded: Bool) {
-        let path = NSBezierPath()
-
-        PlatformColors.label.setFill()
-
-        if isFolded {
-            // Right-pointing triangle (▶️)
-            path.move(to: NSPoint(x: rect.minX, y: rect.minY))
-            path.line(to: NSPoint(x: rect.maxX, y: rect.midY))
-            path.line(to: NSPoint(x: rect.minX, y: rect.maxY))
-        } else {
-            // Down-pointing triangle (▼)
-            path.move(to: NSPoint(x: rect.minX, y: rect.minY))
-            path.line(to: NSPoint(x: rect.maxX, y: rect.minY))
-            path.line(to: NSPoint(x: rect.midX, y: rect.maxY))
-        }
-
-        path.close()
-        path.fill()
-    }
-
     override func mouseDown(with event: NSEvent) {
         guard let textView = textView as? CodeEditorView,
               textView.configuration.display.isCodeFoldingEnabled else {
