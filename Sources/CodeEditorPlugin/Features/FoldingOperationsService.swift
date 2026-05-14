@@ -15,11 +15,6 @@ internal final class FoldingOperationsService {
     // MARK: - Properties
 
     private weak var textView: CodeEditorView?
-    // Read through textContentStorage?.textStorage (TK2-safe) — reading
-    // `textView.textStorage` directly would coerce to TK1. Task 8 of the
-    // TextKit 2 migration moves the persistent-attribute writers below to
-    // `textKitBridge.addPersistentAttributes` and removes this accessor.
-    private var textStorage: NSTextStorage? { textView?.textContentStorage?.textStorage }
 
     // MARK: - Public Methods
 
@@ -149,15 +144,16 @@ internal final class FoldingOperationsService {
     // MARK: - Private Methods
 
     private func applyFoldingVisuals(for region: FoldableRegion, isFolded: Bool, configuration: CodeFoldingConfiguration) {
-        guard let textStorage else { return }
+        guard let textView else { return }
+        let bridge = textView.textKitBridge
 
         if isFolded {
             // Add fold indicator at the end of the first line
             let firstLineEnd = firstLineEndLocation(for: region.range)
             let indicatorRange = NSRange(location: firstLineEnd, length: 0)
 
-            // Apply folding attributes
-            textStorage.addAttributes([
+            // Apply folding attributes (persistent — gutter reads .foldingIndicator).
+            bridge.addPersistentAttributes([
                 .foldingIndicator: true,
                 .foregroundColor: configuration.indicatorColor
             ], range: indicatorRange)
@@ -166,12 +162,13 @@ internal final class FoldingOperationsService {
             let firstLineEnd = firstLineEndLocation(for: region.range)
             let indicatorRange = NSRange(location: firstLineEnd, length: region.foldedText?.count ?? 0)
 
-            textStorage.removeAttribute(.foldingIndicator, range: indicatorRange)
+            bridge.removePersistentAttribute(.foldingIndicator, range: indicatorRange)
         }
     }
 
     private func hideFoldedContent(_ region: FoldableRegion) {
-        guard let textStorage else { return }
+        guard let textView else { return }
+        let bridge = textView.textKitBridge
 
         // Calculate content range (excluding first line)
         let firstLineEnd = firstLineEndLocation(for: region.range)
@@ -182,9 +179,8 @@ internal final class FoldingOperationsService {
 
         let contentRange = NSRange(location: contentStart, length: contentLength)
 
-        // Use cached hidden paragraph style instead of creating new one
-        // Apply attributes to hide content
-        textStorage.addAttributes([
+        // Apply attributes to hide content (persistent — layout attributes).
+        bridge.addPersistentAttributes([
             .paragraphStyle: ParagraphStyleCache.hiddenParagraphStyle,
             .font: PlatformFont.systemFont(ofSize: 0.1), // Nearly invisible font
             .foregroundColor: PlatformColors.clear,
@@ -193,7 +189,8 @@ internal final class FoldingOperationsService {
     }
 
     private func showUnfoldedContent(_ region: FoldableRegion) {
-        guard let textStorage else { return }
+        guard let textView else { return }
+        let bridge = textView.textKitBridge
 
         // Calculate content range (excluding first line)
         let firstLineEnd = firstLineEndLocation(for: region.range)
@@ -204,40 +201,39 @@ internal final class FoldingOperationsService {
 
         let contentRange = NSRange(location: contentStart, length: contentLength)
 
-        // Remove folding attributes
-        textStorage.removeAttribute(.paragraphStyle, range: contentRange)
-        textStorage.removeAttribute(.font, range: contentRange)
-        textStorage.removeAttribute(.foregroundColor, range: contentRange)
-        textStorage.removeAttribute(.foldedRegion, range: contentRange)
+        // Remove folding attributes (persistent).
+        bridge.removePersistentAttributes(
+            [.paragraphStyle, .font, .foregroundColor, .foldedRegion],
+            range: contentRange
+        )
 
-        // Restore the configured font
-        if let textView {
-            let fontSize = textView.configuration.display.fontSize
-            let font = PlatformFonts.monospacedSystemFont(ofSize: fontSize, weight: .regular)
-            textStorage.addAttribute(.font, value: font, range: contentRange)
+        // Restore the configured font (persistent — affects layout).
+        let fontSize = textView.configuration.display.fontSize
+        let font = PlatformFonts.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        bridge.addPersistentAttributes([.font: font], range: contentRange)
 
-            // Force layout update to properly display unfolded content
-            #if canImport(AppKit)
-            textView.setNeedsDisplay(textView.bounds)
-            textView.needsLayout = true
-            textView.layoutSubtreeIfNeeded()
-            #else
-            textView.setNeedsDisplay()
-            textView.setNeedsLayout()
-            textView.layoutIfNeeded()
-            #endif
-        }
+        // Force layout update to properly display unfolded content
+        #if canImport(AppKit)
+        textView.setNeedsDisplay(textView.bounds)
+        textView.needsLayout = true
+        textView.layoutSubtreeIfNeeded()
+        #else
+        textView.setNeedsDisplay()
+        textView.setNeedsLayout()
+        textView.layoutIfNeeded()
+        #endif
     }
 
     // MARK: - Utilities
 
     private func lineNumber(for location: Int) -> Int {
-        guard let text = textStorage?.string else { return 0 }
+        guard let text = textView?.textKitBridge.documentString, !text.isEmpty else { return 0 }
         return TextRangeUtilities.lineNumber(for: location, in: text)
     }
 
     private func firstLineEndLocation(for range: NSRange) -> Int {
-        guard let text = textStorage?.string else { return range.location }
+        let text = textView?.textKitBridge.documentString ?? ""
+        guard !text.isEmpty else { return range.location }
 
         let lineRange = TextRangeUtilities.lineRange(containing: range.location, in: text)
 

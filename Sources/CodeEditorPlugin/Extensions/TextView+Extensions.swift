@@ -118,17 +118,13 @@ extension TextView {
             setRenderingAttributes(renderingAttributes, for: range)
         }
 
-        // Apply layout-affecting attributes through the text storage
+        // Apply layout-affecting attributes through the TK2-safe path.
         let layoutAttributes = attributes.filter { key, _ in
             key != .foregroundColor && key != .backgroundColor
         }
 
-        if !layoutAttributes.isEmpty {
-            #if canImport(AppKit)
-            textStorage?.addAttributes(layoutAttributes, range: range)
-            #else
-            textStorage.addAttributes(layoutAttributes, range: range)
-            #endif
+        if !layoutAttributes.isEmpty, let codeEditorView = self as? CodeEditorView {
+            codeEditorView.textKitBridge.addPersistentAttributes(layoutAttributes, range: range)
         }
     }
 

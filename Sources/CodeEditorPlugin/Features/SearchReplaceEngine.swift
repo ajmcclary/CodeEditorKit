@@ -348,23 +348,16 @@ public class SearchReplaceEngine: ObservableObject {
 
     private func highlightSearchResults(_ results: [SearchResult]) {
         guard let textView else { return }
-
-        // Route through textContentStorage?.textStorage (TK2-safe). Task 8 will
-        // switch these search-highlight writes to bridge.addPersistentAttributes.
-        guard let textStorage = textView.textContentStorage?.textStorage else { return }
-        let fullRange = TextRangeUtilities.fullRange(in: textView.textKitBridge.documentString)
+        let bridge = textView.textKitBridge
+        let fullRange = TextRangeUtilities.fullRange(in: bridge.documentString)
 
         // Clear existing highlights
-        textStorage.removeAttribute(
-            .backgroundColor,
-            range: fullRange
-        )
+        bridge.removePersistentAttribute(.backgroundColor, range: fullRange)
 
         // Apply highlights
         for result in results {
-            textStorage.addAttribute(
-                .backgroundColor,
-                value: searchOptions.highlightColor,
+            bridge.addPersistentAttributes(
+                [.backgroundColor: searchOptions.highlightColor],
                 range: result.range
             )
         }
@@ -388,33 +381,22 @@ public class SearchReplaceEngine: ObservableObject {
 
     private func flashRange(_ range: NSRange) {
         guard let textView else { return }
-
-        // Route through textContentStorage?.textStorage (TK2-safe). Task 8
-        // will switch these flash highlights to bridge.addPersistentAttributes.
-        guard let textStorage = textView.textContentStorage?.textStorage else { return }
+        let bridge = textView.textKitBridge
 
         let flashColor = searchOptions.flashColor
 
-        textStorage.addAttribute(
-            .backgroundColor,
-            value: flashColor,
-            range: range
-        )
+        bridge.addPersistentAttributes([.backgroundColor: flashColor], range: range)
 
         Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
-            textStorage.removeAttribute(
-                .backgroundColor,
-                range: range
-            )
+            guard let self, let textView = self.textView else { return }
+            let bridge = textView.textKitBridge
+            bridge.removePersistentAttribute(.backgroundColor, range: range)
 
             // Reapply search highlight if needed
-            if self?.searchOptions.highlightResults == true {
-                textStorage.addAttribute(
-                    .backgroundColor,
-                    value: self?.searchOptions.highlightColor ?? PlatformColor.yellow.withAlphaComponent(0.3),
-                    range: range
-                )
+            if self.searchOptions.highlightResults {
+                let color = self.searchOptions.highlightColor
+                bridge.addPersistentAttributes([.backgroundColor: color], range: range)
             }
         }
     }

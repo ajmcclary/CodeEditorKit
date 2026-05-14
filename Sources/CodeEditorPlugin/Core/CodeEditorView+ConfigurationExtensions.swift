@@ -209,48 +209,17 @@ extension CodeEditorView {
     // MARK: - Syntax Highlighting Toggle
 
     internal func removeSyntaxHighlighting() {
-        // Read through the TK2-safe accessor; `self.textStorage` triggers
-        // Apple's TK1 compatibility shim.
-        guard let textStorage = textContentStorage?.textStorage else { return }
-
         // Cancel any in-progress highlighting first
         asyncHighlighter.cancelAllHighlighting()
 
-        // For large files, batch the attribute changes
-        let textLength = textStorage.length
+        // Syntax highlighting now lives in NSTextLayoutManager rendering
+        // attributes (see RangeAttributeApplier + AsyncSyntaxHighlighter).
+        // Removing the foreground rendering attribute exposes the base
+        // text color set by setupDefaultTheme on the underlying NSTextStorage.
+        let textLength = textKitBridge.documentLength
         guard textLength > 0 else { return }
-
-        textStorage.beginEditing()
-        defer { textStorage.endEditing() }
-
-        // Process in chunks for better performance on large files
-        let chunkSize = configuration.performance.maxSyntaxHighlightingLength > 0
-            ? min(configuration.performance.maxSyntaxHighlightingLength, 50_000)
-            : 50_000
-
-        let defaultColor = textColor ?? PlatformColors.label
-
-        if textLength <= chunkSize {
-            // Small file - process in one go
-            let fullRange = NSRange(location: 0, length: textLength)
-            textStorage.removeAttribute(.foregroundColor, range: fullRange)
-            textStorage.addAttribute(.foregroundColor, value: defaultColor, range: fullRange)
-        } else {
-            // Large file - process in chunks to avoid blocking
-            var location = 0
-            while location < textLength {
-                autoreleasepool {
-                    let remainingLength = textLength - location
-                    let currentChunkSize = min(chunkSize, remainingLength)
-                    let range = NSRange(location: location, length: currentChunkSize)
-
-                    textStorage.removeAttribute(.foregroundColor, range: range)
-                    textStorage.addAttribute(.foregroundColor, value: defaultColor, range: range)
-
-                    location += currentChunkSize
-                }
-            }
-        }
+        let fullRange = NSRange(location: 0, length: textLength)
+        textKitBridge.removeAttributes([.foregroundColor], range: fullRange)
     }
 
     // MARK: - Code Folding Configuration
