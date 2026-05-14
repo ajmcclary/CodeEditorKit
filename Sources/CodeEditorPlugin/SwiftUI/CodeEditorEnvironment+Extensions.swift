@@ -104,6 +104,28 @@ public struct CodeEditorEnvironment: Sendable {
             performanceObservation: performanceObservation ?? self.performanceObservation
         )
     }
+
+    /// Returns a copy with the optional field at `keyPath` set to `nil`.
+    ///
+    /// Use this to clear an optional environment field — the `with(_:)`
+    /// builder treats `nil` parameters as "no change" and cannot clear.
+    /// The `WritableKeyPath<Self, T?>` constraint makes the API
+    /// correct-by-construction: non-optional fields like `theme`,
+    /// `language`, `configuration`, and `becomeFirstResponder` are
+    /// rejected at compile time.
+    ///
+    /// Chainable for multi-field clears:
+    ///
+    /// ```swift
+    /// let cleared = env
+    ///     .clearing(\.workspaceRoot)
+    ///     .clearing(\.memoryMonitor)
+    /// ```
+    public func clearing<T>(_ keyPath: WritableKeyPath<Self, T?>) -> Self {
+        var copy = self
+        copy[keyPath: keyPath] = nil
+        return copy
+    }
 }
 
 // MARK: - Environment Key

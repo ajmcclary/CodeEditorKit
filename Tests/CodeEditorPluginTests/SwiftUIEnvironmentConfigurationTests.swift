@@ -637,4 +637,86 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
             "Writing nil through the legacy setter must clear the underlying field."
         )
     }
+
+    // MARK: - Clearing(_:) keypath method tests
+    // Spec: docs/superpowers/specs/2026-05-14-codeeditor-environment-clearing-design.md
+
+    @MainActor
+    func testClearingWorkspaceRootReturnsNilField() {
+        let url = URL(fileURLWithPath: "/tmp/codeeditor-test")
+        let env = CodeEditorEnvironment(workspaceRoot: url)
+        XCTAssertEqual(env.workspaceRoot, url, "Sanity: seeded.")
+
+        let cleared = env.clearing(\.workspaceRoot)
+
+        XCTAssertNil(cleared.workspaceRoot, "Field must be nil after clearing.")
+        XCTAssertEqual(env.workspaceRoot, url, "Source env must be unchanged.")
+    }
+
+    @MainActor
+    func testClearingMemoryMonitorReturnsNilField() {
+        let monitor = MemoryMonitor()
+        let env = CodeEditorEnvironment(memoryMonitor: monitor)
+        XCTAssertNotNil(env.memoryMonitor, "Sanity: seeded.")
+
+        let cleared = env.clearing(\.memoryMonitor)
+
+        XCTAssertNil(cleared.memoryMonitor, "Field must be nil after clearing.")
+        XCTAssertNotNil(env.memoryMonitor, "Source env must be unchanged.")
+    }
+
+    @MainActor
+    func testClearingEventSystemReturnsNilField() {
+        let system = UnifiedEventSystem()
+        let env = CodeEditorEnvironment(eventSystem: system)
+        XCTAssertNotNil(env.eventSystem, "Sanity: seeded.")
+
+        let cleared = env.clearing(\.eventSystem)
+
+        XCTAssertNil(cleared.eventSystem, "Field must be nil after clearing.")
+        XCTAssertNotNil(env.eventSystem, "Source env must be unchanged.")
+    }
+
+    @MainActor
+    func testClearingPerformanceObservationReturnsNilField() {
+        let observation = PerformanceObservation()
+        let env = CodeEditorEnvironment(performanceObservation: observation)
+        XCTAssertNotNil(env.performanceObservation, "Sanity: seeded.")
+
+        let cleared = env.clearing(\.performanceObservation)
+
+        XCTAssertNil(cleared.performanceObservation, "Field must be nil after clearing.")
+        XCTAssertNotNil(env.performanceObservation, "Source env must be unchanged.")
+    }
+
+    @MainActor
+    func testClearingRuntimeDependenciesReturnsNilField() {
+        let deps = EditorRuntimeDependencies.live()
+        let env = CodeEditorEnvironment(runtimeDependencies: deps)
+        XCTAssertNotNil(env.runtimeDependencies, "Sanity: seeded.")
+
+        let cleared = env.clearing(\.runtimeDependencies)
+
+        XCTAssertNil(cleared.runtimeDependencies, "Field must be nil after clearing.")
+        XCTAssertNotNil(env.runtimeDependencies, "Source env must be unchanged.")
+    }
+
+    @MainActor
+    func testClearingChainedClearsBothFields() {
+        let url = URL(fileURLWithPath: "/tmp/codeeditor-test")
+        let monitor = MemoryMonitor()
+        let env = CodeEditorEnvironment(
+            workspaceRoot: url,
+            memoryMonitor: monitor
+        )
+
+        let cleared = env
+            .clearing(\.workspaceRoot)
+            .clearing(\.memoryMonitor)
+
+        XCTAssertNil(cleared.workspaceRoot, "First chained clear must take effect.")
+        XCTAssertNil(cleared.memoryMonitor, "Second chained clear must take effect.")
+        XCTAssertEqual(cleared.language, env.language, "Untouched fields must be preserved.")
+        XCTAssertEqual(cleared.theme, env.theme, "Untouched fields must be preserved.")
+    }
 }
