@@ -9,7 +9,7 @@ struct PerformanceSampleCoordinatorTests {
     @Test func initialStateIsStopped() {
         let coordinator = PerformanceSampleCoordinator(
             memoryMonitor: MemoryMonitor.mock(memoryUsage: 100),
-            unifiedPerformanceSystem: UnifiedPerformanceSystem()
+            performanceObservation: PerformanceObservation()
         )
         #expect(coordinator.state == .stopped)
         #expect(coordinator.fps == 0)
@@ -19,7 +19,7 @@ struct PerformanceSampleCoordinatorTests {
     @Test func startTransitionsToLive() {
         let coordinator = PerformanceSampleCoordinator(
             memoryMonitor: MemoryMonitor.mock(memoryUsage: 100),
-            unifiedPerformanceSystem: UnifiedPerformanceSystem()
+            performanceObservation: PerformanceObservation()
         )
         coordinator.start()
         #expect(coordinator.state == .live)
@@ -29,7 +29,7 @@ struct PerformanceSampleCoordinatorTests {
     @Test func startIsIdempotent() {
         let coordinator = PerformanceSampleCoordinator(
             memoryMonitor: MemoryMonitor.mock(memoryUsage: 100),
-            unifiedPerformanceSystem: UnifiedPerformanceSystem()
+            performanceObservation: PerformanceObservation()
         )
         coordinator.start()
         coordinator.start()
@@ -40,7 +40,7 @@ struct PerformanceSampleCoordinatorTests {
     @Test func stopTransitionsToStopped() {
         let coordinator = PerformanceSampleCoordinator(
             memoryMonitor: MemoryMonitor.mock(memoryUsage: 100),
-            unifiedPerformanceSystem: UnifiedPerformanceSystem()
+            performanceObservation: PerformanceObservation()
         )
         coordinator.start()
         coordinator.stop()
@@ -55,7 +55,7 @@ struct PerformanceSampleCoordinatorTests {
         )
         let coordinator = PerformanceSampleCoordinator(
             memoryMonitor: memory,
-            unifiedPerformanceSystem: UnifiedPerformanceSystem()
+            performanceObservation: PerformanceObservation()
         )
         coordinator.resetPeak()
         #expect(memory.memoryStats.peakUsageMB == 145)
@@ -71,7 +71,7 @@ struct PerformanceSampleCoordinatorTests {
         )
         let coordinator = PerformanceSampleCoordinator(
             memoryMonitor: memory,
-            unifiedPerformanceSystem: UnifiedPerformanceSystem()
+            performanceObservation: PerformanceObservation()
         )
         coordinator.refresh()
         #expect(coordinator.memoryStats.currentUsageMB == 145)
@@ -82,7 +82,7 @@ struct PerformanceSampleCoordinatorTests {
     @Test func targetFPSReadsFromMainScreen() {
         let coordinator = PerformanceSampleCoordinator(
             memoryMonitor: MemoryMonitor.mock(memoryUsage: 100),
-            unifiedPerformanceSystem: UnifiedPerformanceSystem()
+            performanceObservation: PerformanceObservation()
         )
         #expect(coordinator.targetFPS >= 60)
     }

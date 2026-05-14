@@ -39,7 +39,7 @@ final class PerformanceSampleCoordinator {
     private let frameRateMonitor: FrameRateMonitor
 
     @ObservationIgnored
-    private let unifiedPerformanceSystem: UnifiedPerformanceSystem
+    private let performanceObservation: PerformanceObservation
 
     @ObservationIgnored
     let performanceInsights: PerformanceInsights
@@ -52,12 +52,12 @@ final class PerformanceSampleCoordinator {
 
     init(
         memoryMonitor: MemoryMonitor,
-        unifiedPerformanceSystem: UnifiedPerformanceSystem
+        performanceObservation: PerformanceObservation
     ) {
         let frames = FrameRateMonitor()
         self.memoryMonitor = memoryMonitor
         self.frameRateMonitor = frames
-        self.unifiedPerformanceSystem = unifiedPerformanceSystem
+        self.performanceObservation = performanceObservation
         self.performanceInsights = PerformanceInsights(
             memoryMonitor: memoryMonitor,
             frameRateMonitor: frames
@@ -108,7 +108,7 @@ final class PerformanceSampleCoordinator {
         }
         issuesCount = performanceInsights.issues.count
         recommendationsCount = performanceInsights.recommendations.count
-        let insights = unifiedPerformanceSystem.generateInsights()
+        let insights = performanceObservation.lastInsights
         if let highlight = insights.metricAnalyses[.syntaxHighlighting] {
             lastHighlightMs = highlight.averageDuration * 1_000
             highlightP95Ms = highlight.p95Duration * 1_000

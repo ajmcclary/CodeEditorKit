@@ -68,8 +68,14 @@ struct InspectorSidebar: View {
             thresholds: .default(fpsTarget: appState.performance.targetFPS),
             onResetPeak: { appState.performance.resetPeak() },
             onShowReport: { showingPerformanceReport = true },
-            onAppear: { appState.performance.start() },
-            onDisappear: { appState.performance.stop() }
+            onAppear: {
+                appState.performance.start()
+                appState.performanceObservation.start()
+            },
+            onDisappear: {
+                appState.performance.stop()
+                appState.performanceObservation.stop()
+            }
         )
         .sheet(isPresented: $showingPerformanceReport) {
             VStack(spacing: 16) {

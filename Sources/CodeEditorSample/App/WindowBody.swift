@@ -64,6 +64,7 @@ struct WindowBody: View {
                 .lineNumbers(appState.configuration.display.isLineNumbersEnabled)
                 .environment(\.codeEditorConfiguration, appState.configuration)
                 .becomeFirstResponder()
+                .performanceObserver(appState.performanceObservation)
                 #if canImport(AppKit)
                 .onTextHover { position in
                     await appState.lsp.handleHover(at: position, in: activeID)

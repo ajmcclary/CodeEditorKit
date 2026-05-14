@@ -548,7 +548,10 @@ extension CodeEditor {
     public func eventSystem(_ eventSystem: UnifiedEventSystem) -> some View {
         environment(\.codeEditorEventSystem, eventSystem)
     }
+}
 
+@available(macOS 13.0, iOS 16.0, *)
+extension View {
     /// Wires a `PerformanceObservation` into the editor's effective
     /// configuration AND the SwiftUI environment in a single call.
     ///
@@ -562,6 +565,10 @@ extension CodeEditor {
     /// modifier does not auto-start the refresh loop because the same
     /// observation may be shared across multiple editors and constructed
     /// before any editor is on screen.
+    ///
+    /// Defined on `View` (rather than `CodeEditor`) so it composes with
+    /// view-typed modifiers higher in the chain — call it before or
+    /// after `.codeLanguage(_:)`, `.lineNumbers(_:)`, etc.
     ///
     /// ## Example
     ///

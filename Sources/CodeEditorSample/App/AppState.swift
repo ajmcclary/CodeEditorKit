@@ -63,11 +63,14 @@ final class AppState {
     /// single source of memory truth.
     let memoryMonitor = MemoryMonitor()
 
-    /// Shared `UnifiedPerformanceSystem` instance: installed on
-    /// `configuration.performance.unifiedPerformanceSystem` so the framework's
-    /// syntax highlighter records into it, and polled by `performance` for
-    /// the `Last highlight` / `Highlight p95` panel readouts.
-    let unifiedPerformanceSystem = UnifiedPerformanceSystem()
+    /// Shared `PerformanceObservation` instance. Installed onto the
+    /// editor view via `.performanceObserver(_:)` (which wires its
+    /// underlying `UnifiedPerformanceSystem` into the framework's
+    /// effective configuration AND surfaces refresh snapshots through
+    /// `lastInsights`). The sample's `performance` coordinator reads
+    /// snapshots from `performanceObservation.lastInsights` rather than
+    /// polling `generateInsights()` directly.
+    let performanceObservation = PerformanceObservation(refreshInterval: .seconds(1))
 
     /// Sample-side LSP coordinator. Owns the `LSPManager`, document
     /// mirroring, and the diagnostics bridge. macOS-only (process spawning
@@ -116,12 +119,13 @@ final class AppState {
             controllerRef?.gotoLine(line)
         }
 
-        // Performance Inspector wiring. Assign `performance` BEFORE mutating
-        // `configuration` so the @Observable macro doesn't trip on an
-        // uninitialized stored property when writing through `self`.
+        // Performance Inspector wiring. The shared `performanceObservation`
+        // is also passed to `.performanceObserver(_:)` on the editor view
+        // in `WindowBody.editorPane`, which is what actually injects its
+        // underlying system into the framework's effective configuration.
         let perfCoordinator = PerformanceSampleCoordinator(
             memoryMonitor: memoryMonitor,
-            unifiedPerformanceSystem: unifiedPerformanceSystem
+            performanceObservation: performanceObservation
         )
         perfCoordinator.attach(controller: editorController)
         self.performance = perfCoordinator
@@ -129,10 +133,6 @@ final class AppState {
         let completionCoordinator = CompletionSampleCoordinator()
         self.completion = completionCoordinator
 
-        // Both observable coordinators must be assigned before mutating
-        // `configuration` through `self`; otherwise the @Observable macro
-        // trips on an uninitialized stored property.
-        self.configuration.performance.unifiedPerformanceSystem = unifiedPerformanceSystem
         completionCoordinator.attach(controller: editorController)
         #endif
     }
