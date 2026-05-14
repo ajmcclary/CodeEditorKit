@@ -307,24 +307,14 @@ extension CodeEditorView {
         let textKitBridge = self.textKitBridge
         if let nsRange = textKitBridge.nsRangeFromTextRange(textRange) {
             let allowed: Bool
-            #if canImport(AppKit)
-            if let proxy = delegate as? CodeEditorViewDelegateProxy,
-               proxy === delegateProxy {
-                allowed = proxy.source?.textView(
-                    self,
-                    shouldChangeTextIn: textRange,
-                    replacementString: replacementString
-                ) ?? true
-            } else {
-                allowed = delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
-            }
-            #else
+            // The multiplexer is the canonical path for shouldChangeTextIn;
+            // forwarding through the host proxy directly preserves the host
+            // gating semantics of this programmatic (non-keystroke) entry point.
             allowed = delegateProxy.source?.textView(
                 self,
                 shouldChangeTextIn: textRange,
                 replacementString: replacementString
             ) ?? true
-            #endif
 
             guard allowed else { return false }
 

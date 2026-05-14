@@ -90,9 +90,9 @@ internal protocol TextViewDelegateParticipant: AnyObject {
     #endif
 }
 
-// MARK: - Default implementations
+// MARK: - Default Implementations
 
-internal extension TextViewDelegateParticipant {
+extension TextViewDelegateParticipant {
     func textView(
         _: CodeEditorView,
         shouldChangeTextIn _: NSRange,

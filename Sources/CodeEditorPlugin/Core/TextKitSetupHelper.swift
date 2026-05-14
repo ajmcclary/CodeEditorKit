@@ -70,9 +70,13 @@ public enum TextKitSetupHelper {
             notes.append("Applied performance optimizations")
         }
 
-        if textView.delegate == nil {
-            textView.delegate = textView.delegateProxy
-        }
+        // The multiplexer is the sole owner of textView.delegate. The
+        // host-facing proxy registers at .gating; behavior participants
+        // (SmartEditingEngine, iOS container, iOS SwiftUI coordinator)
+        // register via CodeEditorView.addDelegateParticipant(_:phase:).
+        // See the named-commit invariant block in CodeEditorView.swift.
+        textView.addDelegateParticipant(textView.delegateProxy, phase: .gating)
+        textView.delegate = textView.delegateMultiplexer
 
         setupNotifications(for: textView)
 

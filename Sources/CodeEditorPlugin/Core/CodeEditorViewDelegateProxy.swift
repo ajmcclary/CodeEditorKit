@@ -6,101 +6,91 @@ import UIKit
 #endif
 import Foundation
 
+/// Adapts the framework's host-facing `CodeEditorViewDelegate` to the
+/// internal `TextViewDelegateParticipant` protocol consumed by
+/// `TextViewDelegateMultiplexer`. Registered at `.gating` so host
+/// vetoes short-circuit before any behavior participant fires.
+///
+/// `publishWillEditEvent` used to live in this proxy's `shouldChangeTextIn`
+/// body. After the multiplexer migration the multiplexer handles that
+/// as an intrinsic side-effect, so this type is now a pure forwarder.
 @MainActor
-class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
+final class CodeEditorViewDelegateProxy: NSObject {
     weak var source: CodeEditorViewDelegate?
 
     init(source: CodeEditorViewDelegate?) {
         self.source = source
+    }
+}
+
+// MARK: - TextViewDelegateParticipant
+
+extension CodeEditorViewDelegateProxy: TextViewDelegateParticipant {
+    func textView(
+        _ textView: CodeEditorView,
+        shouldChangeTextIn range: NSRange,
+        replacementString: String?
+    ) -> Bool {
+        guard textView.configuration.behavior.isEditable else { return false }
+
+        let textRange: NSTextRange?
+        if let textLayoutManager = textView.textLayoutManager,
+           let textContentManager = textLayoutManager.textContentManager {
+            textRange = NSTextRange(range, provider: textContentManager)
+        } else {
+            textRange = NSTextRange(range)
+        }
+        guard let textRange else { return true }
+
+        return source?.textView(
+            textView,
+            shouldChangeTextIn: textRange,
+            replacementString: replacementString
+        ) ?? true
+    }
+
+    func textViewWillChangeText(_ textView: CodeEditorView) {
+        let notification = Notification(name: textChangeNotificationName, object: textView)
+        source?.textViewWillChangeText(notification)
+    }
+
+    func textViewDidChangeText(_ textView: CodeEditorView) {
+        let notification = Notification(name: textChangeNotificationName, object: textView)
+        source?.textViewDidChangeText(notification)
+    }
+
+    func textViewDidChangeSelection(_ textView: CodeEditorView) {
+        let notification = Notification(name: selectionChangeNotificationName, object: textView)
+        source?.textViewDidChangeSelection(notification)
     }
 
     func undoManager(for textView: CodeEditorView) -> UndoManager? {
         source?.undoManager(for: textView)
     }
 
-    func textViewWillChangeText(_ notification: Notification) {
-        source?.textViewWillChangeText(notification)
+    func completionViewController(
+        for textView: CodeEditorView
+    ) -> (any CompletionViewControllerRepresentable)? {
+        // Match the existing CodeEditorViewDelegate default-impl behavior:
+        // if the host doesn't supply one, return nil so the multiplexer
+        // falls through to its first-non-nil-wins default (nil),
+        // matching today's surface where the host's default-impl
+        // `textViewCompletionViewController(_:)` is what fires.
+        source?.textViewCompletionViewController(textView)
     }
 
-    func textViewDidChangeText(_ notification: Notification) {
-        source?.textViewDidChangeText(notification)
-    }
-
-    func textViewDidChangeSelection(_ notification: Notification) {
-        source?.textViewDidChangeSelection(notification)
+    func insertionPointView(
+        for textView: CodeEditorView,
+        frame: CGRect
+    ) -> (any InsertionPointIndicating)? {
+        source?.textViewInsertionPointView(textView, frame: frame)
     }
 
     func textView(
         _ textView: CodeEditorView,
-        shouldChangeTextIn affectedCharRange: NSTextRange,
-        replacementString: String?
+        clickedOnLink link: Any,
+        at location: any NSTextLocation
     ) -> Bool {
-        source?.textView(textView, shouldChangeTextIn: affectedCharRange, replacementString: replacementString) ?? true
-    }
-
-    @MainActor
-    func textView(_ textView: CodeEditorView, willChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
-        source?.textView(textView, willChangeTextIn: affectedCharRange, replacementString: replacementString)
-    }
-
-    @MainActor
-    func textView(_ textView: CodeEditorView, didChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
-        source?.textView(textView, didChangeTextIn: affectedCharRange, replacementString: replacementString)
-    }
-
-    // Menu customization is not yet supported in the delegate protocol
-    // @MainActor
-    // func textView(_ textView: CodeEditorView, menu: NSMenu, for event: NSEvent, at location: NSTextLocation) -> NSMenu? {
-    //     guard let textContentManager = textView.textLayoutManager.textContentManager else {
-    //         return nil
-    //     }
-    //
-    //     let effectiveMenu = source?.textView(textView, menu: menu, for: event, at: location)
-    //
-    //     // Append plugins menus
-    //     let pluginMenus = textView.plugins.events.compactMap { events in
-    //         events.onContextMenuHandler?(location, textContentManager)
-    //     }
-    //
-    //     if let effectiveMenu, !pluginMenus.isEmpty {
-    //         effectiveMenu.addItem(NSMenuItem.separator())
-    //
-    //         for pluginMenu in pluginMenus {
-    //             if pluginMenu.items.count == 1, let firstItem = pluginMenu.items.first?.copy() as? NSMenuItem {
-    //                 effectiveMenu.addItem(firstItem)
-    //             } else if pluginMenu.items.count > 1 {
-    //                 let menuItem = effectiveMenu.addItem(withTitle: pluginMenu.title, action: nil, keyEquivalent: "")
-    //                 menuItem.submenu = pluginMenu
-    //             }
-    //         }
-    //     }
-    //
-    //     return effectiveMenu
-    // }
-
-    // Completion items methods are not yet supported in the delegate protocol
-    // @_unavailableFromAsync
-    // func textView(_ textView: CodeEditorView, completionItemsAtLocation location: NSTextLocation) -> [any CompletionItem]? {
-    //     source?.textView(textView, completionItemsAtLocation: location)
-    // }
-    //
-    // func textView(_ textView: CodeEditorView, completionItemsAtLocation location: any NSTextLocation) async -> [any CompletionItem]? {
-    //     await source?.textView(textView, completionItemsAtLocation: location)
-    // }
-
-    func textView(_ textView: CodeEditorView, insertCompletionItem item: any CompletionItemView) {
-        source?.textView(textView, insertCompletionItem: item)
-    }
-
-    func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerRepresentable {
-        source?.textViewCompletionViewController(textView) ?? CompletionViewController()
-    }
-
-    func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicating)? {
-        source?.textViewInsertionPointView(textView, frame: frame)
-    }
-
-    func textView(_ textView: CodeEditorView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
         source?.textView(textView, clickedOnLink: link, at: location) ?? false
     }
 
@@ -120,96 +110,19 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
         source?.textView(textView, shouldAllowInteractionWith: attachment, at: location) ?? true
     }
 
-    // MARK: - Platform-specific delegate forwarding
-
-    #if canImport(AppKit)
-    func textDidChange(_ notification: Notification) {
-        // Forward NSTextView's textDidChange to our custom notification
-        if let textView = notification.object as? CodeEditorView {
-            let textChangeNotification = Notification(name: NSText.didChangeNotification, object: textView)
-            textViewDidChangeText(textChangeNotification)
-        }
+    private var textChangeNotificationName: Notification.Name {
+        #if canImport(AppKit)
+        return NSText.didChangeNotification
+        #else
+        return UITextView.textDidChangeNotification
+        #endif
     }
 
-    func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
-        guard let codeEditorView = textView as? CodeEditorView else {
-            return true
-        }
-        guard codeEditorView.configuration.behavior.isEditable else {
-            return false
-        }
-
-        let allowed: Bool
-        let textRange: NSTextRange?
-        if let textLayoutManager = codeEditorView.textLayoutManager,
-           let textContentManager = textLayoutManager.textContentManager {
-            textRange = NSTextRange(affectedCharRange, provider: textContentManager)
-        } else {
-            textRange = NSTextRange(affectedCharRange)
-        }
-        if let textRange {
-            allowed = source?.textView(
-                codeEditorView,
-                shouldChangeTextIn: textRange,
-                replacementString: replacementString
-            ) ?? true
-        } else {
-            allowed = true
-        }
-
-        guard allowed else { return false }
-
-        // Publish WillEditEvent after validation succeeds so rejected edits
-        // do not leave stale pending transactions in downstream observers.
-        codeEditorView.publishWillEditEvent(
-            range: affectedCharRange,
-            replacementText: replacementString ?? ""
-        )
-        return true
+    private var selectionChangeNotificationName: Notification.Name {
+        #if canImport(AppKit)
+        return NSTextView.didChangeSelectionNotification
+        #else
+        return UITextView.textDidChangeNotification
+        #endif
     }
-    #elseif canImport(UIKit)
-    func textViewDidChange(_ textView: UITextView) {
-        // Forward UITextView's textViewDidChange to our custom notification
-        if let codeEditorView = textView as? CodeEditorView {
-            let textChangeNotification = Notification(name: UITextView.textDidChangeNotification, object: codeEditorView)
-            textViewDidChangeText(textChangeNotification)
-        }
-    }
-
-    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        guard let codeEditorView = textView as? CodeEditorView else {
-            return true
-        }
-        guard codeEditorView.configuration.behavior.isEditable else {
-            return false
-        }
-
-        let allowed: Bool
-        if let textRange = NSTextRange(range) {
-            allowed = source?.textView(
-                codeEditorView,
-                shouldChangeTextIn: textRange,
-                replacementString: text
-            ) ?? true
-        } else {
-            allowed = true
-        }
-
-        guard allowed else { return false }
-
-        codeEditorView.publishWillEditEvent(
-            range: range,
-            replacementText: text
-        )
-        return true
-    }
-    #endif
 }
-
-// MARK: - Platform-specific Protocol Conformance
-
-#if canImport(AppKit)
-extension CodeEditorViewDelegateProxy: NSTextViewDelegate {}
-#elseif canImport(UIKit)
-extension CodeEditorViewDelegateProxy: UITextViewDelegate {}
-#endif

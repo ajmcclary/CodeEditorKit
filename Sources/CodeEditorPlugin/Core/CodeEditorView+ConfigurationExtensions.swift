@@ -92,12 +92,12 @@ extension CodeEditorView {
     // MARK: - Line Highlighting
 
     @objc
-    internal func handleTextViewDidChangeSelection(_ notification: Notification) {
+    internal func handleTextViewDidChangeSelection(_: Notification) {
         // Forward to the host's delegate synchronously — Apple's NSTextView
         // contract is that `textViewDidChangeSelection` runs in the same
         // turn as the selection change, and callers that override it expect
         // that timing.
-        delegateProxy.textViewDidChangeSelection(notification)
+        delegateProxy.textViewDidChangeSelection(self)
 
         // Defer everything that may enumerate the TextKit2 layout or text
         // content storage. AppKit re-emits selection change notifications

@@ -1,5 +1,5 @@
-import XCTest
 @testable import CodeEditorPlugin
+import XCTest
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -8,8 +8,7 @@ import UIKit
 
 @MainActor
 final class TextViewDelegateMultiplexerTests: XCTestCase {
-
-    // MARK: - shouldChangeTextIn: phase ordering
+    // MARK: - ShouldChangeTextIn Phase Ordering
 
     func testGatingVetoShortCircuitsBeforeBehavior() throws {
         let codeEditorView = CodeEditorView(frame: .zero)
@@ -108,7 +107,7 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
 
         let result = invokeUndoManager(multiplexer, codeEditorView: codeEditorView)
 
-        XCTAssertTrue(result === firstNonNil.undoManagerToReturn, "First non-nil participant must win")
+        XCTAssertIdentical(result, firstNonNil.undoManagerToReturn, "First non-nil participant must win")
         XCTAssertEqual(secondNonNil.undoManagerCalls, 0, "Subsequent participants must not be consulted after a non-nil win")
     }
 
@@ -308,7 +307,7 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
         // Any NSTextLocation works — the mocks just pass it through.
         // Use a dummy implementation so we don't need a wired-up
         // NSTextContentManager.
-        return DummyTextLocation()
+        DummyTextLocation()
     }
 
     /// Walks participants in registration order ourselves to assert
@@ -426,6 +425,7 @@ private final class MockParticipant: TextViewDelegateParticipant {
 @MainActor
 private final class WillEditObserver: WillEditEventObserving {
     private(set) var willEditCount = 0
+
     func textStorageWillApplyEdit(_: WillEditEvent) {
         willEditCount += 1
     }

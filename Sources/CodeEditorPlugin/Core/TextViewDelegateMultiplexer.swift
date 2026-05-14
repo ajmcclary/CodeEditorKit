@@ -52,6 +52,7 @@ internal final class TextViewDelegateMultiplexer: NSObject {
             pruneGating()
             guard !gatingParticipants.contains(where: { $0.value === participant }) else { return }
             gatingParticipants.append(WeakParticipant(value: participant))
+
         case .behavior:
             pruneBehavior()
             guard !behaviorParticipants.contains(where: { $0.value === participant }) else { return }
@@ -94,14 +95,14 @@ private struct WeakParticipant {
     weak var value: (any TextViewDelegateParticipant)?
 }
 
-// MARK: - Shared per-method impls (cross-platform)
+// MARK: - Shared Per-method Impls
 
 extension TextViewDelegateMultiplexer {
     /// Veto chain for `shouldChangeTextIn:`. Walks `.gating` first; a
     /// gating veto short-circuits before any `.behavior` fires. After
     /// both phases vote allow, publishes `WillEditEvent` as the
     /// multiplexer's intrinsic side-effect, then returns `true`.
-    fileprivate func shouldChangeText(
+    internal func shouldChangeText(
         in codeEditorView: CodeEditorView,
         range: NSRange,
         replacementString: String?
@@ -132,7 +133,7 @@ extension TextViewDelegateMultiplexer {
     }
 }
 
-// MARK: - macOS delegate conformance
+// MARK: - MacOS Delegate Conformance
 
 #if canImport(AppKit)
 extension TextViewDelegateMultiplexer: NSTextViewDelegate {
@@ -175,7 +176,7 @@ extension TextViewDelegateMultiplexer: NSTextViewDelegate {
 }
 #endif
 
-// MARK: - iOS delegate conformance
+// MARK: - IOS Delegate Conformance
 
 #if canImport(UIKit)
 extension TextViewDelegateMultiplexer: UITextViewDelegate {
