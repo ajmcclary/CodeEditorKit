@@ -172,4 +172,50 @@ final class CompletionEventStreamTests: XCTestCase {
             XCTFail("Expected .succeeded outcome, got \(event.outcome)")
         }
     }
+
+    func testFailingProviderPublishesEventAndIsolatesFailure() async throws {
+        let manager = makeManager()
+        let failingProvider = StubCompletionProvider(
+            behavior: .throwing(TestError(description: "boom")),
+            id: "swift.failing",
+            supportedLanguages: [.swift]
+        )
+        let succeedingProvider = StubCompletionProvider(
+            behavior: .returns(itemCount: 2),
+            id: "swift.ok",
+            supportedLanguages: [.swift]
+        )
+        manager.registerProvider(failingProvider)
+        manager.registerProvider(succeedingProvider)
+
+        let stream = manager.events()
+        let context = makeContext()
+
+        async let drained = Self.awaitEvents(2, from: stream)
+        let result = try await manager.requestCompletions(for: context)
+        let events = try await drained
+
+        XCTAssertEqual(events.count, 2)
+
+        let byID = Dictionary(uniqueKeysWithValues: events.map { ($0.providerID, $0) })
+        let failed = try XCTUnwrap(byID["swift.failing"])
+        let succeeded = try XCTUnwrap(byID["swift.ok"])
+
+        if case .failed(let err) = failed.outcome {
+            XCTAssertTrue(
+                err.message.contains("boom"),
+                "SendableError.message (\(err.message)) should contain the thrown error description."
+            )
+        } else {
+            XCTFail("Expected .failed outcome for the throwing provider, got \(failed.outcome)")
+        }
+        if case .succeeded(let itemCount) = succeeded.outcome {
+            XCTAssertEqual(itemCount, 2)
+        } else {
+            XCTFail("Expected .succeeded outcome for the OK provider, got \(succeeded.outcome)")
+        }
+
+        // Failure isolation: the throwing provider does not poison the batch.
+        XCTAssertEqual(result.items.count, 2, "Successful provider's items must still surface in the merged result.")
+    }
 }
