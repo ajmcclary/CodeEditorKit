@@ -93,11 +93,20 @@ public enum CrossPlatformLogger {
             log(level: .fault, message)
         }
 
-        /// Internal logging method
+        /// Internal logging method.
+        ///
+        /// **Privacy contract.** Messages are logged with explicit
+        /// `.public` privacy on Apple platforms. This wrapper accepts a
+        /// pre-interpolated `String`, so OSLog cannot redact individual
+        /// substitutions — the whole message is one opaque value at the
+        /// boundary. The choice is `.public` so production logs stay
+        /// useful (`<private>` everywhere would defeat the purpose of
+        /// diagnostic logging). Callers are responsible for redacting
+        /// sensitive data (tokens, paths, user identifiers) at the
+        /// interpolation site before passing the string here.
         private func log(level: Level, _ message: String) {
             #if canImport(os.log)
-            // Use os.log on Apple platforms
-            osLogger.log(level: level.osLogType, "\(message)")
+            osLogger.log(level: level.osLogType, "\(message, privacy: .public)")
             #else
             // Fallback to stderr on platforms without os.log.
             let timestamp = ISO8601DateFormatter().string(from: Date())
