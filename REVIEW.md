@@ -259,6 +259,7 @@ These are what the sample had to *invent* to integrate the framework — the fra
 - `SettingsScene`'s `frame(width: 1380, height: 880)` precedes `windowResizability(.contentSize)` and overrides the min sizes (`App/CodeEditorSampleApp.swift:16-20`).
 - `MainActor.assumeIsolated` after `.receive(on: DispatchQueue.main)` (`DiagnosticsBridge.swift:49-55`) — works only by accident.
 - No `Sources/CodeEditorSample/README.md`; users will keep hitting the `cd CodeEditorSample` trap.
+- **`EditorState.language` is never populated by the framework.** `EditorState.language: Language?` is declared at `Core/EditorState.swift:24` and consumed by `CodeEditorUI/StatusBar/EditorStatusBar.swift:50` (status-bar language badge) — but `EditorContainerViewModel.updateEditorState()` (`Layout/EditorContainerViewModel.swift:370-394`), which owns the EditorState mirror, only writes `characterCount`, `lineCount`, and `visibleRange`. Result: the status bar always shows "Plain Text" regardless of what `CodeEditorView.language` is set to. Discovered 2026-05-14 while smoke-testing the TextKit 2 migration. Fix: have `updateEditorState()` write `editorState.language = textView.language`, and re-call it from `CodeEditorView.language`'s `didSet` (or from the SwiftUI representable's update path). Two-line framework fix.
 
 ---
 
