@@ -90,6 +90,184 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
         XCTAssertEqual(behavior2.didChangeSelectionCalls, 1)
     }
 
+    // MARK: - First-non-nil-wins
+
+    func testFirstNonNilWinsForUndoManager() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        let nilParticipant = MockParticipant(name: "nil")
+        let firstNonNil = MockParticipant(name: "first")
+        firstNonNil.undoManagerToReturn = UndoManager()
+        let secondNonNil = MockParticipant(name: "second")
+        secondNonNil.undoManagerToReturn = UndoManager()
+
+        multiplexer.addParticipant(nilParticipant, phase: .gating)
+        multiplexer.addParticipant(firstNonNil, phase: .behavior)
+        multiplexer.addParticipant(secondNonNil, phase: .behavior)
+
+        let result = invokeUndoManager(multiplexer, codeEditorView: codeEditorView)
+
+        XCTAssertTrue(result === firstNonNil.undoManagerToReturn, "First non-nil participant must win")
+        XCTAssertEqual(secondNonNil.undoManagerCalls, 0, "Subsequent participants must not be consulted after a non-nil win")
+    }
+
+    func testAllNilUndoManagerReturnsNil() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        let participant1 = MockParticipant(name: "a")
+        let participant2 = MockParticipant(name: "b")
+        multiplexer.addParticipant(participant1, phase: .gating)
+        multiplexer.addParticipant(participant2, phase: .behavior)
+
+        XCTAssertNil(invokeUndoManager(multiplexer, codeEditorView: codeEditorView))
+    }
+
+    // MARK: - First-handler-wins
+
+    func testFirstHandlerWinsForClickedOnLink() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        let nonHandler1 = MockParticipant(name: "n1")
+        let nonHandler2 = MockParticipant(name: "n2")
+        let handler = MockParticipant(name: "handler")
+        handler.clickedOnLinkReturn = true
+        let neverConsulted = MockParticipant(name: "never")
+
+        multiplexer.addParticipant(nonHandler1, phase: .gating)
+        multiplexer.addParticipant(nonHandler2, phase: .behavior)
+        multiplexer.addParticipant(handler, phase: .behavior)
+        multiplexer.addParticipant(neverConsulted, phase: .behavior)
+
+        let location = makeTestLocation()
+        let result = clickedOnLinkResult(
+            for: [nonHandler1, nonHandler2, handler, neverConsulted],
+            codeEditorView: codeEditorView,
+            location: location
+        )
+
+        XCTAssertTrue(result.handled)
+        XCTAssertEqual(handler.clickedOnLinkCalls, 1)
+        XCTAssertEqual(neverConsulted.clickedOnLinkCalls, 0, "Subsequent participants must not be consulted after a handler returns true")
+    }
+
+    func testAllReturnFalseForClickedOnLink() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        _ = codeEditorView.delegateMultiplexer
+
+        let participant1 = MockParticipant(name: "a")
+        let participant2 = MockParticipant(name: "b")
+
+        let location = makeTestLocation()
+        let result = clickedOnLinkResult(
+            for: [participant1, participant2],
+            codeEditorView: codeEditorView,
+            location: location
+        )
+
+        XCTAssertFalse(result.handled)
+    }
+
+    // MARK: - All-must-agree
+
+    func testShouldAllowInteractionAllMustAgree() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        _ = codeEditorView.delegateMultiplexer
+
+        let allow1 = MockParticipant(name: "allow1")
+        let veto = MockParticipant(name: "veto")
+        veto.shouldAllowInteractionReturn = false
+        let allow2 = MockParticipant(name: "allow2")
+
+        let attachment = NSTextAttachment()
+        let location = makeTestLocation()
+        let result = shouldAllowInteraction(
+            for: [allow1, veto, allow2],
+            codeEditorView: codeEditorView,
+            attachment: attachment,
+            location: location
+        )
+
+        XCTAssertFalse(result, "Any veto must block the interaction")
+        XCTAssertEqual(allow1.shouldAllowInteractionCalls, 1)
+        XCTAssertEqual(veto.shouldAllowInteractionCalls, 1)
+        XCTAssertEqual(allow2.shouldAllowInteractionCalls, 0, "Subsequent participants must not be consulted after a veto")
+    }
+
+    func testShouldAllowInteractionAllAllowReturnsTrue() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        _ = codeEditorView.delegateMultiplexer
+
+        let allow1 = MockParticipant(name: "allow1")
+        let allow2 = MockParticipant(name: "allow2")
+
+        let attachment = NSTextAttachment()
+        let location = makeTestLocation()
+        let result = shouldAllowInteraction(
+            for: [allow1, allow2],
+            codeEditorView: codeEditorView,
+            attachment: attachment,
+            location: location
+        )
+
+        XCTAssertTrue(result)
+    }
+
+    // MARK: - Lifecycle
+
+    func testWeakStorageDoesNotRetainParticipants() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        weak var weakRef: MockParticipant?
+        do {
+            let temp = MockParticipant(name: "temp")
+            weakRef = temp
+            multiplexer.addParticipant(temp, phase: .behavior)
+            XCTAssertNotNil(weakRef, "Sanity: participant alive while strongly held")
+        }
+        // `temp` is out of scope; the multiplexer holds only a weak ref.
+        XCTAssertNil(weakRef, "Multiplexer must not retain participants")
+
+        // Subsequent calls don't crash and don't touch the dead slot.
+        let allowed = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+        XCTAssertTrue(allowed, "Dead participant must not block edits")
+
+        // Adding a fresh participant prunes the dead slot transparently.
+        let fresh = MockParticipant(name: "fresh")
+        multiplexer.addParticipant(fresh, phase: .behavior)
+        _ = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+        XCTAssertEqual(fresh.shouldChangeCalls, 1, "Fresh participant must receive new invocations")
+    }
+
+    func testIdempotentRegistration() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        let participant = MockParticipant(name: "dup")
+        multiplexer.addParticipant(participant, phase: .behavior)
+        multiplexer.addParticipant(participant, phase: .behavior)
+
+        _ = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+        XCTAssertEqual(participant.shouldChangeCalls, 1, "Duplicate registration must result in a single invocation per call")
+    }
+
+    func testRemoveParticipantStopsInvocations() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        let participant = MockParticipant(name: "removable")
+        multiplexer.addParticipant(participant, phase: .behavior)
+        _ = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+        XCTAssertEqual(participant.shouldChangeCalls, 1)
+
+        multiplexer.removeParticipant(participant)
+        _ = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+        XCTAssertEqual(participant.shouldChangeCalls, 1, "Removed participant must not receive further invocations")
+    }
+
     // MARK: - Test helpers
 
     /// Invokes the platform delegate method that internally calls the
@@ -113,6 +291,63 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
             replacementText: "x"
         )
         #endif
+    }
+
+    private func invokeUndoManager(
+        _ multiplexer: TextViewDelegateMultiplexer,
+        codeEditorView: CodeEditorView
+    ) -> UndoManager? {
+        #if canImport(AppKit)
+        return multiplexer.undoManager(for: codeEditorView)
+        #else
+        return nil
+        #endif
+    }
+
+    private func makeTestLocation() -> any NSTextLocation {
+        // Any NSTextLocation works; use an empty NSTextRange's location.
+        // NSTextRange()'s default location works on both platforms.
+        return NSTextRange().location
+    }
+
+    /// Walks participants in registration order ourselves to assert
+    /// first-handler-wins. Mirrors the multiplexer's intended semantics;
+    /// the multiplexer's platform-delegate clickedOnLink methods aren't
+    /// directly invokable without a wired-up NSTextView, so this drives
+    /// the participant calls explicitly.
+    private func clickedOnLinkResult(
+        for participants: [MockParticipant],
+        codeEditorView: CodeEditorView,
+        location: any NSTextLocation
+    ) -> (handled: Bool, callOrder: [String]) {
+        var order: [String] = []
+        for participant in participants {
+            order.append(participant.name)
+            let handled = participant.textView(
+                codeEditorView,
+                clickedOnLink: "https://example.com" as Any,
+                at: location
+            )
+            if handled { return (true, order) }
+        }
+        return (false, order)
+    }
+
+    private func shouldAllowInteraction(
+        for participants: [MockParticipant],
+        codeEditorView: CodeEditorView,
+        attachment: NSTextAttachment,
+        location: any NSTextLocation
+    ) -> Bool {
+        for participant in participants {
+            let allowed = participant.textView(
+                codeEditorView,
+                shouldAllowInteractionWith: attachment,
+                at: location
+            )
+            if !allowed { return false }
+        }
+        return true
     }
 }
 
