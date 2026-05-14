@@ -305,9 +305,10 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
     }
 
     private func makeTestLocation() -> any NSTextLocation {
-        // Any NSTextLocation works; use an empty NSTextRange's location.
-        // NSTextRange()'s default location works on both platforms.
-        return NSTextRange().location
+        // Any NSTextLocation works — the mocks just pass it through.
+        // Use a dummy implementation so we don't need a wired-up
+        // NSTextContentManager.
+        return DummyTextLocation()
     }
 
     /// Walks participants in registration order ourselves to assert
@@ -427,5 +428,18 @@ private final class WillEditObserver: WillEditEventObserving {
     private(set) var willEditCount = 0
     func textStorageWillApplyEdit(_: WillEditEvent) {
         willEditCount += 1
+    }
+}
+
+// MARK: - DummyTextLocation
+
+/// Minimal NSTextLocation stand-in for tests that only need an object
+/// to thread through participant methods. The compare(_:) impl is a
+/// stable no-op (always .orderedSame) — fine because the multiplexer
+/// itself never compares locations.
+private final class DummyTextLocation: NSObject, NSTextLocation {
+    func compare(_ location: any NSTextLocation) -> ComparisonResult {
+        if self === location as AnyObject { return .orderedSame }
+        return .orderedAscending
     }
 }

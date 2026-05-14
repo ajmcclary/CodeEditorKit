@@ -141,6 +141,41 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Proxy for delegate calls
     internal let delegateProxy = CodeEditorViewDelegateProxy(source: nil)
 
+    /// The sole owner of `textView.delegate` for this view.
+    ///
+    /// Every framework-internal feature that wants delegate hooks (host
+    /// proxy, smart editing, iOS scroll forwarding, iOS SwiftUI
+    /// coordinator) registers as a `TextViewDelegateParticipant` via
+    /// `addDelegateParticipant(_:phase:)`. The `textView.delegate` slot
+    /// itself is set to this object during `TextKitSetupHelper.setupTextKit`
+    /// and never re-assigned. See the named-commit invariant block in
+    /// this file for the structural rule.
+    internal let delegateMultiplexer = TextViewDelegateMultiplexer()
+
+    /// Register a participant with the delegate multiplexer.
+    ///
+    /// - Parameters:
+    ///   - participant: An object conforming to `TextViewDelegateParticipant`.
+    ///     Held weakly; the caller owns its lifetime.
+    ///   - phase: `.gating` for host-style gating (one slot, used by the
+    ///     `CodeEditorViewDelegateProxy`); `.behavior` for smart-editing
+    ///     interception, scroll forwarding, and SwiftUI coordinator
+    ///     state mirroring. Defaults to `.behavior`.
+    internal func addDelegateParticipant(
+        _ participant: any TextViewDelegateParticipant,
+        phase: TextViewDelegatePhase = .behavior
+    ) {
+        delegateMultiplexer.addParticipant(participant, phase: phase)
+    }
+
+    /// Remove a participant from the delegate multiplexer. Idempotent —
+    /// removing an unregistered participant is a no-op.
+    internal func removeDelegateParticipant(
+        _ participant: any TextViewDelegateParticipant
+    ) {
+        delegateMultiplexer.removeParticipant(participant)
+    }
+
     /// Event publisher for unified event handling
     public let eventPublisher = EditorEventPublisher()
 
