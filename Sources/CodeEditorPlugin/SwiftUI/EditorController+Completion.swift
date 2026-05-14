@@ -48,5 +48,20 @@ extension EditorController {
             triggerCharacter: triggerCharacter
         )
     }
+
+    /// Returns an `AsyncStream` of per-provider completion events from the
+    /// attached editor's completion manager.
+    ///
+    /// Returns an empty, immediately-terminating stream when no editor is
+    /// attached. Each call returns an independent stream; multiple subscribers
+    /// each receive every event.
+    ///
+    /// - SeeAlso: `CompletionManager.events()`
+    public func completionEvents() -> AsyncStream<CompletionEvent> {
+        guard let manager = codeEditorView?.completionManager else {
+            return AsyncStream { $0.finish() }
+        }
+        return manager.events()
+    }
 }
 #endif

@@ -323,4 +323,14 @@ final class CompletionEventStreamTests: XCTestCase {
         let timestamps = drained.map(\.timestamp)
         XCTAssertEqual(timestamps, timestamps.sorted(), "Drained events must be timestamp-monotonic.")
     }
+
+    func testEditorControllerCompletionEventsTerminatesWhenUnattached() async throws {
+        let controller = EditorController()
+        let stream = controller.completionEvents()
+        var observed: [CompletionEvent] = []
+        for await event in stream {
+            observed.append(event)
+        }
+        XCTAssertTrue(observed.isEmpty, "Unattached controller must yield no events and terminate immediately.")
+    }
 }
