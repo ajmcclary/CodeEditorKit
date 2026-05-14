@@ -34,4 +34,21 @@ struct ApplyThemePropagationTests {
         #expect(container.appliedTheme == fallback)
         #expect(container.appliedTheme != Theme.lcarsDark)
     }
+
+    #if canImport(AppKit)
+    @Test("apply(theme:) propagates to the macOS LineNumberRulerView renderer")
+    @MainActor
+    func applyThemePropagatesToRuler() async throws {
+        let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        // The scroll view + ruler are created in CodeEditorContainerView.init via
+        // ContainerViewInitializer; pull the ruler out to read its renderer state.
+        let scrollView = try #require(container.textView.enclosingScrollView)
+        let ruler = try #require(scrollView.verticalRulerView as? LineNumberRulerView)
+
+        container.apply(theme: .lcarsDark)
+
+        let expected = PlatformColor(tokens: Theme.lcarsDark.style.editor.activeLineNumber)
+        #expect(ruler.renderer.themedActiveLineNumberColor.cgColor == expected.cgColor)
+    }
+    #endif
 }

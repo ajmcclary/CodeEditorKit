@@ -51,6 +51,9 @@ public final class CodeEditorContainerView: PlatformView {
         gutterView.apply(theme: theme)
         minimapView.apply(theme: theme)
         textView.apply(theme: theme)
+        #if canImport(AppKit)
+        (textView.enclosingScrollView?.verticalRulerView as? LineNumberRulerView)?.apply(theme: theme)
+        #endif
     }
 
     // MARK: - Initialization
