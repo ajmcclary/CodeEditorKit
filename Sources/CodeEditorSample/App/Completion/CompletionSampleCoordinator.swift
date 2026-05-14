@@ -22,8 +22,8 @@ final class CompletionSampleCoordinator {
 
     struct Snapshot: Sendable {
         var registeredProviders: [RegisteredProviderSummary]
-        var recentActivity: [CompletionActivityEntry]     // newest-first, max 20
-        var lastActivity: CompletionActivityEntry?
+        var recentActivity: [CompletionEvent]             // newest-first, max 20
+        var lastActivity: CompletionEvent?
         var requests: Int
         var cacheHitRate: Double
         var avgProcessingMs: Double
@@ -54,7 +54,10 @@ final class CompletionSampleCoordinator {
     private var refreshTimer: Timer?
 
     @ObservationIgnored
-    private var ring: [CompletionActivityEntry] = []
+    private var ring: [CompletionEvent] = []
+
+    @ObservationIgnored
+    private var eventTask: Task<Void, Never>?
 
     // MARK: - Lifecycle
 
@@ -66,17 +69,16 @@ final class CompletionSampleCoordinator {
         self.controller = controller
 
         for provider in BuiltInLanguageProviders.all() {
-            controller.registerCompletionProvider(
-                TelemetryCompletionProvider(wrapping: provider) { [weak self] entry in
-                    Task { @MainActor [weak self] in self?.record(entry) }
-                }
-            )
+            controller.registerCompletionProvider(provider)
         }
-        controller.registerCompletionProvider(
-            TelemetryCompletionProvider(wrapping: DemoCompletionProvider()) { [weak self] entry in
-                Task { @MainActor [weak self] in self?.record(entry) }
+        controller.registerCompletionProvider(DemoCompletionProvider())
+
+        eventTask?.cancel()
+        eventTask = Task { @MainActor [weak self] in
+            for await event in controller.completionEvents() {
+                self?.record(event)
             }
-        )
+        }
 
         refresh()
     }
@@ -104,6 +106,8 @@ final class CompletionSampleCoordinator {
 
     func detach() {
         stop()
+        eventTask?.cancel()
+        eventTask = nil
         controller = nil
     }
 
@@ -119,8 +123,8 @@ final class CompletionSampleCoordinator {
 
     // MARK: - Telemetry
 
-    func record(_ entry: CompletionActivityEntry) {
-        ring.append(entry)
+    func record(_ event: CompletionEvent) {
+        ring.append(event)
         if ring.count > Self.ringCapacity {
             ring.removeFirst(ring.count - Self.ringCapacity)
         }

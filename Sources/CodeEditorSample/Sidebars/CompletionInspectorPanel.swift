@@ -8,8 +8,8 @@ import SwiftUI
 /// remains snapshot-testable.
 struct CompletionInspectorPanel: View {
     let registeredProviders: [CompletionSampleCoordinator.RegisteredProviderSummary]
-    let recentActivity: [CompletionActivityEntry]
-    let lastActivity: CompletionActivityEntry?
+    let recentActivity: [CompletionEvent]
+    let lastActivity: CompletionEvent?
     let requests: Int
     let cacheHitRate: Double
     let avgProcessingMs: Double
@@ -66,9 +66,17 @@ struct CompletionInspectorPanel: View {
     @ViewBuilder
     private var lastRequestView: some View {
         if let last = lastActivity {
+            let displayCount: Int = {
+                if case .succeeded(let itemCount) = last.outcome { return itemCount }
+                return 0
+            }()
+            let isFailed: Bool = {
+                if case .failed = last.outcome { return true }
+                return false
+            }()
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    if last.error != nil {
+                    if isFailed {
                         Image(systemName: "exclamationmark.triangle")
                             .foregroundStyle(.orange)
                     }
@@ -84,7 +92,7 @@ struct CompletionInspectorPanel: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text("\(last.providerId) → \(last.itemCount) items · \(String(format: "%.1f", last.durationMs))ms")
+                Text("\(last.providerID) → \(displayCount) items · \(String(format: "%.1f", last.durationMilliseconds))ms")
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
@@ -120,22 +128,30 @@ struct CompletionInspectorPanel: View {
         } else {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(recentActivity) { entry in
+                    let displayCount: Int = {
+                        if case .succeeded(let itemCount) = entry.outcome { return itemCount }
+                        return 0
+                    }()
+                    let failureHelp: String = {
+                        if case .failed(let err) = entry.outcome { return err.description }
+                        return ""
+                    }()
                     HStack(spacing: 6) {
-                        if entry.error != nil {
+                        if !failureHelp.isEmpty {
                             Image(systemName: "exclamationmark.triangle")
                                 .foregroundStyle(.orange)
                         }
                         Text(Self.timeFormatter.string(from: entry.timestamp))
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundStyle(.secondary)
-                        Text(entry.providerId)
+                        Text(entry.providerID)
                             .font(.system(size: 11, design: .monospaced))
                         Spacer()
-                        Text("\(entry.itemCount) · \(String(format: "%.1f", entry.durationMs))ms")
+                        Text("\(displayCount) · \(String(format: "%.1f", entry.durationMilliseconds))ms")
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundStyle(.secondary)
                     }
-                    .help(entry.error ?? "")
+                    .help(failureHelp)
                 }
             }
         }
