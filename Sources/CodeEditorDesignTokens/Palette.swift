@@ -68,6 +68,18 @@ extension Tokens {
             public static let infoLight = Color(hex: 0x007AFF)
         }
 
+        /// macOS Tahoe window traffic-light colors (close / minimize / zoom).
+        /// Hairline stroke is not part of the palette — call sites apply
+        /// `.black.opacity(0.18)` as a UI-system primitive.
+        public enum TrafficLight {
+            /// `#FF5D57` — Tahoe close-button red.
+            public static let close = Color(hex: 0xFF5D57)
+            /// `#FEBC2E` — Tahoe minimize-button yellow.
+            public static let minimize = Color(hex: 0xFEBC2E)
+            /// `#28C840` — Tahoe zoom-button green.
+            public static let zoom = Color(hex: 0x28C840)
+        }
+
         /// ANSI terminal palette (dark variant — VS Code Bridge terminal).
         public enum ANSI {
             /// `#1E1E1E` — terminal black.

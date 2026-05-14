@@ -37,14 +37,15 @@ public struct TrafficLightsConfiguration: Sendable {
 /// `TrafficLightsConfiguration` fire on click; if all three are nil the
 /// lights are decorative.
 public struct EditorTrafficLights: View {
-    /// Standard Tahoe close-button red.
-    private static let closeColor = Color(red: 1.0, green: 0.365, blue: 0.341)
-    /// Standard Tahoe minimize-button yellow.
-    private static let minimizeColor = Color(red: 0.996, green: 0.737, blue: 0.180)
-    /// Standard Tahoe zoom-button green.
-    private static let zoomColor = Color(red: 0.157, green: 0.784, blue: 0.251)
+    /// Standard Tahoe close-button red (`Tokens.Palette.TrafficLight.close`).
+    private static let closeColor = Color(tokens: Tokens.Palette.TrafficLight.close)
+    /// Standard Tahoe minimize-button yellow (`Tokens.Palette.TrafficLight.minimize`).
+    private static let minimizeColor = Color(tokens: Tokens.Palette.TrafficLight.minimize)
+    /// Standard Tahoe zoom-button green (`Tokens.Palette.TrafficLight.zoom`).
+    private static let zoomColor = Color(tokens: Tokens.Palette.TrafficLight.zoom)
 
-    /// Stroke color for the dot's hairline border.
+    /// Stroke color for the dot's hairline border (UI-system primitive,
+    /// not part of the brand palette).
     private static let strokeColor = Color.black.opacity(0.18)
 
     /// Configuration carrying optional click callbacks.
