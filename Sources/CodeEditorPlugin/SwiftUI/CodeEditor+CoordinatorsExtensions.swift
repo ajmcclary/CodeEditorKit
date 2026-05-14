@@ -42,11 +42,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     ///
     /// `EditorState`'s doc contract is that the editor target writes
     /// `selection`, `language`, and `lineCount`; the host writes the rest.
-    /// We hold a weak reference so an env default (a throwaway returned by
-    /// `EditorStateKey.defaultValue`) can deallocate immediately and writes
-    /// no-op for hosts without chrome. Hosts that wire chrome retain their
-    /// own `EditorState` via `@State` and inject it with
-    /// `.environment(\.editorState, _:)`.
+    /// Held weakly so the env's process-wide sentinel doesn't extend its
+    /// lifetime through this view (and so a host's `@State`-owned
+    /// `EditorState` deallocates cleanly when the host drops it). Writes
+    /// to the shared sentinel are inert — no chrome view reads it unless
+    /// a host explicitly wires one via `.environment(\.editorState, _:)`.
     weak var hostEditorState: EditorState?
 
     /// Additional callbacks for extended functionality
