@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Dockerfile",
             fileExtensions: ["dockerfile"],
             lspIdentifier: "dockerfile",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
             blockCommentEnd: nil,

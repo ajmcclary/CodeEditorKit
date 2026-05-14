@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Java",
             fileExtensions: ["java"],
             lspIdentifier: "java",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

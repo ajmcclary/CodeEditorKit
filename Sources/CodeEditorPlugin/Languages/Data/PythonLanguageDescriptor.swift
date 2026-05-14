@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Python",
             fileExtensions: ["py", "pyw"],
             lspIdentifier: "python",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: "\"\"\"",
             blockCommentEnd: "\"\"\"",

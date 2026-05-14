@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "YAML",
             fileExtensions: ["yaml", "yml"],
             lspIdentifier: "yaml",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
             blockCommentEnd: nil,

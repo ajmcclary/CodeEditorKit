@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "HTML",
             fileExtensions: ["html", "htm", "xhtml"],
             lspIdentifier: "html",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: "<!--",
             blockCommentEnd: "-->",

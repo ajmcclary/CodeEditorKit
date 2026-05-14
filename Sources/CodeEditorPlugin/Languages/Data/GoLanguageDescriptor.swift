@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Go",
             fileExtensions: ["go"],
             lspIdentifier: "go",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

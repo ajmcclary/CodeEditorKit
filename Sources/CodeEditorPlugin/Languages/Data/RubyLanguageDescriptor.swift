@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Ruby",
             fileExtensions: ["rb", "rbw"],
             lspIdentifier: "ruby",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: "=begin",
             blockCommentEnd: "=end",

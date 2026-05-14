@@ -18,7 +18,14 @@ internal struct LanguageDescriptor: Sendable {
 
     // MARK: - Highlighting
 
-    let highlightingStrategy: HighlightingStrategy
+    /// Whether this language is highlighted by the regex-based pipeline
+    /// (`RegexSyntaxHighlighter` + `RegexRangeHighlightProvider`). Distinct
+    /// from `parserName` (a tree-sitter grammar id that's still used by
+    /// `LanguageDetectionService`). Languages like Swift (SwiftSyntax) and
+    /// JSON (FastJSONTokenizer) have their own strategies and may still
+    /// have `parserName` set; the regex pipeline ignores them via this
+    /// flag.
+    let usesRegexHighlighter: Bool
     let lineComment: String?
     let blockCommentStart: String?
     let blockCommentEnd: String?
@@ -51,7 +58,7 @@ internal struct LanguageDescriptor: Sendable {
         displayName: String,
         fileExtensions: [String],
         lspIdentifier: String,
-        highlightingStrategy: HighlightingStrategy,
+        usesRegexHighlighter: Bool,
         lineComment: String?,
         blockCommentStart: String?,
         blockCommentEnd: String?,
@@ -74,7 +81,7 @@ internal struct LanguageDescriptor: Sendable {
         self.displayName = displayName
         self.fileExtensions = fileExtensions
         self.lspIdentifier = lspIdentifier
-        self.highlightingStrategy = highlightingStrategy
+        self.usesRegexHighlighter = usesRegexHighlighter
         self.lineComment = lineComment
         self.blockCommentStart = blockCommentStart
         self.blockCommentEnd = blockCommentEnd
@@ -159,10 +166,6 @@ internal struct LanguageDescriptor: Sendable {
 
     static func descriptor(for language: Language) -> Self? {
         all[language]
-    }
-
-    static func highlightingStrategy(for language: Language) -> HighlightingStrategy {
-        all[language]?.highlightingStrategy ?? .noHighlighting
     }
 
     static func keywords(for language: Language) -> [String] {

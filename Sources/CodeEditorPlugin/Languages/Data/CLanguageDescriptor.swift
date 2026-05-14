@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "C",
             fileExtensions: ["c", "h"],
             lspIdentifier: "c",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

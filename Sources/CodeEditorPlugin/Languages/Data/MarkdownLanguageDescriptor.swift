@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Markdown",
             fileExtensions: ["md", "markdown", "mdown", "mkd"],
             lspIdentifier: "markdown",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: nil,
             blockCommentEnd: nil,

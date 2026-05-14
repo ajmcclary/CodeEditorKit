@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "C#",
             fileExtensions: ["cs"],
             lspIdentifier: "csharp",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "TypeScript",
             fileExtensions: ["ts", "tsx"],
             lspIdentifier: "typescript",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

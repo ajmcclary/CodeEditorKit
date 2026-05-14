@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Rust",
             fileExtensions: ["rs"],
             lspIdentifier: "rust",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

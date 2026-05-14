@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Kotlin",
             fileExtensions: ["kt", "kts"],
             lspIdentifier: "kotlin",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

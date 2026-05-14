@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "SQL",
             fileExtensions: ["sql"],
             lspIdentifier: "sql",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "--",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

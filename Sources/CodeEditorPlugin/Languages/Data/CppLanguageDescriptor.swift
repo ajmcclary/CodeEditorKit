@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "C++",
             fileExtensions: ["cpp", "cc", "cxx", "hpp", "hh", "hxx"],
             lspIdentifier: "cpp",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

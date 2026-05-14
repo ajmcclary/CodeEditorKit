@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Shell",
             fileExtensions: ["sh", "bash", "zsh", "fish"],
             lspIdentifier: "shellscript",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
             blockCommentEnd: nil,

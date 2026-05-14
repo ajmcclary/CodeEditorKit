@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Swift",
             fileExtensions: ["swift"],
             lspIdentifier: "swift",
-            highlightingStrategy: .swiftSyntax,
+            usesRegexHighlighter: false,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

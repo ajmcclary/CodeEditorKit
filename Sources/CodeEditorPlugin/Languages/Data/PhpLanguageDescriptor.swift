@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "PHP",
             fileExtensions: ["php", "phtml", "php3", "php4", "php5"],
             lspIdentifier: "php",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

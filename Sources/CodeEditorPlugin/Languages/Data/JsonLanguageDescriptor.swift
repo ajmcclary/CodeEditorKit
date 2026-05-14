@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "JSON",
             fileExtensions: ["json", "jsonc"],
             lspIdentifier: "json",
-            highlightingStrategy: .fastJSON,
+            usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: nil,
             blockCommentEnd: nil,

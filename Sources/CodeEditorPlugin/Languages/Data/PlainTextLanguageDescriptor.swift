@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Plain Text",
             fileExtensions: ["txt", "text", "log"],
             lspIdentifier: "plaintext",
-            highlightingStrategy: .noHighlighting,
+            usesRegexHighlighter: false,
             lineComment: nil,
             blockCommentStart: nil,
             blockCommentEnd: nil,

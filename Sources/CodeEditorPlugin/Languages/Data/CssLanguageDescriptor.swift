@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "CSS",
             fileExtensions: ["css", "scss", "sass", "less"],
             lspIdentifier: "css",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

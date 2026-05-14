@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Dart",
             fileExtensions: ["dart"],
             lspIdentifier: "dart",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

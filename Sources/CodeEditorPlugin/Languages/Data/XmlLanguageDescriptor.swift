@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "XML",
             fileExtensions: ["xml", "xsl", "xslt", "svg"],
             lspIdentifier: "xml",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: "<!--",
             blockCommentEnd: "-->",

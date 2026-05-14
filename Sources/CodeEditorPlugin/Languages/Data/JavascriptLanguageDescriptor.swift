@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "JavaScript",
             fileExtensions: ["js", "jsx", "mjs"],
             lspIdentifier: "javascript",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
             blockCommentEnd: "*/",

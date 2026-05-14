@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "Lua",
             fileExtensions: ["lua"],
             lspIdentifier: "lua",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "--",
             blockCommentStart: "--[[",
             blockCommentEnd: "]]",

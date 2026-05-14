@@ -32,7 +32,7 @@ extension RegexSyntaxHighlighter {
     internal static func createLanguageDefinitions() -> [String: RegexLanguageDefinition] {
         var languages: [String: RegexLanguageDefinition] = [:]
 
-        for descriptor in LanguageDescriptor.allDescriptors where descriptor.parserName != nil {
+        for descriptor in LanguageDescriptor.allDescriptors where descriptor.usesRegexHighlighter {
             languages[descriptor.lspIdentifier] = createDefinition(from: descriptor)
         }
 
@@ -43,7 +43,7 @@ extension RegexSyntaxHighlighter {
     internal static func createLanguageMap(from definitions: [String: RegexLanguageDefinition]) -> [Language: RegexLanguageDefinition] {
         var languageMap: [Language: RegexLanguageDefinition] = [:]
 
-        for descriptor in LanguageDescriptor.allDescriptors where descriptor.parserName != nil {
+        for descriptor in LanguageDescriptor.allDescriptors where descriptor.usesRegexHighlighter {
             languageMap[descriptor.language] = definitions[descriptor.lspIdentifier]
         }
 

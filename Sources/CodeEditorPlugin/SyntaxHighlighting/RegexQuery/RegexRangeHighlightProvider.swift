@@ -312,7 +312,7 @@ internal final class RegexRangeHighlightProvider: RangeHighlightProviding {
 extension RegexRangeHighlightProvider {
     /// Creates a provider for the given language.
     static func makeProvider(for language: Language) -> RegexRangeHighlightProvider? {
-        guard LanguageDescriptor.descriptor(for: language)?.parserName != nil else {
+        guard LanguageDescriptor.descriptor(for: language)?.usesRegexHighlighter == true else {
             return nil
         }
 

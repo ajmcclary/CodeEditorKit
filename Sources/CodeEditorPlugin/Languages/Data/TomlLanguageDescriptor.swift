@@ -7,7 +7,7 @@ extension LanguageDescriptor {
             displayName: "TOML",
             fileExtensions: ["toml"],
             lspIdentifier: "toml",
-            highlightingStrategy: .regex,
+            usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
             blockCommentEnd: nil,
