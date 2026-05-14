@@ -41,22 +41,11 @@ public final class MultiCursorEditor {
     public func addCursorsAtOccurrences(in textView: CodeEditorView) {
         guard textView.selectedRange.length > 0 else { return }
 
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return }
-        #else
-        let textStorage = textView.textStorage
-        #endif
-
-        let selectedText = textStorage.attributedSubstring(
-            from: textView.selectedRange
-        ).string
+        let bridge = textView.textKitBridge
+        guard let selectedText = bridge.substring(in: textView.selectedRange) else { return }
 
         // Find all occurrences
-        #if canImport(AppKit)
-        let text = textView.string
-        #else
-        let text = textView.text ?? ""
-        #endif
+        let text = bridge.documentString
         var searchRange = NSRange(location: 0, length: text.count)
 
         cursors.removeAll()
@@ -94,19 +83,12 @@ public final class MultiCursorEditor {
     public func handleInput(_ text: String, in textView: CodeEditorView) -> Bool {
         guard !cursors.isEmpty else { return false }
 
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return false }
-        #else
-        let textStorage = textView.textStorage
-        #endif
-
-        // Begin grouped editing
-        textStorage.beginEditing()
+        let bridge = textView.textKitBridge
 
         // Insert text at each cursor location (in reverse order to maintain positions)
         for cursor in cursors.reversed() {
             let range = NSRange(location: cursor.location, length: cursor.selection)
-            textStorage.replaceCharacters(in: range, with: text)
+            bridge.replaceCharacters(in: range, with: text)
 
             // Update cursor positions for remaining cursors
             let lengthChange = text.count - cursor.selection
@@ -114,8 +96,6 @@ public final class MultiCursorEditor {
                 cursors[index].location += lengthChange
             }
         }
-
-        textStorage.endEditing()
 
         // Update cursor positions
         for index in 0..<cursors.count {

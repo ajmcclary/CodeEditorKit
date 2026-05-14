@@ -115,7 +115,7 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
         // received the didChange yet. Refresh is triggered from the
         // post-batch hook instead. Return the full document as invalidated
         // so the visible range is re-queried after refresh.
-        let length = textView.textStorage?.length ?? 0
+        let length = textView.textKitBridge.documentLength
         return IndexSet(integersIn: 0..<max(1, length))
     }
 
@@ -123,7 +123,8 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
         guard isSetup, !storage.isEmpty else { return [] }
 
         // Convert the character range to a line range.
-        guard let source = textView.textStorage?.string else { return [] }
+        let source = textView.textKitBridge.documentString
+        guard !source.isEmpty else { return [] }
         let lineRange = lineNumbers(in: source, for: range)
 
         let decoded = storage.tokens(in: lineRange)
@@ -219,7 +220,7 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
     }
 
     private func notifyTokensUpdated() {
-        let length = textView?.textStorage?.length ?? 0
+        let length = textView?.textKitBridge.documentLength ?? 0
         guard length > 0 else { return }
         onTokensUpdated?(IndexSet(integersIn: 0..<length))
     }

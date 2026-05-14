@@ -189,30 +189,13 @@ public class SearchReplaceEngine: ObservableObject {
 
         var replacementCount = 0
 
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return 0 }
-
-        // Begin grouped undo
-        textStorage.beginEditing()
-        defer { textStorage.endEditing() }
-
+        // Group replacements under a single edit transaction via the bridge.
+        // The bridge routes through textContentStorage?.textStorage (TK2-safe).
+        let bridge = textView.textKitBridge
         for result in sortedResults {
-            textView.replaceCharacters(in: result.range, with: replacement)
+            bridge.replaceCharacters(in: result.range, with: replacement)
             replacementCount += 1
         }
-        #else
-        // On iOS, textStorage is not optional
-        let textStorage = textView.textStorage
-
-        // Use textStorage
-        textStorage.beginEditing()
-        defer { textStorage.endEditing() }
-
-        for result in sortedResults {
-            textStorage.replaceCharacters(in: result.range, with: replacement)
-            replacementCount += 1
-        }
-        #endif
 
         // Clear search results after replace all
         currentSearchResults = []
@@ -366,13 +349,10 @@ public class SearchReplaceEngine: ObservableObject {
     private func highlightSearchResults(_ results: [SearchResult]) {
         guard let textView else { return }
 
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return }
-        let fullRange = TextRangeUtilities.fullRange(in: textView.string)
-        #else
-        let textStorage = textView.textStorage
-        let fullRange = TextRangeUtilities.fullRange(in: textView.text ?? "")
-        #endif
+        // Route through textContentStorage?.textStorage (TK2-safe). Task 8 will
+        // switch these search-highlight writes to bridge.addPersistentAttributes.
+        guard let textStorage = textView.textContentStorage?.textStorage else { return }
+        let fullRange = TextRangeUtilities.fullRange(in: textView.textKitBridge.documentString)
 
         // Clear existing highlights
         textStorage.removeAttribute(
@@ -409,11 +389,9 @@ public class SearchReplaceEngine: ObservableObject {
     private func flashRange(_ range: NSRange) {
         guard let textView else { return }
 
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return }
-        #else
-        let textStorage = textView.textStorage
-        #endif
+        // Route through textContentStorage?.textStorage (TK2-safe). Task 8
+        // will switch these flash highlights to bridge.addPersistentAttributes.
+        guard let textStorage = textView.textContentStorage?.textStorage else { return }
 
         let flashColor = searchOptions.flashColor
 

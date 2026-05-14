@@ -79,15 +79,12 @@ public class SymbolNavigator: ObservableObject {
             invalidateSymbolCaches()
             return
         }
-        #if canImport(AppKit)
-        guard let text = textView.textStorage?.string else {
+        let text = textView.textKitBridge.documentString
+        guard !text.isEmpty else {
             symbols = []
             invalidateSymbolCaches()
             return
         }
-        #else
-        let text = textView.textStorage.string
-        #endif
 
         isProcessing = true
         defer { isProcessing = false }

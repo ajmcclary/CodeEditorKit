@@ -44,40 +44,31 @@ public enum AutoBracketingEngine {
         at range: NSRange,
         in textView: CodeEditorView
     ) -> Bool {
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return false }
-        #else
-        let textStorage = textView.textStorage
-        #endif
+        let bridge = textView.textKitBridge
+        let documentLength = bridge.documentLength
 
         // For quotes, check if we should auto-pair
         if pair.isQuote {
             // Don't auto-pair if there's already a matching quote
-            if range.location < textStorage.length {
-                let nextChar = textStorage.attributedSubstring(
-                    from: NSRange(location: range.location, length: 1)
-                ).string
-                if nextChar == pair.close {
-                    // Just move cursor past the quote
-                    textView.selectedRange = NSRange(location: range.location + 1, length: 0)
-                    return true
-                }
+            if range.location < documentLength,
+               let nextChar = bridge.substring(in: NSRange(location: range.location, length: 1)),
+               nextChar == pair.close {
+                // Just move cursor past the quote
+                textView.selectedRange = NSRange(location: range.location + 1, length: 0)
+                return true
             }
 
             // Don't auto-pair inside words
-            if range.location > 0 {
-                let prevChar = textStorage.attributedSubstring(
-                    from: NSRange(location: range.location - 1, length: 1)
-                ).string
-                if prevChar.rangeOfCharacter(from: CharacterSet.alphanumerics) != nil {
-                    return false
-                }
+            if range.location > 0,
+               let prevChar = bridge.substring(in: NSRange(location: range.location - 1, length: 1)),
+               prevChar.rangeOfCharacter(from: CharacterSet.alphanumerics) != nil {
+                return false
             }
         }
 
         // Insert both opening and closing brackets
         let insertString = pair.open + pair.close
-        textStorage.replaceCharacters(in: range, with: insertString)
+        bridge.replaceCharacters(in: range, with: insertString)
 
         // Position cursor between brackets
         textView.selectedRange = NSRange(location: range.location + 1, length: 0)
@@ -92,23 +83,16 @@ public enum AutoBracketingEngine {
         at range: NSRange,
         in textView: CodeEditorView
     ) -> Bool {
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return false }
-        #else
-        let textStorage = textView.textStorage
-        #endif
+        let bridge = textView.textKitBridge
+        let documentLength = bridge.documentLength
 
         // Check if the next character is the same closing bracket
-        if range.location < textStorage.length {
-            let nextChar = textStorage.attributedSubstring(
-                from: NSRange(location: range.location, length: 1)
-            ).string
-
-            if nextChar == pair.close {
-                // Skip over the closing bracket
-                textView.selectedRange = NSRange(location: range.location + 1, length: 0)
-                return true
-            }
+        if range.location < documentLength,
+           let nextChar = bridge.substring(in: NSRange(location: range.location, length: 1)),
+           nextChar == pair.close {
+            // Skip over the closing bracket
+            textView.selectedRange = NSRange(location: range.location + 1, length: 0)
+            return true
         }
 
         return false

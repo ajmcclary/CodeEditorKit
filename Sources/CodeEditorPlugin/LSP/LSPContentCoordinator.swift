@@ -95,7 +95,7 @@ final class LSPContentCoordinator {
         // Compute the start Position from the pre-edit full source.
         // `shouldChangeText` fires before the mutation, so `textStorage.string`
         // is still the pre-edit document.
-        let fullSource = textView?.textStorage?.string ?? ""
+        let fullSource = textView?.textKitBridge.documentString ?? ""
         let startPos = Self.position(
             for: event.preEditRange.location,
             in: fullSource
@@ -158,7 +158,7 @@ final class LSPContentCoordinator {
     private func flushBatch() async {
         guard !pendingChanges.isEmpty else { return }
 
-        let fullText = textView?.textStorage?.string ?? ""
+        let fullText = textView?.textKitBridge.documentString ?? ""
 
         let changes: [TextDocumentContentChangeEvent]
         if syncKind == .incremental {

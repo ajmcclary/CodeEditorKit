@@ -88,6 +88,13 @@ class LineNumberRulerView: NSRulerView {
         backgroundColor.set()
         rect.fill()
 
+        // NOTE: This NSRulerView-based gutter is a TK1-only rendering path
+        // (it depends on `NSLayoutManager.glyphRange(...)`). Reading
+        // `textView.layoutManager` triggers Apple's TK1 compatibility shim —
+        // once the gutter draws, the editor switches from TK2 to TK1. A full
+        // TK2 gutter rewrite is its own design pass. For now, this is a known
+        // TK1 island and the textStorage read below is via the legacy property
+        // because we've already coerced to TK1.
         guard let textView = self.clientView as? NSTextView,
               let scrollView = self.scrollView,
               let textContainer = textView.textContainer,

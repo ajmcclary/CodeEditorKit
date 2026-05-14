@@ -39,15 +39,9 @@ public final class TextKitLineNumberHelper {
             return []
         }
 
-        // Calculate line ranges from the text itself
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else {
-            return []
-        }
-        let text = textStorage.string
-        #else
-        let text = textView.textStorage.string
-        #endif
+        // Calculate line ranges from the text itself via the bridge.
+        let text = textKitBridge.documentString
+        guard !text.isEmpty else { return [] }
 
         return calculateLineRanges(in: text, visibleRange: visibleRange)
     }

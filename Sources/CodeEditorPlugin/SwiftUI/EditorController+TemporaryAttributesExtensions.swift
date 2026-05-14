@@ -35,7 +35,7 @@ extension EditorController {
     /// controller is unattached. Useful for clamping ranges before calling
     /// `applyTemporaryAttributes(_:to:)` against the active buffer.
     public var currentDocumentLength: Int {
-        codeEditorView?.textStorage?.length ?? 0
+        codeEditorView?.textKitBridge.documentLength ?? 0
     }
 }
 #endif

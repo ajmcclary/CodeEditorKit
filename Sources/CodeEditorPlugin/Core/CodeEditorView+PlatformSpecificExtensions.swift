@@ -93,7 +93,8 @@ extension CodeEditorView {
         if configuration.layout.insertSpacesForTabs {
             // Remove up to tabWidth spaces before cursor
             let tabWidth = configuration.layout.tabWidth
-            guard let textStorage = self.textStorage else {
+            let text = textKitBridge.documentString
+            guard !text.isEmpty else {
                 super.insertBacktab(sender)
                 return
             }
@@ -107,7 +108,6 @@ extension CodeEditorView {
             // Look backwards to find spaces to remove
             let maxCheck = min(tabWidth, currentRange.location)
             let checkRange = NSRange(location: currentRange.location - maxCheck, length: maxCheck)
-            let text = textStorage.string
             guard let range = Range(checkRange, in: text) else {
                 super.insertBacktab(sender)
                 return

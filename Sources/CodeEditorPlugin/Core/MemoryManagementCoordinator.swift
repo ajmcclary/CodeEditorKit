@@ -192,10 +192,9 @@ public final class MemoryManagementCoordinator {
 
         // Clear large text storage if read-only
         #if canImport(AppKit)
-        if let textStorage = editorView.textStorage,
-           textStorage.length > 100_000,
-           !editorView.isEditable {
-            let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1
+        let storageLength = editorView.textKitBridge.documentLength
+        if storageLength > 100_000, !editorView.isEditable {
+            let sizeReduction = Double(storageLength) / (1_024 * 1_024) * 0.1
             memoryFreed += sizeReduction
             operations.append("large text storage")
         }

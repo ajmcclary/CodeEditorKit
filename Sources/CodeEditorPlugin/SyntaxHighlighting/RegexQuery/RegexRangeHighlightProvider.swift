@@ -270,11 +270,7 @@ internal final class RegexRangeHighlightProvider: RangeHighlightProviding {
     }
 
     private static func sourceString(from textView: CodeEditorView) -> String {
-        #if canImport(AppKit)
-        textView.textStorage?.string ?? ""
-        #else
-        textView.textStorage.string
-        #endif
+        textView.textKitBridge.documentString
     }
 
     private static func byteRange(forUTF16Range range: NSRange, in source: String) -> Range<Int>? {

@@ -43,11 +43,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         self.textView = textView
         self.language = language
 
-        #if canImport(AppKit)
-        let documentLength = textView.textStorage?.length ?? 0
-        #else
-        let documentLength = textView.textStorage.length
-        #endif
+        let documentLength = textView.textKitBridge.documentLength
 
         let container = StyledRangeContainer(documentLength: documentLength)
         let providerID = container.registerProvider(priority: 0)
@@ -112,12 +108,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         guard supplementalProviderStates[identity] == nil else { return }
         supplementalProviders[identity] = supplementalProvider
 
-        let documentLength: Int
-        #if canImport(AppKit)
-        documentLength = textView.textStorage?.length ?? 0
-        #else
-        documentLength = textView.textStorage.length
-        #endif
+        let documentLength = textView.textKitBridge.documentLength
 
         let providerID = container.registerProvider(priority: priority)
         supplementalProviderIDs[identity] = providerID
@@ -226,11 +217,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     }
 
     private static func sourceString(from textView: CodeEditorView) -> String {
-        #if canImport(AppKit)
-        textView.textStorage?.string ?? ""
-        #else
-        textView.textStorage.string
-        #endif
+        textView.textKitBridge.documentString
     }
 
     private static func makeHighlighter(for language: Language) -> any SyntaxHighlighter {

@@ -417,19 +417,12 @@ extension CodeEditorView {
     /// - Parameter textRange: The range of text to replace.
     /// - Parameter string: The replacement text.
     public func replaceCharacters(in textRange: NSTextRange, with string: String) {
-        #if canImport(AppKit)
-        guard let textStorage else { return }
-        #else
-        let textStorage = self.textStorage
-        #endif
-
-        let textKitBridge = TextKitBridge(textView: self)
         let nsRange = textKitBridge.nsRangeFromTextRange(textRange) ?? selectedRange
 
-        // Perform the replacement
-        textStorage.beginEditing()
-        textStorage.replaceCharacters(in: nsRange, with: string)
-        textStorage.endEditing()
+        // Perform the replacement through the bridge; goes through
+        // textContentStorage?.textStorage (TK2-safe) and preserves
+        // NSTextStorage's batching semantics.
+        textKitBridge.replaceCharacters(in: nsRange, with: string)
 
         // Update syntax highlighting for the affected area if enabled
         if isSyntaxHighlightingEnabled {

@@ -15,7 +15,11 @@ internal final class FoldingOperationsService {
     // MARK: - Properties
 
     private weak var textView: CodeEditorView?
-    private var textStorage: NSTextStorage? { textView?.textStorage }
+    // Read through textContentStorage?.textStorage (TK2-safe) — reading
+    // `textView.textStorage` directly would coerce to TK1. Task 8 of the
+    // TextKit 2 migration moves the persistent-attribute writers below to
+    // `textKitBridge.addPersistentAttributes` and removes this accessor.
+    private var textStorage: NSTextStorage? { textView?.textContentStorage?.textStorage }
 
     // MARK: - Public Methods
 

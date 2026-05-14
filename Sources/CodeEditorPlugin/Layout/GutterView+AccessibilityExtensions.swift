@@ -57,8 +57,7 @@ extension GutterView {
 
         // Calculate visible line range based on scroll position
         let visibleRect = bounds
-        let textStorage = textView.textStorage
-        let string = String(textStorage.string)
+        let string = textView.textKitBridge.documentString
 
         // Estimate first visible line
         let lineHeight = textView.font?.lineHeight ?? 17.0
@@ -109,8 +108,7 @@ extension GutterView {
 
         // Calculate visible line range based on scroll position
         let visibleRect = bounds
-        let textStorage = textView.textStorage
-        let string = textStorage?.string ?? ""
+        let string = textView.textKitBridge.documentString
 
         // Estimate first visible line
         let lineHeight = textView.font?.capHeight ?? 17.0

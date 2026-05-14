@@ -22,15 +22,13 @@ public enum SmartIndentationEngine {
     ) -> String {
         guard configuration.isAutoIndentEnabled else { return "" }
 
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return "" }
-        #else
-        let textStorage = textView.textStorage
-        #endif
+        let bridge = textView.textKitBridge
+        let documentString = bridge.documentString
+        guard !documentString.isEmpty else { return "" }
 
         // Get the current line
-        let lineRange = TextRangeUtilities.lineRange(containing: location, in: textStorage.string)
-        let currentLine = textStorage.attributedSubstring(from: lineRange).string
+        let lineRange = TextRangeUtilities.lineRange(containing: location, in: documentString)
+        let currentLine = bridge.substring(in: lineRange) ?? ""
 
         // Extract current indentation
         let indentation = currentLine.prefix { $0 == " " || $0 == "\t" }

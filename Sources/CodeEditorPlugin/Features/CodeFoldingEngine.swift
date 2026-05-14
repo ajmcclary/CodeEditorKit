@@ -19,7 +19,6 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     // MARK: - Properties
 
     private weak var textView: CodeEditorView?
-    private var textStorage: NSTextStorage? { textView?.textStorage }
     private let providerRegistry = FoldingProviderRegistry()
     private let operationsService = FoldingOperationsService()
     private var updateTask: Task<Void, Never>?

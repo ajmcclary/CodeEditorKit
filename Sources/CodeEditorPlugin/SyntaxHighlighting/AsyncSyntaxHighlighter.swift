@@ -376,12 +376,9 @@ public final class AsyncSyntaxHighlighter {
         to textView: CodeEditorView,
         visibleRange: NSRange? = nil
     ) {
-        // Get text storage through the platform text view.
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return }
-        #else
-        let textStorage = textView.textStorage
-        #endif
+        // Get text storage through the TK2-safe accessor; reading
+        // `textView.textStorage` would trigger Apple's TK1 compatibility shim.
+        guard let textStorage = textView.textContentStorage?.textStorage else { return }
 
         // Determine range to apply
         let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: textStorage.length)
@@ -451,11 +448,7 @@ public final class AsyncSyntaxHighlighter {
     }
 
     private func clearHighlighting(for textView: CodeEditorView) {
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage else { return }
-        #else
-        let textStorage = textView.textStorage
-        #endif
+        guard let textStorage = textView.textContentStorage?.textStorage else { return }
 
         #if canImport(AppKit)
             let range = NSRange(location: 0, length: textView.string.count)

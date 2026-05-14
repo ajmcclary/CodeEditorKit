@@ -63,8 +63,10 @@ public final class EditorController {
 
     /// Lazily-built store keyed on the currently-attached view's text storage.
     /// Rebuilt automatically when the attached view (and thus storage) changes.
+    /// Reads the storage via `textContentStorage?.textStorage` to avoid Apple's
+    /// TK1 compatibility shim that fires on `NSTextView.textStorage`.
     var temporaryAttributesStore: TemporaryAttributesStore? {
-        guard let storage = codeEditorView?.textStorage else { return nil }
+        guard let storage = codeEditorView?.textContentStorage?.textStorage else { return nil }
         if let existing = memoizedTemporaryAttributesStore,
            existing.textStorage === storage {
             return existing

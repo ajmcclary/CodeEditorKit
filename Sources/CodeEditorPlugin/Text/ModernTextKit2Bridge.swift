@@ -303,9 +303,11 @@ internal class ModernTextKit2Bridge: NSObject {
                 return false
             }
 
-            // Count line breaks in fragment
+            // Count line breaks in fragment. Read via the TK2-safe content
+            // storage; `textView.textStorage` would trigger Apple's TK1
+            // compatibility shim.
             if let nsRange = self.nsRange(from: fragmentRange),
-               let textStorage = self.textView?.textStorage {
+               let textStorage = (self.textContentManager as? NSTextContentStorage)?.textStorage {
                 let text = textStorage.attributedSubstring(from: nsRange).string
                 lineNumber += text.components(separatedBy: .newlines).count - 1
             }
@@ -332,9 +334,11 @@ internal class ModernTextKit2Bridge: NSObject {
                 )
 
                 if offset != NSNotFound {
-                    // Check for line break before location
+                    // Check for line break before location. Read via the
+                    // TK2-safe content storage; `textView.textStorage` would
+                    // trigger Apple's TK1 compatibility shim.
                     if let nsRange = self.nsRange(from: fragmentRange),
-                       let textStorage = self.textView?.textStorage {
+                       let textStorage = (self.textContentManager as? NSTextContentStorage)?.textStorage {
                         let text = textStorage.attributedSubstring(from: nsRange).string
                         let beforeLocation = String(text.prefix(offset))
 

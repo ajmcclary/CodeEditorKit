@@ -172,8 +172,7 @@ extension SmartEditingEngine: NSTextViewDelegate {
         if text == "\n" && configuration.isAutoIndentEnabled {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
-                guard let textStorage = codeEditorView.textStorage else { return true }
-                textStorage.replaceCharacters(
+                codeEditorView.textKitBridge.replaceCharacters(
                     in: range,
                     with: "\n" + indentation
                 )
@@ -223,8 +222,7 @@ extension SmartEditingEngine: UITextViewDelegate {
         if text == "\n" && configuration.isAutoIndentEnabled {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
-                let textStorage = codeEditorView.textStorage
-                textStorage.replaceCharacters(
+                codeEditorView.textKitBridge.replaceCharacters(
                     in: range,
                     with: "\n" + indentation
                 )
