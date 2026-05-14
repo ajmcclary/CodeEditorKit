@@ -12,7 +12,7 @@ struct XMLSymbolProvider: DocumentSymbolProvider {
             let lineSymbols = detectXMLSymbols(in: line, at: currentLocation, line: lineIndex, elementStack: &elementStack)
             symbols.append(contentsOf: lineSymbols)
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -111,7 +111,7 @@ struct XMLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: detail,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: tag
         )
     }
@@ -191,7 +191,7 @@ struct XMLSymbolProvider: DocumentSymbolProvider {
             return nil
         }
 
-        let range = NSRange(location: 0, length: tag.count)
+        let range = NSRange(location: 0, length: TextRangeUtilities.utf16Length(of: tag))
         guard let match = regex.firstMatch(in: tag, options: [], range: range),
               match.numberOfRanges > 1 else {
             return nil

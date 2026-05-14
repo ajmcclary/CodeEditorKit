@@ -15,7 +15,7 @@ struct ShellFoldingProvider: CodeFoldingProvider {
 
             // Skip comments and empty lines
             if trimmed.hasPrefix("#") || trimmed.isEmpty {
-                currentLocation += line.count + 1
+                currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
                 continue
             }
 
@@ -32,7 +32,7 @@ struct ShellFoldingProvider: CodeFoldingProvider {
             // End detection
             if isBlockEnd(line: trimmed) {
                 if let block = blockStack.popLast() {
-                    let endLocation = currentLocation + line.count
+                    let endLocation = currentLocation + TextRangeUtilities.utf16Length(of: line)
                     let range = NSRange(location: block.startLocation, length: endLocation - block.startLocation)
 
                     // Only add regions with minimum line count
@@ -59,7 +59,7 @@ struct ShellFoldingProvider: CodeFoldingProvider {
             if trimmed == ")" && !blockStack.isEmpty {
                 if let block = blockStack.last, block.title == "subshell" {
                     blockStack.removeLast()
-                    let endLocation = currentLocation + line.count
+                    let endLocation = currentLocation + TextRangeUtilities.utf16Length(of: line)
                     let range = NSRange(location: block.startLocation, length: endLocation - block.startLocation)
 
                     if lineIndex - block.startLine >= 1 {
@@ -72,7 +72,7 @@ struct ShellFoldingProvider: CodeFoldingProvider {
                 }
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return regions
@@ -86,7 +86,7 @@ struct ShellFoldingProvider: CodeFoldingProvider {
                 let functionName = String(afterFunction.prefix(upTo: parenIndex)).trimmingCharacters(in: .whitespaces)
                 if !functionName.isEmpty {
                     return FoldableRegion(
-                        range: NSRange(location: location, length: line.count),
+                        range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
                         title: "function \(functionName)",
                         type: .function
                     )
@@ -102,7 +102,7 @@ struct ShellFoldingProvider: CodeFoldingProvider {
                 if let functionName = parts.last, !functionName.isEmpty {
                     if functionName.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }) {
                         return FoldableRegion(
-                            range: NSRange(location: location, length: line.count),
+                            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
                             title: "function \(functionName)",
                             type: .function
                         )

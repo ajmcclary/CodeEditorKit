@@ -12,7 +12,7 @@ struct HTMLSymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -58,7 +58,7 @@ struct HTMLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: detail,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: line.trimmingCharacters(in: .whitespaces)
         )
     }
@@ -94,7 +94,7 @@ struct HTMLSymbolProvider: DocumentSymbolProvider {
             return nil
         }
 
-        let range = NSRange(location: 0, length: line.count)
+        let range = NSRange(location: 0, length: TextRangeUtilities.utf16Length(of: line))
         guard let match = regex.firstMatch(in: line, options: [], range: range),
               match.numberOfRanges > 1 else {
             return nil

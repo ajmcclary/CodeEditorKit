@@ -34,7 +34,7 @@ struct YAMLSymbolProvider: DocumentSymbolProvider {
                 }
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -53,7 +53,7 @@ struct YAMLSymbolProvider: DocumentSymbolProvider {
             return DocumentSymbol(
                 name: trimmed,
                 kind: .module,
-                range: NSRange(location: location, length: line.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
                 detail: "Document separator"
             )
         }
@@ -68,7 +68,7 @@ struct YAMLSymbolProvider: DocumentSymbolProvider {
                 return DocumentSymbol(
                     name: content.isEmpty ? "[item]" : content,
                     kind: .enumMember,
-                    range: NSRange(location: location, length: line.count),
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
                     detail: "Array item"
                 )
             }
@@ -98,7 +98,7 @@ struct YAMLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: displayName,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: detail
         )
     }

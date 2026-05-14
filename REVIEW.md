@@ -2,6 +2,29 @@
 
 Synthesis of four parallel reviewer passes covering the entire `Sources/` tree, `Tests/` conventions, and `CodeEditorSample`'s API consumption. Every issue carries a `file:line` citation; agents verified citations against the current tree at the time of review.
 
+## Status (2026-05-14)
+
+All 7 Critical fixes have landed on `main` (uncommitted). Build is green, SwiftLint clean (0 violations), `swift test` shows no regressions — the one observed failure (`AnnotationTests.testAnnotationTextKit2Integration: "TextKit2 layout manager not available"`) reproduces on bare `main` and is pre-existing. The `EditorStatusBarSnapshots` parallel-runner SIGSEGV/SIGBUS crashes also reproduce on bare `main` (Swift-Testing helper launching XCTest snapshot suites in parallel).
+
+| # | Issue | Status | Notes |
+|---|---|---|---|
+| 1 | `TextKitBridge.setTemporaryAttributes` ignored attrs | ✅ Fixed | Now delegates to `NSTextLayoutManager.setRenderingAttributes(_:for:)`. Matches the working impl already in `ModernTextKit2Bridge.swift:172-184`. |
+| 2 | `MemoryManagementCoordinator` used TextKit 1 APIs | ✅ Fixed | Removed the `editorView.layoutManager`/`textContainer` branch — it was a no-op anyway (`ensureLayout` doesn't free memory). |
+| 3 | `EditorEvent.error(Error)` non-`Sendable` | ✅ Fixed | Introduced `SendableError` (Sendable + Hashable + CustomStringConvertible) with `init(_ error: any Error, domain:)` convenience. Updated `UnifiedEventSystem.lastError` accordingly. No production code constructed `.error(...)`, so call-site fanout was zero. |
+| 4 | UTF-16 vs `Character.count` in symbol providers | ✅ Fixed | Applied to **15** files (the 8 originally listed + 7 missed by the review with the same bug: `ShellSymbolProvider`, `SQLFoldingProvider`, `ShellFoldingProvider`, `RubyFoldingProvider`, `JavaScriptSymbolProvider`, `YAMLSymbolProvider`, `XMLSymbolProvider`). All `NSRange(...length: X.count)` and `currentLocation += X.count + 1` sites now use `TextRangeUtilities.utf16Length(of: X)`. |
+| 5 | `Theme.lcarsDark` re-decoded JSON per access | ✅ Fixed | Converted `static var` → `static let`. JSON now decodes once at first access. |
+| 6 | `PortableProjectSearchAdapter` recompiled regex per line | ✅ Fixed | Regex now compiled once in `performSearch` and passed through to `makePredicate`/`computeColumn`. |
+| 7 | `SmartTokenCache.CacheKey` stored full source text | ✅ Fixed | Dropped `text` field; key is now `textLength + textFingerprint(FNV-1a) + language + version`. Updated the `CacheProtocol` round-trip in `ActorCoordinator` to serialize/parse the new compact format. Also dropped the bogus "legacy length-only" recovery path the review separately flagged as broken (it was materializing `String(repeating: "\0", count: textLength)` and causing collisions). |
+
+**Files touched (23):**
+`ActorCoordinator.swift`, `EditorEvent.swift`, `MemoryManagementCoordinator.swift`, `UnifiedEventSystem.swift`, 15 language providers (`CSSSymbolProvider`, `CStyleSymbolProvider`, `HTMLSymbolProvider`, `JSONSymbolProvider`, `JavaScriptSymbolProvider`, `MarkdownSymbolProvider`, `PHPSymbolProvider`, `RubyFoldingProvider`, `RubySymbolProvider`, `SQLFoldingProvider`, `SQLSymbolProvider`, `ShellFoldingProvider`, `ShellSymbolProvider`, `XMLSymbolProvider`, `YAMLSymbolProvider`), `ProjectSearchProvider.swift`, `SmartTokenCache.swift`, `TextKitBridge.swift`, `ThemeFamily+Loader.swift`.
+
+**Pre-existing test issues (not introduced by these fixes — confirmed by running `swift test` against `main`):**
+- `AnnotationTests.testAnnotationTextKit2Integration` fails with "TextKit2 layout manager not available" — XCTest setup issue.
+- `EditorStatusBarSnapshots` crashes (signals 10/11) under `--parallel` — Swift-Testing helper spawning XCTest snapshot suites concurrently.
+
+
+
 ## Top-level take
 
 The codebase is in good shape on the boring axes — convention compliance is solid (no `print()`, no force-unwraps, no `#if os(...)` regressions, no Mac Catalyst residue, `@unchecked Sendable` sites carry rationale comments). The bugs are mostly in the seams: TextKit 1 sneaking back in via `MemoryManagementCoordinator`, a silent no-op in `TextKitBridge`, UTF-16 vs `Character.count` drift across symbol providers, theme-decoding pressure on the hot SwiftUI path, and a sample app that's pedagogically strong but ships a known-wrong LSP range converter.

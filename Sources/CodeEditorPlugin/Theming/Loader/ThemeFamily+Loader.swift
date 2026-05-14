@@ -55,8 +55,11 @@ extension Theme {
     /// Library default. Resolves to `"LCARS Dark"` from the `"zed-trek"`
     /// bundle; falls back to `Theme.fallback(appearance: .dark)` if the
     /// bundle is somehow absent (build error in normal use).
-    public static var lcarsDark: Theme {
-        bundled(family: "zed-trek", variant: "LCARS Dark")
-            ?? Theme.fallback(appearance: .dark)
-    }
+    ///
+    /// The bundled JSON (~5.5k lines) is decoded once at first access and
+    /// cached for the process lifetime — every `CodeEditor.init` defaults
+    /// the theme to this value, so re-decoding per access would put the
+    /// parser on every SwiftUI body's hot path.
+    public static let lcarsDark: Theme = bundled(family: "zed-trek", variant: "LCARS Dark")
+        ?? Theme.fallback(appearance: .dark)
 }

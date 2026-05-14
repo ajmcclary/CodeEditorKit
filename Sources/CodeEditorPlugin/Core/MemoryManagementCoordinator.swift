@@ -214,17 +214,6 @@ public final class MemoryManagementCoordinator {
         memoryFreed += 2.0 // Estimate
         operations.append("syntax highlighting cache")
 
-        // Clear text processing cache
-        #if canImport(AppKit)
-        // Force layout manager to clear cached layout information
-        if let layoutManager = editorView.layoutManager,
-           let textContainer = editorView.textContainer {
-            layoutManager.ensureLayout(for: textContainer)
-            memoryFreed += 1.0 // Estimate
-            operations.append("layout cache")
-        }
-        #endif
-
         // Clear line geometry store
         editorView.lineGeometryStore.reset()
         memoryFreed += 0.5 // Estimate

@@ -254,16 +254,11 @@ final class TextKitBridge {
 
     /// Set rendering attributes on TextKit2 layout fragments for the given range.
     /// Applies temporary attributes through TextKit2 APIs.
-    func setTemporaryAttributes(_: [NSAttributedString.Key: Any], for range: NSRange) {
+    func setTemporaryAttributes(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
         guard let textRange = textRangeFromNSRange(range),
               let textLayoutManager = textView?.textLayoutManager else { return }
 
-        textLayoutManager.enumerateTextLayoutFragments(from: textRange.location) { fragment in
-            fragment.invalidateLayout()
-            return fragment.rangeInElement.endLocation.compare(textRange.endLocation) == .orderedAscending
-        }
-
-        textLayoutManager.ensureLayout(for: textRange)
+        textLayoutManager.setRenderingAttributes(attributes, for: textRange)
     }
 
     /// Remove temporary/rendering attributes for a range.

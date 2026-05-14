@@ -12,7 +12,7 @@ struct CSSSymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -62,7 +62,7 @@ struct CSSSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: detail,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: line.trimmingCharacters(in: .whitespaces)
         )
     }
@@ -78,7 +78,7 @@ struct CSSSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: selector,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: line.trimmingCharacters(in: .whitespaces)
         )
     }

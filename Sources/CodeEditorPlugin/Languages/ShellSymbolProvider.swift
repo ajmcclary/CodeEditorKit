@@ -12,7 +12,7 @@ struct ShellSymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -59,7 +59,7 @@ struct ShellSymbolProvider: DocumentSymbolProvider {
                     return DocumentSymbol(
                         name: functionName,
                         kind: .function,
-                        range: NSRange(location: location, length: fullLine.count),
+                        range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                         detail: "function"
                     )
                 }
@@ -79,7 +79,7 @@ struct ShellSymbolProvider: DocumentSymbolProvider {
                         return DocumentSymbol(
                             name: functionName,
                             kind: .function,
-                            range: NSRange(location: location, length: fullLine.count),
+                            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                             detail: "function"
                         )
                     }
@@ -111,7 +111,7 @@ struct ShellSymbolProvider: DocumentSymbolProvider {
                         return DocumentSymbol(
                             name: varName,
                             kind: kind,
-                            range: NSRange(location: location, length: fullLine.count),
+                            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                             detail: "\(kind == .constant ? "constant" : "variable") = \(preview)"
                         )
                     }
@@ -137,7 +137,7 @@ struct ShellSymbolProvider: DocumentSymbolProvider {
                     return DocumentSymbol(
                         name: aliasName,
                         kind: .property,
-                        range: NSRange(location: location, length: fullLine.count),
+                        range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                         detail: "alias = \(preview)"
                     )
                 }
@@ -175,7 +175,7 @@ struct ShellSymbolProvider: DocumentSymbolProvider {
                 return DocumentSymbol(
                     name: varName,
                     kind: .constant,
-                    range: NSRange(location: location, length: fullLine.count),
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                     detail: detail
                 )
             }

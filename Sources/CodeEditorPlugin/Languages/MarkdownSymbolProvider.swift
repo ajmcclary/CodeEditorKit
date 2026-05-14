@@ -12,7 +12,7 @@ struct MarkdownSymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -30,7 +30,7 @@ struct MarkdownSymbolProvider: DocumentSymbolProvider {
                 return DocumentSymbol(
                     name: headerText,
                     kind: level == 1 ? .module : .namespace,
-                    range: NSRange(location: location, length: line.count),
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
                     detail: "Level \(level) heading"
                 )
             }

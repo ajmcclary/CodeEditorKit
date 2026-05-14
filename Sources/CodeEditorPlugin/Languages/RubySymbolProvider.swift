@@ -12,7 +12,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -89,7 +89,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: className,
             kind: .class,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: detail
         )
     }
@@ -103,7 +103,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: String(moduleName),
             kind: .namespace,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: "module"
         )
     }
@@ -146,7 +146,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: methodName,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: detail
         )
     }
@@ -168,7 +168,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
                         return DocumentSymbol(
                             name: constantName,
                             kind: .constant,
-                            range: NSRange(location: location, length: fullLine.count),
+                            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                             detail: "constant = \(preview)"
                         )
                     }
@@ -191,7 +191,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
                     return DocumentSymbol(
                         name: varPart,
                         kind: .field,
-                        range: NSRange(location: location, length: fullLine.count),
+                        range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                         detail: "instance variable"
                     )
                 }
@@ -212,7 +212,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
                 return DocumentSymbol(
                     name: varPart,
                     kind: .variable,
-                    range: NSRange(location: location, length: fullLine.count),
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                     detail: "class variable"
                 )
             }
@@ -239,7 +239,7 @@ struct RubySymbolProvider: DocumentSymbolProvider {
                 return DocumentSymbol(
                     name: firstAttribute,
                     kind: .property,
-                    range: NSRange(location: location, length: fullLine.count),
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                     detail: detail
                 )
             }

@@ -57,7 +57,7 @@ struct JavaScriptSymbolProvider: LineBasedSymbolProvider {
         return DocumentSymbol(
             name: name,
             kind: .function,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: line
         )
     }

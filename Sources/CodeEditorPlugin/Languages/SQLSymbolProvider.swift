@@ -11,7 +11,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
             if let symbol = detectSQLSymbol(in: statement, at: currentLocation) {
                 symbols.append(symbol)
             }
-            currentLocation += statement.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: statement) + 1
         }
 
         return symbols
@@ -60,7 +60,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "TABLE \(tableName)",
             kind: .class,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Create table statement"
         )
     }
@@ -71,7 +71,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "VIEW \(viewName)",
             kind: .interface,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Create view statement"
         )
     }
@@ -82,7 +82,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "INDEX \(indexName)",
             kind: .property,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Create index statement"
         )
     }
@@ -94,7 +94,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "PROC \(procName)",
             kind: .function,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Create procedure statement"
         )
     }
@@ -105,7 +105,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "FUNC \(funcName)",
             kind: .function,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Create function statement"
         )
     }
@@ -117,7 +117,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "SELECT from \(tableList.isEmpty ? "unknown" : tableList)",
             kind: .method,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Select statement"
         )
     }
@@ -128,7 +128,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "INSERT into \(tableName)",
             kind: .method,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Insert statement"
         )
     }
@@ -139,7 +139,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "UPDATE \(tableName)",
             kind: .method,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Update statement"
         )
     }
@@ -150,7 +150,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "DELETE from \(tableName)",
             kind: .method,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Delete statement"
         )
     }
@@ -161,7 +161,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "ALTER TABLE \(tableName)",
             kind: .method,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Alter table statement"
         )
     }
@@ -178,7 +178,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
             return DocumentSymbol(
                 name: "DROP \(objectType) \(objectName)",
                 kind: .method,
-                range: NSRange(location: location, length: statement.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
                 detail: "Drop statement"
             )
         }
@@ -186,7 +186,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: "DROP statement",
             kind: .method,
-            range: NSRange(location: location, length: statement.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
             detail: "Drop statement"
         )
     }

@@ -14,7 +14,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -112,7 +112,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: className,
             kind: .class,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: detail
         )
     }
@@ -124,7 +124,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: interfaceName,
             kind: .interface,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: "interface"
         )
     }
@@ -136,7 +136,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: traitName,
             kind: .module,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: "trait"
         )
     }
@@ -148,7 +148,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: functionName,
             kind: .function,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: "function"
         )
     }
@@ -180,7 +180,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: methodName,
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: detail
         )
     }
@@ -192,7 +192,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: constantName,
             kind: .constant,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: "constant"
         )
     }
@@ -231,7 +231,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
             return DocumentSymbol(
                 name: String(propertyName),
                 kind: .property,
-                range: NSRange(location: location, length: fullLine.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                 detail: detail
             )
         }
@@ -250,7 +250,7 @@ struct PHPSymbolProvider: DocumentSymbolProvider {
             return DocumentSymbol(
                 name: varName,
                 kind: .variable,
-                range: NSRange(location: location, length: fullLine.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                 detail: "global variable"
             )
         }

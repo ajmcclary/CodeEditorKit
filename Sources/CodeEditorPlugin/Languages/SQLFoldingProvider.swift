@@ -11,7 +11,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
             if let region = detectSQLFoldableRegion(in: statement, at: currentLocation) {
                 regions.append(region)
             }
-            currentLocation += statement.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: statement) + 1
         }
 
         // Also detect BEGIN/END blocks within statements
@@ -29,7 +29,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
             let procedureName = SQLParsingUtility.extractObjectName(from: trimmed, afterKeyword: "CREATE PROCEDURE") ??
                                SQLParsingUtility.extractObjectName(from: trimmed, afterKeyword: "CREATE PROC")
             return FoldableRegion(
-                range: NSRange(location: location, length: statement.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
                 title: "PROCEDURE \(procedureName ?? "unknown")",
                 type: .function
             )
@@ -39,7 +39,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
         if upperStatement.hasPrefix("CREATE FUNCTION") {
             let functionName = SQLParsingUtility.extractObjectName(from: trimmed, afterKeyword: "CREATE FUNCTION")
             return FoldableRegion(
-                range: NSRange(location: location, length: statement.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
                 title: "FUNCTION \(functionName ?? "unknown")",
                 type: .function
             )
@@ -49,7 +49,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
         if upperStatement.hasPrefix("CREATE TRIGGER") {
             let triggerName = SQLParsingUtility.extractObjectName(from: trimmed, afterKeyword: "CREATE TRIGGER")
             return FoldableRegion(
-                range: NSRange(location: location, length: statement.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
                 title: "TRIGGER \(triggerName ?? "unknown")",
                 type: .function
             )
@@ -59,7 +59,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
         if upperStatement.hasPrefix("CREATE VIEW") {
             let viewName = SQLParsingUtility.extractObjectName(from: trimmed, afterKeyword: "CREATE VIEW")
             return FoldableRegion(
-                range: NSRange(location: location, length: statement.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
                 title: "VIEW \(viewName ?? "unknown")",
                 type: .class
             )
@@ -69,7 +69,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
         if upperStatement.hasPrefix("WITH ") ||
            (upperStatement.hasPrefix("SELECT") && (upperStatement.contains("UNION") || upperStatement.contains("JOIN"))) {
             return FoldableRegion(
-                range: NSRange(location: location, length: statement.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
                 title: "Complex SELECT",
                 type: .block
             )
@@ -79,7 +79,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
         if upperStatement.hasPrefix("INSERT") && statement.components(separatedBy: .newlines).count >= 5 {
             let tableName = SQLParsingUtility.extractObjectName(from: statement, afterKeyword: "INSERT INTO")
             return FoldableRegion(
-                range: NSRange(location: location, length: statement.count),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: statement)),
                 title: "INSERT into \(tableName ?? "table")",
                 type: .block
             )
@@ -107,7 +107,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
 
             if trimmed == "END" || trimmed.hasPrefix("END;") {
                 if let begin = beginStack.popLast() {
-                    let endLocation = currentLocation + line.count
+                    let endLocation = currentLocation + TextRangeUtilities.utf16Length(of: line)
                     let range = NSRange(location: begin.location, length: endLocation - begin.location)
 
                     regions.append(FoldableRegion(
@@ -118,7 +118,7 @@ struct SQLFoldingProvider: CodeFoldingProvider {
                 }
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return regions

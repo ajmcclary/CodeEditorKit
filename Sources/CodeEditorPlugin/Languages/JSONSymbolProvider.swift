@@ -33,7 +33,7 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
                 let symbol = DocumentSymbol(
                     name: key,
                     kind: kind,
-                    range: NSRange(location: location, length: key.count + detail.count + 4), // approximate
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: key) + TextRangeUtilities.utf16Length(of: detail) + 4), // approximate
                     detail: detail
                 )
 
@@ -65,7 +65,7 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -89,7 +89,7 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
                 return DocumentSymbol(
                     name: key,
                     kind: kind,
-                    range: NSRange(location: location, length: line.count),
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
                     detail: detail
                 )
             }

@@ -3,33 +3,25 @@ import Foundation
 /// Smart cache for syntax highlighting tokens with intelligent eviction strategies
 actor SmartTokenCache {
     struct CacheKey: Hashable {
-        let text: String
         let textLength: Int
         let textFingerprint: UInt64
         let language: Language
         let version: Int
 
         init(text: String, language: Language, version: Int) {
-            self.text = text
             self.textLength = TextRangeUtilities.utf16Length(of: text)
             self.textFingerprint = Self.fingerprint(text)
             self.language = language
             self.version = version
         }
 
-        static func == (lhs: CacheKey, rhs: CacheKey) -> Bool {
-            lhs.textLength == rhs.textLength &&
-            lhs.textFingerprint == rhs.textFingerprint &&
-            lhs.language == rhs.language &&
-            lhs.version == rhs.version &&
-            lhs.text == rhs.text
-        }
-
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(textLength)
-            hasher.combine(textFingerprint)
-            hasher.combine(language)
-            hasher.combine(version)
+        /// Internal initializer used by the `CacheProtocol` bridge in
+        /// `ActorCoordinator`, which round-trips keys through a string.
+        init(textLength: Int, textFingerprint: UInt64, language: Language, version: Int) {
+            self.textLength = textLength
+            self.textFingerprint = textFingerprint
+            self.language = language
+            self.version = version
         }
 
         private static func fingerprint(_ text: String) -> UInt64 {

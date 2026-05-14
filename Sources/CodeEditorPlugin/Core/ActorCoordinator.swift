@@ -195,31 +195,28 @@ extension SmartTokenCache: CacheProtocol {
 }
 
 extension SmartTokenCache.CacheKey {
-    /// Create cache key from string representation
+    /// Create cache key from string representation. The format is
+    /// `<textLength>|<textFingerprint>|<language>|<version>`.
     init?(fromString string: String) {
-        let components = string.split(separator: "|", maxSplits: 2, omittingEmptySubsequences: false)
-        guard components.count >= 2 else { return nil }
-
-        if components.count == 3,
-           let data = Data(base64Encoded: String(components[0])),
-           let text = String(data: data, encoding: .utf8) {
-            let language = Language(rawValue: String(components[1])) ?? .plainText
-            let version = Int(components[2]) ?? 0
-            self.init(text: text, language: language, version: version)
-            return
-        }
-
-        // Legacy length-only keys cannot recover the original text, so they
-        // intentionally map to a placeholder that will not collide with real
-        // content keys.
-        guard let textLength = Int(components[0]) else { return nil }
-        let language = Language(rawValue: String(components[1])) ?? .plainText
-        let version = components.count > 2 ? Int(components[2]) ?? 0 : 0
-        self.init(text: String(repeating: "\0", count: textLength), language: language, version: version)
+        let components = string.split(separator: "|", omittingEmptySubsequences: false)
+        guard components.count == 4,
+              let textLength = Int(components[0]),
+              let textFingerprint = UInt64(components[1]),
+              let version = Int(components[3])
+        else { return nil }
+        let language = Language(rawValue: String(components[2])) ?? .plainText
+        self.init(
+            textLength: textLength,
+            textFingerprint: textFingerprint,
+            language: language,
+            version: version
+        )
     }
 
-    /// Convert cache key to string representation
+    /// Convert cache key to string representation. The full text is not
+    /// included — round-tripping uses the same fingerprint + length the
+    /// in-memory key uses.
     var stringRepresentation: String {
-        "\(Data(text.utf8).base64EncodedString())|\(language.rawValue)|\(version)"
+        "\(textLength)|\(textFingerprint)|\(language.rawValue)|\(version)"
     }
 }

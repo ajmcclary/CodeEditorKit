@@ -23,7 +23,7 @@ public final class UnifiedEventSystem: ObservableObject {
     @Published public private(set) var lastSelectionChangeEvent: NSRange?
     @Published public private(set) var lastCompletionContext: CompletionContext?
     @Published public private(set) var lastPerformanceWarning: String?
-    @Published public private(set) var lastError: Error?
+    @Published public private(set) var lastError: SendableError?
 
     /// Event filters
     private var eventFilters: [EventFilter] = []

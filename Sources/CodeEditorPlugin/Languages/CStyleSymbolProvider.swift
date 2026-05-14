@@ -12,7 +12,7 @@ struct CStyleSymbolProvider: DocumentSymbolProvider {
                 symbols.append(symbol)
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return symbols
@@ -31,7 +31,7 @@ struct CStyleSymbolProvider: DocumentSymbolProvider {
                     return DocumentSymbol(
                         name: String(lastPart),
                         kind: .function,
-                        range: NSRange(location: location, length: line.count),
+                        range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
                         detail: line
                     )
                 }
@@ -56,7 +56,7 @@ struct CStyleSymbolProvider: DocumentSymbolProvider {
         return DocumentSymbol(
             name: String(name),
             kind: kind,
-            range: NSRange(location: location, length: fullLine.count),
+            range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
             detail: line
         )
     }

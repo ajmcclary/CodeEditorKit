@@ -142,7 +142,14 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         maxResults: Int
     ) -> [ProjectSearchResult] {
         var results: [ProjectSearchResult] = []
-        let predicate = makePredicate(query: query, options: options)
+        // Compile the regex once when in regex mode; otherwise nil.
+        let regex: NSRegularExpression? = options.useRegex
+            ? try? NSRegularExpression(
+                pattern: query,
+                options: options.caseSensitive ? [] : .caseInsensitive
+            )
+            : nil
+        let predicate = makePredicate(query: query, options: options, regex: regex)
 
         for fileURL in files {
             guard !Task.isCancelled, results.count < maxResults else { break }
@@ -153,7 +160,7 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
                 guard !Task.isCancelled, results.count < maxResults else { break }
                 guard predicate(line) else { continue }
 
-                let column = computeColumn(query: query, options: options, line: line)
+                let column = computeColumn(query: query, options: options, line: line, regex: regex)
                 let matchedText = extractMatchedText(query: query, line: line, column: column)
 
                 results.append(ProjectSearchResult(
@@ -168,12 +175,12 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         return results
     }
 
-    nonisolated private static func makePredicate(query: String, options: ProjectSearchOptions) -> (String) -> Bool {
+    nonisolated private static func makePredicate(
+        query: String,
+        options: ProjectSearchOptions,
+        regex: NSRegularExpression?
+    ) -> (String) -> Bool {
         if options.useRegex {
-            let regex = try? NSRegularExpression(
-                pattern: query,
-                options: options.caseSensitive ? [] : .caseInsensitive
-            )
             return { line in
                 regex?.firstMatch(in: line, range: NSRange(location: 0, length: line.utf16.count)) != nil
             }
@@ -184,12 +191,13 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         }
     }
 
-    nonisolated private static func computeColumn(query: String, options: ProjectSearchOptions, line: String) -> Int {
+    nonisolated private static func computeColumn(
+        query: String,
+        options: ProjectSearchOptions,
+        line: String,
+        regex: NSRegularExpression?
+    ) -> Int {
         if options.useRegex {
-            let regex = try? NSRegularExpression(
-                pattern: query,
-                options: options.caseSensitive ? [] : .caseInsensitive
-            )
             let range = regex?.firstMatch(in: line, range: NSRange(location: 0, length: line.utf16.count))?.range
             return (range?.location ?? 0) + 1
         }

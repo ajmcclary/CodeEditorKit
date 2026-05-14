@@ -15,7 +15,7 @@ struct RubyFoldingProvider: CodeFoldingProvider {
 
             // Skip comments and empty lines
             if trimmed.hasPrefix("#") || trimmed.isEmpty {
-                currentLocation += line.count + 1
+                currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
                 continue
             }
 
@@ -27,7 +27,7 @@ struct RubyFoldingProvider: CodeFoldingProvider {
             // End keyword detection
             if trimmed == "end" {
                 if let block = blockStack.popLast() {
-                    let endLocation = currentLocation + line.count
+                    let endLocation = currentLocation + TextRangeUtilities.utf16Length(of: line)
                     let range = NSRange(location: block.startLocation, length: endLocation - block.startLocation)
 
                     // Only add regions with minimum line count
@@ -68,7 +68,7 @@ struct RubyFoldingProvider: CodeFoldingProvider {
                 blockStack.append((type: .block, startLine: lineIndex, startLocation: currentLocation, title: "ensure block", keyword: "ensure"))
             }
 
-            currentLocation += line.count + 1
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
         }
 
         return regions
