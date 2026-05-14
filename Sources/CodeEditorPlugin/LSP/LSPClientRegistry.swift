@@ -26,9 +26,20 @@ final class LSPClientRegistry {
     /// Path resolver for finding language server executables
     private let pathResolver = LSPPathResolver()
 
+    /// Test-only client factory. Production uses `LSPClient.createAndSetup()`.
+    private let clientFactory: @MainActor () async -> LSPClient
+
     // MARK: - Initialization
 
     init() {
+        self.clientFactory = { await LSPClient.createAndSetup() }
+        setupDefaultConfigurations()
+        rebuildExtensionCache()
+    }
+
+    /// Test initializer — substitute the client factory.
+    init(clientFactory: @escaping @MainActor () async -> LSPClient) {
+        self.clientFactory = clientFactory
         setupDefaultConfigurations()
         rebuildExtensionCache()
     }
@@ -92,8 +103,16 @@ final class LSPClientRegistry {
         // Use provided retry config or fall back to the server's configured retry settings
         let effectiveRetryConfig = retryConfig ?? config.retryConfiguration
 
-        guard let workspaceRoot else {
-            throw LSPError.invalidResponse("No workspace root set")
+        // Remote configs don't need a workspace root (WebSocket transport ignores it).
+        // Local configs require one — Process needs a working directory.
+        let effectiveWorkspaceRoot: URL
+        if config.remoteURL != nil {
+            effectiveWorkspaceRoot = workspaceRoot ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        } else {
+            guard let root = workspaceRoot else {
+                throw LSPError.invalidResponse("No workspace root set")
+            }
+            effectiveWorkspaceRoot = root
         }
 
         // Don't start if already running
@@ -103,33 +122,41 @@ final class LSPClientRegistry {
 
         logger.info("Starting LSP server for \(languageId)")
 
-        // Resolve the server path if path resolution is enabled
-        let resolvedServerPath: String
-        if config.enablePathResolution {
+        // Resolve the executable path on macOS for local-shaped configs.
+        // Remote-shaped configs and iOS short-circuit (no resolver).
+        let resolvedConfig: LanguageServerConfig
+        #if canImport(AppKit)
+        if config.remoteURL == nil, config.enablePathResolution {
             guard let resolved = pathResolver.resolvePath(config.serverPath) else {
                 throw LSPError.invalidResponse("Language server executable not found: \(config.serverPath)")
             }
-            resolvedServerPath = resolved
-            logger.debug("Resolved server path for \(languageId): \(config.serverPath) -> \(resolvedServerPath)")
+            logger.debug("Resolved server path for \(languageId): \(config.serverPath) -> \(resolved)")
+            resolvedConfig = LanguageServerConfig.local(
+                languageId: config.languageId,
+                serverPath: resolved,
+                fileExtensions: config.fileExtensions,
+                serverArguments: config.serverArguments,
+                capabilities: config.capabilities,
+                autoStart: config.autoStart,
+                enablePathResolution: false,
+                retryConfiguration: config.retryConfiguration
+            )
         } else {
-            resolvedServerPath = config.serverPath
+            resolvedConfig = config
         }
+        #else
+        resolvedConfig = config
+        #endif
 
-        let client = await LSPClient.createAndSetup()
-        let serverConfig = LSPClient.ServerConfiguration(
-            languageId: languageId,
-            serverPath: resolvedServerPath,
-            workspaceRoot: workspaceRoot,
-            serverArguments: config.serverArguments,
-            capabilities: config.capabilities
-        )
+        let client = await clientFactory()
+        let serverConfig = try resolvedConfig.makeServerConfiguration(workspaceRoot: effectiveWorkspaceRoot)
 
         // Attempt connection with retry logic
         var lastError: Error?
 
         for attempt in 0...effectiveRetryConfig.maxRetries {
             do {
-                try await client.connect(configuration: serverConfig)
+                try await client.connect(configuration: serverConfig, languageId: languageId)
                 activeClients[languageId] = client
                 logger.info("Successfully started LSP server for \(languageId) on attempt \(attempt + 1)")
                 return
@@ -205,22 +232,32 @@ final class LSPClientRegistry {
 
     // MARK: - Language Server Availability
 
-    /// Check if a language server is available for the given configuration
-    /// - Parameter config: Language server configuration to check
-    /// - Returns: True if the server executable can be found
+    /// Check if a language server is available for the given configuration.
+    /// Remote configs are "available" iff they carry a URL.
+    /// Local configs require AppKit; on iOS they always return false.
     func isLanguageServerAvailable(_ config: LanguageServerConfig) -> Bool {
+        if config.remoteURL != nil {
+            return true
+        }
+        #if canImport(AppKit)
         if config.enablePathResolution {
             return pathResolver.isAvailable(config.serverPath)
-        } else {
-            return FileManager.default.fileExists(atPath: config.serverPath)
         }
+        return FileManager.default.fileExists(atPath: config.serverPath)
+        #else
+        return false
+        #endif
     }
 
-    /// Get all available paths for a language server executable
-    /// - Parameter executableName: Name of the executable (e.g., "typescript-language-server")
-    /// - Returns: Array of absolute paths where the executable was found
+    /// Get all available paths for a language server executable.
+    /// macOS-only — iOS returns an empty array (no executable resolution under sandbox).
     func findLanguageServerPaths(for executableName: String) -> [String] {
-        pathResolver.findAllPaths(for: executableName)
+        #if canImport(AppKit)
+        return pathResolver.findAllPaths(for: executableName)
+        #else
+        _ = executableName
+        return []
+        #endif
     }
 
     /// Get availability status for all configured language servers
@@ -235,15 +272,21 @@ final class LSPClientRegistry {
         return availability
     }
 
-    /// Resolve the actual path that would be used for a language server
-    /// - Parameter config: Language server configuration
-    /// - Returns: The resolved absolute path, or nil if not found
+    /// Resolve the actual path that would be used for a language server.
+    /// macOS-only for local configs. Returns the remote URL string for remote configs.
+    /// Returns nil for local configs on iOS.
     func resolveLanguageServerPath(_ config: LanguageServerConfig) -> String? {
+        if let url = config.remoteURL {
+            return url.absoluteString
+        }
+        #if canImport(AppKit)
         if config.enablePathResolution {
             return pathResolver.resolvePath(config.serverPath)
-        } else {
-            return FileManager.default.fileExists(atPath: config.serverPath) ? config.serverPath : nil
         }
+        return FileManager.default.fileExists(atPath: config.serverPath) ? config.serverPath : nil
+        #else
+        return nil
+        #endif
     }
 
     /// Cleanup all resources

@@ -17,6 +17,12 @@ extension LSPClient {
     ///   - configuration: Unified server configuration (`.local` or `.remote`).
     ///   - languageId: LSP language identifier (e.g. "swift", "python") used during init handshake.
     public func connect(configuration: LSPServerConfiguration, languageId: String) async throws {
+        // Test-only hook (production callers leave this nil).
+        if let handler = recordingHandler {
+            await handler(configuration, languageId)
+            return
+        }
+
         // Create appropriate transport based on configuration.
         let transport = try await configuration.createTransport()
         self.transport = transport

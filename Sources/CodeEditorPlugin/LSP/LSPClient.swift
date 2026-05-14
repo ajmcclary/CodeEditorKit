@@ -95,6 +95,10 @@ public final class LSPClient: ObservableObject {
     /// Transport for communication (optional for backward compatibility)
     internal var transport: LSPTransport?
 
+    /// Test-only hook: fires from the modern `connect(configuration:, languageId:)` overload
+    /// before any transport work. Production callers leave this `nil`.
+    internal var recordingHandler: (@Sendable (LSPServerConfiguration, String) async -> Void)?
+
     /// Process manager for local server processes (macOS only)
     private lazy var processManager = LSPProcessManager(messageHandler: messageHandler)
 
