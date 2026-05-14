@@ -42,35 +42,32 @@ struct CompletionSampleCoordinatorTests {
     func ringIsBounded() {
         let coordinator = CompletionSampleCoordinator()
         for index in 0..<25 {
-            coordinator.record(.init(
-                providerId: "p\(index)",
+            coordinator.record(CompletionEvent(
+                providerID: "p\(index)",
                 language: .swift,
                 triggerCharacter: nil,
                 prefix: "",
-                itemCount: 0,
-                durationMs: 0,
-                timestamp: Date(timeIntervalSince1970: TimeInterval(index)),
-                error: nil
+                durationMilliseconds: 0,
+                outcome: .succeeded(itemCount: 0),
+                timestamp: Date(timeIntervalSince1970: TimeInterval(index))
             ))
         }
         #expect(coordinator.snapshot.recentActivity.count == 20)
         // Newest first.
-        let topId = coordinator.snapshot.recentActivity.first?.providerId
-        #expect(topId == "p24")
+        let topID = coordinator.snapshot.recentActivity.first?.providerID
+        #expect(topID == "p24")
     }
 
     @Test("resetActivity clears recent and last but leaves controller stats alone")
     func resetActivity() {
         let coordinator = CompletionSampleCoordinator()
-        coordinator.record(.init(
-            providerId: "p",
+        coordinator.record(CompletionEvent(
+            providerID: "p",
             language: .swift,
             triggerCharacter: nil,
             prefix: "",
-            itemCount: 1,
-            durationMs: 0.5,
-            timestamp: Date(),
-            error: nil
+            durationMilliseconds: 0.5,
+            outcome: .succeeded(itemCount: 1)
         ))
         #expect(coordinator.snapshot.recentActivity.count == 1)
         #expect(coordinator.snapshot.lastActivity != nil)

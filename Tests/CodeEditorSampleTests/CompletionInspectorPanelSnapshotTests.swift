@@ -57,15 +57,14 @@ final class CompletionInspectorPanelSnapshotTests: XCTestCase {
     }
 
     func testErrorStateLight() {
-        let errored = CompletionActivityEntry(
-            providerId: "swift-universal",
+        let errored = CompletionEvent(
+            providerID: "swift-universal",
             language: .swift,
             triggerCharacter: ".",
             prefix: "view",
-            itemCount: 0,
-            durationMs: 0.8,
-            timestamp: Date(timeIntervalSince1970: 0),
-            error: "ProviderError(why: \"network\")"
+            durationMilliseconds: 0.8,
+            outcome: .failed(SendableError(message: "ProviderError(why: \"network\")", domain: "CompletionProvider")),
+            timestamp: Date(timeIntervalSince1970: 0)
         )
         let view = panel(
             providers: sampleProviders(),
@@ -82,8 +81,8 @@ final class CompletionInspectorPanelSnapshotTests: XCTestCase {
 
     private func panel(
         providers: [CompletionSampleCoordinator.RegisteredProviderSummary],
-        recent: [CompletionActivityEntry],
-        last: CompletionActivityEntry?,
+        recent: [CompletionEvent],
+        last: CompletionEvent?,
         requests: Int,
         cacheHitRate: Double,
         avgMs: Double
@@ -121,47 +120,43 @@ final class CompletionInspectorPanelSnapshotTests: XCTestCase {
         ]
     }
 
-    private func sampleEntries() -> [CompletionActivityEntry] {
+    private func sampleEntries() -> [CompletionEvent] {
         [
-            .init(
-                providerId: "swift-universal",
+            CompletionEvent(
+                providerID: "swift-universal",
                 language: .swift,
                 triggerCharacter: ".",
                 prefix: "view",
-                itemCount: 12,
-                durationMs: 1.4,
-                timestamp: Date(timeIntervalSince1970: 3),
-                error: nil
+                durationMilliseconds: 1.4,
+                outcome: .succeeded(itemCount: 12),
+                timestamp: Date(timeIntervalSince1970: 3)
             ),
-            .init(
-                providerId: "swift-universal",
+            CompletionEvent(
+                providerID: "swift-universal",
                 language: .swift,
                 triggerCharacter: ".",
                 prefix: "vie",
-                itemCount: 8,
-                durationMs: 0.9,
-                timestamp: Date(timeIntervalSince1970: 2),
-                error: nil
+                durationMilliseconds: 0.9,
+                outcome: .succeeded(itemCount: 8),
+                timestamp: Date(timeIntervalSince1970: 2)
             ),
-            .init(
-                providerId: "sample.demo",
+            CompletionEvent(
+                providerID: "sample.demo",
                 language: .swift,
                 triggerCharacter: nil,
                 prefix: "",
-                itemCount: 3,
-                durationMs: 0.1,
-                timestamp: Date(timeIntervalSince1970: 1),
-                error: nil
+                durationMilliseconds: 0.1,
+                outcome: .succeeded(itemCount: 3),
+                timestamp: Date(timeIntervalSince1970: 1)
             ),
-            .init(
-                providerId: "python-universal",
+            CompletionEvent(
+                providerID: "python-universal",
                 language: .python,
                 triggerCharacter: ".",
                 prefix: "str",
-                itemCount: 4,
-                durationMs: 0.7,
-                timestamp: Date(timeIntervalSince1970: 0),
-                error: nil
+                durationMilliseconds: 0.7,
+                outcome: .succeeded(itemCount: 4),
+                timestamp: Date(timeIntervalSince1970: 0)
             )
         ]
     }
