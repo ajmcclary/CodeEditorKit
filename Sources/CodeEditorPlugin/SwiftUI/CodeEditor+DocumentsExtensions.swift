@@ -24,11 +24,9 @@ extension View {
     /// the manager's storage.
     ///
     /// Defined on `View` (rather than `CodeEditor`) so it composes with
-    /// view-typed modifiers higher in the chain. Note that
-    /// `CodeEditor`-typed methods such as `.editorController(_:)`,
-    /// `.editorInteractionState(_:)`, `.onTextChange(_:)`, and
-    /// `.codeCompletion(_:)` must be applied to `CodeEditor` *before*
-    /// `.activeDocument(in:)` (they return `Self`, not `some View`).
+    /// view-typed modifiers higher in the chain. As of 2026-05-14 every
+    /// public CodeEditor modifier returns `some View`, so call order is
+    /// no longer constrained.
     ///
     /// ## Example
     ///
