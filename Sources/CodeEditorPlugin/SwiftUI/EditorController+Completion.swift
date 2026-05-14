@@ -63,5 +63,18 @@ extension EditorController {
         }
         return manager.events()
     }
+
+    /// Records that the user accepted this completion item, updating the
+    /// attached manager's in-memory frequency/recency state. No-op when no
+    /// editor is attached.
+    ///
+    /// The framework automatically calls this when the user accepts a
+    /// completion from the popup; hosts only need to call it themselves to
+    /// record acceptances from custom UI (e.g., a command palette).
+    ///
+    /// - SeeAlso: `CompletionManager.recordSelection(_:)`
+    public func recordCompletionSelection(_ item: CompletionItemModel) {
+        codeEditorView?.completionManager.recordSelection(item)
+    }
 }
 #endif
