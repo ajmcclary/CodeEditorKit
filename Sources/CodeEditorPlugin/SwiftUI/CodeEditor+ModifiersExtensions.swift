@@ -548,6 +548,38 @@ extension CodeEditor {
     public func eventSystem(_ eventSystem: UnifiedEventSystem) -> some View {
         environment(\.codeEditorEventSystem, eventSystem)
     }
+
+    /// Wires a `PerformanceObservation` into the editor's effective
+    /// configuration AND the SwiftUI environment in a single call.
+    ///
+    /// The observation's `UnifiedPerformanceSystem` is installed onto
+    /// `configuration.performance.unifiedPerformanceSystem` so framework
+    /// producers (e.g. `AsyncSyntaxHighlighter`) record metrics into it,
+    /// and the observation's `lastInsights` property is the canonical
+    /// place to read snapshots from a SwiftUI body.
+    ///
+    /// Lifecycle (`start()` / `stop()`) stays with the host — the
+    /// modifier does not auto-start the refresh loop because the same
+    /// observation may be shared across multiple editors and constructed
+    /// before any editor is on screen.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @State private var observation = PerformanceObservation()
+    ///
+    /// var body: some View {
+    ///     CodeEditor(text: $code)
+    ///         .performanceObserver(observation)
+    ///     Text("Health: \(observation.lastInsights.overallHealth, format: .number)")
+    /// }
+    /// ```
+    ///
+    /// - Parameter observation: The performance observation to wire.
+    /// - Returns: A view with the observation installed in the editor environment.
+    public func performanceObserver(_ observation: PerformanceObservation) -> some View {
+        environment(\.codeEditorPerformanceObservation, observation)
+    }
 }
 
 #endif

@@ -278,6 +278,30 @@ public struct CodeEditor: View {
         return copy
     }
 
+    // MARK: - Configuration overlay
+
+    /// Produces the configuration value `body` actually passes downstream,
+    /// after overlaying environment-driven knobs that are wired through
+    /// SwiftUI modifiers rather than the configuration struct directly.
+    ///
+    /// Currently overlays:
+    /// - `performanceObservation.system` →
+    ///   `performance.unifiedPerformanceSystem` (so framework producers
+    ///   like `AsyncSyntaxHighlighter` record into the same system the
+    ///   host observes via `.performanceObserver(_:)`).
+    ///
+    /// Extracted as a `static` helper so it's unit-testable without
+    /// rendering the view.
+    static func makeEffectiveConfiguration(
+        from environment: CodeEditorEnvironment
+    ) -> EditorConfiguration {
+        var configuration = environment.configuration
+        if let observation = environment.performanceObservation {
+            configuration.performance.unifiedPerformanceSystem = observation.system
+        }
+        return configuration
+    }
+
     // MARK: - Body
 
     public var body: some View {
@@ -303,15 +327,19 @@ public struct CodeEditor: View {
             }
         }
 
+        // Overlay env-driven knobs onto a local copy of configuration.
+        // Currently: performanceObservation → performance.unifiedPerformanceSystem.
+        let effectiveConfiguration = Self.makeEffectiveConfiguration(from: environment)
+
         // Use configuration's debounce interval when no explicit override was passed.
         let effectiveDebounceInterval = textDebounceInterval
-            ?? environment.configuration.performance.textChangeDebounceInterval
+            ?? effectiveConfiguration.performance.textChangeDebounceInterval
 
         return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
             language: effectiveLanguage,
             theme: effectiveTheme,
-            configuration: environment.configuration,
+            configuration: effectiveConfiguration,
             runtimeDependencies: effectiveRuntimeDependencies,
             textDebounceInterval: effectiveDebounceInterval,
             interactionState: interactionState,
@@ -327,7 +355,7 @@ public struct CodeEditor: View {
         // searchable chrome can layer it outside the editor.
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
-        .environment(\.codeEditorConfiguration, environment.configuration)
+        .environment(\.codeEditorConfiguration, effectiveConfiguration)
         .environment(\.editorEventBus, editorController?.editorEventBus)
         .onAppear {
             // Start monitoring if using default memory monitor
