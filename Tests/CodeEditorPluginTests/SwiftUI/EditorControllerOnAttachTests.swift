@@ -23,4 +23,39 @@ final class EditorControllerOnAttachTests: XCTestCase {
         XCTAssertEqual(fireCount, 0, "Handler must not run before any attach.")
         _ = token // suppress unused warning; token retains the registration
     }
+
+    func testHandlerFiredOnFirstAttach() {
+        let controller = EditorController()
+        let view = CodeEditorView(frame: .zero)
+        var fireCount = 0
+        var receivedController: EditorController?
+
+        let token = controller.onAttach { ctrl in
+            fireCount += 1
+            receivedController = ctrl
+        }
+
+        controller.attach(to: view)
+
+        XCTAssertEqual(fireCount, 1, "Handler must fire exactly once on the first attach.")
+        XCTAssertIdentical(
+            receivedController,
+            controller,
+            "Handler must receive the controller it was registered on."
+        )
+        _ = token
+    }
+
+    func testHandlerNotFiredOnDetach() {
+        let controller = EditorController()
+        let view = CodeEditorView(frame: .zero)
+        var fireCount = 0
+
+        let token = controller.onAttach { _ in fireCount += 1 }
+        controller.attach(to: view)
+        controller.attach(to: nil)
+
+        XCTAssertEqual(fireCount, 1, "Detach must not fire onAttach handlers.")
+        _ = token
+    }
 }

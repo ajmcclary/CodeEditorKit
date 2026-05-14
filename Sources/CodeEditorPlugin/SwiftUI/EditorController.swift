@@ -86,6 +86,12 @@ public final class EditorController {
     private var eventBusInstaller: EditorEventBusInstaller?
     #endif
 
+    /// Handlers registered via `onAttach(_:)`. Stored as an array (rather
+    /// than a dictionary) so registration order is preserved and
+    /// iteration is deterministic. Typical sizes are 1–3 entries.
+    @ObservationIgnored
+    private var attachHandlers: [(id: UUID, closure: @MainActor (EditorController) -> Void)] = []
+
     // MARK: - Observable state
 
     /// Whether a `CodeEditorView` is currently attached. False until the
@@ -133,9 +139,18 @@ public final class EditorController {
     ///   remove the handler. Store it in `Set<AnyCancellable>` or as a
     ///   property to keep the subscription active.
     public func onAttach(
-        _: @MainActor @escaping (EditorController) -> Void
+        _ handler: @MainActor @escaping (EditorController) -> Void
     ) -> AnyCancellable {
-        AnyCancellable {}
+        let id = UUID()
+        attachHandlers.append((id, handler))
+        return AnyCancellable { [weak self] in
+            // `AnyCancellable`'s cancel closure is not @MainActor-isolated
+            // (Combine predates strict concurrency). Hop back to
+            // MainActor to mutate `attachHandlers` safely.
+            Task { @MainActor in
+                self?.attachHandlers.removeAll { $0.id == id }
+            }
+        }
     }
 
     // MARK: - Attach hook (called by the SwiftUI representable)
@@ -163,6 +178,14 @@ public final class EditorController {
             installer.install()
             eventBusInstaller = installer
             #endif
+
+            // Fire registered onAttach handlers. Snapshot first so a
+            // handler that calls onAttach again doesn't mutate the
+            // in-flight iteration.
+            let snapshot = attachHandlers
+            for (_, handler) in snapshot {
+                handler(self)
+            }
         } else {
             symbolSubscription?.cancel()
             symbolSubscription = nil
