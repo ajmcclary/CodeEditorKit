@@ -30,7 +30,7 @@ public final class TextKitLineNumberHelper {
 
     /// Get visible line ranges without accessing layoutManager directly on iOS
     public func getVisibleLineRanges() -> [(lineNumber: Int, range: NSRange)] {
-        guard let textView else {
+        guard textView != nil else {
             return []
         }
 

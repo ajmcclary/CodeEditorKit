@@ -69,11 +69,21 @@ final class TextKitBridge {
     // and clears `textLayoutManager`. All framework code that previously read
     // `view.textStorage` should go through these.
 
-    /// Internal-only TK2-safe `NSTextStorage` accessor. Routes through
-    /// `textContentStorage?.textStorage`. Returns nil when the TK2 stack
-    /// has not finished init (rare; init-order safety net only).
+    /// Internal-only `NSTextStorage` accessor. Prefers the TK2-safe path
+    /// (`textContentStorage?.textStorage`); when the view has already been
+    /// coerced to TK1 by an external trigger (e.g., the NSRulerView gutter's
+    /// `drawHashMarksAndLabels` reading `textView.layoutManager`), the TK2
+    /// content storage is nil and we fall back to the legacy
+    /// `textView.textStorage` property. Reading that property *after*
+    /// coercion has already fired doesn't re-trigger the shim — it just
+    /// returns the active NSTextStorage. This lets the framework's
+    /// highlighting and persistent-attribute writes keep working even when
+    /// the view is operating in TK1 mode at runtime.
     private var safeTextStorage: NSTextStorage? {
-        textContentStorage?.textStorage
+        if let tk2Storage = textContentStorage?.textStorage {
+            return tk2Storage
+        }
+        return textView?.textStorage
     }
 
     /// UTF-16 length of the document. Returns 0 when the TK2 stack is not yet ready.
@@ -226,46 +236,65 @@ final class TextKitBridge {
 
     // MARK: - Rendering Attributes
 
-    /// Apply rendering attributes for syntax highlighting (non-destructive;
-    /// TK2-native). Attributes do NOT persist into the underlying
+    /// Apply rendering attributes for syntax highlighting (non-destructive
+    /// when TK2 is live). Attributes do NOT persist into the underlying
     /// NSAttributedString — they're applied per-fragment during layout.
     ///
+    /// When the view has been coerced to TK1 (e.g., by the NSRulerView
+    /// gutter), `textLayoutManager` is nil and this method falls back to
+    /// text-storage attributes so highlighting still renders.
+    ///
     /// Use this for syntax highlighting colors. For attributes that must
-    /// persist (fold marks, search highlights, layout-affecting attributes),
-    /// use `addPersistentAttributes(_:range:)` instead.
+    /// persist regardless of TK state (fold marks, search highlights,
+    /// layout-affecting attributes), use `addPersistentAttributes(_:range:)`.
     func addAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
-        guard let textLayoutManager = textView?.textLayoutManager,
-              let textRange = textRangeFromNSRange(range) else { return }
-        textLayoutManager.setRenderingAttributes(attributes, for: textRange)
+        if let textLayoutManager = textView?.textLayoutManager,
+           let textRange = textRangeFromNSRange(range) {
+            textLayoutManager.setRenderingAttributes(attributes, for: textRange)
+            return
+        }
+        // TK1 fallback: apply as text-storage attributes.
+        guard let storage = safeTextStorage else { return }
+        storage.beginEditing()
+        storage.addAttributes(attributes, range: range)
+        storage.endEditing()
     }
 
     /// Remove rendering attribute keys from a range. Counterpart to
-    /// `addAttributes(_:range:)`. Use `removePersistentAttribute(_:range:)`
-    /// for text-storage-backed attributes.
+    /// `addAttributes(_:range:)`. Falls back to text-storage attribute
+    /// removal when TK2 is not available.
     func removeAttributes(_ attributeKeys: [NSAttributedString.Key], range: NSRange) {
-        guard let textLayoutManager = textView?.textLayoutManager,
-              let textRange = textRangeFromNSRange(range) else { return }
-
-        // `setRenderingAttributes` replaces (not merges) the attribute set for
-        // a range. To strip specific keys, enumerate the existing rendering
-        // attributes within the target range, filter the unwanted keys, and
-        // re-apply the remainder per fragment.
-        var fragments: [(NSTextRange, [NSAttributedString.Key: Any])] = []
-        textLayoutManager.enumerateRenderingAttributes(
-            from: textRange.location,
-            reverse: false
-        ) { _, attrs, attrRange in
-            guard attrRange.intersects(textRange) else { return true }
-            var filtered = attrs
-            for key in attributeKeys {
-                filtered.removeValue(forKey: key)
+        if let textLayoutManager = textView?.textLayoutManager,
+           let textRange = textRangeFromNSRange(range) {
+            // `setRenderingAttributes` replaces (not merges) the attribute set
+            // for a range. To strip specific keys, enumerate existing
+            // rendering attributes, filter the unwanted keys, and re-apply
+            // the remainder per fragment.
+            var fragments: [(NSTextRange, [NSAttributedString.Key: Any])] = []
+            textLayoutManager.enumerateRenderingAttributes(
+                from: textRange.location,
+                reverse: false
+            ) { _, attrs, attrRange in
+                guard attrRange.intersects(textRange) else { return true }
+                var filtered = attrs
+                for key in attributeKeys {
+                    filtered.removeValue(forKey: key)
+                }
+                fragments.append((attrRange, filtered))
+                return attrRange.endLocation.compare(textRange.endLocation) == .orderedAscending
             }
-            fragments.append((attrRange, filtered))
-            return attrRange.endLocation.compare(textRange.endLocation) == .orderedAscending
+            for (subRange, attrs) in fragments {
+                textLayoutManager.setRenderingAttributes(attrs, for: subRange)
+            }
+            return
         }
-        for (subRange, attrs) in fragments {
-            textLayoutManager.setRenderingAttributes(attrs, for: subRange)
+        // TK1 fallback: remove from text-storage.
+        guard let storage = safeTextStorage else { return }
+        storage.beginEditing()
+        for key in attributeKeys {
+            storage.removeAttribute(key, range: range)
         }
+        storage.endEditing()
     }
 
     // MARK: - Layout Information
