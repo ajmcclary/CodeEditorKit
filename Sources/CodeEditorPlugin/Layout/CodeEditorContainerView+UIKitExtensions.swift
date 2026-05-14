@@ -70,9 +70,11 @@ extension CodeEditorContainerView {
             CrossPlatformLogger.logger().error("Rejected UIKit container configuration: \(error)")
         }
 
-        // Set the text view's delegate AFTER configuration
-        // This must be done after textView.setupTextView() and configuration.apply()
-        textView.delegate = self
+        // Register as a behavior-phase participant in the delegate
+        // multiplexer. The multiplexer is set as textView.delegate by
+        // TextKitSetupHelper; we participate from there for scroll
+        // forwarding.
+        textView.addDelegateParticipant(self, phase: .behavior)
 
         // Set up constraints based on configuration
         rebuildConstraints()
@@ -243,41 +245,39 @@ extension CodeEditorContainerView {
     }
 }
 
-// MARK: - UITextViewDelegate
+// MARK: - TextViewDelegateParticipant
 
-extension CodeEditorContainerView: UITextViewDelegate {
+extension CodeEditorContainerView: TextViewDelegateParticipant {
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        // Update minimap when text view scrolls
+        // Update minimap when text view scrolls.
         updateMinimap()
 
-        // Don't move the gutter view - keep it fixed in position
-        // The gutter will adjust its drawing based on the text view's scroll offset
+        // Don't move the gutter view - keep it fixed in position.
+        // The gutter will adjust its drawing based on the text view's scroll offset.
 
-        // Call the gutter's scroll method directly to update its state
+        // Call the gutter's scroll method directly to update its state.
         gutterView.scrollViewDidScroll(scrollView)
 
-        // Force the gutter view to redraw immediately
+        // Force the gutter view to redraw immediately.
         gutterView.setNeedsDisplay()
-
-        // On iOS, we need to force the display update more aggressively
     }
 
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        // Start updating line numbers when scrolling begins
-        // This helps activate the display link earlier for smoother updates
+        // Start updating line numbers when scrolling begins.
+        // This helps activate the display link earlier for smoother updates.
         gutterView.scrollViewWillBeginDragging(scrollView)
     }
 
     public func scrollViewDidEndDragging(_: UIScrollView, willDecelerate decelerate: Bool) {
-        // Continue updating if decelerating
+        // Continue updating if decelerating.
         if !decelerate {
-            // Scrolling has stopped, ensure final update
+            // Scrolling has stopped, ensure final update.
             gutterView.setNeedsDisplayLineNumbers()
         }
     }
 
     public func scrollViewDidEndDecelerating(_: UIScrollView) {
-        // Scrolling has completely stopped
+        // Scrolling has completely stopped.
         gutterView.setNeedsDisplayLineNumbers()
     }
 }

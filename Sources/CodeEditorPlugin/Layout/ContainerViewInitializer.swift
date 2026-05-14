@@ -209,8 +209,12 @@ enum ContainerViewInitializer {
         components.gutterView.textView = components.textView
         components.gutterView.observeTextView()
 
-        // Set delegate LAST to ensure it's not overridden
-        components.textView.delegate = container
+        // Register the container as a behavior-phase participant in the
+        // delegate multiplexer. The multiplexer is installed as
+        // textView.delegate by TextKitSetupHelper; "delegate LAST" is no
+        // longer meaningful — registration order within a phase is what
+        // matters now.
+        components.textView.addDelegateParticipant(container, phase: .behavior)
 
         // Rebuild constraints using container's existing method
         container.rebuildConstraints()
