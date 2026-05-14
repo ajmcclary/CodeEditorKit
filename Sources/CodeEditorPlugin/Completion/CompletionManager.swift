@@ -185,6 +185,9 @@ public final class CompletionManager {
         // Cancel any existing request
         currentRequest?.cancel()
 
+        // Capture for recordSelection scoping; cleared on cancel.
+        lastContext = context
+
         // Check cache first if enabled
         if let cachedResult = getCachedResult(for: context) {
             return cachedResult
@@ -303,8 +306,8 @@ public final class CompletionManager {
         let isIncomplete = results.contains { $0.isIncomplete }
         let processingTime = Date().timeIntervalSince(startTime)
 
-        // Sort and deduplicate items
-        let sortedItems = sortAndDeduplicateItems(allItems)
+        // Apply the canonical six-tier rank (dedup + sort + maxCompletions cap).
+        let sortedItems = rankCombined(allItems, context: context)
 
         let result = CompletionResult(
             items: sortedItems,
@@ -355,6 +358,7 @@ public final class CompletionManager {
         currentRequest?.cancel()
         currentRequest = nil
         debouncer.cancelAllRequests()
+        lastContext = nil
     }
 
     /// Access to the debouncer for configuration
@@ -569,30 +573,6 @@ public final class CompletionManager {
     }
 
     // MARK: - Private Methods
-
-    private func sortAndDeduplicateItems(_ items: [CompletionItemModel]) -> [CompletionItemModel] {
-        // Remove duplicates based on label and kind
-        var seen = Set<String>()
-        let unique = items.filter { item in
-            let key = "\(item.label):\(item.kind.rawValue)"
-            if seen.contains(key) {
-                return false
-            }
-            seen.insert(key)
-            return true
-        }
-
-        // Sort by priority (desc), then by label (asc)
-        return unique.sorted { lhs, rhs in
-            if lhs.priority != rhs.priority {
-                return lhs.priority > rhs.priority
-            }
-            if lhs.kind.defaultPriority != rhs.kind.defaultPriority {
-                return lhs.kind.defaultPriority > rhs.kind.defaultPriority
-            }
-            return lhs.label.localizedCaseInsensitiveCompare(rhs.label) == .orderedAscending
-        }
-    }
 
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
