@@ -245,4 +245,40 @@ final class CompletionEventStreamTests: XCTestCase {
         XCTAssertEqual(eventsB.first?.providerID, "swift.multi")
         XCTAssertEqual(eventsA.first?.id, eventsB.first?.id, "Both subscribers must see the same event instance (UUID).")
     }
+
+    func testTerminationRemovesContinuation() async throws {
+        let manager = makeManager()
+        let provider = StubCompletionProvider(
+            behavior: .returns(itemCount: 1),
+            id: "swift.term",
+            supportedLanguages: [.swift]
+        )
+        manager.registerProvider(provider)
+
+        do {
+            let stream = manager.events()
+            XCTAssertEqual(manager.testOnlyBroadcaster.subscriberCount, 1, "Subscribing must register exactly one continuation.")
+
+            async let drained = Self.awaitEvents(1, from: stream)
+            _ = try await manager.requestCompletions(for: makeContext())
+            _ = try await drained
+            // `stream` goes out of scope at the end of this `do { ... }`. The
+            // AsyncStream iterator created by `awaitEvents` is also gone after
+            // it observed its first event and broke.
+        }
+
+        // Allow onTermination to run. The closure is dispatched off the lock;
+        // a single yield is enough on the cooperative pool, but loop a few
+        // times to keep the test robust under load.
+        for _ in 0..<5 {
+            await Task.yield()
+            if manager.testOnlyBroadcaster.subscriberCount == 0 { break }
+        }
+
+        XCTAssertEqual(manager.testOnlyBroadcaster.subscriberCount, 0, "Dropping the stream must remove the continuation.")
+
+        let nextStream = manager.events()
+        defer { _ = nextStream }
+        XCTAssertEqual(manager.testOnlyBroadcaster.subscriberCount, 1, "Resubscribing must register exactly one new continuation.")
+    }
 }

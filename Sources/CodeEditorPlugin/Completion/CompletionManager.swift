@@ -110,6 +110,13 @@ public final class CompletionManager {
         broadcaster.subscribe()
     }
 
+    /// Internal test hook — exposes the broadcaster so suites in
+    /// `CodeEditorPluginTests` (via `@testable import`) can probe its
+    /// `subscriberCount`. Not part of the public API.
+    var testOnlyBroadcaster: CompletionEventBroadcaster {
+        broadcaster
+    }
+
     // MARK: - Provider Management
 
     /// Register a completion provider
