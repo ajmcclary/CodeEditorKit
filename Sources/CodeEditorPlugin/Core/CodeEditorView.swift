@@ -221,6 +221,18 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // `Layout/CodeEditorContainerView+AppKitExtensions.swift:drawHashMarksAndLabels(in:)`
     // is a known TK1 island and is not covered by the canary; rewriting
     // that draw path against `NSTextLayoutManager` is its own follow-up.
+    //
+    // **Delegate ownership invariant.** `textView.delegate` is owned
+    // exclusively by `TextViewDelegateMultiplexer`, installed during
+    // `TextKitSetupHelper.setupTextKit`. Features that need delegate
+    // hooks (host proxy, smart editing, iOS scroll forwarding, iOS
+    // SwiftUI coordinator) register via
+    // `addDelegateParticipant(_:phase:)` — never by assigning to
+    // `textView.delegate` directly. The SwiftLint custom rule
+    // `forbidden_text_view_delegate_assignment` enforces this at lint
+    // time; `TextKitSetupHelper.swift` is its only exemption. See
+    // `docs/superpowers/specs/2026-05-14-delegate-multiplexer-design.md`
+    // for the full design.
 
     /// Explicit feature dependencies used by view models and live editor behavior.
     internal var featureDependencies: EditorFeatureRuntimeDependencies {

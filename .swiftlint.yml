@@ -275,6 +275,18 @@ custom_rules:
     message: "Use Swift String methods instead of NSString, except for drawing APIs"
     severity: warning
 
+  forbidden_text_view_delegate_assignment:
+    included: 'Sources/.*\.swift'
+    excluded: 'Sources/CodeEditorPlugin/Core/TextKitSetupHelper\.swift'
+    name: "Forbidden textView.delegate Assignment"
+    # Match any `textView.delegate = …` assignment. TextViewDelegateMultiplexer
+    # is the sole owner; participation flows through
+    # CodeEditorView.addDelegateParticipant(_:phase:). The only legitimate
+    # install site is TextKitSetupHelper.setupTextKit.
+    regex: '\btextView\.delegate\s*='
+    message: "Do not assign to textView.delegate. Register as a TextViewDelegateParticipant via CodeEditorView.addDelegateParticipant(_:phase:). The sole legitimate install site is TextKitSetupHelper.setupTextKit."
+    severity: error
+
 # ===========================
 # MARK: - Configuration
 # ===========================
