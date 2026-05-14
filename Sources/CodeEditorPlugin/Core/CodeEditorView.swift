@@ -167,6 +167,25 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // editor accepted clicks and selections but rejected typed input. If
     // you ever need access to the live managers, read them via the standard
     // accessors (`self.textLayoutManager`, `self.textContentStorage`).
+    //
+    // Critically, **do not read `self.textStorage` directly** anywhere in
+    // setup or steady-state code. Reading `NSTextView.textStorage` on a
+    // TK2-initialized view triggers Apple's TK1 compatibility shim and
+    // clears `textLayoutManager`. The framework funnels every text access
+    // through `self.textKitBridge` (lazily-constructed `TextKitBridge`),
+    // which routes via `textContentStorage?.textStorage` — the TK2-safe
+    // accessor. The same applies to `self.layoutManager`: it returns the
+    // TK1 NSLayoutManager and reading it coerces the view to TK1 mode.
+    //
+    // The load-bearing invariant — `textLayoutManager != nil` after init
+    // — is covered by
+    // `Tests/CodeEditorPluginTests/Core/CodeEditorViewTextKit2InitTests.swift`.
+    // If that test fails, a new `self.textStorage` or `self.layoutManager`
+    // read has been re-introduced somewhere on the setup path. The
+    // NSRulerView-based gutter at
+    // `Layout/CodeEditorContainerView+AppKitExtensions.swift:drawHashMarksAndLabels(in:)`
+    // is a known TK1 island and is not covered by the canary; rewriting
+    // that draw path against `NSTextLayoutManager` is its own follow-up.
 
     /// Explicit feature dependencies used by view models and live editor behavior.
     internal var featureDependencies: EditorFeatureRuntimeDependencies {

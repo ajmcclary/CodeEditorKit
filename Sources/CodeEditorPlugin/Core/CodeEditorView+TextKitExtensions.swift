@@ -96,11 +96,11 @@ extension CodeEditorView {
     /// - Note: This property is only available on macOS. On iOS, use the inherited `attributedText` property.
     public var attributedText: NSAttributedString? {
         get {
-            textStorage
+            textContentStorage?.textStorage
         }
         set {
-            if let newValue {
-                textStorage?.setAttributedString(newValue)
+            if let newValue, let storage = textContentStorage?.textStorage {
+                storage.setAttributedString(newValue)
                 rebuildLineGeometryStoreFromCurrentTextStorage()
             } else {
                 string = ""
@@ -204,11 +204,11 @@ extension CodeEditorView {
     /// ```
     public var widthTracksTextView: Bool {
         get {
-            let textKitBridge = TextKitBridge(textView: self)
+            let textKitBridge = self.textKitBridge
             return textKitBridge.widthTracksTextView
         }
         set {
-            let textKitBridge = TextKitBridge(textView: self)
+            let textKitBridge = self.textKitBridge
             textKitBridge.widthTracksTextView = newValue
         }
     }
@@ -304,7 +304,7 @@ extension CodeEditorView {
         // Check if editing is allowed
         guard configuration.behavior.isEditable else { return false }
 
-        let textKitBridge = TextKitBridge(textView: self)
+        let textKitBridge = self.textKitBridge
         if let nsRange = textKitBridge.nsRangeFromTextRange(textRange) {
             let allowed: Bool
             #if canImport(AppKit)
@@ -442,7 +442,7 @@ extension CodeEditorView {
 
     /// Calculate line rect using TextKit2.
     internal func calculateLineRect(for range: NSRange) -> CGRect? {
-        let textKitBridge = TextKitBridge(textView: self)
+        let textKitBridge = self.textKitBridge
         return textKitBridge.boundingRect(for: range)
     }
 

@@ -63,7 +63,7 @@ extension CodeEditorView {
 
     /// Get the visible range of text in the text view
     public func visibleRange() -> NSRange {
-        let textKitBridge = TextKitBridge(textView: self)
+        let textKitBridge = self.textKitBridge
         return textKitBridge.visibleRange ?? NSRange(location: 0, length: text?.count ?? 0)
     }
 }

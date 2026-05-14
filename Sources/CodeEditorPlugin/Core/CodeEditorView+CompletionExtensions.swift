@@ -138,7 +138,7 @@ extension CodeEditorView {
 
     /// Get cursor rectangle for positioning completion popup
     private func cursorRectForPosition(_ position: Int) -> CGRect {
-        let textKitBridge = TextKitBridge(textView: self)
+        let textKitBridge = self.textKitBridge
         return textKitBridge.cursorRect(at: position) ?? CGRect(x: 0, y: 0, width: 1, height: 16)
     }
 
