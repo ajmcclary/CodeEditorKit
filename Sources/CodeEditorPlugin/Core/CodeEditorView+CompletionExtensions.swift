@@ -96,6 +96,12 @@ extension CodeEditorView {
             wordRange: currentWordRange(at: cursorPosition)
         )
 
+        // Cancel any in-flight request before kicking off a new one. The
+        // manager's cancel signals its internal request + the debouncer; the
+        // old wrapping Task below will see `CancellationError` from
+        // `requestCompletions` and exit via the catch.
+        completionManager.cancelCurrentRequest()
+
         // Request completions asynchronously
         Task { @MainActor in
             do {
@@ -103,6 +109,8 @@ extension CodeEditorView {
                 if !result.items.isEmpty {
                     showCompletionPopup(with: result.items, at: cursorPosition)
                 }
+            } catch is CancellationError {
+                // Superseded by a newer completion request; nothing to log.
             } catch {
                 Self.logger.error("Completion request failed: \(error)")
             }
