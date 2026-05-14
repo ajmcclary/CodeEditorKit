@@ -55,8 +55,17 @@ import UIKit
 public actor EditorEventPublisher {
     private var handlers: [ObjectIdentifier: WeakHandler] = [:]
 
+    /// Tail of the FIFO delivery chain on `@MainActor`.
+    ///
+    /// Each `publish(_:)` enqueues a `Task` that first `await`s the previous
+    /// delivery before fanning out to handlers. This preserves publish order
+    /// (the old fire-and-forget `Task { @MainActor in … }` per call left
+    /// ordering up to the MainActor scheduler, which is not guaranteed for
+    /// independently created tasks).
+    private var deliveryTask: Task<Void, Never>?
+
     /// Creates a new event publisher.
-    /// 
+    ///
     /// The publisher starts with no subscribers and is ready to receive
     /// event subscriptions and publish events immediately.
     public init() {}
@@ -91,6 +100,9 @@ public actor EditorEventPublisher {
     ///
     /// Sends the event to all registered handlers. Events are delivered
     /// asynchronously on the main actor to ensure UI thread safety.
+    /// Deliveries run in publish order: each `publish(_:)` chains a new
+    /// `Task` onto the previous one so handlers see events `A`, `B`, `C`
+    /// in the same order their `publish` calls were made.
     ///
     /// - Parameter event: The event to publish
     ///
@@ -105,7 +117,9 @@ public actor EditorEventPublisher {
         // Publish to all active handlers in a single task to avoid excessive task creation
         guard !activeHandlers.isEmpty else { return }
 
-        Task { @MainActor in
+        let previous = deliveryTask
+        deliveryTask = Task { @MainActor in
+            await previous?.value
             for handler in activeHandlers {
                 handler.handle(event)
             }
