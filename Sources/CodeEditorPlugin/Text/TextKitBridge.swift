@@ -18,6 +18,11 @@ import UIKit
 final class TextKitBridge {
     // MARK: - Properties
 
+    private static let logger = CrossPlatformLogger.logger(
+        subsystem: "com.codeeditor.plugin",
+        category: "TextKitBridge"
+    )
+
     private weak var textView: PlatformTextView?
     private let capabilities: PlatformCapabilities
 
@@ -59,6 +64,126 @@ final class TextKitBridge {
         }
         return nil
         #endif
+    }
+
+    // MARK: - TK2-Safe Document Access
+    //
+    // These accessors funnel reads through `textContentStorage?.textStorage`
+    // — the content-manager-owned NSTextStorage — instead of
+    // `textView?.textStorage`, which triggers Apple's TK1 compatibility shim
+    // and clears `textLayoutManager`. All framework code that previously read
+    // `view.textStorage` should go through these.
+
+    /// Internal-only TK2-safe `NSTextStorage` accessor. Routes through
+    /// `textContentStorage?.textStorage`. Returns nil when the TK2 stack
+    /// has not finished init (rare; init-order safety net only).
+    private var safeTextStorage: NSTextStorage? {
+        textContentStorage?.textStorage
+    }
+
+    /// UTF-16 length of the document. Returns 0 when the TK2 stack is not yet ready.
+    var documentLength: Int {
+        safeTextStorage?.length ?? 0
+    }
+
+    /// Full document string. Returns "" when the TK2 stack is not yet ready.
+    var documentString: String {
+        safeTextStorage?.string ?? ""
+    }
+
+    /// Substring for a UTF-16 range. Returns nil for empty ranges or when
+    /// the TK2 stack is not yet ready. Clamps `range` to document bounds.
+    func substring(in range: NSRange) -> String? {
+        guard let storage = safeTextStorage else { return nil }
+        let length = storage.length
+        let lower = max(0, min(range.location, length))
+        let upper = max(lower, min(range.location + range.length, length))
+        let clamped = NSRange(location: lower, length: upper - lower)
+        guard clamped.length > 0 else { return nil }
+        // swiftlint:disable:next legacy_objc_type
+        return (storage.string as NSString).substring(with: clamped)
+    }
+
+    /// Attributed substring for a UTF-16 range. Returns nil for empty ranges
+    /// or when the TK2 stack is not yet ready.
+    func attributedSubstring(in range: NSRange) -> NSAttributedString? {
+        guard let storage = safeTextStorage else { return nil }
+        let length = storage.length
+        let lower = max(0, min(range.location, length))
+        let upper = max(lower, min(range.location + range.length, length))
+        let clamped = NSRange(location: lower, length: upper - lower)
+        guard clamped.length > 0 else { return nil }
+        return storage.attributedSubstring(from: clamped)
+    }
+
+    // MARK: - TK2-Safe Content Mutation
+
+    /// Replace characters in the given range with a plain string. No-op
+    /// (with one logged warning) when the TK2 stack is not yet ready.
+    ///
+    /// Callers that need to batch multiple mutations should wrap their
+    /// calls in `NSTextContentManager.performEditingTransaction(_:)`; this
+    /// method does NOT open its own transaction (nesting trips
+    /// `NSTextContentStorageBreakOnEnumerateWhileEditing` per the existing
+    /// guard in `CodeEditorView+SyntaxHighlightingExtensions.swift`).
+    func replaceCharacters(in range: NSRange, with string: String) {
+        guard let storage = safeTextStorage else {
+            Self.logger.error("replaceCharacters: TextKit 2 stack not ready; mutation dropped")
+            return
+        }
+        storage.replaceCharacters(in: range, with: string)
+    }
+
+    /// Replace characters in the given range with an attributed string.
+    func replaceCharacters(in range: NSRange, with attributedString: NSAttributedString) {
+        guard let storage = safeTextStorage else {
+            Self.logger.error("replaceCharacters: TextKit 2 stack not ready; mutation dropped")
+            return
+        }
+        storage.replaceCharacters(in: range, with: attributedString)
+    }
+
+    // MARK: - TK2-Safe Persistent Attributes
+    //
+    // These methods mutate the content-manager-owned NSTextStorage's
+    // attributes. Use them ONLY for attributes that must survive serialization
+    // or that other code reads back via
+    // `textStorage.attribute(_:at:effectiveRange:)`:
+    //   - fold indicator marks (read by the gutter)
+    //   - search-result highlighting
+    //   - layout-affecting attributes (font, baseline, paragraph style)
+    //   - the temporary-attributes store
+    //
+    // For syntax-highlighting colors, use `addAttributes(_:range:)` instead
+    // (rendering attributes — non-destructive, TK2-native).
+
+    /// Apply persistent text-storage attributes to a range.
+    func addPersistentAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
+        guard let storage = safeTextStorage else { return }
+        storage.beginEditing()
+        storage.addAttributes(attributes, range: range)
+        storage.endEditing()
+        ensureLayout(for: range)
+    }
+
+    /// Remove a persistent text-storage attribute key from a range.
+    func removePersistentAttribute(_ key: NSAttributedString.Key, range: NSRange) {
+        guard let storage = safeTextStorage else { return }
+        storage.beginEditing()
+        storage.removeAttribute(key, range: range)
+        storage.endEditing()
+        ensureLayout(for: range)
+    }
+
+    /// Remove multiple persistent text-storage attribute keys from a range.
+    func removePersistentAttributes(_ keys: [NSAttributedString.Key], range: NSRange) {
+        guard let storage = safeTextStorage else { return }
+        storage.beginEditing()
+        for key in keys {
+            storage.removeAttribute(key, range: range)
+        }
+        storage.endEditing()
+        ensureLayout(for: range)
     }
 
     // MARK: - Layout Management
