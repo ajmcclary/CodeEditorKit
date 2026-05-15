@@ -13,6 +13,7 @@ extension LanguageDescriptor {
             blockCommentEnd: "*/",
             identifierPattern: "[a-zA-Z_][a-zA-Z0-9_]*",
             stringDelimiters: ["'"],
+            caseInsensitiveKeywords: true,
             keywords: [
                 "SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE",
                 "CREATE", "TABLE", "DROP", "ALTER", "INDEX", "VIEW", "JOIN", "INNER", "LEFT",

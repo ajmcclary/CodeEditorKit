@@ -33,6 +33,14 @@ internal struct LanguageDescriptor: Sendable {
     let stringDelimiters: [Character]
     let highlightingRules: [DescriptorHighlightRule]
 
+    /// When true, the regex highlighter compiles the keyword / type /
+    /// function word-patterns with a leading `(?i)` flag so e.g. lowercase
+    /// SQL still highlights against an uppercase keyword list. Defaults to
+    /// `false` because most language descriptors carry exact-case keywords
+    /// and case-folding would let an identifier like `IF` match `if` in
+    /// languages where casing is significant.
+    let caseInsensitiveKeywords: Bool
+
     // MARK: - Completion
 
     let keywords: [String]
@@ -65,6 +73,7 @@ internal struct LanguageDescriptor: Sendable {
         identifierPattern: String,
         stringDelimiters: [Character],
         highlightingRules: [DescriptorHighlightRule] = [], // swiftlint:disable:this function_default_parameter_at_end
+        caseInsensitiveKeywords: Bool = false, // swiftlint:disable:this function_default_parameter_at_end
         keywords: [String],
         types: [String],
         functions: [String],
@@ -88,6 +97,7 @@ internal struct LanguageDescriptor: Sendable {
         self.identifierPattern = identifierPattern
         self.stringDelimiters = stringDelimiters
         self.highlightingRules = highlightingRules
+        self.caseInsensitiveKeywords = caseInsensitiveKeywords
         self.keywords = keywords
         self.types = types
         self.functions = functions

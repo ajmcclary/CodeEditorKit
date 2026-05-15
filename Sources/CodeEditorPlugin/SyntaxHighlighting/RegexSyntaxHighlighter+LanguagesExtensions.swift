@@ -67,10 +67,12 @@ extension RegexSyntaxHighlighter {
 
         builder = builder.addNumbers(pattern: numberPattern(for: descriptor))
 
+        let caseFlag = descriptor.caseInsensitiveKeywords ? "(?i)" : ""
+
         let keywordTerms = descriptor.keywords + descriptor.literals
         if !keywordTerms.isEmpty {
             builder = builder.addCustomRule(
-                pattern: wordPattern(for: keywordTerms),
+                pattern: caseFlag + wordPattern(for: keywordTerms),
                 type: .keyword,
                 priority: 7
             )
@@ -78,7 +80,7 @@ extension RegexSyntaxHighlighter {
 
         if !descriptor.types.isEmpty {
             builder = builder.addCustomRule(
-                pattern: wordPattern(for: descriptor.types),
+                pattern: caseFlag + wordPattern(for: descriptor.types),
                 type: .type,
                 priority: 7
             )
@@ -86,7 +88,7 @@ extension RegexSyntaxHighlighter {
 
         if !descriptor.functions.isEmpty {
             builder = builder.addCustomRule(
-                pattern: wordPattern(for: descriptor.functions),
+                pattern: caseFlag + wordPattern(for: descriptor.functions),
                 type: .function,
                 priority: 7
             )
