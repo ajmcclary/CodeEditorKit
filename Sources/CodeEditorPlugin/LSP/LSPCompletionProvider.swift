@@ -240,7 +240,7 @@ public final class LSPCompletionProvider: CompletionProvider {
         var textEdit: CompletionTextEdit?
         if let lspTextEdit = lspItem.textEdit {
             textEdit = CompletionTextEdit(
-                range: convertLSPRangeToNSRange(lspTextEdit.range, in: context.text),
+                range: Self.convertLSPRangeToNSRange(lspTextEdit.range, in: context.text),
                 newText: lspTextEdit.newText
             )
         }
@@ -257,7 +257,7 @@ public final class LSPCompletionProvider: CompletionProvider {
             textEdit: textEdit,
             additionalTextEdits: lspItem.additionalTextEdits.map { lspEdit in
                 CompletionTextEdit(
-                    range: convertLSPRangeToNSRange(lspEdit.range, in: context.text),
+                    range: Self.convertLSPRangeToNSRange(lspEdit.range, in: context.text),
                     newText: lspEdit.newText
                 )
             }
@@ -357,30 +357,33 @@ public final class LSPCompletionProvider: CompletionProvider {
         }
     }
 
-    private func convertLSPRangeToNSRange(_ lspRange: LSPRange, in text: String) -> NSRange {
-        let utf16Count = text.utf16.count
-
-        // Convert line/character positions to string indices
+    /// Translate an LSP `Range` (line/character pair, where `character` is a
+    /// UTF-16 code unit offset per the LSP spec) into an `NSRange` over the
+    /// document's UTF-16 view. `nonisolated` + static so the conversion math
+    /// can be unit-tested synchronously without entering the actor; the math
+    /// depends only on `lspRange` and `text`.
+    nonisolated static func convertLSPRangeToNSRange(
+        _ lspRange: LSPRange, in text: String
+    ) -> NSRange {
+        let utf16Count = TextRangeUtilities.utf16Length(of: text)
         let lines = text.components(separatedBy: .newlines)
 
-        // Calculate start position
-        var startIndex = 0
-        for index in 0..<min(lspRange.start.line, lines.count) {
-            startIndex += lines[index].count + 1 // +1 for newline
+        func offset(forLine line: Int, character: Int) -> Int {
+            var accum = 0
+            for index in 0..<min(line, lines.count) {
+                // LSP positions index UTF-16 code units, not grapheme clusters.
+                // +1 for the newline separator joining the lines back together.
+                accum += TextRangeUtilities.utf16Length(of: lines[index]) + 1
+            }
+            accum += character
+            return min(accum, utf16Count)
         }
-        startIndex += lspRange.start.character
-        startIndex = min(startIndex, utf16Count)
 
-        // Calculate end position
-        var endIndex = 0
-        for index in 0..<min(lspRange.end.line, lines.count) {
-            endIndex += lines[index].count + 1 // +1 for newline
-        }
-        endIndex += lspRange.end.character
-        endIndex = min(endIndex, utf16Count)
+        let startOffset = offset(forLine: lspRange.start.line, character: lspRange.start.character)
+        let endOffset = offset(forLine: lspRange.end.line, character: lspRange.end.character)
 
-        let location = min(startIndex, utf16Count)
-        let length = max(0, min(endIndex - startIndex, utf16Count - location))
+        let location = min(startOffset, utf16Count)
+        let length = max(0, min(endOffset - startOffset, utf16Count - location))
 
         return NSRange(location: location, length: length)
     }
