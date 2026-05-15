@@ -143,11 +143,12 @@ public enum TextKitSetupHelper {
     /// Applies platform performance optimizations.
     private static func applyPerformanceOptimizations(to textView: CodeEditorView) {
         #if canImport(AppKit)
+        let useHWAccel = textView.configuration.performance.useHardwareAcceleration
         if let scrollView = textView.enclosingScrollView {
-            scrollView.wantsLayer = true
-            scrollView.canDrawSubviewsIntoLayer = true
+            HardwareAcceleration.apply(useHWAccel, to: scrollView)
+            scrollView.canDrawSubviewsIntoLayer = useHWAccel
         }
-        textView.wantsLayer = true
+        HardwareAcceleration.apply(useHWAccel, to: textView)
 
         applyTextKit2Optimizations(to: textView)
 

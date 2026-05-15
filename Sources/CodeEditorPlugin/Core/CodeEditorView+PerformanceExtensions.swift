@@ -33,11 +33,12 @@ extension CodeEditorView {
 
         // Configure for hardware acceleration if available
         #if canImport(AppKit)
+        let useHWAccel = configuration.performance.useHardwareAcceleration
         if let scrollView = enclosingScrollView {
-            scrollView.wantsLayer = true
-            scrollView.canDrawSubviewsIntoLayer = true
+            HardwareAcceleration.apply(useHWAccel, to: scrollView)
+            scrollView.canDrawSubviewsIntoLayer = useHWAccel
         }
-        wantsLayer = true
+        HardwareAcceleration.apply(useHWAccel, to: self)
         #elseif canImport(UIKit)
         layer.shouldRasterize = false // Let the system decide
         layer.rasterizationScale = UIKitScreenMetrics.scale(for: self)
