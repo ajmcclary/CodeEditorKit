@@ -23,17 +23,17 @@ final class AnnotationsHubInstallTests: XCTestCase {
         // hub is NOT yet installed as a data source anywhere. The
         // attachToken inside AppState is now alive and waiting.
         XCTAssertFalse(
-            appState.editorController.isAttached,
+            appState.documents.editorController.isAttached,
             "Freshly-constructed controller should be unattached."
         )
 
         // Simulate what the SwiftUI representable does: build a
         // CodeEditorView and run attach(to:).
         let view = CodeEditorView(frame: .zero)
-        appState.editorController.attach(to: view)
+        appState.documents.editorController.attach(to: view)
 
         XCTAssertTrue(
-            appState.editorController.isAttached,
+            appState.documents.editorController.isAttached,
             "Controller should be attached after attach(to:)."
         )
 
