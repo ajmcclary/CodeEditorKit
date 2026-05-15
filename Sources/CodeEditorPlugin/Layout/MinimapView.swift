@@ -252,7 +252,9 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     }
 
     private func setupView() {
-        wantsLayer = true
+        // Default-on at construction time — config isn't in scope here.
+        // The container reapplies the configured value if needed.
+        HardwareAcceleration.apply(true, to: self)
         layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
         layer?.borderWidth = 1.0
         layer?.borderColor = PlatformColors.separator.cgColor

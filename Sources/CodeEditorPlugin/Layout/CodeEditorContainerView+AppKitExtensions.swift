@@ -161,8 +161,9 @@ extension CodeEditorContainerView {
         // Add minimap on top of scroll view
         addSubview(minimapView, positioned: .above, relativeTo: scrollView)
 
-        // Ensure minimap is properly configured
-        minimapView.wantsLayer = true
+        // Ensure minimap is properly configured — gate on the same knob
+        // the rest of the editor's view family uses.
+        HardwareAcceleration.apply(configuration.performance.useHardwareAcceleration, to: minimapView)
         minimapView.layer?.zPosition = 1_000
         minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
 

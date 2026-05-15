@@ -157,8 +157,12 @@ enum ContainerViewInitializer {
         container.addSubview(scrollView)
         container.addSubview(components.minimapView, positioned: .above, relativeTo: scrollView)
 
-        // Configure minimap layer
-        components.minimapView.wantsLayer = true
+        // Configure minimap layer — gate on the same knob the rest of
+        // the editor's view family uses.
+        HardwareAcceleration.apply(
+            container.configuration.performance.useHardwareAcceleration,
+            to: components.minimapView
+        )
         components.minimapView.layer?.zPosition = 1_000
         components.minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
 

@@ -141,7 +141,9 @@ public class GutterView: PlatformView, GutterViewProtocol {
 
     private func setup() {
         #if canImport(AppKit)
-        wantsLayer = true
+        // Default-on at construction time — config isn't in scope here.
+        // The container reapplies the configured value if needed.
+        HardwareAcceleration.apply(true, to: self)
         // Make gutter transparent so it doesn't block text
         layer?.backgroundColor = PlatformColors.clear.cgColor
         #else
