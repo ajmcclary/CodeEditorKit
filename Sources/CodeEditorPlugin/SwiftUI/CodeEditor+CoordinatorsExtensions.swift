@@ -68,6 +68,13 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
     private let platformAdapter = CodeEditorPlatformAdapterFactory.make()
 
+    /// Adapter that wraps the host's `.codeCompletion { … }` modifier
+    /// closure as a `CompletionProvider`. Lazy: allocated on the first
+    /// non-nil closure, kept alive for the coordinator's lifetime so
+    /// re-renders only swap the closure slot. Manager-side identity is
+    /// stable.
+    var modifierProviderAdapter: SwiftUIClosureCompletionProvider?
+
     /// Request focus for the text view
     func requestFocusIfNeeded(for view: PlatformView, shouldBecomeFirstResponder: Bool) {
         guard shouldBecomeFirstResponder, !hasFocusBeenRequested else { return }
@@ -505,3 +512,36 @@ extension CodeEditorCoordinator: TextViewDelegateParticipant {
 }
 
 #endif
+
+// MARK: - Modifier Provider Reconciliation
+
+extension CodeEditorBaseCoordinator {
+    /// Reconciles the host's `.codeCompletion { … }` closure with the
+    /// manager's provider registry. Idempotent across renders:
+    /// - `(closure, nil)`     → allocate adapter, set slot, register.
+    /// - `(closure, adapter)` → swap slot (manager untouched).
+    /// - `(nil, adapter)`     → unregister, drop adapter.
+    /// - `(nil, nil)`         → no-op.
+    func syncModifierProvider(
+        on manager: CompletionManager,
+        closure: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
+    ) {
+        switch (closure, modifierProviderAdapter) {
+        case let (.some(new), .some(adapter)):
+            adapter.closure = new
+
+        case let (.some(new), .none):
+            let adapter = SwiftUIClosureCompletionProvider()
+            adapter.closure = new
+            modifierProviderAdapter = adapter
+            manager.registerProvider(adapter)
+
+        case (.none, .some):
+            manager.unregisterProvider(withId: "swiftui-modifier")
+            modifierProviderAdapter = nil
+
+        case (.none, .none):
+            break
+        }
+    }
+}
