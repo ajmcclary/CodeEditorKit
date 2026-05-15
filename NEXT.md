@@ -10,7 +10,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 ### A.1 Missing capabilities (framework features the sample doesn't demonstrate)
 
-**Event stream invisible.** `UnifiedEventSystem` + `EditorEvent` (textDidChange, selectionDidChange, languageDidChange, themeDidChange, …) — no event log panel. The `.eventSystem(_:)` modifier is undemonstrated. This is the natural next headline gap — three coordinator templates are already in place (LSP / Completion / Performance Inspector panels), so a fourth `EventLogPanel` is straightforward.
+~~**Event stream invisible.**~~ — done. `EventLogSampleCoordinator` + `EventLogPanel` now surface `UnifiedEventSystem.events` (text / selection / focus) layered with `controller.completionEvents()` in the macOS `InspectorSidebar` and the iOS `IOSRootView` Inspectors detail. Framework wiring converted three `eventPublisher.publishSync(...)` sites to `publishEvent(...)` and added focus-event responder overrides in `CodeEditorView+Responder.swift`. Spec: `docs/superpowers/specs/2026-05-14-event-log-panel-design.md`; plan: `docs/superpowers/plans/2026-05-14-event-log-panel.md`.
 
 **Workspace search.** `PortableProjectSearchAdapter` and `ProjectSearchProvider` exist; the sample's find/replace is single-file only. A workspace search sidebar is the obvious demo.
 
@@ -36,7 +36,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 | New surface | Where it goes | What it demos |
 |---|---|---|
-| `EventLogPanel` | Inspector sidebar | Tail of `EditorEvent` stream with filtering |
+| ~~`EventLogPanel`~~ | ~~Inspector sidebar~~ | done |
 | `WorkspaceFileTreeSidebar` | New left-rail above settings, or as a Switcher tab | Tree from `workspaceRoot` via `FileSystemActor` |
 | `ProjectSearchSidebar` | New left section | Cross-file find using `PortableProjectSearchAdapter` |
 | `ThemeImporter` | Switchers | Load Zed JSON from disk |
@@ -56,7 +56,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 6. **`AnnotationsHub`** is currently a demo data source. Promote its protocol surface as a documented example of how third parties plug in custom annotation providers — it is the clearest existing pattern for "user-supplied data source", and the LSP diagnostic demo consumes the same protocol.
 
-7. **iOS feature parity.** `IOSRootView.swift` exposes Editor/Settings/Themes/Languages/Inspectors only — no presets, no annotations panel, no workspace knobs. Mirror the macOS knob sections through `NavigationSplitView`.
+7. **iOS feature parity.** `IOSRootView.swift` exposes Editor/Settings/Themes/Languages/Inspectors only — no presets, no annotations panel, no workspace knobs. Mirror the macOS knob sections through `NavigationSplitView`. (Partial progress: the Inspectors detail now hosts `EventLogPanel` cross-platform — the first cross-platform inspector — alongside the existing macOS-only explainer.)
 
 8. **`SettingsScene.swift`** (macOS ⌘,) is reportedly untouched boilerplate. It should host the more "global" settings (theme, presets, performance), while the inline sidebar focuses on per-document knobs — current arrangement has both showing everything.
 
