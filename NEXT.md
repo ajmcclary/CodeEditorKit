@@ -14,7 +14,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 ~~**Workspace search.**~~ — done. New `ProjectSearchPanelView` (Search tab of `WorkspaceSidebar`) drives `PortableProjectSearchAdapter` with case-sensitive / regex / file-extension controls; smart tab routing opens the file and selects the matched substring via `EditorController.selectMatch(_:)` + new `selectRange(_:scroll:)`. Spec: `docs/superpowers/specs/2026-05-14-workspace-surface-design.md`; plan: `docs/superpowers/plans/2026-05-14-workspace-surface.md`.
 
-**Symbol navigation backed by real data.** `SymbolNavigator` + `DocumentSymbolProvider` are framework-grade; `GotoSymbolSheet.swift` likely fakes the symbol list. Verify it queries the provider.
+~~**Symbol navigation backed by real data.**~~ — done. Verified in A.3 #3: `GotoSymbolSheet.swift:54` flattens `controller.symbols` (backed by `SymbolNavigator` / `DocumentSymbolProvider`) and routes selection through `controller.gotoSymbol(_:)`. No static stub to replace.
 
 ~~**File tree / workspace browser.**~~ — done. `WorkspaceSidebar` (new left rail) hosts `FilePanelView` driven by a now-public `MacOSWorkspaceFileManager` (`WorkspaceFileTree` + `WorkspaceFileWatching`). Lazy disclosure, incremental updates from `WorkspaceFileWatching.events`, empty-state with Open Folder…, and File ▸ Open Folder… (⌘O). Spec / plan as above.
 
@@ -37,8 +37,8 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 | New surface | Where it goes | What it demos |
 |---|---|---|
 | ~~`EventLogPanel`~~ | ~~Inspector sidebar~~ | done |
-| `WorkspaceFileTreeSidebar` | New left-rail above settings, or as a Switcher tab | Tree from `workspaceRoot` via `FileSystemActor` |
-| `ProjectSearchSidebar` | New left section | Cross-file find using `PortableProjectSearchAdapter` |
+| ~~`WorkspaceFileTreeSidebar`~~ | ~~New left-rail above settings, or as a Switcher tab~~ | done — landed as `WorkspaceSidebar` + `FilePanelView` (Files tab) |
+| ~~`ProjectSearchSidebar`~~ | ~~New left section~~ | done — landed as `ProjectSearchPanelView` (Search tab of `WorkspaceSidebar`) |
 | `ThemeImporter` | Switchers | Load Zed JSON from disk |
 | `DesignTokenGallery` | Settings tab | Swatches/typography ramp showing `CodeEditorDesignTokens` |
 
