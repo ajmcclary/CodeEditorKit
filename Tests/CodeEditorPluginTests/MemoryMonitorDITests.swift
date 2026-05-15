@@ -118,8 +118,12 @@ final class MemoryMonitorDITests: XCTestCase {
         XCTAssertEqual(editor.lspManager.workspaceRoot, workspaceRoot)
         #endif
 
-        let provider = editor.featureDependencies.completionProviderRegistry.ensureProvider(for: .python)
-        XCTAssertTrue(provider is UniversalCompletionProvider)
+        editor.completionManager.ensureBuiltInProvider(for: .python)
+        let providerIds = editor.completionManager.registeredProviders.map(\.id)
+        XCTAssertTrue(
+            providerIds.contains("builtin.keywords.python"),
+            "DI path should result in a per-language built-in being registered"
+        )
 
         var valueOnlyConfiguration = editor.configuration
         valueOnlyConfiguration.display.fontSize = 19
