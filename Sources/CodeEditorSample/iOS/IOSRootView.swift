@@ -2,25 +2,39 @@
 import CodeEditorPlugin
 import SwiftUI
 
-/// iOS / iPadOS root scene for the sample app.
+/// iOS / iPadOS root scene for the sample.
 ///
-/// The macOS sample uses a custom three-pane shell from `CodeEditorUI`
-/// (`EditorSidebarShell`, `EditorTabStrip`, `EditorCommandPalette`) — those
-/// components are AppKit-only by design. On iOS we use a `NavigationSplitView`
-/// with the same `EditorDocuments` and `EditorConfiguration` so the
-/// underlying state model is shared.
+/// On iPad: 3-column `NavigationSplitView` with a toolbar-toggleable
+/// inspector column hosting `InspectorPanelStack`. The inspector
+/// column is visible only when the `.editor` sidebar destination is
+/// selected; switching to any other destination collapses it.
+///
+/// On iPhone: `NavigationSplitView` collapses to single-stack
+/// navigation automatically. The toolbar inspector toggle is hidden
+/// in compact width classes; the `.inspectors` sidebar destination
+/// remains the iPhone path into the panel stack.
 struct IOSRootView: View {
+    @Environment(\.horizontalSizeClass) private var hSizeClass
     @Bindable var appState: AppState
 
     @State private var sidebarSelection: IOSSidebarSection? = .editor
+    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @State private var showingPerformanceReport = false
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebar
-        } detail: {
+        } content: {
             detail(for: selectedSection)
                 .navigationTitle(title(for: selectedSection))
                 .toolbar { toolbar(documents: appState.documents.store) }
+        } detail: {
+            inspectorRail
+        }
+        .onChange(of: sidebarSelection) { _, newValue in
+            if newValue != .editor {
+                columnVisibility = .doubleColumn
+            }
         }
         .codeTheme(appState.theme.current)
         .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
@@ -76,7 +90,10 @@ struct IOSRootView: View {
             languagePanel
 
         case .inspectors:
-            inspectorsUnavailable
+            InspectorPanelStack(
+                appState: appState,
+                showingPerformanceReport: $showingPerformanceReport
+            )
         }
     }
 
@@ -99,54 +116,16 @@ struct IOSRootView: View {
         }
     }
 
-    /// EventLog (cross-platform) plus an explainer for the macOS-only
-    /// inspectors. The sample's other inspector panels live in `Sidebars/`
-    /// behind `#if canImport(AppKit)` because they depend on AppKit
-    /// pasteboard APIs and macOS-only chrome (`EditorSidebarShell`).
-    private var inspectorsUnavailable: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                EventLogPanel(
-                    entries: appState.eventLog.snapshot.entries,
-                    totals: appState.eventLog.snapshot.totals,
-                    mutedCategories: appState.eventLog.mutedCategories,
-                    paused: appState.eventLog.paused,
-                    onToggleCategory: { category in
-                        appState.eventLog.setMuted(category, !appState.eventLog.mutedCategories.contains(category))
-                    },
-                    onTogglePause: { appState.eventLog.setPaused(!appState.eventLog.paused) },
-                    onClear: { appState.eventLog.clear() }
-                )
-
-                Divider()
-
-                ContentUnavailableView {
-                    Label("Other inspectors are macOS-only", systemImage: "macwindow.badge.plus")
-                } description: {
-                    Text(
-                        """
-                        The LSP, Completion, Performance, and Annotations inspectors \
-                        live in `Sources/CodeEditorSample/Sidebars/` and are gated to \
-                        AppKit. The underlying CodeEditorPlugin APIs (LSPManager, \
-                        CompletionManager, PerformanceInsights, AnnotationsHub) work \
-                        on iOS — only the sample's inspector chrome is desktop-only.
-
-                        The workspace surface (Files / Search left rail) is also \
-                        macOS-only in the current sample. The framework's \
-                        WorkspaceFileTree, WorkspaceFileWatching, and \
-                        PortableProjectSearchAdapter are usable from any platform, \
-                        but the sample's UI for them sits inside WindowBody (AppKit).
-
-                        Remote LSP servers work on iOS: use \
-                        `LanguageServerConfig.remote(url:)` with `LSPManager` to wire \
-                        up a WebSocket-backed language server. Local servers require \
-                        AppKit's `Process` API (macOS only) and throw an `LSPError` \
-                        at start time on iOS.
-                        """
-                    )
-                }
-            }
-            .padding(16)
+    @ViewBuilder
+    private var inspectorRail: some View {
+        if selectedSection == .editor {
+            InspectorPanelStack(
+                appState: appState,
+                showingPerformanceReport: $showingPerformanceReport
+            )
+            .navigationTitle("Inspectors")
+        } else {
+            EmptyView()
         }
     }
 
@@ -161,6 +140,7 @@ struct IOSRootView: View {
                 .codeWorkspaceRoot(appState.workspaceRoot)
                 .becomeFirstResponder()
                 .eventSystem(appState.eventSystem)
+                .performanceObserver(appState.performanceObservation)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ContentUnavailableView(
@@ -241,6 +221,17 @@ struct IOSRootView: View {
                     .keyboardShortcut("o", modifiers: [.command, .shift])
             } label: {
                 Label("File", systemImage: "doc")
+            }
+        }
+
+        if hSizeClass != .compact {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    columnVisibility = (columnVisibility == .all) ? .doubleColumn : .all
+                } label: {
+                    Label("Inspector", systemImage: "sidebar.right")
+                }
+                .disabled(selectedSection != .editor)
             }
         }
     }
