@@ -60,6 +60,34 @@ extension EditorDocuments {
         }
     }
 
+    /// Write the document's contents to `url` and rebind the tab to it:
+    /// updates `url`, renames the tab to the URL's last path component,
+    /// switches `language` to whatever the new extension implies, and
+    /// clears `isDirty`. The previous on-disk file (if any) is left
+    /// untouched. Returns `.noTab` if there is no active document (and
+    /// no explicit `id` was passed); `.failed(error:)` on write failure.
+    @discardableResult
+    func saveAs(to url: URL, _ id: EditorDocument.ID? = nil) -> SaveOutcome {
+        let target = id ?? activeID
+        guard let target,
+              let document = documents.first(where: { $0.id == target }) else {
+            return .noTab
+        }
+        do {
+            try Self.writeWithSecurityScope(text: document.text, to: url)
+            let detected = LanguageDetectionService().detectLanguage(fromExtension: url.pathExtension)
+            update(target) { doc in
+                doc.tab.url = url
+                doc.tab.name = url.lastPathComponent
+                doc.tab.language = detected
+                doc.tab.isDirty = false
+            }
+            return .saved(url: url)
+        } catch {
+            return .failed(error: error)
+        }
+    }
+
     // MARK: - Security-scoped I/O helpers
 
     /// Writes `text` to `url`. On iOS, brackets the write in
