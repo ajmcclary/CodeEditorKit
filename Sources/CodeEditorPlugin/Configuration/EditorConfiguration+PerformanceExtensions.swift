@@ -21,7 +21,10 @@ extension EditorConfiguration {
         /// dedicated range-based text attribute applier is available.
         public var usesRangeBasedHighlighting: Bool = false
 
-        /// Whether to use hardware acceleration
+        /// Gates `wantsLayer` on the editor's `NSView` instances at mount
+        /// (macOS). No effect on iOS — `UIView` is always layer-backed.
+        /// The applied outcome is published via
+        /// `EditorState.hardwareAccelerationActive`.
         public var useHardwareAcceleration: Bool = true
 
         /// Rendering update strategy

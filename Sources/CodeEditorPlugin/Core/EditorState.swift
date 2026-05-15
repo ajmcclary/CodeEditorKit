@@ -22,11 +22,18 @@ public final class EditorState {
     public var selection: SelectionState?
     /// Detected/explicit language for the active document.
     public var language: Language?
-    /// True when the active document has unsaved changes.
+    /// True when the editor view has observed an edit since its current
+    /// bound content was installed. View-local — the host owns
+    /// document-level dirty tracking (e.g., across tabs). Resets on
+    /// initial mount, on host-driven binding swap, on
+    /// `EditorController.markClean()`, and on edits that return content
+    /// to the baseline (covers undo).
     public var isDirty: Bool
-    /// Reflects the editor's *actual* hardware-acceleration state — what's
-    /// running, not what's configured. Status bar reads this so the UI
-    /// shows truth.
+    /// Reflects the editor's hardware-acceleration state applied at mount.
+    /// iOS: always `true` (UIView is layer-backed by definition). macOS:
+    /// reflects `EditorConfiguration.Performance.useHardwareAcceleration`
+    /// at the time the editor mounted; live config changes after mount do
+    /// not toggle this field.
     public var hardwareAccelerationActive: Bool
     /// Total line count of the active document.
     public var lineCount: Int
