@@ -34,6 +34,26 @@ final class CompletionManagerBuiltInProviderTests: XCTestCase {
         XCTAssertEqual(ids, ["builtin.keywords.python"])
     }
 
+    func testCodeEditorViewRegistersBuiltInForInitialLanguage() {
+        let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        let ids = editor.completionManager.registeredProviders.map(\.id)
+        XCTAssertTrue(
+            ids.contains("builtin.keywords.\(Language.plainText.identifier)"),
+            "First-time setup should register the built-in keyword provider for initial language"
+        )
+    }
+
+    func testCodeEditorViewSwapsBuiltInOnLanguageChange() {
+        let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        editor.language = .swift
+        editor.language = .python
+
+        let ids = Set(editor.completionManager.registeredProviders.map(\.id))
+        XCTAssertTrue(ids.contains("builtin.keywords.python"))
+        XCTAssertFalse(ids.contains("builtin.keywords.swift"))
+    }
+
     func testHostCollisionOnBuiltInIdWins() {
         let manager = makeManager()
 

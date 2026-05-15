@@ -75,9 +75,12 @@ extension CodeEditorView {
     }
 
     internal func setupCompletionProviders() {
-        // Set up language-specific completion providers
-        // Providers are registered on-demand when languages are selected
-        // The completion manager will handle provider registration internally
+        // First-time wakeup: language hasn't gone through didSet for its
+        // initial value (`.plainText`). Register the built-in keyword
+        // provider explicitly so a fresh editor gets keyword completions
+        // for free. Subsequent language changes route through
+        // `language { didSet }` below.
+        completionManager.ensureBuiltInProvider(for: language)
     }
 
     internal func setupCodeFoldingEngine() {

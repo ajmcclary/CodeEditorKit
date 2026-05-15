@@ -399,6 +399,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
                 applySyntaxHighlighting()
                 updateCompletionTriggerCharacters()
             }
+
+            // Built-in keyword provider tracks the current language; the
+            // call is idempotent and sweeps any prior-language built-in.
+            completionManager.ensureBuiltInProvider(for: language)
         }
     }
 
