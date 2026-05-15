@@ -162,6 +162,29 @@ public final class CompletionManager {
         providers.removeValue(forKey: id)
     }
 
+    /// Ensures a `LanguageKeywordCompletionProvider` is registered for
+    /// the given language. Idempotent. Sweeps any prior built-in for a
+    /// different language, then registers the new one. Host-supplied
+    /// providers at the canonical id win (collision check). Called by
+    /// `CodeEditorView` on language change; safe to call from hosts
+    /// using `CompletionManager` standalone.
+    public func ensureBuiltInProvider(for language: Language) {
+        let newId = "builtin.keywords.\(language.identifier)"
+
+        // Already installed (built-in or host-supplied at this id).
+        if providers[newId] != nil { return }
+
+        // Sweep any prior built-in providers for other languages.
+        let staleIds = providers.keys.filter {
+            $0.hasPrefix("builtin.keywords.") && $0 != newId
+        }
+        for staleId in staleIds {
+            providers.removeValue(forKey: staleId)
+        }
+
+        registerProvider(LanguageKeywordCompletionProvider(language: language))
+    }
+
     /// Get all registered providers
     public var registeredProviders: [any CompletionProvider] {
         Array(providers.values)
