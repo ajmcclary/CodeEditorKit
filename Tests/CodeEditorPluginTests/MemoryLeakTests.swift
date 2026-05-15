@@ -9,8 +9,27 @@ import UIKit
 
 // MARK: - MemoryLeakTests
 
-/// Tests to ensure proper memory management and no retain cycles
+/// Tests to ensure proper memory management and no retain cycles.
+///
+/// The five `CodeEditorView` deallocation assertions in this file used to
+/// `print("Warning: …")` in place of asserting, which made them
+/// "guaranteed-green" leak detectors (REVIEW.md Tests/Critical). They now
+/// assert via `XCTAssertNil` and use `XCTExpectFailure` to record the
+/// underlying retention as a *known* failure — when the leak is fixed, the
+/// strict expected-failure will itself fail, forcing the wrapper to be
+/// removed instead of letting a fixed leak silently re-rot. The retention
+/// reproduces in production code; the wrapper documents it as outstanding
+/// work, not as a permitted exception.
 final class MemoryLeakTests: CleanupTestCase {
+    /// Shared description for the `CodeEditorView` retention these tests
+    /// currently detect. Keep the phrasing consistent so log scrapes lump
+    /// them together.
+    private static let knownEditorRetentionReason: String = """
+        Known CodeEditorView retention: instance survives autoreleasepool exit \
+        + repeated runloop spins after its last local strong reference drops. \
+        Tests assert the leak so when the production retention is removed \
+        XCTExpectFailure(strict:) flags the wrapper for deletion.
+        """
     override func setUp() {
         super.setUp()
         // Add at least one non-trivial statement to satisfy SwiftLint
@@ -21,31 +40,18 @@ final class MemoryLeakTests: CleanupTestCase {
 
     @MainActor
     func testCodeEditorViewDeallocation() {
-        // Test using weak reference pattern like other tests
         weak var weakEditor: CodeEditorView?
-
         autoreleasepool {
             let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
             weakEditor = editor
-
-            // Configure the editor
             editor.text = "test content"
             editor.language = .swift
             editor.isLineNumbersEnabled = true
-
-            // Explicitly clean up to allow deallocation
             editor.removeFromSuperview()
         }
-
-        // Give time for cleanup
-        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
-
-        // Check if deallocated
-        if weakEditor != nil {
-            // This is a known issue with TextKit2 in test environments
-            print("Warning: CodeEditorView not immediately deallocated (known TextKit2 behavior in tests)")
-            // For now, we'll skip the assertion as the other tests show this is expected
-            // XCTAssertNil(weakEditor, "CodeEditorView should be deallocated")
+        drainPendingRetains()
+        XCTExpectFailure(Self.knownEditorRetentionReason) {
+            XCTAssertNil(weakEditor, "CodeEditorView should be deallocated after its last strong reference drops")
         }
     }
 
@@ -53,67 +59,48 @@ final class MemoryLeakTests: CleanupTestCase {
     func testDelegateDoesNotCreateRetainCycle() {
         weak var weakEditor: CodeEditorView?
         weak var weakDelegate: MockDelegate?
-
         autoreleasepool {
-            let editor = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+            let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
             let delegate = MockDelegate()
-
             weakEditor = editor
             weakDelegate = delegate
-
-            // Set up delegate relationship
             editor.textDelegate = delegate
-
-            // Trigger some delegate methods
             editor.text = "trigger delegate"
-
-            XCTAssertNotNil(weakEditor)
-            XCTAssertNotNil(weakDelegate)
-
-            // Explicit cleanup to break retain cycles
+            // Drop the delegate before the autoreleasepool closes so the
+            // delegate's only strong path is via the editor — if the editor
+            // retained it, the delegate would survive.
             editor.textDelegate = nil
         }
-
-        // Both should be deallocated
-        // Note: Due to TextKit2 system-level retention, views may not deallocate immediately in tests
-        if weakEditor != nil {
-            print("Warning: CodeEditorView not immediately deallocated (acceptable in test environment)")
+        drainPendingRetains()
+        // Delegate retention is strict — the delegate-cycle protection is the
+        // primary contract of this test. The editor's own retention is the
+        // known regression scoped via XCTExpectFailure.
+        XCTAssertNil(weakDelegate, "Delegate must not be retained by CodeEditorView")
+        XCTExpectFailure(Self.knownEditorRetentionReason) {
+            XCTAssertNil(weakEditor, "CodeEditorView should be deallocated alongside its delegate")
         }
-        XCTAssertNil(weakDelegate, "Delegate retained by CodeEditorView")
     }
 
     @MainActor
     func testAnnotationViewsAreCleaned() {
         weak var weakEditor: CodeEditorView?
-
         autoreleasepool {
-            let editor = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+            let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
             weakEditor = editor
-
-            // Skip annotations for this test - they require proper TextKit2 setup
-            // Since we can't test annotations, let's test that the editor itself can be deallocated
-
-            // Force layout update
+            // Force a layout pass so any annotation-overlay-supporting view
+            // graph that would be wired in real use also gets built and then
+            // released here.
             #if canImport(AppKit)
             editor.needsLayout = true
             #else
             editor.setNeedsLayout()
             #endif
-
-            // For this test, just verify the editor exists since we can't test annotations properly
-            XCTAssertNotNil(editor)
-
-            // Editor will be cleaned up automatically by CleanupTestCase
+            editor.removeFromSuperview()
         }
-
-        // Editor should be deallocated
-        // Note: Due to TextKit2 system retention, immediate deallocation may not occur in tests
-        if weakEditor != nil {
-            print("Warning: CodeEditorView not immediately deallocated (acceptable in test environment)")
+        drainPendingRetains()
+        XCTExpectFailure(Self.knownEditorRetentionReason) {
+            XCTAssertNil(weakEditor, "Annotation/overlay path must not retain the editor")
         }
-
-        // Since we can't properly test annotations without full TextKit2 setup,
-        // this test now just verifies basic memory management
     }
 
     // MARK: - Performance Monitor Memory Tests
@@ -173,31 +160,23 @@ final class MemoryLeakTests: CleanupTestCase {
     @MainActor
     func testSyntaxHighlightingDoesNotRetainTextView() {
         weak var weakEditor: CodeEditorView?
-
         autoreleasepool {
-            let editor = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+            let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
             weakEditor = editor
-
-            // Enable syntax highlighting
             editor.language = .swift
             editor.isSyntaxHighlightingEnabled = true
             editor.text = "func hello() { print(\"world\") }"
-
-            // Force layout update
             #if canImport(AppKit)
             editor.needsLayout = true
             #else
             editor.setNeedsLayout()
             #endif
-
-            // Explicit cleanup to break syntax highlighting retain cycles
             editor.isSyntaxHighlightingEnabled = false
+            editor.removeFromSuperview()
         }
-
-        // Editor should still be deallocated
-        // Note: Due to TextKit2 and syntax highlighting system retention, immediate deallocation may not occur in tests
-        if weakEditor != nil {
-            print("Warning: CodeEditorView not immediately deallocated (acceptable in test environment)")
+        drainPendingRetains()
+        XCTExpectFailure(Self.knownEditorRetentionReason) {
+            XCTAssertNil(weakEditor, "Syntax-highlighting coordinator must not retain the editor")
         }
     }
 
@@ -206,23 +185,29 @@ final class MemoryLeakTests: CleanupTestCase {
     @MainActor
     func testCompletionPopupCleansUp() {
         weak var weakEditor: CodeEditorView?
-
         autoreleasepool {
-            let editor = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+            let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
             weakEditor = editor
-
-            // Set some text
             editor.text = "let test = String()"
-
-            // Just test that the editor exists
-            XCTAssertNotNil(editor)
-
-            // Editor will be cleaned up automatically by CleanupTestCase
+            editor.removeFromSuperview()
         }
+        drainPendingRetains()
+        XCTExpectFailure(Self.knownEditorRetentionReason) {
+            XCTAssertNil(weakEditor, "Completion subsystem must not retain the editor")
+        }
+    }
 
-        // Note: Due to TextKit2 system retention, immediate deallocation may not occur in tests
-        if weakEditor != nil {
-            print("Warning: CodeEditorView not immediately deallocated (acceptable in test environment)")
+    // MARK: - Helpers
+
+    /// Spin the runloop a few times inside nested autoreleasepools so
+    /// framework-autoreleased helpers and TextKit2 background cleanup work
+    /// have a chance to drop their references before we assert.
+    @MainActor
+    private func drainPendingRetains() {
+        for _ in 0..<5 {
+            autoreleasepool {
+                RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+            }
         }
     }
 }
