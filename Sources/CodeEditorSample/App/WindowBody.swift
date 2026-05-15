@@ -98,14 +98,75 @@ struct WindowBody: View {
                     appState.lsp.currentWorkspaceRoot = newValue
                 }
                 #endif
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    if appState.findOverlayVisible {
-                        FindReplaceOverlay(appState: appState)
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                }
+                .modifier(FindReplacePlumbing(appState: appState))
         } else {
             emptyState
+        }
+    }
+
+    private struct FindReplacePlumbing: ViewModifier {
+        @Bindable var appState: AppState
+
+        func body(content: Content) -> some View {
+            content
+                .modifier(FindReplaceOverlayAttachment(appState: appState))
+                .modifier(FindReplaceClearHooks(appState: appState))
+        }
+    }
+
+    private struct FindReplaceOverlayAttachment: ViewModifier {
+        @Bindable var appState: AppState
+
+        func body(content: Content) -> some View {
+            content
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    overlay
+                }
+                .task(id: appState.findReplace.searchRequest(activeDocumentID: appState.documents.activeID)) {
+                    await appState.findReplace.runDebouncedSearch(controller: appState.editorController)
+                }
+        }
+
+        @ViewBuilder
+        private var overlay: some View {
+            if appState.findReplace.isOverlayVisible {
+                FindReplaceOverlay(
+                    model: appState.findReplace,
+                    controller: appState.editorController,
+                    isReadOnly: !appState.configuration.behavior.isEditable
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+    }
+
+    private struct FindReplaceClearHooks: ViewModifier {
+        @Bindable var appState: AppState
+
+        func body(content: Content) -> some View {
+            content
+                .onChange(of: appState.findReplace.isOverlayVisible) { _, isVisible in
+                    if !isVisible {
+                        appState.editorController.clearSearch()
+                    }
+                }
+                .onChange(of: appState.documents.activeID) { _, _ in
+                    clearAndBump()
+                }
+                .onChange(of: appState.documents.active?.text) { _, _ in
+                    clearAndBump()
+                }
+                .onChange(of: appState.documents.active?.language) { _, _ in
+                    clearAndBump()
+                }
+                .onChange(of: appState.theme.id) { _, _ in
+                    clearAndBump()
+                }
+        }
+
+        private func clearAndBump() {
+            appState.editorController.clearSearch()
+            appState.findReplace.markDocumentEdited()
         }
     }
 

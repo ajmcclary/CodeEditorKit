@@ -70,7 +70,7 @@ struct CodeEditorSampleApp: App {
 
             CommandGroup(after: .textEditing) {
                 Button("Find / Replace…") {
-                    appState.findOverlayVisible = true
+                    appState.findReplace.isOverlayVisible = true
                 }
                 .keyboardShortcut("f", modifiers: .command)
 

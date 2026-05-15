@@ -121,17 +121,23 @@ enum CommandPaletteCatalog {
     ) {
         // Single entry covers both Find and Replace — the overlay exposes
         // both rows, so two palette entries that both just toggle it on
-        // were redundant.
+        // were redundant. Drives `FindReplaceModel`; the controller calls
+        // are dispatched by the model so navigation also refreshes the
+        // overlay's match-position badge.
         let openOverlay = CommandPaletteItem(title: "Find / Replace…", kind: .action, shortcut: "⌘F")
-        actions[openOverlay.id] = { appState.findOverlayVisible = true }
+        actions[openOverlay.id] = { appState.findReplace.isOverlayVisible = true }
         items.append(openOverlay)
 
         let findNext = CommandPaletteItem(title: "Find Next", kind: .action)
-        actions[findNext.id] = { _ = appState.editorController.findNext() }
+        actions[findNext.id] = {
+            appState.findReplace.findNext(controller: appState.editorController)
+        }
         items.append(findNext)
 
         let findPrev = CommandPaletteItem(title: "Find Previous", kind: .action)
-        actions[findPrev.id] = { _ = appState.editorController.findPrevious() }
+        actions[findPrev.id] = {
+            appState.findReplace.findPrevious(controller: appState.editorController)
+        }
         items.append(findPrev)
     }
 

@@ -68,15 +68,11 @@ final class AppState {
     /// for completion activity.
     let eventLog = EventLogSampleCoordinator()
 
-    /// Whether the find/replace overlay is pinned to the top of the
-    /// editor pane.
-    var findOverlayVisible: Bool = false
-
-    /// Persisted find query — survives palette/overlay toggles.
-    var findText: String = ""
-
-    /// Persisted replace string.
-    var replaceText: String = ""
+    /// Find / replace feature-scoped model. Owns query text, options,
+    /// overlay visibility, debounce / clear lifecycle, and the
+    /// derived match counters. First slice of the AppState
+    /// decomposition tracked by NEXT.md A.3 #1.
+    let findReplace = FindReplaceModel()
 
     /// Whether the "Go to Line…" sheet is presented.
     var gotoLineSheetVisible: Bool = false
