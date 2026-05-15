@@ -32,19 +32,19 @@ extension RegexSyntaxHighlighter {
             var newRules = rules
 
             if double {
-                if let rule = Self.rule(#"\"(?:[^\"\\\\]|\\\\.)*\""#, .string, 9) {
+                if let rule = Self.rule(#"\"(?:[^\"\\]|\\.)*\""#, .string, 9) {
                     newRules.append(rule)
                 }
             }
 
             if single {
-                if let rule = Self.rule(#"'(?:[^'\\\\]|\\\\.)*'"#, .string, 9) {
+                if let rule = Self.rule(#"'(?:[^'\\]|\\.)*'"#, .string, 9) {
                     newRules.append(rule)
                 }
             }
 
             if backtick {
-                if let rule = Self.rule(#"`(?:[^`\\\\]|\\\\.)*`"#, .string, 9) {
+                if let rule = Self.rule(#"`(?:[^`\\]|\\.)*`"#, .string, 9) {
                     newRules.append(rule)
                 }
             }

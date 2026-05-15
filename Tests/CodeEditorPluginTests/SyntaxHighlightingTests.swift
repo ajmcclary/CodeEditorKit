@@ -73,6 +73,32 @@ final class SyntaxHighlightingTests: XCTestCase {
         XCTAssertFalse(stringTokens.isEmpty, "Should detect strings")
     }
 
+    /// Regression: the `addStrings` regex builder used `\\\\.` inside a Swift raw
+    /// string, which NSRegex interpreted as "two literal backslashes + any char"
+    /// rather than the intended escape sequence `\\.`. Result: string literals
+    /// containing escaped inner quotes (`"hello \"world\""`) were tokenized as a
+    /// single trailing `""` instead of one token spanning the full literal.
+    @MainActor
+    func testStringHighlightingPreservesEscapedQuotes() {
+        let highlighter = SyntaxHighlightingCoordinator()
+        let code = #"let s = "hello \"world\"""#
+        let tokens = highlighter.highlight(source: code, language: .javascript)
+        let stringTokens = tokens.filter { $0.type == .string }
+
+        XCTAssertEqual(
+            stringTokens.count,
+            1,
+            "Escaped inner quotes must not split the literal. Got: \(debugTokenSummary(stringTokens, in: code))"
+        )
+
+        let stringText = stringTokens.first.flatMap { tokenText($0, in: code) }
+        XCTAssertEqual(
+            stringText,
+            #""hello \"world\"""#,
+            "String token should span the full literal including escaped inner quotes"
+        )
+    }
+
     @MainActor
     func testSwiftNumberHighlighting() {
         let highlighter = SyntaxHighlightingCoordinator()

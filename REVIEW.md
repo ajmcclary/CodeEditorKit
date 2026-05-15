@@ -11,6 +11,12 @@ The codebase is structurally sound and convention-compliant at the level lint ca
 
 ---
 
+## Fix log
+
+- **2026-05-15 — FIXED Critical #1 (string regex escapes).** `SyntaxHighlighting/RegexSyntaxHighlighter+BuilderExtensions.swift:35,41,47` — replaced the four-backslash sequences inside raw strings with two backslashes so NSRegex now sees `\\.` (escape-any). Added regression test `testStringHighlightingPreservesEscapedQuotes` in `Tests/CodeEditorPluginTests/SyntaxHighlightingTests.swift` that asserts `"hello \"world\""` tokenizes as a single string token spanning the full literal (test failed pre-fix returning `""`, passes post-fix). All 24 `SyntaxHighlightingTests` and 41 highlight-related Swift Testing cases pass; lint clean.
+
+---
+
 ## Critical (correctness bugs — fix before shipping)
 
 ### TextKit2 / Text pipeline
@@ -20,7 +26,7 @@ The codebase is structurally sound and convention-compliant at the level lint ca
 - **`Core/CodeEditorView.swift:643`** — `delegate = nil` in `removeFromSuperview()` evades the `forbidden_text_view_delegate_assignment` SwiftLint rule (which matches `textView.delegate =` literally). View reuse breaks typing.
 
 ### Syntax highlighting
-- **`SyntaxHighlighting/RegexSyntaxHighlighter+BuilderExtensions.swift:35,41,47`** — String/char/backtick regex patterns use `\\\\` inside `#"..."#` raw strings. Because raw strings don't process escapes, `NSRegularExpression` receives literal `\\\\.` (two backslashes + any char) instead of `\\.` (escape sequence). **Every language that uses `addStrings(double:true)` is silently broken.** Inputs like `"hello \"world\""` match only the empty `""` between the opening quote and first escape.
+- ~~**`SyntaxHighlighting/RegexSyntaxHighlighter+BuilderExtensions.swift:35,41,47`** — String/char/backtick regex patterns use `\\\\` inside `#"..."#` raw strings. Because raw strings don't process escapes, `NSRegularExpression` receives literal `\\\\.` (two backslashes + any char) instead of `\\.` (escape sequence). **Every language that uses `addStrings(double:true)` is silently broken.** Inputs like `"hello \"world\""` match only the empty `""` between the opening quote and first escape.~~ **FIXED 2026-05-15** (see Fix log).
 - **`Languages/Data/SqlLanguageDescriptor.swift:16-23`** — Keywords are uppercase but the matching rule is case-sensitive. Lowercase SQL (the common case) gets zero keyword highlighting.
 - **`SyntaxHighlighting/BackgroundHighlightingActor.swift:23-82`** — Fallback path uses case-insensitive substring search with no word boundaries. `int` matches inside `printf`, `if` inside `notify`. Reachable via `MemoryManagementCoordinator.createAsyncHighlighter`.
 
@@ -138,7 +144,7 @@ The codebase is structurally sound and convention-compliant at the level lint ca
 
 ## Suggested first 10 fixes (impact × cost)
 
-1. Fix the regex string-pattern escapes in `RegexSyntaxHighlighter+BuilderExtensions.swift:35,41,47` — silently broken in most languages.
+1. ~~Fix the regex string-pattern escapes in `RegexSyntaxHighlighter+BuilderExtensions.swift:35,41,47`~~ — **DONE 2026-05-15**.
 2. Thread `appearance` through theme palette fallbacks — light themes are silently dark on any missing key.
 3. Apply TLS pinning / min-TLS settings in `WebSocketTransport` — security correctness.
 4. Restore real assertions in `MemoryLeakTests.swift`.
