@@ -96,6 +96,54 @@ final class FeatureBehaviorTests: CleanupTestCase {
         XCTAssertEqual(results.map(\.range.location), [0, 26])
     }
 
+    private func backgroundColor(at location: Int, in editor: CodeEditorView) -> PlatformColor? {
+        let range = NSRange(location: location, length: 1)
+        guard let attrs = editor.textKitBridge.attributedSubstring(in: range) else { return nil }
+        return attrs.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? PlatformColor
+    }
+
+    func testCurrentMatchColorNilPreservesLegacyBehavior() async throws {
+        let editor = createCodeEditorView()
+        editor.text = "alpha beta alpha"
+
+        var options = SearchOptions()
+        options.flashResult = false
+        XCTAssertNil(options.currentMatchColor)
+
+        let engine = SearchReplaceEngine()
+        engine.attach(to: editor)
+        _ = await engine.findAll(pattern: "alpha", options: options)
+
+        let text = editor.text ?? ""
+        let firstLoc = NSRange(try XCTUnwrap(text.range(of: "alpha")), in: text).location
+        let secondLoc = NSRange(try XCTUnwrap(text.range(of: "alpha", options: [.backwards])), in: text).location
+
+        XCTAssertEqual(backgroundColor(at: firstLoc, in: editor), options.highlightColor)
+        XCTAssertEqual(backgroundColor(at: secondLoc, in: editor), options.highlightColor)
+    }
+
+    func testSearchOptionsCurrentMatchColorPaintsTwoLayers() async throws {
+        let editor = createCodeEditorView()
+        editor.text = "alpha beta alpha"
+
+        var options = SearchOptions()
+        options.flashResult = false
+        options.highlightColor = PlatformColor.yellow.withAlphaComponent(0.3)
+        options.currentMatchColor = PlatformColor.systemBlue.withAlphaComponent(0.5)
+
+        let engine = SearchReplaceEngine()
+        engine.attach(to: editor)
+        _ = await engine.findAll(pattern: "alpha", options: options)
+
+        let text = editor.text ?? ""
+        let firstLoc = NSRange(try XCTUnwrap(text.range(of: "alpha")), in: text).location
+        let secondLoc = NSRange(try XCTUnwrap(text.range(of: "alpha", options: [.backwards])), in: text).location
+
+        XCTAssertEqual(engine.currentSearchIndex, 0)
+        XCTAssertEqual(backgroundColor(at: firstLoc, in: editor), options.currentMatchColor)
+        XCTAssertEqual(backgroundColor(at: secondLoc, in: editor), options.highlightColor)
+    }
+
     func testCodeFoldingDetectsAndTogglesSwiftRegions() async throws {
         let editor = createCodeEditorView()
         editor.language = .swift

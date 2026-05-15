@@ -351,14 +351,20 @@ public final class SearchReplaceEngine: ObservableObject {
         let bridge = textView.textKitBridge
         let fullRange = TextRangeUtilities.fullRange(in: bridge.documentString)
 
-        // Clear existing highlights
         bridge.removePersistentAttribute(.backgroundColor, range: fullRange)
 
-        // Apply highlights
         for result in results {
             bridge.addPersistentAttributes(
                 [.backgroundColor: searchOptions.highlightColor],
                 range: result.range
+            )
+        }
+
+        if let currentColor = searchOptions.currentMatchColor,
+           results.indices.contains(currentSearchIndex) {
+            bridge.addPersistentAttributes(
+                [.backgroundColor: currentColor],
+                range: results[currentSearchIndex].range
             )
         }
     }
@@ -473,6 +479,12 @@ public struct SearchOptions {
     public var highlightColor = PlatformColor.yellow.withAlphaComponent(0.3)
     /// The color used to flash the current search result
     public var flashColor = PlatformColor.systemBlue.withAlphaComponent(0.5)
+    /// Optional second color for the *active* match. When non-nil,
+    /// `SearchReplaceEngine.highlightSearchResults(_:)` paints the
+    /// active match (`currentSearchResults[currentSearchIndex]`) with
+    /// this color and the other matches with `highlightColor`. When
+    /// nil, behavior is identical to prior releases.
+    public var currentMatchColor: PlatformColor?
 
     var searchOptions: String.CompareOptions {
         var options: String.CompareOptions = []
