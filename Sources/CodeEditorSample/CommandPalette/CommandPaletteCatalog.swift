@@ -11,7 +11,7 @@ enum CommandPaletteCatalog {
     @MainActor
     static func build(
         appState: AppState,
-        settingsVisible: Binding<Bool>,
+        workspaceVisible: Binding<Bool>,
         inspectorVisible: Binding<Bool>
     ) -> (items: [CommandPaletteItem], dispatch: (CommandPaletteItem) -> Void) {
         var items: [CommandPaletteItem] = []
@@ -63,7 +63,7 @@ enum CommandPaletteCatalog {
         appendSidebarActions(
             into: &items,
             actions: &actions,
-            settingsVisible: settingsVisible,
+            workspaceVisible: workspaceVisible,
             inspectorVisible: inspectorVisible
         )
         appendFindActions(into: &items, actions: &actions, appState: appState)
@@ -101,12 +101,12 @@ enum CommandPaletteCatalog {
     private static func appendSidebarActions(
         into items: inout [CommandPaletteItem],
         actions: inout [CommandPaletteItem.ID: () -> Void],
-        settingsVisible: Binding<Bool>,
+        workspaceVisible: Binding<Bool>,
         inspectorVisible: Binding<Bool>
     ) {
-        let toggleSettings = CommandPaletteItem(title: "Toggle Settings Sidebar", kind: .action)
-        actions[toggleSettings.id] = { settingsVisible.wrappedValue.toggle() }
-        items.append(toggleSettings)
+        let toggleWorkspace = CommandPaletteItem(title: "Toggle Workspace Sidebar", kind: .action)
+        actions[toggleWorkspace.id] = { workspaceVisible.wrappedValue.toggle() }
+        items.append(toggleWorkspace)
 
         let toggleInspector = CommandPaletteItem(title: "Toggle Inspector", kind: .action)
         actions[toggleInspector.id] = { inspectorVisible.wrappedValue.toggle() }

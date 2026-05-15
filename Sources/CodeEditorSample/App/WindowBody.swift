@@ -4,20 +4,29 @@ import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
-/// Horizontal split: settings | editor | inspector. macOS only —
+/// Horizontal split: workspace | editor | inspector. macOS only —
 /// `IOSRootView` provides the iOS layout via `NavigationSplitView`.
+/// Global settings live in `Settings { SettingsScene(...) }` (⌘,).
 struct WindowBody: View {
     @Environment(\.codeEditorTheme) private var editorTheme
     @Bindable var appState: AppState
-    @Binding var settingsVisible: Bool
+    @Binding var workspaceVisible: Bool
     @Binding var inspectorVisible: Bool
 
     var body: some View {
         HStack(spacing: 0) {
-            if settingsVisible {
-                SettingsSidebar(
+            if workspaceVisible {
+                WorkspaceSidebar(
+                    workspace: appState.workspaceModel,
+                    search: appState.projectSearchModel,
                     appState: appState
                 )
+                .onChange(of: appState.workspaceRoot) { _, newValue in
+                    appState.workspaceModel.setRoot(newValue)
+                    Task { @MainActor [projectSearchModel = appState.projectSearchModel] in
+                        await projectSearchModel.setRoot(newValue)
+                    }
+                }
                 columnSeparator
             }
             editorPane

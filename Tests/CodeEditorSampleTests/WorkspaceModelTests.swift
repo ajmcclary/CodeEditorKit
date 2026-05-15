@@ -11,6 +11,22 @@ struct WorkspaceModelTests {
         WorkspaceFileNode(name: "ws", url: URL(fileURLWithPath: path), isDirectory: true)
     }
 
+    /// Polls the predicate on the MainActor, yielding between checks
+    /// for up to ~1 s. The watch task in WorkspaceModel needs at least
+    /// one MainActor hop per event; a fixed sleep is flaky under
+    /// parallel test load.
+    private func waitFor(
+        timeoutMs: Int = 1_000,
+        predicate: @escaping () -> Bool
+    ) async {
+        let started = ContinuousClock.now
+        let timeout = Duration.milliseconds(timeoutMs)
+        while ContinuousClock.now - started < timeout {
+            if predicate() { return }
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+    }
+
     private func makeChild(
         _ name: String,
         in rootPath: String = "/tmp/ws",
@@ -68,10 +84,11 @@ struct WorkspaceModelTests {
         let model = WorkspaceModel { _ in stub }
 
         model.setRoot(root.url)
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        await waitFor { stub.startCount == 1 }
         #expect(stub.startCount == 1)
 
         model.setRoot(nil)
+        await waitFor { stub.stopCount == 1 }
         #expect(stub.stopCount == 1)
     }
 
@@ -81,11 +98,13 @@ struct WorkspaceModelTests {
         let stub = StubWorkspaceFileTree(root: root)
         let model = WorkspaceModel { _ in stub }
         model.setRoot(root.url)
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        await waitFor { stub.startCount == 1 }
 
         let newChild = makeChild("NewFile.swift")
         stub.send(.created(url: newChild.url))
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await waitFor {
+            model.filteredChildren(of: root.url).contains { $0.name == "NewFile.swift" }
+        }
 
         let children = model.filteredChildren(of: root.url)
         #expect(children.contains { $0.name == "NewFile.swift" })
@@ -98,10 +117,12 @@ struct WorkspaceModelTests {
         let stub = StubWorkspaceFileTree(root: root, childrenByID: [root.id: [existing]])
         let model = WorkspaceModel { _ in stub }
         model.setRoot(root.url)
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        await waitFor { stub.startCount == 1 }
 
         stub.send(.deleted(url: existing.url))
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await waitFor {
+            !model.filteredChildren(of: root.url).contains { $0.name == "Existing.swift" }
+        }
 
         let children = model.filteredChildren(of: root.url)
         #expect(!children.contains { $0.name == "Existing.swift" })

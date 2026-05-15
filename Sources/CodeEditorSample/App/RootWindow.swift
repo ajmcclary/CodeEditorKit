@@ -11,14 +11,14 @@ import SwiftUI
 struct RootWindow: View {
     @Bindable var appState: AppState
 
-    @State private var settingsVisible: Bool = true
+    @State private var workspaceVisible: Bool = true
     @State private var inspectorVisible: Bool = true
 
     var body: some View {
         @Bindable var documents = appState.documents
         let (items, dispatch) = CommandPaletteCatalog.build(
             appState: appState,
-            settingsVisible: $settingsVisible,
+            workspaceVisible: $workspaceVisible,
             inspectorVisible: $inspectorVisible
         )
         return ZStack {
@@ -50,7 +50,7 @@ struct RootWindow: View {
                     .platformGlassSurface(.tabBar)
                 WindowBody(
                     appState: appState,
-                    settingsVisible: $settingsVisible,
+                    workspaceVisible: $workspaceVisible,
                     inspectorVisible: $inspectorVisible
                 )
                 EditorStatusBar()
