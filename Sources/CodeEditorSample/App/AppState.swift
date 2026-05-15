@@ -216,4 +216,56 @@ final class AppState {
             logger.error("Save failed: \(error.localizedDescription)")
         }
     }
+
+    // MARK: - Save / Open command orchestration
+
+    /// `⌘S` command handler. Tries `documents.save()`; if the active tab
+    /// has no URL, transparently chains to `requestSaveAs()` so the user
+    /// gets the save panel instead of a silent log entry. All other
+    /// outcomes route to `handleSaveOutcome`.
+    @MainActor
+    func requestSave() {
+        let outcome = documents.save()
+        if case .untitled = outcome {
+            requestSaveAs()
+        } else {
+            handleSaveOutcome(outcome)
+        }
+    }
+
+    /// `⇧⌘S` command handler. Presents the platform save panel, then
+    /// rebinds the active document to the chosen URL via
+    /// `EditorDocuments.saveAs(to:)`.
+    @MainActor
+    func requestSaveAs() {
+        guard let active = documents.active else {
+            handleSaveOutcome(.noTab)
+            return
+        }
+        #if canImport(AppKit)
+        DocumentPicker.save(
+            suggestedName: active.name,
+            defaultDirectory: workspaceRoot ?? active.url?.deletingLastPathComponent()
+        ) { [self] url in
+            let outcome = documents.saveAs(to: url)
+            handleSaveOutcome(outcome)
+        }
+        #else
+        pendingSaveAs = prepareSaveAsTemporaryFile(for: active)
+        #endif
+    }
+
+    /// `⇧⌘O` command handler. Presents the platform open panel and feeds
+    /// the picked URL into `EditorDocuments.openFile(url:)`. If the URL is
+    /// already open, the existing tab is activated.
+    @MainActor
+    func requestOpenFile() {
+        #if canImport(AppKit)
+        DocumentPicker.openFile(defaultDirectory: workspaceRoot) { [self] url in
+            documents.openFile(url: url)
+        }
+        #else
+        pendingOpenFile = true
+        #endif
+    }
 }
