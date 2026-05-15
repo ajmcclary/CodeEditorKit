@@ -212,6 +212,19 @@ public final class SearchReplaceEngine: ObservableObject {
         return replacementCount
     }
 
+    /// Drop all search state and clear in-editor match highlights.
+    /// Synchronous — no scanning happens.
+    public func clearAll() {
+        currentSearchResults = []
+        currentSearchIndex = -1
+        updateStatistics(for: [])
+
+        guard let textView else { return }
+        let bridge = textView.textKitBridge
+        let fullRange = TextRangeUtilities.fullRange(in: bridge.documentString)
+        bridge.removePersistentAttribute(.backgroundColor, range: fullRange)
+    }
+
     // MARK: - Private Methods
 
     private func performSearch(

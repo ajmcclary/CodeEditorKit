@@ -201,6 +201,32 @@ final class FeatureBehaviorTests: CleanupTestCase {
         )
     }
 
+    func testClearSearchAlsoClearsHighlights() async throws {
+        let editor = createCodeEditorView()
+        editor.text = "alpha beta alpha"
+
+        var options = SearchOptions()
+        options.flashResult = false
+
+        let controller = EditorController()
+        controller.attach(to: editor)
+        _ = await controller.find("alpha", options: options)
+        XCTAssertEqual(controller.matchCount, 2)
+
+        let text = editor.text ?? ""
+        let firstLoc = NSRange(try XCTUnwrap(text.range(of: "alpha")), in: text).location
+        XCTAssertNotNil(backgroundColor(at: firstLoc, in: editor))
+
+        controller.clearSearch()
+
+        XCTAssertEqual(controller.matchCount, 0)
+        XCTAssertEqual(controller.currentMatchIndex, -1)
+        XCTAssertNil(
+            backgroundColor(at: firstLoc, in: editor),
+            "clearSearch must remove in-editor highlights"
+        )
+    }
+
     func testFindPreviousRepaintsCorrectly() async {
         let editor = createCodeEditorView()
         editor.text = "alpha beta alpha gamma alpha"

@@ -265,12 +265,11 @@ public final class EditorController {
         return count
     }
 
-    /// Reset cached search state. Does not clear the editor's match
-    /// highlights — call `view.searchEngine.findAll(pattern: "")` if you
-    /// want highlights cleared.
+    /// Reset cached search state AND clear in-editor match highlights.
     public func clearSearch() {
         matchCount = 0
         currentMatchIndex = -1
+        codeEditorView?.searchEngine.clearAll()
     }
 
     // MARK: - Navigation
