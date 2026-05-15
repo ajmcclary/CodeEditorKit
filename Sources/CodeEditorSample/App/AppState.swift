@@ -21,6 +21,17 @@ final class AppState {
     /// Workspace root for runtime-only LSP/file integrations.
     var workspaceRoot: URL?
 
+    #if canImport(AppKit)
+    /// File-tree state + WorkspaceFileWatching subscription for the
+    /// left-rail Files panel. macOS-only; iOS doesn't ship the
+    /// workspace surface in the current sample.
+    let workspaceModel = WorkspaceModel()
+
+    /// Project-wide search state + PortableProjectSearchAdapter for the
+    /// left-rail Search panel. macOS-only.
+    let projectSearchModel = ProjectSearchModel()
+    #endif
+
     /// Multi-tab document collection backing `EditorTabStrip` and the
     /// editor pane. Lives here (rather than as `@State` inside
     /// `RootWindow`) so the Settings window can observe and mutate the
@@ -170,6 +181,18 @@ final class AppState {
         // UnifiedEventSystem and the controller's completionEvents() into the
         // unified ring buffer that `EventLogPanel` renders.
         eventLog.attach(controller: editorController, eventSystem: eventSystem)
+
+        #if canImport(AppKit)
+        // Workspace surface wiring. Picks up any initial workspaceRoot.
+        // Subsequent changes (Open Folder… menu, knob section, etc.) are
+        // routed through `.onChange(of: appState.workspaceRoot)` on the
+        // `WorkspaceSidebar` host in `WindowBody`.
+        workspaceModel.setRoot(workspaceRoot)
+        let initialRoot = workspaceRoot
+        Task { @MainActor [projectSearchModel] in
+            await projectSearchModel.setRoot(initialRoot)
+        }
+        #endif
     }
 
     /// Logs the result of a `DocumentStore.save(_:)` call so the user sees
