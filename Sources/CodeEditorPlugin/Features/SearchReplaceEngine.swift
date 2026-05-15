@@ -534,6 +534,11 @@ public struct SearchOptions {
     /// nil, behavior is identical to prior releases.
     public var currentMatchColor: PlatformColor?
 
+    /// Creates a default search options instance. Hosts mutate fields
+    /// on the returned value to opt into case-sensitivity, regex,
+    /// whole-word matching, etc.
+    public init() {}
+
     var searchOptions: String.CompareOptions {
         var options: String.CompareOptions = []
 
