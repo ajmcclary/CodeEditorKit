@@ -295,6 +295,23 @@ public final class EditorController {
         codeEditorView?.searchEngine.clearAll()
     }
 
+    // MARK: - Dirty tracking
+
+    /// Reset the framework's view-local dirty baseline. Hosts call this
+    /// after a successful save (or any other moment when the current text
+    /// should be treated as the new clean baseline). Writes
+    /// `EditorState.isDirty = false`. No-op when the controller is
+    /// unattached.
+    ///
+    /// Note: `EditorState.isDirty` is view-local — it tracks whether the
+    /// editor view has observed an edit since its current bound content
+    /// was installed. Hosts that track document-level dirty across tabs
+    /// (e.g., the sample app's `TabModel.isDirty`) continue to do so
+    /// independently.
+    public func markClean() {
+        codeEditorView?.applyMarkClean()
+    }
+
     // MARK: - Navigation
 
     /// Move the caret to the start of `lineNumber` (1-based) and scroll

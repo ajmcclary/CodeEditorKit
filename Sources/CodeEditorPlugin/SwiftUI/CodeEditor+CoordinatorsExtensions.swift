@@ -75,6 +75,13 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// stable.
     var modifierProviderAdapter: SwiftUIClosureCompletionProvider?
 
+    /// Tracks the view's content against its baseline. Coordinator writes
+    /// the baseline on initial text install (`setupContainer`) and on
+    /// host-driven binding swaps (`updateContainer`); reads in
+    /// `updateState` to write `EditorState.isDirty`. `markClean(view:)`
+    /// resets the baseline to the current text.
+    private var dirtyTracker = DirtyTracker()
+
     /// Request focus for the text view
     func requestFocusIfNeeded(for view: PlatformView, shouldBecomeFirstResponder: Bool) {
         guard shouldBecomeFirstResponder, !hasFocusBeenRequested else { return }
@@ -136,6 +143,20 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
             if hostEditorState.lineCount != lineCount {
                 hostEditorState.lineCount = lineCount
             }
+            let dirty = dirtyTracker.isDirty(currentText: text)
+            if hostEditorState.isDirty != dirty {
+                hostEditorState.isDirty = dirty
+            }
+        }
+    }
+
+    /// Reset the dirty baseline to the view's current content. Called by
+    /// `EditorController.markClean()` via `CodeEditorView.applyMarkClean()`.
+    func markClean(view: CodeEditorView) {
+        let currentText = platformAdapter.text(from: view)
+        dirtyTracker.markClean(currentText: currentText)
+        if let hostEditorState, hostEditorState.isDirty != false {
+            hostEditorState.isDirty = false
         }
     }
 
@@ -347,6 +368,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Set initial text
         platformAdapter.setText(text, in: textView, preserveSelection: false)
 
+        // Seed the dirty tracker against the initial content. Coordinator
+        // owns the tracker; the view holds a weak back-pointer so
+        // `EditorController.markClean()` can route through.
+        dirtyTracker.setBaseline(text)
+        textView.coordinator = self
+
         // Set language
         textView.language = language
 
@@ -399,8 +426,20 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         let textView = container.textView
         textView.apply(runtimeDependencies: runtimeDependencies)
 
+        // Detect host-driven binding swap: when the binding's text differs
+        // from the view's current storage, the host has installed new
+        // content (e.g., tab switch, file load). User edits write to
+        // storage via the delegate before they propagate back here, so
+        // storage already matches `text` on the edit re-render path.
+        let storageText = platformAdapter.text(from: textView)
+        let isHostBindingSwap = (storageText != text)
+
         // Update text if changed
         platformAdapter.setText(text, in: textView, preserveSelection: true)
+
+        if isHostBindingSwap {
+            dirtyTracker.setBaseline(text)
+        }
 
         // Update language if changed
         if textView.language != language {

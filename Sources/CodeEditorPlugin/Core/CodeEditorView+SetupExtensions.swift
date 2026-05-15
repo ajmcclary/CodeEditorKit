@@ -163,4 +163,11 @@ extension CodeEditorView {
         registerSemanticTokenProviderIfAvailable()
     }
     #endif
+
+    /// Bridge between `EditorController.markClean()` and the coordinator
+    /// that owns the dirty tracker. No-op when the view is not mounted
+    /// (no coordinator attached).
+    internal func applyMarkClean() {
+        coordinator?.markClean(view: self)
+    }
 }
