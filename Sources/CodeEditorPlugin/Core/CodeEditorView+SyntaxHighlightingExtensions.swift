@@ -109,9 +109,9 @@ extension CodeEditorView {
             guard let self else { return }
             self.textEditEventHub.publish(event)
             #if canImport(AppKit)
-            self.eventPublisher.publishSync(.textDidChange(self.string))
+            self.publishEvent(.textDidChange(self.string))
             #else
-            self.eventPublisher.publishSync(.textDidChange(self.text ?? ""))
+            self.publishEvent(.textDidChange(self.text ?? ""))
             #endif
             self.notifyAccessibilityTextDidChange()
             if shouldCheckCompletion {

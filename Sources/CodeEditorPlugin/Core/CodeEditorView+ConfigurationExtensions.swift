@@ -118,7 +118,7 @@ extension CodeEditorView {
                 object: self
             )
             NotificationCenter.default.post(selectionNotification)
-            self.eventPublisher.publishSync(.textSelectionDidChange(currentSelection))
+            self.publishEvent(.textSelectionDidChange(currentSelection))
         }
     }
 
