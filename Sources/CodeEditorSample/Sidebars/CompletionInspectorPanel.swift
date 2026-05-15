@@ -1,5 +1,3 @@
-#if canImport(AppKit)
-import AppKit
 import CodeEditorPlugin
 import SwiftUI
 
@@ -237,4 +235,3 @@ struct CompletionInspectorPanel: View {
         return formatter
     }()
 }
-#endif

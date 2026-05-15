@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorDesignTokens
 import CodeEditorPlugin
 import SwiftUI
@@ -159,4 +158,3 @@ struct AnnotationsInspectorPanel: View {
             )
     }
 }
-#endif

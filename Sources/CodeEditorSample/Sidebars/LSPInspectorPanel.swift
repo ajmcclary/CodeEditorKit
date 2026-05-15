@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorPlugin
 import SwiftUI
 
@@ -125,4 +124,3 @@ struct LSPInspectorPanel: View {
         }
     }
 }
-#endif

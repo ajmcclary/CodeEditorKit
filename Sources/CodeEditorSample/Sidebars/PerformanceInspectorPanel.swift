@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorPlugin
 import SwiftUI
 
@@ -275,4 +274,3 @@ private struct MetricTile: View {
         .clipShape(RoundedRectangle(cornerRadius: 5))
     }
 }
-#endif
