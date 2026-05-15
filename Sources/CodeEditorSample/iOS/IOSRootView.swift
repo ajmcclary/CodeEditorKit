@@ -22,8 +22,8 @@ struct IOSRootView: View {
                 .navigationTitle(title(for: selectedSection))
                 .toolbar { toolbar(documents: appState.documents) }
         }
-        .codeTheme(appState.theme)
-        .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
+        .codeTheme(appState.theme.current)
+        .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
         .sheet(item: $appState.pendingSaveAs) { state in
             ExportDocumentSheet(
                 temporaryURL: state.temporaryURL,
@@ -157,7 +157,7 @@ struct IOSRootView: View {
                 .editorController(appState.editorController)
                 .activeDocument(in: appState.documents)
                 .environment(\.codeEditorConfiguration, appState.configuration)
-                .codeTheme(appState.theme)
+                .codeTheme(appState.theme.current)
                 .codeWorkspaceRoot(appState.workspaceRoot)
                 .becomeFirstResponder()
                 .eventSystem(appState.eventSystem)
@@ -189,11 +189,11 @@ struct IOSRootView: View {
         List {
             ForEach(ThemeCatalog.all, id: \.name) { theme in
                 Button {
-                    appState.theme = ThemeCatalog.theme(named: theme.name)
+                    appState.theme.current = ThemeCatalog.theme(named: theme.name)
                 } label: {
                     Label(
                         theme.name,
-                        systemImage: theme.name == appState.theme.name ? "checkmark.circle.fill" : "circle"
+                        systemImage: theme.name == appState.theme.current.name ? "checkmark.circle.fill" : "circle"
                     )
                 }
             }

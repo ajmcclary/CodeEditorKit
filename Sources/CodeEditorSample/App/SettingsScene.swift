@@ -51,8 +51,8 @@ struct SettingsScene: View {
             detail
         }
         .navigationSplitViewStyle(.balanced)
-        .codeTheme(appState.theme)
-        .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
+        .codeTheme(appState.theme.current)
+        .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
         .frame(minWidth: 760, idealWidth: 880, minHeight: 540, idealHeight: 660)
     }
 
@@ -103,7 +103,7 @@ struct SettingsScene: View {
 
         case .theme:
             SwitcherSection(
-                theme: $appState.theme,
+                theme: appState.theme,
                 configuration: $appState.configuration,
                 documents: appState.documents
             )

@@ -159,7 +159,7 @@ struct WindowBody: View {
                 .onChange(of: appState.documents.active?.language) { _, _ in
                     clearAndBump()
                 }
-                .onChange(of: appState.theme.id) { _, _ in
+                .onChange(of: appState.theme.current.id) { _, _ in
                     clearAndBump()
                 }
         }

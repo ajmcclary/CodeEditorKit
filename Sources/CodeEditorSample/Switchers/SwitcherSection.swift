@@ -4,7 +4,7 @@ import SwiftUI
 /// Single rounded card containing three switcher chips: Theme, Language,
 /// Preset. Replaces the previous trio of stacked `Picker(.menu)` blocks.
 struct SwitcherSection: View {
-    @Binding var theme: Theme
+    @Bindable var theme: ThemeModel
     @Binding var configuration: EditorConfiguration
     @Bindable var documents: EditorDocuments
 
@@ -41,11 +41,11 @@ struct SwitcherSection: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(tokens: theme.style.chrome.elevatedSurfaceBackground))
+                .fill(Color(tokens: theme.current.style.chrome.elevatedSurfaceBackground))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color(tokens: theme.style.borders.base), lineWidth: 0.5)
+                .strokeBorder(Color(tokens: theme.current.style.borders.base), lineWidth: 0.5)
         )
         .padding(.horizontal, 12)
         .padding(.top, 12)
@@ -53,7 +53,7 @@ struct SwitcherSection: View {
 
     private var divider: some View {
         Rectangle()
-            .fill(Color(tokens: theme.style.borders.variant))
+            .fill(Color(tokens: theme.current.style.borders.variant))
             .frame(height: 0.5)
             .padding(.horizontal, 12)
     }
@@ -62,8 +62,8 @@ struct SwitcherSection: View {
 
     private var themeBinding: Binding<Theme> {
         Binding(
-            get: { theme },
-            set: { newValue in theme = ThemeCatalog.theme(named: newValue.name) }
+            get: { theme.current },
+            set: { newValue in theme.current = ThemeCatalog.theme(named: newValue.name) }
         )
     }
 

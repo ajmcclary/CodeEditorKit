@@ -67,8 +67,8 @@ struct RootWindow: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
-        .codeTheme(appState.theme)
-        .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
+        .codeTheme(appState.theme.current)
+        .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
     }
 }
 #endif

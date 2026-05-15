@@ -19,7 +19,7 @@ enum CommandPaletteCatalog {
 
         for chosen in ThemeCatalog.all {
             let item = CommandPaletteItem(title: "Theme: \(chosen.name)", kind: .setting)
-            actions[item.id] = { appState.theme = chosen }
+            actions[item.id] = { appState.theme.current = chosen }
             items.append(item)
         }
 

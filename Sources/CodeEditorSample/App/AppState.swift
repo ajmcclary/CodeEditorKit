@@ -11,8 +11,9 @@ import Observation
 @Observable
 final class AppState {
     /// Active editor theme. Mirrored to `\.codeEditorTheme` and to
-    /// `.preferredColorScheme` at the scene root.
-    var theme: Theme = ThemeCatalog.default
+    /// `.preferredColorScheme` at the scene root. First slice of the
+    /// AppState decomposition (NEXT.md A.3 #1).
+    let theme = ThemeModel()
 
     /// Active editor configuration. Bound directly from the knob panels;
     /// flows into the editor via `\.codeEditorConfiguration`.
