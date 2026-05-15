@@ -98,6 +98,38 @@ struct EventLogSampleCoordinatorTests {
         #expect(entry?.summary == "textDidChange (len=5)")
     }
 
+    @Test("translate(completionEvent:) renders succeeded outcomes")
+    func translateCompletionSucceeded() {
+        let event = CompletionEvent(
+            providerID: "swift-universal",
+            language: .swift,
+            triggerCharacter: ".",
+            prefix: "",
+            durationMilliseconds: 4.31,
+            outcome: .succeeded(itemCount: 12)
+        )
+        let entry = EventLogSampleCoordinator.translate(completionEvent: event)
+        #expect(entry.category == .completion)
+        #expect(entry.summary == "swift → 12 items · 4.3ms")
+        #expect(entry.detail == "swift-universal · trigger=\".\"")
+    }
+
+    @Test("translate(completionEvent:) renders failed outcomes")
+    func translateCompletionFailed() {
+        let event = CompletionEvent(
+            providerID: "swift-universal",
+            language: .swift,
+            triggerCharacter: nil,
+            prefix: "",
+            durationMilliseconds: 1.0,
+            outcome: .failed(SendableError(message: "timed out", domain: "Completion"))
+        )
+        let entry = EventLogSampleCoordinator.translate(completionEvent: event)
+        #expect(entry.category == .completion)
+        #expect(entry.summary == "swift failed")
+        #expect(entry.detail?.contains("timed out") == true)
+    }
+
     @Test("selection and focus events land in their categories")
     func attachReceivesSelectionAndFocus() {
         let coordinator = EventLogSampleCoordinator()

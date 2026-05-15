@@ -93,12 +93,15 @@ final class EventLogSampleCoordinator {
     @ObservationIgnored
     private var eventSystemCancellable: AnyCancellable?
 
+    @ObservationIgnored
+    private var completionTask: Task<Void, Never>?
+
     // MARK: - Lifecycle
 
     /// Subscribe to the shared `UnifiedEventSystem` for first-class editor
     /// events and to `controller.completionEvents()` for completion activity.
     /// Idempotent — calling `attach` again replaces both subscriptions.
-    func attach(controller _: EditorController, eventSystem: UnifiedEventSystem) {
+    func attach(controller: EditorController, eventSystem: UnifiedEventSystem) {
         detach()
         eventSystemCancellable = eventSystem.events
             .sink { [weak self] event in
@@ -107,13 +110,20 @@ final class EventLogSampleCoordinator {
                     self.append(entry)
                 }
             }
-        // Completion subscription is wired in Task 7.
+        completionTask = Task { @MainActor [weak self] in
+            for await event in controller.completionEvents() {
+                guard let self else { return }
+                self.append(Self.translate(completionEvent: event))
+            }
+        }
     }
 
     /// Tear down all subscriptions. Safe to call multiple times.
     func detach() {
         eventSystemCancellable?.cancel()
         eventSystemCancellable = nil
+        completionTask?.cancel()
+        completionTask = nil
     }
 
     // MARK: - Translators
@@ -140,6 +150,32 @@ final class EventLogSampleCoordinator {
              .performanceWarning, .error,
              .textWillChange:
             return nil
+        }
+    }
+
+    static func translate(completionEvent event: CompletionEvent) -> LoggedEvent {
+        let language = event.language.rawValue
+        switch event.outcome {
+        case .succeeded(let itemCount):
+            let ms = String(format: "%.1f", event.durationMilliseconds)
+            let detail: String
+            if let trigger = event.triggerCharacter {
+                detail = "\(event.providerID) · trigger=\"\(trigger)\""
+            } else {
+                detail = "\(event.providerID)"
+            }
+            return .completion(
+                summary: "\(language) → \(itemCount) items · \(ms)ms",
+                detail: detail,
+                timestamp: event.timestamp
+            )
+
+        case .failed(let failure):
+            return .completion(
+                summary: "\(language) failed",
+                detail: String(describing: failure),
+                timestamp: event.timestamp
+            )
         }
     }
 
