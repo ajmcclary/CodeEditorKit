@@ -18,7 +18,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 ~~**File tree / workspace browser.**~~ — done. `WorkspaceSidebar` (new left rail) hosts `FilePanelView` driven by a now-public `MacOSWorkspaceFileManager` (`WorkspaceFileTree` + `WorkspaceFileWatching`). Lazy disclosure, incremental updates from `WorkspaceFileWatching.events`, empty-state with Open Folder…, and File ▸ Open Folder… (⌘O). Spec / plan as above.
 
-**Save-As for `Untitled-*` tabs.** `⌘S` writes through `EditorDocuments.save(_:)` with `SaveOutcome` routing, but Save-As for untitled tabs was deliberately deferred. Needs an `NSSavePanel` flow on macOS and an iOS document-picker variant. `⌘O` is still a no-op.
+~~**Save-As for `Untitled-*` tabs.**~~ — done. `⌘S` on Untitled tabs now chains through `AppState.requestSave` → `requestSaveAs` → `DocumentPicker.save` (macOS `NSSavePanel`; iOS `UIDocumentPickerViewController` in export mode). Explicit Save As… (`⇧⌘S`) and Open File… (`⇧⌘O`) added; Go to Symbol… moved to `⌃⌘O`. `EditorDocuments.saveAs(to:)` rebinds the tab (url, name, language, isDirty). Spec: `docs/superpowers/specs/2026-05-15-save-as-open-file-design.md`; plan: `docs/superpowers/plans/2026-05-15-save-as-open-file.md`.
 
 ~~**`CodeEditorUI` components underused.**~~ — done. `EditorTitleBar`, `EditorTrafficLights`, `EditorBreadcrumbView`, and `PlatformGlassSurface` are exercised via `.windowStyle(.hiddenTitleBar)` + `RootWindow` chrome. `EditorSidebarShell` is now consumed three times: `WorkspaceSidebar` (Files / Search), `InspectorSidebar`, and via `SettingsScene`'s nested usage.
 
@@ -87,8 +87,8 @@ JSON now opts out of the regex pipeline (`usesRegexHighlighter: false`) to match
 ### B.5 ~~NSRulerView gutter TextKit 1 island~~ — done
 `LineNumberRulerView` now delegates `drawHashMarksAndLabels(in:)` to `GutterViewRenderer` + `TextKitLineNumberHelper`, and fold-control hit-testing routes through the same TK2 helper. `NSTextView._layoutManager` stays nil through first paint (asserted by `LineNumberRulerViewTK2Tests`) — the TK1 compatibility shim is no longer synthesized. Active-line line-number coloring is wired through a new defaulted `activeLineNumber: Int?` parameter on `GutterViewRenderer.draw(...)` and refreshed on macOS via an `NSTextView.didChangeSelectionNotification` observer. Spec: `docs/superpowers/specs/2026-05-14-tk2-gutter-rewrite-design.md`; plan: `docs/superpowers/plans/2026-05-14-tk2-gutter-rewrite.md`.
 
-### B.6 Save-As path
-Sample-side. `EditorDocuments.save(_:)` covers tabs that already have URLs. Save-As for `Untitled-*` tabs needs an `NSSavePanel` flow on macOS and an iOS document-picker variant. Tracked under A.1 above for the sample side; framework changes (if any) are minimal — `EditorDocuments` already exposes the storage and dirty tracking.
+### B.6 ~~Save-As path~~ — done
+Sample-side. Closed alongside the A.1 entry above. Zero framework changes; all I/O lives in `EditorDocuments+SampleExtras.swift` via the new `saveAs(to:)` plus security-scoped read/write helpers.
 
 ---
 
