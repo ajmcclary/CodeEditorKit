@@ -431,11 +431,14 @@ public final class SearchReplaceEngine: ObservableObject {
             let bridge = textView.textKitBridge
             bridge.removePersistentAttribute(.backgroundColor, range: range)
 
-            // Reapply search highlight if needed
-            if self.searchOptions.highlightResults {
-                let color = self.searchOptions.highlightColor
-                bridge.addPersistentAttributes([.backgroundColor: color], range: range)
-            }
+            guard self.searchOptions.highlightResults else { return }
+
+            let isCurrent = self.currentSearchResults.indices.contains(self.currentSearchIndex)
+                && self.currentSearchResults[self.currentSearchIndex].range == range
+            let color = isCurrent
+                ? (self.searchOptions.currentMatchColor ?? self.searchOptions.highlightColor)
+                : self.searchOptions.highlightColor
+            bridge.addPersistentAttributes([.backgroundColor: color], range: range)
         }
     }
 

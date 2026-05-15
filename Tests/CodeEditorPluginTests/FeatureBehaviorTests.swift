@@ -176,6 +176,31 @@ final class FeatureBehaviorTests: CleanupTestCase {
         )
     }
 
+    func testFlashRangeReappliesCurrentMatchColorOnCurrentMatch() async throws {
+        let editor = createCodeEditorView()
+        editor.text = "alpha beta alpha"
+
+        var options = SearchOptions()
+        options.flashResult = true
+        options.highlightColor = PlatformColor.yellow.withAlphaComponent(0.3)
+        options.currentMatchColor = PlatformColor.systemBlue.withAlphaComponent(0.5)
+
+        let engine = SearchReplaceEngine()
+        engine.attach(to: editor)
+        _ = await engine.findAll(pattern: "alpha", options: options)
+        XCTAssertEqual(engine.currentSearchIndex, 0)
+
+        // Wait past the 300 ms flash window.
+        try await Task.sleep(nanoseconds: 450_000_000)
+
+        let firstRange = engine.currentSearchResults[0].range
+        XCTAssertEqual(
+            backgroundColor(at: firstRange.location, in: editor),
+            options.currentMatchColor,
+            "post-flash, the active match must return to currentMatchColor"
+        )
+    }
+
     func testFindPreviousRepaintsCorrectly() async {
         let editor = createCodeEditorView()
         editor.text = "alpha beta alpha gamma alpha"
