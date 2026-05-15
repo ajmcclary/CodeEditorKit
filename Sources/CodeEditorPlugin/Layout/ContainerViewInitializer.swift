@@ -105,8 +105,12 @@ enum ContainerViewInitializer {
 
     private static func setupContainerBackground(for container: CodeEditorContainerView) {
         #if canImport(AppKit)
-        // macOS uses layer background
-        container.wantsLayer = true
+        // macOS uses layer background — only available when hardware
+        // acceleration is enabled (the layer-backed path).
+        HardwareAcceleration.apply(
+            container.configuration.performance.useHardwareAcceleration,
+            to: container
+        )
         container.layer?.backgroundColor = PlatformColors.systemBackground.cgColor
         #else
         // iOS uses backgroundColor
