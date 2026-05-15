@@ -53,13 +53,30 @@ public final class TextKitLineNumberHelper {
         // For TextKit 2, we can use the text layout manager
         if let textLayoutManager = textView.textLayoutManager,
            let textRange = textKitBridge.textRangeFromNSRange(lineRange) {
-            // Find the layout fragment for this range
-            var fragmentRect: CGRect?
-            textLayoutManager.enumerateTextLayoutFragments(from: textRange.location) { fragment in
-                fragmentRect = fragment.layoutFragmentFrame
-                return false // Stop after first fragment
+            textLayoutManager.ensureLayout(for: textRange)
+
+            var lineFragmentRect: CGRect?
+            textLayoutManager.enumerateTextLayoutFragments(
+                from: textRange.location,
+                options: [.ensuresLayout]
+            ) { fragment in
+                guard let fragmentRange = self.textKitBridge.nsRangeFromTextRange(fragment.rangeInElement) else {
+                    return false
+                }
+
+                guard Self.rangesIntersect(fragmentRange, lineRange) else {
+                    return fragmentRange.upperBound < lineRange.location
+                }
+
+                lineFragmentRect = self.firstVisualLineFragmentRect(
+                    in: fragment,
+                    containing: textRange.location,
+                    fallbackLineRange: lineRange
+                ) ?? fragment.layoutFragmentFrame
+
+                return false
             }
-            return fragmentRect
+            return lineFragmentRect
         }
 
         let lineIndex = textView.lineGeometryStore.lineIndex(forUtf16Offset: lineRange.location)
@@ -175,6 +192,41 @@ public final class TextKitLineNumberHelper {
             y: point.y + textView.contentOffset.y - textContainerInset.top
         )
         #endif
+    }
+
+    private func firstVisualLineFragmentRect(
+        in layoutFragment: NSTextLayoutFragment,
+        containing location: NSTextLocation,
+        fallbackLineRange: NSRange
+    ) -> CGRect? {
+        guard let textContentManager = layoutFragment.textLayoutManager?.textContentManager else {
+            return nil
+        }
+
+        let lineFragment = layoutFragment.textLineFragment(at: location, in: textContentManager)
+            ?? layoutFragment.textLineFragments.first { lineFragment in
+                guard let lineRange = lineFragment.textRange(in: layoutFragment)
+                    .flatMap(textKitBridge.nsRangeFromTextRange)
+                else { return false }
+
+                return Self.rangesIntersect(lineRange, fallbackLineRange)
+            }
+            ?? layoutFragment.textLineFragments.first { !$0.isExtraLineFragment }
+
+        guard let lineFragment else { return nil }
+
+        let bounds = lineFragment.typographicBounds
+        let fragmentFrame = layoutFragment.layoutFragmentFrame
+        return CGRect(
+            x: fragmentFrame.minX + bounds.minX,
+            y: fragmentFrame.minY + bounds.minY,
+            width: bounds.width,
+            height: bounds.height
+        )
+    }
+
+    private static func rangesIntersect(_ first: NSRange, _ second: NSRange) -> Bool {
+        first.location < second.upperBound && second.location < first.upperBound
     }
 
     /// Calculate line number using TextKit 2

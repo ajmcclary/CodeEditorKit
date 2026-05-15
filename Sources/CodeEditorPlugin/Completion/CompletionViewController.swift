@@ -146,7 +146,8 @@ extension CompletionViewController: NSTableViewDelegate {
         platformRowHeight()
     }
 
-    public func tableViewSelectionDidChange(_: Notification) {
+    public func tableViewSelectionDidChange(_ notification: Notification) {
+        guard let tableView = notification.object as? NSTableView else { return }
         selectedIndex = tableView.selectedRow
     }
 

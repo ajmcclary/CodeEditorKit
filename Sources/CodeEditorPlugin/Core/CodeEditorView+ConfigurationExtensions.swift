@@ -12,6 +12,11 @@ extension CodeEditorView {
     // MARK: - Configuration Application
 
     internal func applyConfiguration() {
+        CodeEditorRenderingDiagnostics.logConfigurationDispatch(
+            "textView.applyConfiguration.begin",
+            textView: self
+        )
+
         // Apply display settings
         #if canImport(AppKit)
         // On macOS, line numbers are handled by NSRulerView in the container
@@ -95,6 +100,10 @@ extension CodeEditorView {
 
         // Notify container view to update gutter width if needed
         containerView?.applyConfiguration()
+        CodeEditorRenderingDiagnostics.logConfigurationDispatch(
+            "textView.applyConfiguration.end",
+            textView: self
+        )
     }
 
     // MARK: - Line Highlighting
@@ -222,12 +231,20 @@ extension CodeEditorView {
 
         // Syntax highlighting now lives in NSTextLayoutManager rendering
         // attributes (see RangeAttributeApplier + AsyncSyntaxHighlighter).
-        // Removing the foreground rendering attribute exposes the base
-        // text color set by setupDefaultTheme on the underlying NSTextStorage.
+        // Remove token foregrounds, then seed the theme's base foreground
+        // back into the rendering surface. TK2 does not reliably fall back
+        // to `NSTextView.textColor` or storage foreground for glyph drawing.
         let textLength = textKitBridge.documentLength
         guard textLength > 0 else { return }
         let fullRange = NSRange(location: 0, length: textLength)
+        CodeEditorRenderingDiagnostics.log(
+            "configuration.removeSyntaxHighlighting",
+            textView: self,
+            theme: appliedTheme,
+            note: "range={\(fullRange.location),\(fullRange.length)}"
+        )
         textKitBridge.removeAttributes([.foregroundColor], range: fullRange)
+        stampThemeForeground(overwritingExistingForeground: false)
     }
 
     // MARK: - Code Folding Configuration

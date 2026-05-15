@@ -42,11 +42,36 @@ public final class CodeEditorContainerView: PlatformView {
     public private(set) var appliedTheme: Theme?
 
     /// Apply a theme to the container and every subview that consumes a
-    /// theme. Equality-gated — no-ops on identical re-application. The
-    /// fan-out grows incrementally as each Layout subview gets an
-    /// `apply(theme:)` override.
+    /// theme. Expensive subview fan-out is equality-gated, but the text view
+    /// still receives same-theme applications so it can re-stamp mutable
+    /// text-storage attributes after content replacement or configuration
+    /// churn.
     public func apply(theme: Theme) {
-        if appliedTheme == theme { return }
+        CodeEditorRenderingDiagnostics.logContainer(
+            "container.apply.begin",
+            container: self,
+            theme: theme,
+            note: "sameTheme=\(appliedTheme == theme)"
+        )
+        #if canImport(AppKit)
+        let appKitAppearance = theme.appKitAppearance
+        appearance = appKitAppearance
+        scrollView.appearance = appKitAppearance
+        gutterView.appearance = appKitAppearance
+        minimapView.appearance = appKitAppearance
+        textView.appearance = appKitAppearance
+        scrollView.verticalRulerView?.appearance = appKitAppearance
+        #endif
+
+        if appliedTheme == theme {
+            textView.apply(theme: theme)
+            CodeEditorRenderingDiagnostics.logContainer(
+                "container.apply.end.sameTheme",
+                container: self,
+                theme: theme
+            )
+            return
+        }
         appliedTheme = theme
         gutterView.apply(theme: theme)
         minimapView.apply(theme: theme)
@@ -54,6 +79,11 @@ public final class CodeEditorContainerView: PlatformView {
         #if canImport(AppKit)
         (textView.enclosingScrollView?.verticalRulerView as? LineNumberRulerView)?.apply(theme: theme)
         #endif
+        CodeEditorRenderingDiagnostics.logContainer(
+            "container.apply.end.changedTheme",
+            container: self,
+            theme: theme
+        )
     }
 
     // MARK: - Initialization

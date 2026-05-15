@@ -41,7 +41,14 @@ extension CodeEditorView {
     /// transparent — `NSTextView.textColor` is not honoured as a glyph
     /// fallback for unattributed runs under TK2.
     public func apply(theme: Theme) {
-        if appliedTheme != theme {
+        let themeChanged = appliedTheme != theme
+        CodeEditorRenderingDiagnostics.log(
+            "textView.apply.begin",
+            textView: self,
+            theme: theme,
+            note: "themeChanged=\(themeChanged)"
+        )
+        if themeChanged {
             appliedTheme = theme
             let cursorColor = PlatformColor(tokens: theme.style.players[0].cursor)
             let selectionColor = PlatformColor(tokens: theme.style.players[0].selection)
@@ -61,6 +68,8 @@ extension CodeEditorView {
             typingAttributes = typingAttrs
 
             #if canImport(AppKit)
+            appearance = theme.appKitAppearance
+            usesAdaptiveColorMappingForDarkAppearance = false
             var attrs = selectedTextAttributes
             attrs[.backgroundColor] = selectionColor
             selectedTextAttributes = attrs
@@ -73,21 +82,59 @@ extension CodeEditorView {
             #endif
         }
 
-        stampThemeForeground()
+        stampThemeForeground(overwritingExistingForeground: themeChanged)
+        CodeEditorRenderingDiagnostics.log(
+            "textView.apply.afterForegroundStamp",
+            textView: self,
+            theme: theme,
+            note: "themeChanged=\(themeChanged)"
+        )
+        if themeChanged {
+            applySyntaxHighlighting()
+        }
     }
 
     /// Stamps the applied theme's foreground colour onto every character in
     /// the text storage. Idempotent and safe to call repeatedly. Required
     /// after any `.string =` replacement, which wipes per-range attributes;
-    /// TK2 glyph rendering will fall through to nothing otherwise.
-    internal func stampThemeForeground() {
-        guard let theme = appliedTheme,
-              let textStorage = textContentStorage?.textStorage,
-              textStorage.length > 0 else { return }
+    /// TK2 glyph rendering will fall through to nothing otherwise. The seed
+    /// can overwrite existing colours on theme changes because all previously
+    /// themed token colours are stale; same-theme calls seed only gaps so
+    /// token-specific colours survive content/configuration churn.
+    internal func stampThemeForeground(overwritingExistingForeground: Bool = false) {
+        guard let theme = appliedTheme else { return }
+        let length = textKitBridge.documentLength
+        guard length > 0 else { return }
+
         let foreground = PlatformColor(tokens: theme.style.editor.foreground)
-        let range = NSRange(location: 0, length: textStorage.length)
-        textStorage.beginEditing()
-        textStorage.addAttribute(.foregroundColor, value: foreground, range: range)
-        textStorage.endEditing()
+        let range = NSRange(location: 0, length: length)
+        let attributes: [NSAttributedString.Key: Any] = [.foregroundColor: foreground]
+        CodeEditorRenderingDiagnostics.log(
+            "textView.stampForeground.begin",
+            textView: self,
+            theme: theme,
+            note: "overwrite=\(overwritingExistingForeground) range={\(range.location),\(range.length)} foreground=\(foreground)"
+        )
+        if overwritingExistingForeground {
+            textKitBridge.addPersistentAttributes(attributes, range: range)
+            textKitBridge.addAttributes(attributes, range: range)
+        } else {
+            textKitBridge.addMissingPersistentAttributes(attributes, range: range)
+            textKitBridge.addMissingRenderingAttributes(attributes, range: range)
+        }
+        CodeEditorRenderingDiagnostics.log(
+            "textView.stampForeground.end",
+            textView: self,
+            theme: theme,
+            note: "overwrite=\(overwritingExistingForeground)"
+        )
     }
 }
+
+#if canImport(AppKit)
+extension Theme {
+    var appKitAppearance: NSAppearance? {
+        NSAppearance(named: appearance == .dark ? .darkAqua : .aqua)
+    }
+}
+#endif

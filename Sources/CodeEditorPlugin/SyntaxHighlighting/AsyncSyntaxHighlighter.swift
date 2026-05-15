@@ -222,7 +222,7 @@ public final class AsyncSyntaxHighlighter {
         // Check cache first
         let cachedTokens = await tokenCache.getCachedTokens(for: cacheKey)
         if !cachedTokens.isEmpty {
-            applyTokens(cachedTokens, to: textView, visibleRange: visibleRange)
+            applyTokens(cachedTokens, to: textView, language: language, visibleRange: visibleRange)
 
             // Track cache hit
             await performanceMetrics.trackHighlighting(
@@ -285,7 +285,7 @@ public final class AsyncSyntaxHighlighter {
 
                     // Apply tokens on main thread
                     await MainActor.run {
-                        self.applyTokens(tokens, to: textView, visibleRange: visibleRange)
+                        self.applyTokens(tokens, to: textView, language: language, visibleRange: visibleRange)
                     }
                 }
             } catch {
@@ -374,6 +374,7 @@ public final class AsyncSyntaxHighlighter {
     internal func applyTokens(
         _ tokens: [HighlightedToken],
         to textView: CodeEditorView,
+        language: Language,
         visibleRange: NSRange? = nil
     ) {
         let bridge = textView.textKitBridge
@@ -392,6 +393,14 @@ public final class AsyncSyntaxHighlighter {
 
         let appliedTheme = textView.appliedTheme
         let baseTextColor = Self.color(for: .identifier, theme: appliedTheme)
+        CodeEditorRenderingDiagnostics.logHighlighting(
+            "syntax.applyTokens.begin",
+            textView: textView,
+            language: language,
+            tokenCount: tokens.count,
+            range: rangeToHighlight,
+            baseColor: baseTextColor
+        )
 
         // Establish the base color across the entire range as rendering
         // attributes. Subsequent token color writes overwrite this for
@@ -433,6 +442,14 @@ public final class AsyncSyntaxHighlighter {
                 bridge.addAttributes([.foregroundColor: color], range: range)
             }
         }
+        CodeEditorRenderingDiagnostics.logHighlighting(
+            "syntax.applyTokens.end",
+            textView: textView,
+            language: language,
+            tokenCount: tokens.count,
+            range: rangeToHighlight,
+            baseColor: baseTextColor
+        )
     }
 
     private func clearHighlighting(for textView: CodeEditorView) {
@@ -440,6 +457,12 @@ public final class AsyncSyntaxHighlighter {
         let range = NSRange(location: 0, length: bridge.documentLength)
         guard range.length > 0 else { return }
 
+        CodeEditorRenderingDiagnostics.log(
+            "syntax.clearHighlighting",
+            textView: textView,
+            theme: textView.appliedTheme,
+            note: "range={\(range.location),\(range.length)}"
+        )
         bridge.addAttributes(
             [.foregroundColor: Self.color(for: .identifier, theme: textView.appliedTheme)],
             range: range

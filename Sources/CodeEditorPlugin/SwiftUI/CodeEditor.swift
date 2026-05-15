@@ -381,6 +381,14 @@ public struct CodeEditor: View {
             stored: $text,
             manager: activeDocumentManager
         )
+        CodeEditorRenderingDiagnostics.logBodyResolution(
+            "body.resolveTextBinding",
+            manager: activeDocumentManager,
+            storedTextLength: text.count,
+            effectiveTextLength: effectiveTextBinding.wrappedValue.count,
+            language: effectiveLanguage,
+            configuration: effectiveConfiguration
+        )
         let storedInteraction = codeEditorIntent.interactionState
             ?? .constant(EditorInteractionState())
         let effectiveInteractionBinding = Self.resolveInteractionBinding(

@@ -349,13 +349,19 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         _ container: CodeEditorContainerView,
         text: String,
         language: Language,
-        theme _: Theme,
+        theme: Theme,
         configuration: EditorConfiguration,
         runtimeDependencies: EditorRuntimeDependencies,
         onTextChange: ((String) -> Void)? = nil,
         onSelectionChange: ((NSRange) -> Void)? = nil,
         swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])? = nil
     ) {
+        CodeEditorRenderingDiagnostics.logContainer(
+            "coordinator.setup.begin",
+            container: container,
+            theme: theme,
+            note: "language=\(language.rawValue) incomingTextLength=\(text.count)"
+        )
         // Store callbacks
         self.onTextChange = onTextChange
         self.onSelectionChange = onSelectionChange
@@ -367,6 +373,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         // Set initial text
         platformAdapter.setText(text, in: textView, preserveSelection: false)
+        CodeEditorRenderingDiagnostics.log(
+            "coordinator.setup.afterSetText",
+            textView: textView,
+            theme: theme,
+            note: "incomingTextLength=\(text.count)"
+        )
 
         // Seed the dirty tracker against the initial content. Coordinator
         // owns the tracker; the view holds a weak back-pointer so
@@ -384,10 +396,22 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // transparent on any later update.
         if textView.appliedTheme == nil {
             platformAdapter.applySystemEditorColors(to: textView)
+            CodeEditorRenderingDiagnostics.log(
+                "coordinator.setup.afterSystemColors",
+                textView: textView,
+                theme: theme,
+                note: "appliedTheme=nil"
+            )
         }
 
         // Apply initial configuration
         container.configuration = configuration
+        CodeEditorRenderingDiagnostics.logContainer(
+            "coordinator.setup.afterConfiguration",
+            container: container,
+            theme: theme,
+            note: "wrapLines=\(configuration.layout.wrapLines) editable=\(configuration.behavior.isEditable)"
+        )
 
         // Set up observers
         setupTextChangeObservers(for: textView)
@@ -417,6 +441,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         // Force initial layout
         platformAdapter.invalidateLayoutAndDisplay(for: textView)
+        CodeEditorRenderingDiagnostics.logContainer(
+            "coordinator.setup.afterInvalidate",
+            container: container,
+            theme: theme
+        )
     }
 
     /// Update a container view with new values
@@ -424,18 +453,31 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         _ container: CodeEditorContainerView,
         text: String,
         language: Language,
-        theme _: Theme,
+        theme: Theme,
         configuration: EditorConfiguration,
         runtimeDependencies: EditorRuntimeDependencies,
         swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])? = nil
     ) {
+        let needsUpdate = shouldUpdate(text: text, language: language, configuration: configuration)
+        CodeEditorRenderingDiagnostics.logContainer(
+            "coordinator.update.begin",
+            container: container,
+            theme: theme,
+            note: "needsUpdate=\(needsUpdate) language=\(language.rawValue) incomingTextLength=\(text.count)"
+        )
+
         // Reconcile the modifier closure *before* the shouldUpdate guard:
         // a host may swap the closure without changing text/language/config,
         // and we still need the new closure to land in the adapter slot.
         syncModifierProvider(on: container.textView.completionManager, closure: swiftUICompletionProvider)
 
         // Check if we need to update
-        guard shouldUpdate(text: text, language: language, configuration: configuration) else {
+        guard needsUpdate else {
+            CodeEditorRenderingDiagnostics.logContainer(
+                "coordinator.update.skipped",
+                container: container,
+                theme: theme
+            )
             return
         }
 
@@ -452,6 +494,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         // Update text if changed
         platformAdapter.setText(text, in: textView, preserveSelection: true)
+        CodeEditorRenderingDiagnostics.log(
+            "coordinator.update.afterSetText",
+            textView: textView,
+            theme: theme,
+            note: "hostBindingSwap=\(isHostBindingSwap) previousTextLength=\(storageText.count) incomingTextLength=\(text.count)"
+        )
 
         if isHostBindingSwap {
             dirtyTracker.setBaseline(text)
@@ -461,6 +509,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
             // foreground stamped synchronously or TK2 renders them with
             // no glyph colour at all.
             textView.stampThemeForeground()
+            CodeEditorRenderingDiagnostics.log(
+                "coordinator.update.afterHostSwapStamp",
+                textView: textView,
+                theme: theme
+            )
         }
 
         // Update language if changed
@@ -474,15 +527,32 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // survive between updateContainer cycles.
         if textView.appliedTheme == nil {
             platformAdapter.applySystemEditorColors(to: textView)
+            CodeEditorRenderingDiagnostics.log(
+                "coordinator.update.afterSystemColors",
+                textView: textView,
+                theme: theme,
+                note: "appliedTheme=nil"
+            )
         }
 
         // Update configuration if changed
         if container.configuration != configuration {
             container.configuration = configuration
+            CodeEditorRenderingDiagnostics.logContainer(
+                "coordinator.update.afterConfiguration",
+                container: container,
+                theme: theme,
+                note: "wrapLines=\(configuration.layout.wrapLines) editable=\(configuration.behavior.isEditable)"
+            )
         }
 
         // Update internal state
         updateState(text: text, language: language, configuration: configuration)
+        CodeEditorRenderingDiagnostics.logContainer(
+            "coordinator.update.end",
+            container: container,
+            theme: theme
+        )
     }
 }
 

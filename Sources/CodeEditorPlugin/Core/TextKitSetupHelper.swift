@@ -164,11 +164,6 @@ public enum TextKitSetupHelper {
     /// Applies TextKit2-specific optimizations
     private static func applyTextKit2Optimizations(to textView: CodeEditorView) {
         #if canImport(AppKit)
-        guard let textLayoutManager = textView.textLayoutManager else { return }
-
-        // TextKit2 automatically handles viewport-based layout
-        textLayoutManager.textViewportLayoutController.delegate = nil
-
         // Ensure non-contiguous layout for better performance
         if let textContainer = textView.textContainer {
             textContainer.widthTracksTextView = true

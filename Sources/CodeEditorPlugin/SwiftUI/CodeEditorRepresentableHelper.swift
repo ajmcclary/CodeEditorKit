@@ -57,6 +57,12 @@ enum CodeEditorRepresentableHelper {
         coordinator: CodeEditorCoordinator
     ) -> CodeEditorContainerView {
         let container = CodeEditorContainerView()
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.make.created",
+            container: container,
+            theme: parameters.theme,
+            note: "language=\(parameters.language.rawValue)"
+        )
 
         coordinator.updateInteractionStateBinding(parameters.interactionState)
         coordinator.hostEditorState = parameters.hostEditorState
@@ -71,9 +77,25 @@ enum CodeEditorRepresentableHelper {
             onSelectionChange: parameters.onSelectionChange,
             swiftUICompletionProvider: parameters.swiftUICompletionProvider
         )
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.make.afterSetup",
+            container: container,
+            theme: parameters.theme,
+            note: "language=\(parameters.language.rawValue)"
+        )
         coordinator.applyInteractionState(to: container.textView)
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.make.afterInteractionState",
+            container: container,
+            theme: parameters.theme
+        )
 
         CodeEditorPlatformAdapterFactory.make().setupPlatformFeatures(container: container, coordinator: coordinator)
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.make.afterPlatformFeatures",
+            container: container,
+            theme: parameters.theme
+        )
 
         // Attach the host's controller (if any) to the underlying view.
         // The controller weakly references the view and is responsible for
@@ -92,11 +114,12 @@ enum CodeEditorRepresentableHelper {
         parameters: UpdateParameters,
         coordinator: CodeEditorCoordinator
     ) {
-        // Push the current theme into the container's equality-gated apply path.
-        // The container is the single fan-out point for subview theme propagation
-        // — sub-project 3 task 5 establishes the route; later tasks wire each subview.
-        container.apply(theme: parameters.theme)
-
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.update.begin",
+            container: container,
+            theme: parameters.theme,
+            note: "language=\(parameters.language.rawValue)"
+        )
         coordinator.updateInteractionStateBinding(parameters.interactionState)
         coordinator.hostEditorState = parameters.hostEditorState
         coordinator.updateContainer(
@@ -108,7 +131,29 @@ enum CodeEditorRepresentableHelper {
             runtimeDependencies: parameters.runtimeDependencies,
             swiftUICompletionProvider: parameters.swiftUICompletionProvider
         )
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.update.afterCoordinator",
+            container: container,
+            theme: parameters.theme,
+            note: "language=\(parameters.language.rawValue)"
+        )
         coordinator.applyInteractionState(to: container.textView)
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.update.afterInteractionState",
+            container: container,
+            theme: parameters.theme
+        )
+
+        // Apply theme after coordinator mutations so setText/configuration
+        // changes cannot wipe the text view's storage foreground stamp.
+        // CodeEditorContainerView forwards same-theme applies to the text
+        // view even when the rest of the theme fan-out is equality-gated.
+        container.apply(theme: parameters.theme)
+        CodeEditorRenderingDiagnostics.logContainer(
+            "representable.update.afterThemeApply",
+            container: container,
+            theme: parameters.theme
+        )
 
         // Re-attach controller on update so that SwiftUI re-creating the
         // representable does not leave the controller pointing at a stale
@@ -223,27 +268,85 @@ enum CodeEditorRepresentableHelper {
             return CGSize(width: proposedWidth, height: proposedHeight)
         }
 
-        // Calculate intrinsic content size based on text
-        let textContainer = textView.textContainer
-        let layoutManager = textView.layoutManager
-
-        guard let textContainer,
-              let layoutManager else {
-            return proposal.replacingUnspecifiedDimensions()
-        }
-
-        // Force layout
-        layoutManager.ensureLayout(for: textContainer)
-
-        // Get the used rect
-        let usedRect = layoutManager.usedRect(for: textContainer)
-        var size = usedRect.size
+        var size = estimateAppKitContentSize(
+            textView: textView,
+            proposal: proposal,
+            configuration: configuration
+        )
 
         // Add platform-specific adjustments
         size = addAppKitSizeAdjustments(size: size, textView: textView, configuration: configuration)
 
         // Apply common size constraints
         return applyCommonSizeConstraints(size, proposal: proposal)
+    }
+
+    private static func estimateAppKitContentSize(
+        textView: CodeEditorView,
+        proposal: ProposedViewSize,
+        configuration: EditorConfiguration
+    ) -> CGSize {
+        let font = textView.font ?? PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
+        let text = textView.textContentStorage?.textStorage?.string ?? ""
+        let lines = text.components(separatedBy: .newlines)
+        let lineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
+            * configuration.layout.lineHeightMultiple
+
+        let lineWidths = lines.map { TextMetricsCalculator.measureTextWidth($0, font: font) }
+        let maxLineWidth = lineWidths.max() ?? 0
+        let lineCount = estimatedAppKitVisualLineCount(
+            lineWidths: lineWidths,
+            textView: textView,
+            proposal: proposal,
+            configuration: configuration
+        )
+
+        return CGSize(
+            width: maxLineWidth,
+            height: CGFloat(max(1, lineCount)) * lineHeight
+        )
+    }
+
+    private static func estimatedAppKitVisualLineCount(
+        lineWidths: [CGFloat],
+        textView: CodeEditorView,
+        proposal: ProposedViewSize,
+        configuration: EditorConfiguration
+    ) -> Int {
+        guard configuration.layout.wrapLines else {
+            return max(1, lineWidths.count)
+        }
+
+        let availableWidth = appKitAvailableTextWidth(
+            textView: textView,
+            proposal: proposal,
+            configuration: configuration
+        )
+        guard availableWidth > 0 else {
+            return max(1, lineWidths.count)
+        }
+
+        return lineWidths.reduce(0) { count, width in
+            count + max(1, Int(ceil(width / availableWidth)))
+        }
+    }
+
+    private static func appKitAvailableTextWidth(
+        textView: CodeEditorView,
+        proposal: ProposedViewSize,
+        configuration: EditorConfiguration
+    ) -> CGFloat {
+        let proposedWidth = proposal.width ?? textView.bounds.width
+        guard proposedWidth > 0 else { return 0 }
+
+        var chromeWidth = textView.textContainerInset.width * 2
+        if configuration.display.isLineNumbersEnabled {
+            chromeWidth += configuration.layout.gutterWidth
+        }
+        if configuration.display.isMinimapVisible {
+            chromeWidth += configuration.layout.minimapWidth
+        }
+        return max(0, proposedWidth - chromeWidth)
     }
 
     private static func addAppKitSizeAdjustments(

@@ -13,11 +13,10 @@ extension CodeEditorView {
 
     /// Configure TextKit2 rendering optimizations for large files
     internal func setupTextKit2Optimization() {
-        guard let textLayoutManager else { return }
+        guard textLayoutManager != nil else { return }
 
-        // Enable viewport-based layout (only lay out visible content)
-        // TextKit2 automatically handles viewport-based layout
-        textLayoutManager.textViewportLayoutController.delegate = nil // Use default viewport behavior
+        // Preserve NSTextView's viewport layout delegate. AppKit installs
+        // it to configure TextKit2 rendering surfaces for layout fragments.
 
         // Configure text container for optimal performance
         #if canImport(AppKit)

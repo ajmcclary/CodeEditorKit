@@ -267,13 +267,13 @@ extension AsyncSyntaxHighlighter {
                     }
                     if !visibleTokens.isEmpty {
                         await MainActor.run {
-                            applyTokens(visibleTokens, to: textView, visibleRange: visibleRange)
+                            applyTokens(visibleTokens, to: textView, language: language, visibleRange: visibleRange)
                         }
                     }
                 } else {
                     // Apply all tokens from this chunk
                     await MainActor.run {
-                        applyTokens(chunk.tokens, to: textView)
+                        applyTokens(chunk.tokens, to: textView, language: language)
                     }
                 }
 

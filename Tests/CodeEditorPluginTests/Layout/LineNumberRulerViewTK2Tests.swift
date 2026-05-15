@@ -173,5 +173,62 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         XCTAssertEqual(ruler.lastActiveLineNumber, 1)
         XCTAssertFalse(ruler.needsDisplay, "Same-line caret move must not dirty the ruler")
     }
+
+    func testWrappedLogicalLineUsesFirstVisualLineFragmentForRulerPosition() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 280, height: 240),
+            styleMask: [.titled, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        let container = CodeEditorContainerView(frame: window.contentLayoutRect)
+        var configuration = EditorConfiguration.default
+        configuration.layout.wrapLines = true
+        configuration.display.isMinimapVisible = false
+        configuration.display.isSelectedLineHighlighted = false
+        container.configuration = configuration
+        container.textView.font = .monospacedSystemFont(ofSize: 16, weight: .regular)
+        container.textView.string = String(repeating: "wrapped ", count: 18) + "\nshort"
+        window.contentView = container
+        window.makeKeyAndOrderFront(nil)
+        defer { window.close() }
+
+        container.layoutSubtreeIfNeeded()
+        container.textView.updateTextContainerSize()
+        let textLayoutManager = try XCTUnwrap(container.textView.textLayoutManager)
+        textLayoutManager.ensureLayout(for: textLayoutManager.documentRange)
+
+        var firstLayoutFragment: NSTextLayoutFragment?
+        textLayoutManager.enumerateTextLayoutFragments(from: textLayoutManager.documentRange.location) { fragment in
+            firstLayoutFragment = fragment
+            return false
+        }
+        let layoutFragment = try XCTUnwrap(firstLayoutFragment)
+        XCTAssertGreaterThan(
+            layoutFragment.textLineFragments.count,
+            1,
+            "The test document must wrap the first logical line into multiple visual rows."
+        )
+
+        let helper = TextKitLineNumberHelper(textView: container.textView)
+        let lineRanges = helper.getVisibleLineRanges()
+        let firstLineRange = try XCTUnwrap(lineRanges.first?.range)
+        let helperRect = try XCTUnwrap(helper.getLineFragmentRect(for: firstLineRange))
+        let firstVisualLine = try XCTUnwrap(layoutFragment.textLineFragments.first)
+        let expectedFirstVisualRect = CGRect(
+            x: firstVisualLine.typographicBounds.minX + layoutFragment.layoutFragmentFrame.minX,
+            y: firstVisualLine.typographicBounds.minY + layoutFragment.layoutFragmentFrame.minY,
+            width: firstVisualLine.typographicBounds.width,
+            height: firstVisualLine.typographicBounds.height
+        )
+
+        XCTAssertLessThan(
+            helperRect.height,
+            layoutFragment.layoutFragmentFrame.height,
+            "The ruler must use the first visual row, not the full wrapped paragraph fragment."
+        )
+        XCTAssertEqual(helperRect.minY, expectedFirstVisualRect.minY, accuracy: 1.0)
+        XCTAssertEqual(helperRect.height, expectedFirstVisualRect.height, accuracy: 1.0)
+    }
 }
 #endif

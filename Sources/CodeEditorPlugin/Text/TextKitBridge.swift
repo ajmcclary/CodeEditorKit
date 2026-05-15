@@ -171,6 +171,32 @@ final class TextKitBridge {
         ensureLayout(for: range)
     }
 
+    /// Apply persistent text-storage attributes only where each attribute key
+    /// is currently absent. This seeds fallback styling without overwriting
+    /// token-specific persistent attributes.
+    func addMissingPersistentAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
+        guard !attributes.isEmpty, let storage = safeTextStorage else { return }
+        let clamped = clampedRange(range, length: storage.length)
+        guard clamped.length > 0 else { return }
+
+        var writes: [(NSAttributedString.Key, Any, NSRange)] = []
+        for (key, value) in attributes {
+            storage.enumerateAttribute(key, in: clamped, options: []) { existingValue, subrange, _ in
+                if existingValue == nil {
+                    writes.append((key, value, subrange))
+                }
+            }
+        }
+        guard !writes.isEmpty else { return }
+
+        storage.beginEditing()
+        for (key, value, subrange) in writes {
+            storage.addAttribute(key, value: value, range: subrange)
+        }
+        storage.endEditing()
+        ensureLayout(for: clamped)
+    }
+
     /// Remove a persistent text-storage attribute key from a range.
     func removePersistentAttribute(_ key: NSAttributedString.Key, range: NSRange) {
         guard let storage = safeTextStorage else { return }
@@ -260,6 +286,39 @@ final class TextKitBridge {
         storage.endEditing()
     }
 
+    /// Apply rendering attributes only where each attribute key is currently
+    /// absent. This is the TK2 counterpart to
+    /// `addMissingPersistentAttributes`: it seeds base glyph attributes
+    /// without replacing syntax colours that already exist on rendering runs.
+    func addMissingRenderingAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
+        guard !attributes.isEmpty else { return }
+        if let textLayoutManager = textView?.textLayoutManager,
+           let textRange = textRangeFromNSRange(range) {
+            var existingRuns: [(NSTextRange, [NSAttributedString.Key: Any])] = []
+            textLayoutManager.enumerateRenderingAttributes(
+                from: textRange.location,
+                reverse: false
+            ) { _, existingAttributes, attributeRange in
+                guard attributeRange.intersects(textRange) else { return true }
+                existingRuns.append((attributeRange, existingAttributes))
+                return attributeRange.endLocation.compare(textRange.endLocation) == .orderedAscending
+            }
+
+            textLayoutManager.setRenderingAttributes(attributes, for: textRange)
+            for (subrange, existingAttributes) in existingRuns {
+                var mergedAttributes = attributes
+                for (key, value) in existingAttributes {
+                    mergedAttributes[key] = value
+                }
+                textLayoutManager.setRenderingAttributes(mergedAttributes, for: subrange)
+            }
+            return
+        }
+
+        // TK1 fallback: rendering attributes are storage attributes.
+        addMissingPersistentAttributes(attributes, range: range)
+    }
+
     /// Remove rendering attribute keys from a range. Counterpart to
     /// `addAttributes(_:range:)`. Falls back to text-storage attribute
     /// removal when TK2 is not available.
@@ -295,6 +354,12 @@ final class TextKitBridge {
             storage.removeAttribute(key, range: range)
         }
         storage.endEditing()
+    }
+
+    private func clampedRange(_ range: NSRange, length: Int) -> NSRange {
+        let lowerBound = max(0, min(range.location, length))
+        let upperBound = max(lowerBound, min(range.location + range.length, length))
+        return NSRange(location: lowerBound, length: upperBound - lowerBound)
     }
 
     // MARK: - Layout Information

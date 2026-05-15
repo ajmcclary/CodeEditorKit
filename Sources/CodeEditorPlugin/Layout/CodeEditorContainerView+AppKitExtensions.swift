@@ -285,11 +285,16 @@ extension CodeEditorContainerView {
             if configuration.layout.wrapLines {
                 // When word wrap is enabled with minimap
                 // Text view should fill the scroll view width and wrap text
-                textView.autoresizingMask = [.width, .height]
+                textView.autoresizingMask = [.width]
                 textView.isHorizontallyResizable = false
 
                 // Set frame to match scroll view content
-                textView.frame = NSRect(x: 0, y: 0, width: contentWidth, height: textView.frame.height)
+                textView.frame = NSRect(
+                    x: 0,
+                    y: 0,
+                    width: contentWidth,
+                    height: max(textView.frame.height, scrollView.contentView.bounds.height)
+                )
 
                 // Configure text container for word wrap
                 textView.textContainer?.containerSize = NSSize(
@@ -358,14 +363,14 @@ extension CodeEditorContainerView {
             // Restore normal behavior when minimap is hidden
             if configuration.layout.wrapLines {
                 // When word wrap is enabled without minimap
-                textView.autoresizingMask = [.width, .height]
+                textView.autoresizingMask = [.width]
                 textView.isHorizontallyResizable = false
 
                 // Configure text container for word wrap
                 textView.textContainer?.widthTracksTextView = true
 
-                // The text container size will be managed by the text view itself
-                // since widthTracksTextView is true
+                textView.frame.size.width = scrollView.contentView.bounds.width
+                textView.updateTextContainerSize()
             } else {
                 // When word wrap is disabled without minimap
                 // Restore autoresizing mask

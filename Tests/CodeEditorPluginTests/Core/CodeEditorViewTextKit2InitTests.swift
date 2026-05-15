@@ -41,4 +41,19 @@ final class CodeEditorViewTextKit2InitTests: XCTestCase {
         XCTAssertNotNil(view.textLayoutManager,
                         "TextKit 2 stack must survive a configuration change")
     }
+
+    #if canImport(AppKit)
+    func testTK2StackSurvivesWrappedLayoutConfigurationChange() {
+        let view = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
+        view.string = String(repeating: "This is a long markdown paragraph that wraps in the editor.\n", count: 3)
+        XCTAssertNotNil(view.textLayoutManager)
+
+        var config = view.configuration
+        config.layout.wrapLines = true
+        view.configuration = config
+
+        XCTAssertNotNil(view.textLayoutManager,
+                        "TextKit 2 stack must survive enabling wrapped layout")
+    }
+    #endif
 }

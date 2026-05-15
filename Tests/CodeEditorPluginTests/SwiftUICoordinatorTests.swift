@@ -138,6 +138,24 @@ final class SwiftUICoordinatorTests: XCTestCase {
         XCTAssertEqual(container.textView.configuration, .minimal)
     }
 
+    #if canImport(AppKit)
+    @MainActor
+    func testSizeCalculationPreservesTextKit2Stack() {
+        let container = CodeEditorContainerView()
+        container.textView.string = "func main() {}\n"
+        XCTAssertNotNil(container.textView.textLayoutManager)
+
+        _ = CodeEditorRepresentableHelper.calculateSize(
+            for: container,
+            proposal: ProposedViewSize(width: nil, height: nil),
+            configuration: .default
+        )
+
+        XCTAssertNotNil(container.textView.textLayoutManager,
+                        "Size calculation must not read legacy layoutManager")
+    }
+    #endif
+
     // MARK: - Focus Management Tests
 
     @MainActor

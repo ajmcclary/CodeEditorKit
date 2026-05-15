@@ -17,6 +17,10 @@ extension CodeEditorContainerView {
         guard !isApplyingConfiguration else { return }
         isApplyingConfiguration = true
         defer { isApplyingConfiguration = false }
+        CodeEditorRenderingDiagnostics.logContainerConfigurationDispatch(
+            "container.applyConfiguration.begin",
+            container: self
+        )
 
         // Snapshot scroll position before mutating layout — toggling
         // wrapLines / widthTracksTextView triggers a TextKit reflow that
@@ -123,6 +127,10 @@ extension CodeEditorContainerView {
         #else
         setNeedsDisplay()
         #endif
+        CodeEditorRenderingDiagnostics.logContainerConfigurationDispatch(
+            "container.applyConfiguration.end",
+            container: self
+        )
     }
 
     // MARK: - Text Container Insets

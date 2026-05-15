@@ -73,7 +73,7 @@ enum ContainerViewHelper {
         textView.isHorizontallyResizable = !wrapLines
         textView.textContainer?.widthTracksTextView = wrapLines
         textView.textContainer?.heightTracksTextView = false
-        textView.autoresizingMask = [.width, .height]
+        textView.autoresizingMask = wrapLines ? [.width] : [.width, .height]
 
         // Set container width for non-wrapping mode
         if !wrapLines {
