@@ -112,6 +112,12 @@ struct IOSRootView: View {
                         CompletionManager, PerformanceInsights, AnnotationsHub) work \
                         on iOS — only the sample's inspector chrome is desktop-only.
 
+                        The workspace surface (Files / Search left rail) is also \
+                        macOS-only in the current sample. The framework's \
+                        WorkspaceFileTree, WorkspaceFileWatching, and \
+                        PortableProjectSearchAdapter are usable from any platform, \
+                        but the sample's UI for them sits inside WindowBody (AppKit).
+
                         Remote LSP servers work on iOS: use \
                         `LanguageServerConfig.remote(url:)` with `LSPManager` to wire \
                         up a WebSocket-backed language server. Local servers require \
