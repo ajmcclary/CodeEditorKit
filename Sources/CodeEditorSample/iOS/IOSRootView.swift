@@ -80,29 +80,48 @@ struct IOSRootView: View {
         }
     }
 
-    /// Explains why the LSP / completion / performance / annotations inspectors
-    /// are absent on iOS. The sample's inspector panels live in `Sidebars/`
-    /// behind `#if canImport(AppKit)` — they depend on AppKit pasteboard APIs
-    /// and macOS-only chrome (`EditorSidebarShell`).
+    /// EventLog (cross-platform) plus an explainer for the macOS-only
+    /// inspectors. The sample's other inspector panels live in `Sidebars/`
+    /// behind `#if canImport(AppKit)` because they depend on AppKit
+    /// pasteboard APIs and macOS-only chrome (`EditorSidebarShell`).
     private var inspectorsUnavailable: some View {
-        ContentUnavailableView {
-            Label("Inspectors are macOS-only", systemImage: "macwindow.badge.plus")
-        } description: {
-            Text(
-                """
-                The LSP, Completion, Performance, and Annotations inspectors \
-                live in `Sources/CodeEditorSample/Sidebars/` and are gated to \
-                AppKit. The underlying CodeEditorPlugin APIs (LSPManager, \
-                CompletionManager, PerformanceInsights, AnnotationsHub) work \
-                on iOS — only the sample's inspector chrome is desktop-only.
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                EventLogPanel(
+                    entries: appState.eventLog.snapshot.entries,
+                    totals: appState.eventLog.snapshot.totals,
+                    mutedCategories: appState.eventLog.mutedCategories,
+                    paused: appState.eventLog.paused,
+                    onToggleCategory: { category in
+                        appState.eventLog.setMuted(category, !appState.eventLog.mutedCategories.contains(category))
+                    },
+                    onTogglePause: { appState.eventLog.setPaused(!appState.eventLog.paused) },
+                    onClear: { appState.eventLog.clear() }
+                )
 
-                Remote LSP servers work on iOS: use \
-                `LanguageServerConfig.remote(url:)` with `LSPManager` to wire \
-                up a WebSocket-backed language server. Local servers require \
-                AppKit's `Process` API (macOS only) and throw an `LSPError` \
-                at start time on iOS.
-                """
-            )
+                Divider()
+
+                ContentUnavailableView {
+                    Label("Other inspectors are macOS-only", systemImage: "macwindow.badge.plus")
+                } description: {
+                    Text(
+                        """
+                        The LSP, Completion, Performance, and Annotations inspectors \
+                        live in `Sources/CodeEditorSample/Sidebars/` and are gated to \
+                        AppKit. The underlying CodeEditorPlugin APIs (LSPManager, \
+                        CompletionManager, PerformanceInsights, AnnotationsHub) work \
+                        on iOS — only the sample's inspector chrome is desktop-only.
+
+                        Remote LSP servers work on iOS: use \
+                        `LanguageServerConfig.remote(url:)` with `LSPManager` to wire \
+                        up a WebSocket-backed language server. Local servers require \
+                        AppKit's `Process` API (macOS only) and throw an `LSPError` \
+                        at start time on iOS.
+                        """
+                    )
+                }
+            }
+            .padding(16)
         }
     }
 
@@ -116,6 +135,7 @@ struct IOSRootView: View {
                 .codeTheme(appState.theme)
                 .codeWorkspaceRoot(appState.workspaceRoot)
                 .becomeFirstResponder()
+                .eventSystem(appState.eventSystem)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ContentUnavailableView(
