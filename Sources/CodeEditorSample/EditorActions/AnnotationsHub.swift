@@ -22,7 +22,7 @@ import UIKit
 /// translate 1-based line numbers into ranges on demand.
 @MainActor
 @Observable
-final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
+final class AnnotationsHub: AnnotationsDataSource {
     /// Set of 1-based line numbers carrying a breakpoint marker.
     private(set) var breakpointLines: Set<Int> = []
 

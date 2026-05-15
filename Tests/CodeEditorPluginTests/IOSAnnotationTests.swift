@@ -168,7 +168,7 @@ final class IOSAnnotationTests: XCTestCase {
 // MARK: - Mock iOS Annotation Data Source
 
 @MainActor
-private class MockIOSAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource {
+private class MockIOSAnnotationDataSource: NSObject, AnnotationsDataSource {
     var mockAnnotations: [Annotation] = []
     var annotationRequestCount = 0
     var annotationColor: UIColor = .systemBlue

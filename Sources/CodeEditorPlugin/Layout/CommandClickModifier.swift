@@ -6,8 +6,11 @@ import SwiftUI
 extension View {
     /// Call `action` when the user clicks the editor's text while holding the
     /// Command key. The click is consumed — the caret does not reposition.
+    /// The action is `@MainActor`-isolated, matching `onReceive`'s
+    /// main-runloop delivery, so consumers can touch main-isolated state
+    /// without wrapping the body in `Task { @MainActor in ... }`.
     public func onCommandClick(
-        action: @escaping (SourcePosition) -> Void
+        action: @escaping @MainActor (SourcePosition) -> Void
     ) -> some View {
         modifier(CommandClickModifier(action: action))
     }
@@ -15,13 +18,18 @@ extension View {
 
 @available(macOS 13.0, iOS 16.0, *)
 private struct CommandClickModifier: ViewModifier {
-    let action: (SourcePosition) -> Void
+    let action: @MainActor (SourcePosition) -> Void
 
     @Environment(\.editorEventBus) private var bus
 
     func body(content: Content) -> some View {
         content.onReceive(busPublisher) { position in
-            action(position)
+            // `onReceive` delivers on the main runloop. The closure runs
+            // synchronously on the main thread, so calling a @MainActor
+            // function here is well-defined.
+            MainActor.assumeIsolated {
+                action(position)
+            }
         }
     }
 

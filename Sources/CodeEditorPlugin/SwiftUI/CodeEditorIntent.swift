@@ -16,7 +16,10 @@ import SwiftUI
 
 @available(macOS 13.0, iOS 16.0, *)
 struct CodeEditorIntent: Sendable {
-    var onTextChange: (@Sendable (String) -> Void)?
+    // `@MainActor` so consumers don't have to wrap the body in
+    // `MainActor.assumeIsolated { ... }` to touch their main-isolated host
+    // state (sample `AppState`, observable models, etc.).
+    var onTextChange: (@MainActor @Sendable (String) -> Void)?
     var onSelectionChange: (@Sendable (Range<String.Index>?) -> Void)?
     var completionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
     var editorController: EditorController?

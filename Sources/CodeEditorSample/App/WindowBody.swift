@@ -56,13 +56,11 @@ struct WindowBody: View {
             CodeEditor()
                 .editorController(appState.documents.editorController)
                 .onTextChange { newText in
-                    MainActor.assumeIsolated {
-                        #if canImport(AppKit)
-                        if let activeID = appState.documents.store.activeID {
-                            appState.lsp.handleTextChange(id: activeID, newText: newText)
-                        }
-                        #endif
+                    #if canImport(AppKit)
+                    if let activeID = appState.documents.store.activeID {
+                        appState.lsp.handleTextChange(id: activeID, newText: newText)
                     }
+                    #endif
                 }
                 .activeDocument(in: appState.documents.store)
                 .codeWorkspaceRoot(appState.workspaceRoot)
@@ -78,8 +76,8 @@ struct WindowBody: View {
                     }
                 }
                 .onCommandClick { position in
-                    Task { @MainActor in
-                        if let activeID = appState.documents.store.activeID {
+                    if let activeID = appState.documents.store.activeID {
+                        Task {
                             await appState.lsp.jumpToDefinition(at: position, in: activeID)
                         }
                     }

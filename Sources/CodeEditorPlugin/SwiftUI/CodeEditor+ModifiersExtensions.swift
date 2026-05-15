@@ -163,7 +163,7 @@ extension View {
     ///     }
     /// ```
     public func onTextChange(
-        perform action: @escaping @Sendable (String) -> Void
+        perform action: @escaping @MainActor @Sendable (String) -> Void
     ) -> some View {
         transformEnvironment(\.codeEditorIntent) { $0.onTextChange = action }
     }

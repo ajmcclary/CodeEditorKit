@@ -554,7 +554,7 @@ class MockCodeEditorViewDelegate: NSObject, CodeEditorViewDelegate {
 // MARK: - MockAnnotationDataSource
 
 @MainActor
-class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource {
+class MockAnnotationDataSource: NSObject, AnnotationsDataSource {
     var mockAnnotations: [Annotation] = []
     var viewCreationCallCount = 0
 

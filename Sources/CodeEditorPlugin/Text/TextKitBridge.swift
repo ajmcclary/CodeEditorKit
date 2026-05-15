@@ -47,6 +47,26 @@ final class TextKitBridge {
         self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
     }
 
+    // MARK: - Editing Transactions
+
+    /// Run `block` inside `NSTextContentStorage.performEditingTransaction(_:)`
+    /// when the content storage is available, otherwise fall back to running
+    /// the block directly. The content-storage bracket is what coordinates
+    /// "in-edit" state with the viewport layout controller, rendering
+    /// attribute enumeration, and `NSTextLayoutManager.enumerateText*`
+    /// callers; without it, `NSTextStorage.beginEditing` (and any API that
+    /// calls it internally, like `replaceCharacters`) can fire
+    /// `NSTextContentStorageBreakOnEnumerateWhileEditing` mid-enumeration.
+    /// `NSTextContentManager` reference-counts its transaction so nesting
+    /// from an outer caller that already opened one is safe.
+    private func withEditingTransaction(_ block: () -> Void) {
+        if let contentStorage = textContentStorage {
+            contentStorage.performEditingTransaction { block() }
+        } else {
+            block()
+        }
+    }
+
     // MARK: - Text Storage Access
 
     /// Get the text content storage.
@@ -124,28 +144,35 @@ final class TextKitBridge {
     // MARK: - TK2-Safe Content Mutation
 
     /// Replace characters in the given range with a plain string. No-op
-    /// (with one logged warning) when the TK2 stack is not yet ready.
-    ///
-    /// Callers that need to batch multiple mutations should wrap their
-    /// calls in `NSTextContentManager.performEditingTransaction(_:)`; this
-    /// method does NOT open its own transaction (nesting trips
-    /// `NSTextContentStorageBreakOnEnumerateWhileEditing` per the existing
-    /// guard in `CodeEditorView+SyntaxHighlightingExtensions.swift`).
+    /// (with one logged warning) when the TK2 stack is not yet ready. The
+    /// mutation runs inside `NSTextContentStorage.performEditingTransaction`
+    /// so the content storage stays in a consistent "in-edit" state
+    /// throughout, even when viewport layout or rendering-attribute
+    /// enumeration is racing the mutation. Callers may wrap multiple
+    /// `replaceCharacters` / attribute mutations in their own outer
+    /// `performEditingTransaction` to batch them atomically — the inner
+    /// transaction here is reference-counted and nests safely.
     func replaceCharacters(in range: NSRange, with string: String) {
         guard let storage = safeTextStorage else {
             Self.logger.error("replaceCharacters: TextKit 2 stack not ready; mutation dropped")
             return
         }
-        storage.replaceCharacters(in: range, with: string)
+        withEditingTransaction {
+            storage.replaceCharacters(in: range, with: string)
+        }
     }
 
     /// Replace characters in the given range with an attributed string.
+    /// Wrapped in `performEditingTransaction` for the same reason as the
+    /// plain-string overload.
     func replaceCharacters(in range: NSRange, with attributedString: NSAttributedString) {
         guard let storage = safeTextStorage else {
             Self.logger.error("replaceCharacters: TextKit 2 stack not ready; mutation dropped")
             return
         }
-        storage.replaceCharacters(in: range, with: attributedString)
+        withEditingTransaction {
+            storage.replaceCharacters(in: range, with: attributedString)
+        }
     }
 
     // MARK: - TK2-Safe Persistent Attributes
@@ -165,9 +192,11 @@ final class TextKitBridge {
     /// Apply persistent text-storage attributes to a range.
     func addPersistentAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
         guard let storage = safeTextStorage else { return }
-        storage.beginEditing()
-        storage.addAttributes(attributes, range: range)
-        storage.endEditing()
+        withEditingTransaction {
+            storage.beginEditing()
+            storage.addAttributes(attributes, range: range)
+            storage.endEditing()
+        }
         ensureLayout(for: range)
     }
 
@@ -189,31 +218,37 @@ final class TextKitBridge {
         }
         guard !writes.isEmpty else { return }
 
-        storage.beginEditing()
-        for (key, value, subrange) in writes {
-            storage.addAttribute(key, value: value, range: subrange)
+        withEditingTransaction {
+            storage.beginEditing()
+            for (key, value, subrange) in writes {
+                storage.addAttribute(key, value: value, range: subrange)
+            }
+            storage.endEditing()
         }
-        storage.endEditing()
         ensureLayout(for: clamped)
     }
 
     /// Remove a persistent text-storage attribute key from a range.
     func removePersistentAttribute(_ key: NSAttributedString.Key, range: NSRange) {
         guard let storage = safeTextStorage else { return }
-        storage.beginEditing()
-        storage.removeAttribute(key, range: range)
-        storage.endEditing()
+        withEditingTransaction {
+            storage.beginEditing()
+            storage.removeAttribute(key, range: range)
+            storage.endEditing()
+        }
         ensureLayout(for: range)
     }
 
     /// Remove multiple persistent text-storage attribute keys from a range.
     func removePersistentAttributes(_ keys: [NSAttributedString.Key], range: NSRange) {
         guard let storage = safeTextStorage else { return }
-        storage.beginEditing()
-        for key in keys {
-            storage.removeAttribute(key, range: range)
+        withEditingTransaction {
+            storage.beginEditing()
+            for key in keys {
+                storage.removeAttribute(key, range: range)
+            }
+            storage.endEditing()
         }
-        storage.endEditing()
         ensureLayout(for: range)
     }
 
@@ -281,9 +316,11 @@ final class TextKitBridge {
         }
         // TK1 fallback: apply as text-storage attributes.
         guard let storage = safeTextStorage else { return }
-        storage.beginEditing()
-        storage.addAttributes(attributes, range: range)
-        storage.endEditing()
+        withEditingTransaction {
+            storage.beginEditing()
+            storage.addAttributes(attributes, range: range)
+            storage.endEditing()
+        }
     }
 
     /// Apply rendering attributes only where each attribute key is currently
@@ -349,11 +386,13 @@ final class TextKitBridge {
         }
         // TK1 fallback: remove from text-storage.
         guard let storage = safeTextStorage else { return }
-        storage.beginEditing()
-        for key in attributeKeys {
-            storage.removeAttribute(key, range: range)
+        withEditingTransaction {
+            storage.beginEditing()
+            for key in attributeKeys {
+                storage.removeAttribute(key, range: range)
+            }
+            storage.endEditing()
         }
-        storage.endEditing()
     }
 
     private func clampedRange(_ range: NSRange, length: Int) -> NSRange {

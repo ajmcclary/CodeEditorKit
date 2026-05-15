@@ -60,10 +60,11 @@ final class LSPProcessManager {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        // Start reading from stdout
-        Task {
-            await startReadingFromServer(pipe: stdoutPipe)
-        }
+        // Wire up an event-driven stdout reader BEFORE the process starts so
+        // the very first byte the server emits triggers the handler. The
+        // reader is callback-based (`FileHandle.readabilityHandler`); there
+        // is no polling loop.
+        installStdoutReader(on: stdoutPipe.fileHandleForReading)
 
         // Start the process
         try process.run()
@@ -77,6 +78,10 @@ final class LSPProcessManager {
 
     /// Terminates the server process
     func terminateServerProcess() {
+        // Drop the readability handler first so a final pipe drain after
+        // terminate() doesn't schedule one last `processIncomingData` Task
+        // against a dead message handler / nil stdout pipe.
+        stdoutPipe?.fileHandleForReading.readabilityHandler = nil
         serverProcess?.terminate()
         serverProcess?.waitUntilExit()
         serverProcess = nil
@@ -102,22 +107,27 @@ final class LSPProcessManager {
 
     // MARK: - Private Methods
 
-    /// Starts reading from the server's stdout pipe
-    private func startReadingFromServer(pipe: Pipe) async {
-        let fileHandle = pipe.fileHandleForReading
-
-        while serverProcess?.isRunning == true {
-            do {
-                let data = fileHandle.availableData
-                if !data.isEmpty {
-                    await messageHandler.processIncomingData(data)
-                }
-
-                // Small delay to prevent busy waiting
-                try await Task.sleep(nanoseconds: 1_000_000) // 1ms
-            } catch {
-                logger.error("Error reading from server: \(error.localizedDescription)")
-                break
+    /// Installs an event-driven readability handler on the stdout file
+    /// handle. The closure runs on `FileHandle`'s dispatch queue (not the
+    /// main actor); incoming bytes are forwarded to the message-handler
+    /// actor via a detached `Task`. On EOF (an empty read) the handler
+    /// removes itself so we stop receiving callbacks. `internal` so tests
+    /// can drive a real `Pipe` without spinning a real server process.
+    internal func installStdoutReader(on fileHandle: FileHandle) {
+        // Capture the actor reference locally so the @Sendable closure
+        // doesn't have to capture `self` (which would be `@MainActor` and
+        // force a hop just to read the property).
+        let handler = messageHandler
+        fileHandle.readabilityHandler = { handle in
+            let data = handle.availableData
+            if data.isEmpty {
+                // EOF — server closed its stdout. Detach the handler so the
+                // dispatch source can release this closure.
+                handle.readabilityHandler = nil
+                return
+            }
+            Task {
+                await handler.processIncomingData(data)
             }
         }
     }

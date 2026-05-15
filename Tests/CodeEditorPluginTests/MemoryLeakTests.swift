@@ -30,6 +30,7 @@ final class MemoryLeakTests: CleanupTestCase {
         Tests assert the leak so when the production retention is removed \
         XCTExpectFailure(strict:) flags the wrapper for deletion.
         """
+
     override func setUp() {
         super.setUp()
         // Add at least one non-trivial statement to satisfy SwiftLint

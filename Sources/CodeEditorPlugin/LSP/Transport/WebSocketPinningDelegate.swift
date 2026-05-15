@@ -30,7 +30,7 @@ final class WebSocketPinningDelegate: NSObject, URLSessionDelegate, @unchecked S
     }
 
     func urlSession(
-        _ session: URLSession,
+        _: URLSession,
         didReceive challenge: URLAuthenticationChallenge,
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {

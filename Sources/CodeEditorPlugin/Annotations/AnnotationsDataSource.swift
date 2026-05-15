@@ -71,6 +71,13 @@ import AppKit
 ///   stop appearing.
 ///
 /// - SeeAlso: ``Annotation``, ``CodeEditorViewAnnotation``, ``CodeEditorView/annotationsDataSource``
+///
+/// - Note: The protocol is `@MainActor`-isolated. The editor only ever reads
+///   annotations during layout, which runs on the main actor, so requiring
+///   conformers to be main-isolated lets implementations touch `@MainActor`
+///   state (active-document model, observable hubs, etc.) without
+///   `@preconcurrency` workarounds.
+@MainActor
 public protocol AnnotationsDataSource: AnyObject {
     /// Returns the annotations for the given text range.
     ///

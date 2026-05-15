@@ -458,7 +458,7 @@ final class AnnotationTests: XCTestCase {
 // MARK: - Test Helper Classes
 
 @MainActor
-class TestAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource {
+class TestAnnotationDataSource: NSObject, AnnotationsDataSource {
     var mockAnnotations: [Annotation] = []
     var viewCreationCount = 0
 
