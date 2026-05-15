@@ -148,6 +148,32 @@ final class SwiftUIClosureCompletionProviderTests: XCTestCase {
         }
     }
 
+    func testItemPriorityComesFromKindDefaultPriority() async throws {
+        // The SwiftUI modifier API doesn't expose a priority field, so the
+        // adapter stamps each item with its kind's defaultPriority — see
+        // SwiftUIClosureCompletionProvider.swift docstring on the init.
+        // This keeps modifier-supplied items from being buried behind
+        // priority-80 keywords past the maxCompletions: 50 cap.
+        let provider = SwiftUIClosureCompletionProvider()
+        provider.closure = { _ in
+            [
+                SwiftUICompletionItem(label: "k", kind: .keyword),
+                SwiftUICompletionItem(label: "s", kind: .snippet),
+                SwiftUICompletionItem(label: "t", kind: .text)
+            ]
+        }
+
+        let context = CompletionContextModel(
+            text: "", cursorPosition: 0, language: .swift, lineText: ""
+        )
+        let result = try await provider.completions(for: context)
+
+        let byLabel = Dictionary(uniqueKeysWithValues: result.items.map { ($0.label, $0.priority) })
+        XCTAssertEqual(byLabel["k"], CompletionItemKind.keyword.defaultPriority)
+        XCTAssertEqual(byLabel["s"], CompletionItemKind.snippet.defaultPriority)
+        XCTAssertEqual(byLabel["t"], CompletionItemKind.text.defaultPriority)
+    }
+
     func testInsertTextDefaultsToLabelWhenNil() async throws {
         let provider = SwiftUIClosureCompletionProvider()
         provider.closure = { _ in

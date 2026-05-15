@@ -71,13 +71,21 @@ extension CompletionItemModel {
     /// type) into the framework's richer `CompletionItemModel`. Lives
     /// here so the conversion table sits next to the adapter that uses
     /// it.
+    ///
+    /// Priority comes from the kind's `defaultPriority` — the SwiftUI
+    /// modifier API has no `priority` field, and defaulting to `0` would
+    /// bury host items behind built-in keywords (priority 80) past the
+    /// `maxCompletions: Int = 50` cap. Hosts who need custom priority
+    /// register a full `CompletionProvider` via `EditorController`.
     init(swiftUI item: SwiftUICompletionItem) {
+        let mappedKind = CompletionItemKind(swiftUI: item.kind)
         self.init(
             label: item.label,
             insertText: item.insertText,
-            kind: CompletionItemKind(swiftUI: item.kind),
+            kind: mappedKind,
             detail: item.detail,
-            documentation: item.documentation
+            documentation: item.documentation,
+            priority: mappedKind.defaultPriority
         )
     }
 }
