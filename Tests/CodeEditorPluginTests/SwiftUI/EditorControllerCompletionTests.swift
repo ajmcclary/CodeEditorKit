@@ -13,7 +13,11 @@ struct EditorControllerCompletionTests {
         let view = CodeEditorView(frame: .zero)
         controller.attach(to: view)
 
-        #expect(controller.registeredCompletionProviders.isEmpty)
+        // CodeEditorView auto-registers a LanguageKeywordCompletionProvider
+        // for its initial language in setupCompletionProviders(); a fresh
+        // controller's registeredCompletionProviders is never empty.
+        let builtInId = "builtin.keywords.\(view.language.identifier)"
+        #expect(controller.registeredCompletionProviders.map(\.id) == [builtInId])
 
         let providerA = StubProvider(id: "a")
         let providerB = StubProvider(id: "b")
@@ -21,14 +25,14 @@ struct EditorControllerCompletionTests {
         controller.registerCompletionProvider(providerB)
 
         let ids = controller.registeredCompletionProviders.map(\.id).sorted()
-        #expect(ids == ["a", "b"])
+        #expect(ids == [builtInId, "a", "b"].sorted())
 
         // Re-register `a` replaces in place.
         controller.registerCompletionProvider(StubProvider(id: "a", trigger: "."))
-        #expect(controller.registeredCompletionProviders.count == 2)
+        #expect(controller.registeredCompletionProviders.count == 3)
 
         controller.unregisterCompletionProvider(withId: "a")
-        #expect(controller.registeredCompletionProviders.map(\.id) == ["b"])
+        #expect(Set(controller.registeredCompletionProviders.map(\.id)) == [builtInId, "b"])
     }
 
     @Test("requestCompletion fires registered provider")

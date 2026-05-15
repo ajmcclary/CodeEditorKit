@@ -91,12 +91,12 @@ public final class EditorRuntime {
 
     public init(dependencies: EditorRuntimeDependencies = .live()) {
         self.dependencies = dependencies
-        self.featureDependencies = EditorFeatureRuntimeDependencies(languageMetadataRegistry: dependencies.languageMetadataRegistry)
+        self.featureDependencies = EditorFeatureRuntimeDependencies()
     }
 
     public func update(dependencies: EditorRuntimeDependencies) {
         self.dependencies = dependencies
-        self.featureDependencies = EditorFeatureRuntimeDependencies(languageMetadataRegistry: dependencies.languageMetadataRegistry)
+        self.featureDependencies = EditorFeatureRuntimeDependencies()
     }
 
     public func update(featureDependencies: EditorFeatureRuntimeDependencies) {
@@ -188,20 +188,6 @@ public struct EditorEditingRuntimeDependencies {
     }
 }
 
-/// Completion services used by completion view models and providers.
-@MainActor
-public struct EditorCompletionRuntimeDependencies {
-    public var completionProviderRegistry: CompletionProviderRegistry
-
-    public init(languageMetadataRegistry: LanguageMetadataRegistry? = nil) {
-        self.completionProviderRegistry = CompletionProviderRegistry(languageMetadataRegistry: languageMetadataRegistry)
-    }
-
-    public init(completionProviderRegistry: CompletionProviderRegistry) {
-        self.completionProviderRegistry = completionProviderRegistry
-    }
-}
-
 /// Folding services that need the editor's folding engine.
 @MainActor
 public struct EditorFoldingRuntimeDependencies {
@@ -250,20 +236,16 @@ public final class EditorFeatureRuntimeDependencies {
     public var layout: EditorLayoutRuntimeDependencies
     public var syntax: EditorSyntaxRuntimeDependencies
     public var editing: EditorEditingRuntimeDependencies
-    public var completion: EditorCompletionRuntimeDependencies
     public var folding: EditorFoldingRuntimeDependencies
 
     public init(
         layout: EditorLayoutRuntimeDependencies = EditorLayoutRuntimeDependencies(),
         syntax: EditorSyntaxRuntimeDependencies = EditorSyntaxRuntimeDependencies(),
-        editing: EditorEditingRuntimeDependencies = EditorEditingRuntimeDependencies(),
-        completion: EditorCompletionRuntimeDependencies? = nil,
-        languageMetadataRegistry: LanguageMetadataRegistry? = nil
+        editing: EditorEditingRuntimeDependencies = EditorEditingRuntimeDependencies()
     ) {
         self.layout = layout
         self.syntax = syntax
         self.editing = editing
-        self.completion = completion ?? EditorCompletionRuntimeDependencies(languageMetadataRegistry: languageMetadataRegistry)
         self.folding = EditorFoldingRuntimeDependencies(lineNumberCalculationService: layout.lineNumberCalculationService)
     }
 
@@ -289,10 +271,6 @@ public final class EditorFeatureRuntimeDependencies {
 
     public var textEditingService: TextEditingService {
         editing.textEditingService
-    }
-
-    public var completionProviderRegistry: CompletionProviderRegistry {
-        completion.completionProviderRegistry
     }
 
     public func codeFoldingCoordinatorService() throws -> CodeFoldingCoordinatorService {

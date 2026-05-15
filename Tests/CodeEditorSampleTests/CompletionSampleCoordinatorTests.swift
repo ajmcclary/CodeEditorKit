@@ -8,7 +8,7 @@ import Testing
 @Suite("CompletionSampleCoordinator")
 @MainActor
 struct CompletionSampleCoordinatorTests {
-    @Test("attach registers nine providers (eight built-ins + one demo)")
+    @Test("attach registers ten providers (eight sample built-ins + framework keyword built-in + one demo)")
     func attachRegistersAllProviders() {
         let coordinator = CompletionSampleCoordinator()
         let controller = EditorController()
@@ -18,10 +18,14 @@ struct CompletionSampleCoordinatorTests {
         coordinator.attach(controller: controller)
         defer { coordinator.detach() }
 
+        // CodeEditorView auto-registers a LanguageKeywordCompletionProvider
+        // for its initial language; that's the +1 above the sample's eight
+        // built-ins + one demo provider.
         let ids = controller.registeredCompletionProviders.map(\.id).sorted()
-        #expect(ids.count == 9)
+        #expect(ids.count == 10)
         #expect(ids.contains("sample.demo"))
         #expect(ids.contains("swift-universal"))
+        #expect(ids.contains("builtin.keywords.\(view.language.identifier)"))
     }
 
     @Test("registered providers in the snapshot mirror the controller")
@@ -35,7 +39,7 @@ struct CompletionSampleCoordinatorTests {
         defer { coordinator.detach() }
         coordinator.refresh()
 
-        #expect(coordinator.snapshot.registeredProviders.count == 9)
+        #expect(coordinator.snapshot.registeredProviders.count == 10)
     }
 
     @Test("activity ring is bounded at 20 newest-first")
