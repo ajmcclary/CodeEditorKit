@@ -53,7 +53,12 @@ public struct ProjectSearchResult: Sendable {
 ///
 /// Implementations range from simple file-walking (portable baseline)
 /// to system search index integration (macOS SearchKit, if viable).
-public protocol ProjectSearchProvider: AnyObject {
+///
+/// `Sendable`-conforming so callers can dispatch index/search work
+/// from any isolation domain; concrete adapters take responsibility
+/// for their own thread safety (`PortableProjectSearchAdapter` uses
+/// an `NSLock`).
+public protocol ProjectSearchProvider: AnyObject, Sendable {
     /// Index a set of file URLs. Called once before search, or
     /// incrementally as files change.
     func indexFiles(urls: [URL]) async throws
@@ -73,7 +78,7 @@ public protocol ProjectSearchProvider: AnyObject {
 /// Cross-platform baseline search implementation. Walks files and
 /// performs in-memory text matching. Suitable for small-to-medium
 /// projects; no system dependencies.
-public final class PortableProjectSearchAdapter: ProjectSearchProvider {
+public final class PortableProjectSearchAdapter: ProjectSearchProvider, @unchecked Sendable {
     private var indexedFiles: [URL] = []
     private var searchTask: Task<[ProjectSearchResult], Never>?
     private let lock = NSLock()
