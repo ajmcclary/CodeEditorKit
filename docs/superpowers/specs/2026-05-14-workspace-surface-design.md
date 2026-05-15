@@ -16,8 +16,8 @@ This spec adds a workspace surface (file tree + project search) to the sample an
 - A real file tree backed by `MacOSWorkspaceFileManager`, with lazy disclosure and incremental updates from `WorkspaceFileWatching.events`.
 - A real project search backed by `PortableProjectSearchAdapter`, exposing case-sensitive, regex, and file-extension controls.
 - Smart tab routing for both surfaces: clicking a file or a search result reuses an existing tab when one is open and jumps to the matched range when applicable.
-- `File ▸ Open Folder…` command (`⇧⌘O`), empty-state button, and footer button that all call into a shared `NSOpenPanel` helper.
-- Migrate the existing `SettingsSidebar` into `SettingsScene` so `⌘,` hosts global settings; the new left rail is dedicated to workspace.
+- `File ▸ Open Folder…` command (`⌘O`, which is currently a no-op per NEXT.md), empty-state button, and footer button that all call into a shared `NSOpenPanel` helper.
+- Remove the inline `SettingsSidebar` and let `Settings { SettingsScene(...) }` (already wired in `CodeEditorSampleApp.swift`) be the single home for global settings; the new left rail is dedicated to workspace.
 
 ## Non-goals
 
@@ -26,22 +26,31 @@ This spec adds a workspace surface (file tree + project search) to the sample an
 - Persistent workspace root across launches. `NSOpenPanel` returns a URL; `AppState.workspaceRoot` holds it for the session. No security-scoped bookmarks, no `NSDocumentController` recents.
 - Reindexing on file events. The project search index rebuilds only on root change or via an explicit "Reindex" button. File-tree events do not poke the search index.
 - `⌘O` (open file). Tracked separately under A.1's Save-As / open work.
-- Framework API changes beyond a single small additive method (`EditorController.selectRange(_:scroll:)`) that exposes already-existing internal behavior used by `gotoSymbol`. Everything else — `WorkspaceFileTree`, `WorkspaceFileWatching`, `ProjectSearchProvider`, `PortableProjectSearchAdapter`, `EditorController.gotoLine`, `EditorController.nsLocation(forLSPLine:character:)`, `EditorDocuments.openFile` — is already public.
+- Framework API changes beyond two additive surfaces:
+  1. `EditorController.selectRange(_:scroll:)` — exposes already-existing internal behavior used by `gotoSymbol`.
+  2. Public promotion of the workspace-tree types so the sample (a separate SPM target) can consume them: `WorkspaceFileNode`, `WorkspaceFileEvent`, `WorkspaceFileTree`, `WorkspaceFileWatching`, and `MacOSWorkspaceFileManager` are currently `internal`. They are already shaped as a clean protocol surface; promoting them mirrors how `ProjectSearchProvider` / `PortableProjectSearchAdapter` are already public.
+
+  Everything else — `ProjectSearchProvider`, `PortableProjectSearchAdapter`, `EditorController.gotoLine`, `EditorController.nsLocation(forLSPLine:character:)`, `EditorDocuments.openFile` — is already public.
 - `A.3 #9` (extract a cross-platform `EditorWorkspaceScene` view). Out of scope.
 
 ## Approach
 
-Two new `@Observable` models live in the sample target — `WorkspaceModel` (tree + watching) and `ProjectSearchModel` (search + indexing). A new `WorkspaceSidebar` view wraps `EditorSidebarShell` and segments between `FilePanelView` and `ProjectSearchPanelView`. `SettingsSidebar.swift` is deleted; its form lifts into a rewritten `SettingsScene.swift` that the `Settings { … }` scene opens via `⌘,`. `WindowBody.swift` swaps `SettingsSidebar` for `WorkspaceSidebar` on the left rail. `RootWindow.swift` gains a `CommandGroup` with `Open Folder…` (`⇧⌘O`).
+Two new `@Observable` models live in the sample target — `WorkspaceModel` (tree + watching) and `ProjectSearchModel` (search + indexing). A new `WorkspaceSidebar` view wraps `EditorSidebarShell` and segments between `FilePanelView` and `ProjectSearchPanelView`. `SettingsSidebar.swift` is deleted; its content was already replicated in the existing `SettingsScene` (opened by `Settings { SettingsScene(appState: appState) }` in `CodeEditorSampleApp.swift`). `WindowBody.swift` swaps `SettingsSidebar` for `WorkspaceSidebar` on the left rail. `CodeEditorSampleApp.swift`'s existing `CommandGroup(after: .newItem)` gains an `Open Folder…` button with `⌘O` (currently a no-op).
 
 `AppState.workspaceRoot` remains the single source of truth. Both models observe it via an `.onChange` on `WorkspaceSidebar` host. The existing `WorkspaceKnobsSection` and the new menu command both write to the same `AppState.workspaceRoot` property. The NSOpenPanel logic currently inside `WorkspaceKnobsSection` is lifted into a reusable `WorkspacePicker` helper consumed by the section, the empty-state button, the footer button, and the menu command.
 
 ## File layout
 
 ```
+Sources/CodeEditorPlugin/Workspace/
+├── WorkspaceFileProtocols.swift                      Public-promote WorkspaceFileNode, WorkspaceFileEvent,
+│                                                     WorkspaceFileTree, WorkspaceFileWatching
+└── MacOSWorkspaceFileManager.swift                   Public-promote final class + members; keep AppKit-gated
+
 Sources/CodeEditorPlugin/SwiftUI/
 └── EditorController.swift                            + public func selectRange(_:scroll:) (additive)
 
-Sources/CodeEditorSample/Workspace/                  (new directory)
+Sources/CodeEditorSample/Workspace/                  (new directory, sample target)
 ├── WorkspaceModel.swift                              @Observable: tree state + WorkspaceFileWatching subscription
 ├── ProjectSearchModel.swift                          @Observable: search state + PortableProjectSearchAdapter
 ├── WorkspaceIgnoreRules.swift                        Static lists: dir ignores + binary-extension deny-list
@@ -49,33 +58,28 @@ Sources/CodeEditorSample/Workspace/                  (new directory)
 ├── WorkspaceSidebar.swift                            EditorSidebarShell host + segmented Files/Search
 ├── FilePanelView.swift                               Lazy disclosure tree + empty + error states + footer
 ├── ProjectSearchPanelView.swift                      Header (query + 3 toggles + ext filter) + grouped results
-└── EditorController+SelectMatch.swift                Sample-side helper: selectMatch(_:in:)
-
-Sources/CodeEditorSample/Scenes/
-└── SettingsScene.swift                               Rewritten: hosts the former SettingsSidebar form
+└── EditorController+SelectMatch.swift                Sample-side helper: selectMatch(_:)
 
 Sources/CodeEditorSample/App/
-└── AppState.swift                                    + workspaceModel; + projectSearchModel
-
-Sources/CodeEditorSample/Windows/
-├── RootWindow.swift                                  + .commands { Open Folder… (⇧⌘O) }; + Settings { SettingsView() }
+├── AppState.swift                                    + workspaceModel; + projectSearchModel
+├── CodeEditorSampleApp.swift                         + "Open Folder…" CommandGroup entry (⌘O)
 └── WindowBody.swift                                  SettingsSidebar removed; WorkspaceSidebar added on the left
 
 Sources/CodeEditorSample/iOS/
 └── IOSRootView.swift                                 Inspectors detail copy updated (macOS-only note)
 
-Sources/CodeEditorSample/Sidebar/
-└── SettingsSidebar.swift                             Deleted; shared subviews relocate to KnobPanels/ if reused
+Sources/CodeEditorSample/Sidebars/
+└── SettingsSidebar.swift                             Deleted (SettingsScene already covers ⌘,)
 
 Sources/CodeEditorSample/KnobPanels/
-└── WorkspaceKnobsSection.swift                       NSOpenPanel logic removed; calls WorkspacePicker
+└── WorkspaceKnobsSection.swift                       NSOpenPanel logic lifted into WorkspacePicker; section calls it
 
 Tests/CodeEditorSampleTests/
 ├── WorkspaceModelTests.swift                         Stub WorkspaceFileTree + AsyncStream
 ├── ProjectSearchModelTests.swift                     Stub ProjectSearchProvider
 ├── EditorControllerSelectMatchTests.swift            Text fixtures
-└── Snapshots/
-    └── WorkspaceSidebarSnapshots.swift               Five baselines
+└── __Snapshots__/
+    └── WorkspaceSidebarSnapshots.swift               Five baselines (alongside existing snapshot tests)
 ```
 
 ## Models
@@ -256,35 +260,40 @@ extension EditorController {
 
 `ProjectSearchResult.lineNumber` / `.column` are 1-based; the framework's `nsLocation(forLSPLine:character:)` is 0-based, so the helper subtracts 1 from each. NSRange length = `result.matchedText.utf16.count`. Calls `selectRange(_:scroll:)` and returns `false` silently when `nsLocation` returns `nil` (file still opens at line 1).
 
-### `RootWindow` commands
+### App commands
+
+In `CodeEditorSampleApp.swift`'s existing `CommandGroup(after: .newItem)`, add:
 
 ```swift
-.commands {
-    CommandGroup(after: .newItem) {
-        Button("Open Folder…") { WorkspacePicker.choose { appState.workspaceRoot = $0 } }
-            .keyboardShortcut("o", modifiers: [.command, .shift])
-    }
+Button("Open Folder…") {
+    WorkspacePicker.choose { appState.workspaceRoot = $0 }
 }
+.keyboardShortcut("o", modifiers: .command)
 ```
 
-`Settings { SettingsScene() }` is added alongside `WindowGroup` so `⌘,` opens the new settings UI.
+`⌘O` is currently a no-op in the sample (per NEXT.md A.1); we claim it. `⇧⌘O` stays reserved for the existing "Go to Symbol…" command. `Settings { SettingsScene(appState: appState) }` is already wired and unchanged.
 
 ### `WindowBody`
 
 ```swift
 HStack(spacing: 0) {
-    WorkspaceSidebar(workspace: appState.workspaceModel, search: appState.projectSearchModel)
-        .onChange(of: appState.workspaceRoot) { _, newValue in
-            appState.workspaceModel.setRoot(newValue)
-            Task { await appState.projectSearchModel.setRoot(newValue) }
-        }
-    Divider()
+    if workspaceVisible {
+        WorkspaceSidebar(workspace: appState.workspaceModel, search: appState.projectSearchModel)
+            .onChange(of: appState.workspaceRoot) { _, newValue in
+                appState.workspaceModel.setRoot(newValue)
+                Task { await appState.projectSearchModel.setRoot(newValue) }
+            }
+        columnSeparator
+    }
     editorPane              // unchanged
-    if inspectorVisible { InspectorSidebar(…) }
+    if inspectorVisible {
+        columnSeparator
+        InspectorSidebar(appState: appState)
+    }
 }
 ```
 
-`SettingsSidebar.swift` is deleted. The boolean toggle that controlled `settingsVisible` is repurposed for `WorkspaceSidebar` visibility (default: always-visible).
+`SettingsSidebar.swift` is deleted. The boolean `@State private var settingsVisible` in `RootWindow.swift` is renamed `workspaceVisible` and threaded into `WindowBody`. `CommandPaletteCatalog` and any other consumer of `settingsVisible` rename accordingly. Default: visible.
 
 ### iOS
 
@@ -342,3 +351,5 @@ Record with `isRecording: true`, commit the PNGs.
 - The `Settings { SettingsView() }` scene must be added once globally; double-adding will produce a SwiftUI duplicate-scene warning at runtime.
 - `selectMatch` builds on `EditorController.nsLocation(forLSPLine:character:)` (existing) plus the new `EditorController.selectRange(_:scroll:)` (this spec). The latter is the only public framework surface added.
 - After this spec lands, A.3 #1 (Split `AppState` god object) has two concrete examples of feature-scoped `@Observable` models to extend, and A.3 #8 (`SettingsScene` migration) is complete.
+- `SettingsScene` was already wired in `CodeEditorSampleApp.swift` with a full NavigationSplitView of knob sections before this spec started — the migration is purely "remove the inline `SettingsSidebar` and let `⌘,` be the single settings home." `SwitcherSection` (theme/preset switchers) moves from always-visible to the Theme tab inside the Settings window; documented behavior change.
+- The promoted workspace types (`WorkspaceFileNode`, the protocols, `MacOSWorkspaceFileManager`) keep their current internal-style names and signatures; promotion is purely access-modifier changes plus a SwiftLint pass.
