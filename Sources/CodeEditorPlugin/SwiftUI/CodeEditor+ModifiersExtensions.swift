@@ -223,9 +223,16 @@ extension View {
     ///     }
     /// ```
     ///
-    /// - Note: As of 2026-05-14 the SwiftUI provider closure is stored
-    ///   on `CodeEditorIntent` but not yet consumed by the editor. A
-    ///   separate follow-up wires it through the completion pipeline.
+    /// The provider is automatically registered as a `CompletionProvider`
+    /// with id `"swiftui-modifier"` for the editor's lifetime. It stacks
+    /// additively with built-in keyword completions and any provider the
+    /// host has registered via `EditorController.registerCompletionProvider(_:)`.
+    /// Items are stamped with their kind's `defaultPriority` so they
+    /// land in a sensible default position relative to built-ins.
+    ///
+    /// The closure runs on manual completion triggers; for trigger-character
+    /// firing, register a full `CompletionProvider` via `EditorController`
+    /// instead.
     public func codeCompletion(
         provider: @escaping @Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem]
     ) -> some View {
