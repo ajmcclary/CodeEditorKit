@@ -25,8 +25,12 @@ final class AppState {
     /// `workspaceRootProvider` closure must `[weak self]`-capture
     /// `self`, which Swift's definite-init analysis forbids during a
     /// `let` field assignment. Constructed once in `init()` and never
-    /// reassigned thereafter — effectively a `let`.
-    private(set) var documents: DocumentsModel! // swiftlint:disable:this implicitly_unwrapped_optional
+    /// reassigned thereafter — effectively a `let`. Not `private(set)`
+    /// because the iOS root view's `.sheet(item: $appState.documents.X)`
+    /// bindings need to project through this property on iOS, where
+    /// strict-mode treats `IUO + private(set)` writes-through-class as
+    /// requiring the parent's setter.
+    var documents: DocumentsModel! // swiftlint:disable:this implicitly_unwrapped_optional
 
     // MARK: - Cross-cutting / un-extracted state
 

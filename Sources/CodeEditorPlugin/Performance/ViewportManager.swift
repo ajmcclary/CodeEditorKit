@@ -79,12 +79,14 @@ public final class ViewportManager: ObservableObject {
             }
             .store(in: &cancellables)
         #elseif canImport(UIKit)
-        textView.publisher(for: \.contentOffset, options: [.new])
-            .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
-            .sink { [weak self] _ in
-                self?.updateViewport()
-            }
-            .store(in: &cancellables)
+        if let textView {
+            textView.publisher(for: \.contentOffset, options: [.new])
+                .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
+                .sink { [weak self] _ in
+                    self?.updateViewport()
+                }
+                .store(in: &cancellables)
+        }
 
         NotificationCenter.default.publisher(for: UITextView.textDidChangeNotification)
             .compactMap { [weak self] _ in self?.textView }

@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorPlugin
 import Foundation
 
@@ -25,4 +24,3 @@ enum BuiltInLanguageProviders {
         curatedLanguages.compactMap { LanguageProviderFactory.createProvider(for: $0) }
     }
 }
-#endif

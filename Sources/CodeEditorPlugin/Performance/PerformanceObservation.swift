@@ -103,13 +103,13 @@ public final class PerformanceObservation {
         refreshTaskSpawnCount += 1
         refreshTask = Task { [weak self] in
             while !Task.isCancelled {
-                guard let interval = await self?.refreshInterval else { return }
+                guard let interval = self?.refreshInterval else { return }
                 do {
                     try await Task.sleep(for: interval)
                 } catch {
                     return
                 }
-                await self?.refresh()
+                self?.refresh()
             }
         }
     }

@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorPlugin
 import Foundation
 
@@ -69,4 +68,3 @@ final class DemoCompletionProvider: CompletionProvider {
         return CompletionResult(items: ranked, context: context)
     }
 }
-#endif

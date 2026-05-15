@@ -36,7 +36,7 @@ public final class FrameRateMonitor {
         #if canImport(AppKit)
         link = NSScreen.main?.displayLink(target: bridge, selector: #selector(DisplayLinkBridge.tick(_:)))
         #elseif canImport(UIKit)
-        link = UIScreen.main.displayLink(target: bridge, selector: #selector(DisplayLinkBridge.tick(_:)))
+        link = UIScreen.main.displayLink(withTarget: bridge, selector: #selector(DisplayLinkBridge.tick(_:)))
         #else
         link = nil
         #endif

@@ -165,7 +165,11 @@ struct PerformanceInspectorPanel: View {
             Button(action: onShowReport) {
                 Text("Report ›").font(.caption)
             }
+            #if canImport(AppKit)
             .buttonStyle(.link)
+            #else
+            .buttonStyle(.borderless)
+            #endif
         }
         .padding(.top, 4)
     }
