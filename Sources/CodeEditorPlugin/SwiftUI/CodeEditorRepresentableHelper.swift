@@ -68,7 +68,8 @@ enum CodeEditorRepresentableHelper {
             configuration: parameters.configuration,
             runtimeDependencies: parameters.runtimeDependencies,
             onTextChange: parameters.onTextChange,
-            onSelectionChange: parameters.onSelectionChange
+            onSelectionChange: parameters.onSelectionChange,
+            swiftUICompletionProvider: parameters.swiftUICompletionProvider
         )
         coordinator.applyInteractionState(to: container.textView)
 
@@ -104,7 +105,8 @@ enum CodeEditorRepresentableHelper {
             language: parameters.language,
             theme: parameters.theme,
             configuration: parameters.configuration,
-            runtimeDependencies: parameters.runtimeDependencies
+            runtimeDependencies: parameters.runtimeDependencies,
+            swiftUICompletionProvider: parameters.swiftUICompletionProvider
         )
         coordinator.applyInteractionState(to: container.textView)
 

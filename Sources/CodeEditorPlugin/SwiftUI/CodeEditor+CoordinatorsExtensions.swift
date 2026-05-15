@@ -332,7 +332,8 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         configuration: EditorConfiguration,
         runtimeDependencies: EditorRuntimeDependencies,
         onTextChange: ((String) -> Void)? = nil,
-        onSelectionChange: ((NSRange) -> Void)? = nil
+        onSelectionChange: ((NSRange) -> Void)? = nil,
+        swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])? = nil
     ) {
         // Store callbacks
         self.onTextChange = onTextChange
@@ -366,6 +367,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Update internal state
         updateState(text: text, language: language, configuration: configuration)
 
+        // Reconcile the .codeCompletion modifier closure against the
+        // text view's completion manager. First-call path; subsequent
+        // updates flow through `updateContainer`.
+        syncModifierProvider(on: textView.completionManager, closure: swiftUICompletionProvider)
+
         // Force initial layout
         platformAdapter.invalidateLayoutAndDisplay(for: textView)
     }
@@ -377,8 +383,14 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         language: Language,
         theme _: Theme,
         configuration: EditorConfiguration,
-        runtimeDependencies: EditorRuntimeDependencies
+        runtimeDependencies: EditorRuntimeDependencies,
+        swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])? = nil
     ) {
+        // Reconcile the modifier closure *before* the shouldUpdate guard:
+        // a host may swap the closure without changing text/language/config,
+        // and we still need the new closure to land in the adapter slot.
+        syncModifierProvider(on: container.textView.completionManager, closure: swiftUICompletionProvider)
+
         // Check if we need to update
         guard shouldUpdate(text: text, language: language, configuration: configuration) else {
             return
