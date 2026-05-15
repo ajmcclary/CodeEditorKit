@@ -1,5 +1,3 @@
-#if canImport(AppKit)
-import AppKit
 import CodeEditorPlugin
 import Foundation
 import Observation
@@ -152,4 +150,3 @@ final class CompletionSampleCoordinator {
         snapshot.avgProcessingMs = (stats?.averageProcessingTime ?? 0) * 1_000
     }
 }
-#endif

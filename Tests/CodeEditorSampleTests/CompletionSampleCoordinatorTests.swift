@@ -1,5 +1,3 @@
-#if canImport(AppKit)
-import AppKit
 @testable import CodeEditorPlugin
 @testable import CodeEditorSample
 import Foundation
@@ -103,4 +101,3 @@ struct CompletionSampleCoordinatorTests {
         coordinator.fireAtCursor()      // must not crash, even with empty buffer
     }
 }
-#endif
