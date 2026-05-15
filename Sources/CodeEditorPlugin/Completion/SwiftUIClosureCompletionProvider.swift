@@ -66,7 +66,7 @@ internal final class SwiftUIClosureCompletionProvider: CompletionProvider {
 
 // MARK: - SwiftUICompletionItem → CompletionItemModel
 
-private extension CompletionItemModel {
+extension CompletionItemModel {
     /// Translates a `SwiftUICompletionItem` (the modifier API's surface
     /// type) into the framework's richer `CompletionItemModel`. Lives
     /// here so the conversion table sits next to the adapter that uses
@@ -82,7 +82,7 @@ private extension CompletionItemModel {
     }
 }
 
-private extension CompletionItemKind {
+extension CompletionItemKind {
     init(swiftUI kind: CompletionKind) {
         switch kind {
         case .keyword:   self = .keyword
