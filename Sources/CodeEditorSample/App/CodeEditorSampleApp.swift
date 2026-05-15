@@ -32,6 +32,13 @@ struct CodeEditorSampleApp: App {
                 }
                 .keyboardShortcut("t", modifiers: .command)
 
+                Button("Open Folder…") {
+                    WorkspacePicker.choose(currentRoot: appState.workspaceRoot) {
+                        appState.workspaceRoot = $0
+                    }
+                }
+                .keyboardShortcut("o", modifiers: .command)
+
                 Button("Close Tab") {
                     if let id = appState.documents.activeID {
                         appState.documents.close(id)
