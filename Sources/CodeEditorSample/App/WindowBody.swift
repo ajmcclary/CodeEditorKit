@@ -36,10 +36,10 @@ struct WindowBody: View {
             }
         }
         .sheet(isPresented: $appState.gotoLineSheetVisible) {
-            GotoLineSheet(controller: appState.editorController)
+            GotoLineSheet(controller: appState.documents.editorController)
         }
         .sheet(isPresented: $appState.gotoSymbolSheetVisible) {
-            GotoSymbolSheet(controller: appState.editorController)
+            GotoSymbolSheet(controller: appState.documents.editorController)
         }
     }
 
@@ -52,19 +52,19 @@ struct WindowBody: View {
 
     @ViewBuilder
     private var editorPane: some View {
-        if appState.documents.active != nil {
+        if appState.documents.store.active != nil {
             CodeEditor()
-                .editorController(appState.editorController)
+                .editorController(appState.documents.editorController)
                 .onTextChange { newText in
                     MainActor.assumeIsolated {
                         #if canImport(AppKit)
-                        if let activeID = appState.documents.activeID {
+                        if let activeID = appState.documents.store.activeID {
                             appState.lsp.handleTextChange(id: activeID, newText: newText)
                         }
                         #endif
                     }
                 }
-                .activeDocument(in: appState.documents)
+                .activeDocument(in: appState.documents.store)
                 .codeWorkspaceRoot(appState.workspaceRoot)
                 .environment(\.codeEditorConfiguration, appState.configuration.current)
                 .lineNumbers(appState.configuration.current.display.isLineNumbersEnabled)
@@ -73,13 +73,13 @@ struct WindowBody: View {
                 .eventSystem(appState.eventSystem)
                 #if canImport(AppKit)
                 .onTextHover { position in
-                    if let activeID = await appState.documents.activeID {
+                    if let activeID = await appState.documents.store.activeID {
                         await appState.lsp.handleHover(at: position, in: activeID)
                     }
                 }
                 .onCommandClick { position in
                     Task { @MainActor in
-                        if let activeID = appState.documents.activeID {
+                        if let activeID = appState.documents.store.activeID {
                             await appState.lsp.jumpToDefinition(at: position, in: activeID)
                         }
                     }
@@ -122,8 +122,8 @@ struct WindowBody: View {
                 .safeAreaInset(edge: .top, spacing: 0) {
                     overlay
                 }
-                .task(id: appState.findReplace.searchRequest(activeDocumentID: appState.documents.activeID)) {
-                    await appState.findReplace.runDebouncedSearch(controller: appState.editorController)
+                .task(id: appState.findReplace.searchRequest(activeDocumentID: appState.documents.store.activeID)) {
+                    await appState.findReplace.runDebouncedSearch(controller: appState.documents.editorController)
                 }
         }
 
@@ -132,7 +132,7 @@ struct WindowBody: View {
             if appState.findReplace.isOverlayVisible {
                 FindReplaceOverlay(
                     model: appState.findReplace,
-                    controller: appState.editorController,
+                    controller: appState.documents.editorController,
                     isReadOnly: !appState.configuration.current.behavior.isEditable
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
@@ -147,16 +147,16 @@ struct WindowBody: View {
             content
                 .onChange(of: appState.findReplace.isOverlayVisible) { _, isVisible in
                     if !isVisible {
-                        appState.editorController.clearSearch()
+                        appState.documents.editorController.clearSearch()
                     }
                 }
-                .onChange(of: appState.documents.activeID) { _, _ in
+                .onChange(of: appState.documents.store.activeID) { _, _ in
                     clearAndBump()
                 }
-                .onChange(of: appState.documents.active?.text) { _, _ in
+                .onChange(of: appState.documents.store.active?.text) { _, _ in
                     clearAndBump()
                 }
-                .onChange(of: appState.documents.active?.language) { _, _ in
+                .onChange(of: appState.documents.store.active?.language) { _, _ in
                     clearAndBump()
                 }
                 .onChange(of: appState.theme.current.id) { _, _ in
@@ -165,7 +165,7 @@ struct WindowBody: View {
         }
 
         private func clearAndBump() {
-            appState.editorController.clearSearch()
+            appState.documents.editorController.clearSearch()
             appState.findReplace.markDocumentEdited()
         }
     }

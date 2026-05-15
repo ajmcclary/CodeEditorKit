@@ -15,7 +15,7 @@ struct RootWindow: View {
     @State private var inspectorVisible: Bool = true
 
     var body: some View {
-        @Bindable var documents = appState.documents
+        @Bindable var documents = appState.documents.store
         let (items, dispatch) = CommandPaletteCatalog.build(
             appState: appState,
             workspaceVisible: $workspaceVisible,

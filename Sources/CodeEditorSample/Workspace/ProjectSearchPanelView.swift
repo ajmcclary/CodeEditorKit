@@ -161,8 +161,8 @@ struct ProjectSearchPanelView: View {
     }
 
     private func openResult(_ hit: ProjectSearchResult) {
-        appState.documents.openFile(url: hit.fileURL)
-        appState.editorController.selectMatch(hit)
+        appState.documents.store.openFile(url: hit.fileURL)
+        appState.documents.editorController.selectMatch(hit)
     }
 
     // MARK: - Debounce

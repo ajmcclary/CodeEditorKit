@@ -27,8 +27,8 @@ enum CommandPaletteCatalog {
             // "Language: X" preserves the buffer — switches highlighter only.
             let setLanguage = CommandPaletteItem(title: "Language: \(language.name)", kind: .setting)
             actions[setLanguage.id] = {
-                guard let id = appState.documents.activeID else { return }
-                appState.documents.setLanguageRenaming(language, of: id)
+                guard let id = appState.documents.store.activeID else { return }
+                appState.documents.store.setLanguageRenaming(language, of: id)
             }
             items.append(setLanguage)
 
@@ -36,8 +36,8 @@ enum CommandPaletteCatalog {
             // canonical demo snippet for that language.
             let resetSample = CommandPaletteItem(title: "Sample: \(language.name)", kind: .setting)
             actions[resetSample.id] = {
-                guard let id = appState.documents.activeID else { return }
-                appState.documents.resetToSample(language, of: id)
+                guard let id = appState.documents.store.activeID else { return }
+                appState.documents.store.resetToSample(language, of: id)
             }
             items.append(resetSample)
         }
@@ -83,17 +83,17 @@ enum CommandPaletteCatalog {
         appState: AppState
     ) {
         let newTab = CommandPaletteItem(title: "New Tab", kind: .action, shortcut: "⌘T")
-        actions[newTab.id] = { appState.documents.newTab() }
+        actions[newTab.id] = { appState.documents.store.newTab() }
         items.append(newTab)
 
         let closeTab = CommandPaletteItem(title: "Close Tab", kind: .action, shortcut: "⌘W")
         actions[closeTab.id] = {
-            if let id = appState.documents.activeID { appState.documents.close(id) }
+            if let id = appState.documents.store.activeID { appState.documents.store.close(id) }
         }
         items.append(closeTab)
 
         let closeAll = CommandPaletteItem(title: "Close All Tabs", kind: .action)
-        actions[closeAll.id] = { appState.documents.closeAll() }
+        actions[closeAll.id] = { appState.documents.store.closeAll() }
         items.append(closeAll)
     }
 
@@ -130,13 +130,13 @@ enum CommandPaletteCatalog {
 
         let findNext = CommandPaletteItem(title: "Find Next", kind: .action)
         actions[findNext.id] = {
-            appState.findReplace.findNext(controller: appState.editorController)
+            appState.findReplace.findNext(controller: appState.documents.editorController)
         }
         items.append(findNext)
 
         let findPrev = CommandPaletteItem(title: "Find Previous", kind: .action)
         actions[findPrev.id] = {
-            appState.findReplace.findPrevious(controller: appState.editorController)
+            appState.findReplace.findPrevious(controller: appState.documents.editorController)
         }
         items.append(findPrev)
     }
@@ -153,7 +153,7 @@ enum CommandPaletteCatalog {
 
         let gotoSymbol = CommandPaletteItem(title: "Go to Symbol…", kind: .action, shortcut: "⌘⇧O")
         actions[gotoSymbol.id] = {
-            appState.editorController.refreshSymbols()
+            appState.documents.editorController.refreshSymbols()
             appState.gotoSymbolSheetVisible = true
         }
         items.append(gotoSymbol)
@@ -166,17 +166,17 @@ enum CommandPaletteCatalog {
         appState: AppState
     ) {
         let foldAll = CommandPaletteItem(title: "Fold All", kind: .action)
-        actions[foldAll.id] = { appState.editorController.foldAll() }
+        actions[foldAll.id] = { appState.documents.editorController.foldAll() }
         items.append(foldAll)
 
         let unfoldAll = CommandPaletteItem(title: "Unfold All", kind: .action)
-        actions[unfoldAll.id] = { appState.editorController.unfoldAll() }
+        actions[unfoldAll.id] = { appState.documents.editorController.unfoldAll() }
         items.append(unfoldAll)
 
         let toggleFold = CommandPaletteItem(title: "Toggle Fold at Cursor", kind: .action)
         actions[toggleFold.id] = {
-            if let line = appState.editorController.currentLineNumber {
-                appState.editorController.toggleFold(atLine: line)
+            if let line = appState.documents.editorController.currentLineNumber {
+                appState.documents.editorController.toggleFold(atLine: line)
             }
         }
         items.append(toggleFold)
@@ -202,7 +202,7 @@ enum CommandPaletteCatalog {
 
         let toggleBp = CommandPaletteItem(title: "Toggle Breakpoint at Cursor", kind: .action)
         actions[toggleBp.id] = {
-            if let line = appState.editorController.currentLineNumber {
+            if let line = appState.documents.editorController.currentLineNumber {
                 appState.annotationsHub.toggleBreakpoint(at: line)
             }
         }
@@ -215,7 +215,7 @@ enum CommandPaletteCatalog {
 
     @MainActor
     private static func addAnnotation(_ kind: AnnotationKind, appState: AppState) {
-        guard let line = appState.editorController.currentLineNumber else { return }
+        guard let line = appState.documents.editorController.currentLineNumber else { return }
         appState.annotationsHub.addDemoAnnotation(kind: kind, at: line)
     }
 }

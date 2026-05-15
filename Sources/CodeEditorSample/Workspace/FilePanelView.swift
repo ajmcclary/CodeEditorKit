@@ -109,7 +109,7 @@ struct FilePanelView: View {
             Task { await model.toggleExpanded(node.url) }
         } else {
             model.selectedFileURL = node.url
-            appState.documents.openFile(url: node.url)
+            appState.documents.store.openFile(url: node.url)
         }
     }
 

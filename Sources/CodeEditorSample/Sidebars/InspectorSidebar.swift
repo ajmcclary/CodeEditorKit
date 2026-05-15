@@ -29,7 +29,7 @@ struct InspectorSidebar: View {
                 completionPanel
                 AnnotationsInspectorPanel(
                     hub: appState.annotationsHub,
-                    controller: appState.editorController
+                    controller: appState.documents.editorController
                 )
                 eventLogPanel
                 Text(rendered)
@@ -48,7 +48,7 @@ struct InspectorSidebar: View {
             counts: appState.lsp.diagnosticCounts,
             serverPath: appState.lsp.resolvedServerPath,
             lastError: appState.lsp.lastError,
-            isSwiftActive: appState.documents.active?.language == .swift,
+            isSwiftActive: appState.documents.store.active?.language == .swift,
             onToggle: handleToggle
         )
     }
@@ -150,7 +150,7 @@ struct InspectorSidebar: View {
                 await appState.lsp.start(workspaceRoot: appState.workspaceRoot)
                 // Open every Swift tab into the freshly started session.
                 if case .running = appState.lsp.state {
-                    for doc in appState.documents.documents where doc.language == .swift {
+                    for doc in appState.documents.store.documents where doc.language == .swift {
                         await appState.lsp.openTab(id: doc.id, text: doc.text, language: .swift)
                     }
                 }

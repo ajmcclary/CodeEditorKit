@@ -26,7 +26,7 @@ final class AppState {
     /// `self`, which Swift's definite-init analysis forbids during a
     /// `let` field assignment. Constructed once in `init()` and never
     /// reassigned thereafter — effectively a `let`.
-    private(set) var documents: DocumentsModel!
+    private(set) var documents: DocumentsModel! // swiftlint:disable:this implicitly_unwrapped_optional
 
     // MARK: - Cross-cutting / un-extracted state
 
@@ -51,7 +51,7 @@ final class AppState {
     /// definite-init analysis rejects `self.documents` access before
     /// all `let` properties are set, so both are written via `var`s.
     /// Set once in `init()` and never reassigned.
-    private(set) var annotationsHub: AnnotationsHub!
+    private(set) var annotationsHub: AnnotationsHub! // swiftlint:disable:this implicitly_unwrapped_optional
 
     /// Shared `UnifiedEventSystem` for the sample. Wired into the
     /// editor view via `.eventSystem(_:)` in both `WindowBody` (macOS)
@@ -97,23 +97,21 @@ final class AppState {
     /// same reason as `documents` — coordinator wiring closures must
     /// `[weak self]` capture, which the DI analyzer rejects during
     /// `let` field initialization. Set once in `init()`.
-    private(set) var lsp: LSPSampleCoordinator!
+    private(set) var lsp: LSPSampleCoordinator! // swiftlint:disable:this implicitly_unwrapped_optional
 
     /// Sample-side Performance Inspector coordinator. macOS-only.
     /// IUO; see `lsp` above.
-    private(set) var performance: PerformanceSampleCoordinator!
+    private(set) var performance: PerformanceSampleCoordinator! // swiftlint:disable:this implicitly_unwrapped_optional
 
     /// Sample-side Completion Inspector coordinator. macOS-only.
     /// IUO; see `lsp` above.
-    private(set) var completion: CompletionSampleCoordinator!
+    private(set) var completion: CompletionSampleCoordinator! // swiftlint:disable:this implicitly_unwrapped_optional
     #endif
 
     init() {
         // DocumentsModel needs workspaceRoot for save/open default
         // directories. Weak self so the model never retains AppState.
-        self.documents = DocumentsModel(
-            workspaceRootProvider: { [weak self] in self?.workspaceRoot }
-        )
+        self.documents = DocumentsModel { [weak self] in self?.workspaceRoot }
 
         let hub = AnnotationsHub()
         self.annotationsHub = hub

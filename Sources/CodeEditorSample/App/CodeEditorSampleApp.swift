@@ -28,7 +28,7 @@ struct CodeEditorSampleApp: App {
             // reachable from the menu bar and via cmd-key chords.
             CommandGroup(after: .newItem) {
                 Button("New Tab") {
-                    appState.documents.newTab()
+                    appState.documents.store.newTab()
                 }
                 .keyboardShortcut("t", modifiers: .command)
 
@@ -40,13 +40,13 @@ struct CodeEditorSampleApp: App {
                 .keyboardShortcut("o", modifiers: .command)
 
                 Button("Open File…") {
-                    appState.requestOpenFile()
+                    appState.documents.requestOpenFile()
                 }
                 .keyboardShortcut("o", modifiers: [.command, .shift])
 
                 Button("Close Tab") {
-                    if let id = appState.documents.activeID {
-                        appState.documents.close(id)
+                    if let id = appState.documents.store.activeID {
+                        appState.documents.store.close(id)
                     }
                 }
                 .keyboardShortcut("w", modifiers: .command)
@@ -55,7 +55,7 @@ struct CodeEditorSampleApp: App {
                 // tabs (no URL), requestSave transparently chains to requestSaveAs
                 // so the user sees the NSSavePanel instead of a silent log entry.
                 Button("Save") {
-                    appState.requestSave()
+                    appState.documents.requestSave()
                 }
                 .keyboardShortcut("s", modifiers: .command)
 
@@ -63,7 +63,7 @@ struct CodeEditorSampleApp: App {
                 // the active document rebinds (url, name, language, isDirty all
                 // update). The previous on-disk file (if any) is left untouched.
                 Button("Save As…") {
-                    appState.requestSaveAs()
+                    appState.documents.requestSaveAs()
                 }
                 .keyboardShortcut("s", modifiers: [.command, .shift])
             }
@@ -80,7 +80,7 @@ struct CodeEditorSampleApp: App {
                 .keyboardShortcut("l", modifiers: .command)
 
                 Button("Go to Symbol…") {
-                    appState.editorController.refreshSymbols()
+                    appState.documents.editorController.refreshSymbols()
                     appState.gotoSymbolSheetVisible = true
                 }
                 .keyboardShortcut("o", modifiers: [.command, .control])

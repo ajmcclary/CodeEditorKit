@@ -20,27 +20,27 @@ struct IOSRootView: View {
         } detail: {
             detail(for: selectedSection)
                 .navigationTitle(title(for: selectedSection))
-                .toolbar { toolbar(documents: appState.documents) }
+                .toolbar { toolbar(documents: appState.documents.store) }
         }
         .codeTheme(appState.theme.current)
         .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
-        .sheet(item: $appState.pendingSaveAs) { state in
+        .sheet(item: $appState.documents.pendingSaveAs) { state in
             ExportDocumentSheet(
                 temporaryURL: state.temporaryURL,
                 onPick: { url in
-                    appState.finalizeSaveAs(to: url)
-                    appState.pendingSaveAs = nil
+                    appState.documents.finalizeSaveAs(to: url)
+                    appState.documents.pendingSaveAs = nil
                 },
-                onCancel: { appState.pendingSaveAs = nil }
+                onCancel: { appState.documents.pendingSaveAs = nil }
             )
         }
-        .sheet(isPresented: $appState.pendingOpenFile) {
+        .sheet(isPresented: $appState.documents.pendingOpenFile) {
             ImportDocumentSheet(
                 onPick: { url in
-                    appState.documents.openFile(url: url)
-                    appState.pendingOpenFile = false
+                    appState.documents.store.openFile(url: url)
+                    appState.documents.pendingOpenFile = false
                 },
-                onCancel: { appState.pendingOpenFile = false }
+                onCancel: { appState.documents.pendingOpenFile = false }
             )
         }
     }
@@ -83,7 +83,7 @@ struct IOSRootView: View {
     private func title(for section: IOSSidebarSection) -> String {
         switch section {
         case .editor:
-            return appState.documents.active?.name ?? "Editor"
+            return appState.documents.store.active?.name ?? "Editor"
 
         case .settings:
             return "Editor Settings"
@@ -152,10 +152,10 @@ struct IOSRootView: View {
 
     @ViewBuilder
     private var editor: some View {
-        if appState.documents.active != nil {
+        if appState.documents.store.active != nil {
             CodeEditor()
-                .editorController(appState.editorController)
-                .activeDocument(in: appState.documents)
+                .editorController(appState.documents.editorController)
+                .activeDocument(in: appState.documents.store)
                 .environment(\.codeEditorConfiguration, appState.configuration.current)
                 .codeTheme(appState.theme.current)
                 .codeWorkspaceRoot(appState.workspaceRoot)
@@ -202,15 +202,15 @@ struct IOSRootView: View {
 
     @ViewBuilder
     private var languagePanel: some View {
-        if let activeID = appState.documents.activeID {
+        if let activeID = appState.documents.store.activeID {
             List {
                 ForEach(LanguageCatalog.all, id: \.self) { language in
                     Button {
-                        appState.documents.setLanguageRenaming(language, of: activeID)
+                        appState.documents.store.setLanguageRenaming(language, of: activeID)
                     } label: {
                         Label(
                             language.name,
-                            systemImage: language == appState.documents.active?.language ? "checkmark.circle.fill" : "circle"
+                            systemImage: language == appState.documents.store.active?.language ? "checkmark.circle.fill" : "circle"
                         )
                     }
                 }
@@ -228,16 +228,16 @@ struct IOSRootView: View {
     private func toolbar(documents: EditorDocuments) -> some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                Button("Save", action: appState.requestSave)
+                Button("Save", action: appState.documents.requestSave)
                     .keyboardShortcut("s", modifiers: .command)
-                    .disabled(appState.documents.active == nil)
-                Button("Save As…", action: appState.requestSaveAs)
+                    .disabled(appState.documents.store.active == nil)
+                Button("Save As…", action: appState.documents.requestSaveAs)
                     .keyboardShortcut("s", modifiers: [.command, .shift])
-                    .disabled(appState.documents.active == nil)
+                    .disabled(appState.documents.store.active == nil)
                 Divider()
                 Button("New Tab") { documents.newTab() }
                     .keyboardShortcut("t", modifiers: .command)
-                Button("Open File…", action: appState.requestOpenFile)
+                Button("Open File…", action: appState.documents.requestOpenFile)
                     .keyboardShortcut("o", modifiers: [.command, .shift])
             } label: {
                 Label("File", systemImage: "doc")

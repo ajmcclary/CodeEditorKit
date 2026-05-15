@@ -105,7 +105,7 @@ struct SettingsScene: View {
             SwitcherSection(
                 theme: appState.theme,
                 configuration: appState.configuration,
-                documents: appState.documents
+                documents: appState.documents.store
             )
             .padding(.top, 4)
         }

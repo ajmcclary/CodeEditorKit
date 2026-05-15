@@ -57,7 +57,7 @@ struct AnnotationsKnobsSection: View {
     }
 
     private func addAnnotation(_ kind: AnnotationKind) {
-        guard let line = appState.editorController.currentLineNumber else { return }
+        guard let line = appState.documents.editorController.currentLineNumber else { return }
         appState.annotationsHub.addDemoAnnotation(kind: kind, at: line)
     }
 }

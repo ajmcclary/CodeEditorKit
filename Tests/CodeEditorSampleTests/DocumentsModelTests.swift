@@ -6,7 +6,7 @@ import XCTest
 @MainActor
 final class DocumentsModelTests: XCTestCase {
     func testAttachAnnotationsInstallsDataSourceAfterControllerAttaches() {
-        let model = DocumentsModel(workspaceRootProvider: { nil })
+        let model = DocumentsModel { nil }
         let hub = AnnotationsHub()
 
         model.attachAnnotations(hub)
@@ -32,7 +32,7 @@ final class DocumentsModelTests: XCTestCase {
     }
 
     func testHandleSaveOutcomeAcceptsAllCases() {
-        let model = DocumentsModel(workspaceRootProvider: { nil })
+        let model = DocumentsModel { nil }
         model.handleSaveOutcome(.saved(url: URL(fileURLWithPath: "/tmp/x")))
         model.handleSaveOutcome(.untitled)
         model.handleSaveOutcome(.noTab)
