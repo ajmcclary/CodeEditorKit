@@ -265,6 +265,29 @@ public final class EditorController {
         return count
     }
 
+    /// Replace the currently active match with `replacement` and advance
+    /// to the next match. Returns true if a replacement happened. No-op
+    /// when there is no current match. Compensates for the engine's
+    /// existing index-decrement after `replace(at:with:)` so the UX
+    /// matches Xcode / VS Code "replace then advance".
+    @discardableResult
+    public func replaceCurrent(with replacement: String) -> Bool {
+        guard let view = codeEditorView else { return false }
+        let engine = view.searchEngine
+        let index = engine.currentSearchIndex
+        guard engine.currentSearchResults.indices.contains(index) else { return false }
+
+        let didReplace = engine.replace(at: index, with: replacement)
+        guard didReplace else { return false }
+
+        if !engine.currentSearchResults.isEmpty {
+            _ = engine.findNext(from: nil)
+        }
+        matchCount = engine.currentSearchResults.count
+        currentMatchIndex = engine.currentSearchIndex
+        return true
+    }
+
     /// Reset cached search state AND clear in-editor match highlights.
     public func clearSearch() {
         matchCount = 0

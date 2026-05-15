@@ -201,6 +201,42 @@ final class FeatureBehaviorTests: CleanupTestCase {
         )
     }
 
+    func testReplaceCurrentAdvancesToNextMatch() async {
+        let editor = createCodeEditorView()
+        editor.text = "alpha beta alpha gamma alpha"
+
+        var options = SearchOptions()
+        options.flashResult = false
+
+        let controller = EditorController()
+        controller.attach(to: editor)
+        _ = await controller.find("alpha", options: options)
+        XCTAssertEqual(controller.matchCount, 3)
+        XCTAssertEqual(controller.currentMatchIndex, 0)
+
+        _ = controller.findNext()
+        XCTAssertEqual(controller.currentMatchIndex, 1)
+
+        let replaced = controller.replaceCurrent(with: "OMEGA")
+        XCTAssertTrue(replaced)
+        XCTAssertEqual(controller.matchCount, 2, "one match consumed")
+
+        let resultText = editor.text ?? ""
+        XCTAssertEqual(resultText, "alpha beta OMEGA gamma alpha")
+    }
+
+    func testReplaceCurrentNoOpWhenNoMatches() async {
+        let editor = createCodeEditorView()
+        editor.text = "no matches here"
+
+        let controller = EditorController()
+        controller.attach(to: editor)
+
+        let replaced = controller.replaceCurrent(with: "anything")
+        XCTAssertFalse(replaced)
+        XCTAssertEqual(editor.text, "no matches here")
+    }
+
     func testClearSearchAlsoClearsHighlights() async throws {
         let editor = createCodeEditorView()
         editor.text = "alpha beta alpha"
