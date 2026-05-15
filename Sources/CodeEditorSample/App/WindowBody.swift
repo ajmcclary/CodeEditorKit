@@ -61,6 +61,7 @@ struct WindowBody: View {
                 .lineNumbers(appState.configuration.display.isLineNumbersEnabled)
                 .becomeFirstResponder()
                 .performanceObserver(appState.performanceObservation)
+                .eventSystem(appState.eventSystem)
                 #if canImport(AppKit)
                 .onTextHover { position in
                     if let activeID = await appState.documents.activeID {

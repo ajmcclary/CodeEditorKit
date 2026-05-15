@@ -31,6 +31,7 @@ struct InspectorSidebar: View {
                     hub: appState.annotationsHub,
                     controller: appState.editorController
                 )
+                eventLogPanel
                 Text(rendered)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(Color(tokens: theme.style.text.base))
@@ -89,6 +90,20 @@ struct InspectorSidebar: View {
             }
             .frame(minWidth: 520, minHeight: 540)
         }
+    }
+
+    private var eventLogPanel: some View {
+        EventLogPanel(
+            entries: appState.eventLog.snapshot.entries,
+            totals: appState.eventLog.snapshot.totals,
+            mutedCategories: appState.eventLog.mutedCategories,
+            paused: appState.eventLog.paused,
+            onToggleCategory: { category in
+                appState.eventLog.setMuted(category, !appState.eventLog.mutedCategories.contains(category))
+            },
+            onTogglePause: { appState.eventLog.setPaused(!appState.eventLog.paused) },
+            onClear: { appState.eventLog.clear() }
+        )
     }
 
     private var completionPanel: some View {

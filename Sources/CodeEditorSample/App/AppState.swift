@@ -46,6 +46,17 @@ final class AppState {
     /// `CodeEditorView.annotationsDataSource` is `weak`.
     let annotationsHub: AnnotationsHub
 
+    /// Shared `UnifiedEventSystem` for the sample. Wired into the editor view
+    /// via `.eventSystem(_:)` in both `WindowBody` (macOS) and `IOSRootView`
+    /// (iOS). The framework's `CodeEditorView.publishEvent(_:)` fans events
+    /// into this instance.
+    let eventSystem = UnifiedEventSystem()
+
+    /// Cross-platform EventLog coordinator. Subscribes to `eventSystem` for
+    /// framework-emitted EditorEvents and to `editorController.completionEvents()`
+    /// for completion activity.
+    let eventLog = EventLogSampleCoordinator()
+
     /// Whether the find/replace overlay is pinned to the top of the
     /// editor pane.
     var findOverlayVisible: Bool = false
@@ -154,6 +165,11 @@ final class AppState {
 
         completionCoordinator.attach(controller: editorController)
         #endif
+
+        // EventLog coordinator wiring. Cross-platform — wires the shared
+        // UnifiedEventSystem and the controller's completionEvents() into the
+        // unified ring buffer that `EventLogPanel` renders.
+        eventLog.attach(controller: editorController, eventSystem: eventSystem)
     }
 
     /// Logs the result of a `DocumentStore.save(_:)` call so the user sees
