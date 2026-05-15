@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorDesignTokens
 import CodeEditorPlugin
 import SwiftUI
@@ -14,9 +13,9 @@ import SwiftUI
 ///   header used by the sample's settings sidebar. May be paired with
 ///   an inline reset action via `onReset`.
 ///
-/// Available on macOS. Absent on iOS — sidebars on
-/// iPad have a different navigation idiom and aren't covered by this
-/// component.
+/// Used by both platforms. Renders a glass-backed panel with optional
+/// section/prominent header, content slot, and footer slot. Pure
+/// SwiftUI — `.platformGlassSurface(.panel)` provides the chrome.
 public struct EditorSidebarShell<Header: View, Content: View, Footer: View>: View {
     @Environment(\.codeEditorTheme) private var theme
 
@@ -144,4 +143,3 @@ public struct EditorSidebarShell<Header: View, Content: View, Footer: View>: Vie
             .frame(height: 0.5)
     }
 }
-#endif
