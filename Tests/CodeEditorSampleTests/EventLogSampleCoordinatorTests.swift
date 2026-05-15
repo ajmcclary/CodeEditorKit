@@ -28,5 +28,56 @@ struct EventLogSampleCoordinatorTests {
         #expect(coordinator.snapshot.ringCount == 2)
         #expect(coordinator.snapshot.totals[.text] == 2)
     }
+
+    @Test("ring caps at 200 entries, oldest dropped")
+    func ringCapsAt200() {
+        let coordinator = EventLogSampleCoordinator()
+        for index in 0..<250 {
+            coordinator.append(.text(summary: "e\(index)", timestamp: Date(timeIntervalSince1970: TimeInterval(index))))
+        }
+        #expect(coordinator.snapshot.ringCount == 200)
+        // Newest-first: first visible entry should be the very last one we appended.
+        #expect(coordinator.snapshot.entries.first?.summary == "e249")
+        // Oldest 50 should have been dropped.
+        #expect(coordinator.snapshot.entries.contains { $0.summary == "e49" } == false)
+    }
+
+    @Test("muted category hidden from snapshot but totals still update")
+    func mutedHiddenButTotalsUpdate() {
+        let coordinator = EventLogSampleCoordinator()
+        for index in 0..<5 {
+            coordinator.append(.text(summary: "t\(index)"))
+        }
+        coordinator.setMuted(.text, true)
+        #expect(coordinator.snapshot.entries.isEmpty)
+        #expect(coordinator.snapshot.totals[.text] == 5)
+        #expect(coordinator.snapshot.ringCount == 5)
+    }
+
+    @Test("paused drops events; unpausing accepts new events")
+    func pausedDrops() {
+        let coordinator = EventLogSampleCoordinator()
+        coordinator.setPaused(true)
+        for index in 0..<10 {
+            coordinator.append(.text(summary: "p\(index)"))
+        }
+        #expect(coordinator.snapshot.ringCount == 0)
+
+        coordinator.setPaused(false)
+        coordinator.append(.text(summary: "after-resume"))
+        #expect(coordinator.snapshot.ringCount == 1)
+        #expect(coordinator.snapshot.entries.first?.summary == "after-resume")
+    }
+
+    @Test("clear empties ring and totals")
+    func clearEmptiesEverything() {
+        let coordinator = EventLogSampleCoordinator()
+        coordinator.append(.text(summary: "t"))
+        coordinator.append(.selection(summary: "s"))
+        coordinator.clear()
+        #expect(coordinator.snapshot.entries.isEmpty)
+        #expect(coordinator.snapshot.totals.isEmpty)
+        #expect(coordinator.snapshot.ringCount == 0)
+    }
 }
 #endif

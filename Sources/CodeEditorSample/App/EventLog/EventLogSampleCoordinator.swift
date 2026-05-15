@@ -112,4 +112,30 @@ final class EventLogSampleCoordinator {
             .filter { !mutedCategories.contains($0.category) }
         snapshot = Snapshot(entries: Array(filtered), totals: totals, ringCount: ring.count)
     }
+
+    // MARK: - Actions
+
+    /// Toggle whether `category` is hidden from the snapshot. Does NOT drop
+    /// events from the underlying ring — pills only filter the view.
+    func setMuted(_ category: EventCategory, _ muted: Bool) {
+        if muted {
+            mutedCategories.insert(category)
+        } else {
+            mutedCategories.remove(category)
+        }
+        publishSnapshot()
+    }
+
+    /// Pause receiving new events. Existing events stay in the ring.
+    func setPaused(_ paused: Bool) {
+        self.paused = paused
+    }
+
+    /// Empty the ring and reset all counts. Does NOT change `mutedCategories`
+    /// or `paused`.
+    func clear() {
+        ring.removeAll()
+        totals.removeAll()
+        publishSnapshot()
+    }
 }
