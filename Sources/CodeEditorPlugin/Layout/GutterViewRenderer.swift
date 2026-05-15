@@ -109,7 +109,8 @@ public class GutterViewRenderer {
             let drawingContext = LineDrawingContext(
                 font: textViewFont,
                 gutterBounds: gutterBounds,
-                textView: textView
+                textView: textView,
+                helper: helper
             )
 
             drawLineNumber(
@@ -141,6 +142,7 @@ public class GutterViewRenderer {
         let font: PlatformFont
         let gutterBounds: CGRect
         let textView: CodeEditorView
+        let helper: TextKitLineNumberHelper
     }
 
     /// Draw a single line number
@@ -151,7 +153,13 @@ public class GutterViewRenderer {
         context: LineDrawingContext
     ) {
         // Calculate Y position directly from line number and actual text layout
-        let yPosition = calculateLineNumberYPosition(lineNumber: lineNumber, lineRange: lineRange, font: context.font, textView: context.textView)
+        let yPosition = calculateLineNumberYPosition(
+            lineNumber: lineNumber,
+            lineRange: lineRange,
+            font: context.font,
+            textView: context.textView,
+            helper: context.helper
+        )
 
         let drawingPoint = CGPoint(
             x: 0, // Will be adjusted by the unified drawing method for right alignment
@@ -175,22 +183,39 @@ public class GutterViewRenderer {
         UnifiedDrawingCoordinator.restoreGraphicsState()
     }
 
-    /// Calculate the Y position for a line number using simplified AppKit-style approach
-    private func calculateLineNumberYPosition(lineNumber: Int, lineRange _: NSRange, font: PlatformFont, textView: CodeEditorView) -> CGFloat {
-        let lineIndex = max(0, lineNumber - 1)
-        guard let geometry = textView.lineGeometryStore.lineGeometry(at: lineIndex) else {
-            return CGFloat(lineIndex) * TextMetricsCalculator.calculateLineHeight(for: font)
-        }
-
-        let lineY = textView.lineGeometryStore.yPosition(forLineIndex: lineIndex)
+    /// Calculate the Y position for a line number. Uses the actual TextKit2
+    /// layout fragment frame for the line so the gutter follows the
+    /// rendered text height (which respects the paragraph style's
+    /// `lineHeightMultiple`). The `LineGeometryStore` carries unmeasured
+    /// estimates and drifts from the rendered y by ~2pt per line; relying
+    /// on it accumulated multi-line misalignment by line ~20.
+    private func calculateLineNumberYPosition(
+        lineNumber: Int,
+        lineRange: NSRange,
+        font: PlatformFont,
+        textView: CodeEditorView,
+        helper: TextKitLineNumberHelper
+    ) -> CGFloat {
         let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
 
-        #if canImport(AppKit)
-        return lineY + (geometry.effectiveHeight - fontLineHeight) / 2
-        #else
-        let textViewY = lineY + textView.textContainerInset.top
-        return textViewY - textView.contentOffset.y + (geometry.effectiveHeight - fontLineHeight) / 2
-        #endif
+        if let lineRect = helper.getLineFragmentRect(for: lineRange) {
+            #if canImport(AppKit)
+            // NSRulerView's draw context is synced to the document view's
+            // coordinate space, but `layoutFragmentFrame` is in the text
+            // container's coords — offset by `textContainerOrigin`.
+            return textView.textContainerOrigin.y + lineRect.minY
+                + (lineRect.height - fontLineHeight) / 2
+            #else
+            // iOS: gutter is a sibling view; account for inset + scroll.
+            return lineRect.minY + textView.textContainerInset.top
+                - textView.contentOffset.y
+                + (lineRect.height - fontLineHeight) / 2
+            #endif
+        }
+
+        // Fallback when TextKit2 hasn't laid out fragments yet.
+        let lineIndex = max(0, lineNumber - 1)
+        return CGFloat(lineIndex) * fontLineHeight
     }
 
     /// Draw folding control (▶️/▼ icon) for foldable lines

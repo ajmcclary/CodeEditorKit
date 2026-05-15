@@ -102,12 +102,8 @@ struct SettingsScene: View {
             AnnotationsKnobsSection(appState: appState, expansion: .always)
 
         case .theme:
-            SwitcherSection(
-                theme: appState.theme,
-                configuration: appState.configuration,
-                documents: appState.documents.store
-            )
-            .padding(.top, 4)
+            SwitcherSection(theme: appState.theme)
+                .padding(.top, 4)
         }
     }
 }

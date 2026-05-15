@@ -35,13 +35,31 @@ extension CodeEditorView {
     }
 
     /// Apply a theme to the text view. Equality-gated; updates the
-    /// selection-background attribute (macOS) or tintColor (iOS) so that
-    /// the selection rendering follows the theme's `players[0]` colors.
+    /// selection-background attribute (macOS) or tintColor (iOS), sets the
+    /// base text foreground from `style.editor.foreground` so untokenized
+    /// ranges render visibly, and stores the applied theme for downstream
+    /// consumers.
     public func apply(theme: Theme) {
         if appliedTheme == theme { return }
         appliedTheme = theme
         let cursorColor = PlatformColor(tokens: theme.style.players[0].cursor)
         let selectionColor = PlatformColor(tokens: theme.style.players[0].selection)
+        let foregroundColor = PlatformColor(tokens: theme.style.editor.foreground)
+        let backgroundColor = PlatformColor(tokens: theme.style.editor.background)
+
+        // Base text + background. Without this the text view falls back to
+        // system label/background, which goes invisible on dark themes when
+        // the editor's effective appearance disagrees with the theme's
+        // background.
+        textColor = foregroundColor
+        self.backgroundColor = backgroundColor
+
+        // Typing attributes for newly-inserted text — keeps the caret colour
+        // matched even before the syntax pass adds rendering attributes.
+        var typingAttrs = typingAttributes
+        typingAttrs[.foregroundColor] = foregroundColor
+        typingAttributes = typingAttrs
+
         #if canImport(AppKit)
         var attrs = selectedTextAttributes
         attrs[.backgroundColor] = selectionColor

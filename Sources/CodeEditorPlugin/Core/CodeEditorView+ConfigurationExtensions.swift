@@ -39,7 +39,15 @@ extension CodeEditorView {
 
         // Apply font settings
         font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        textColor = PlatformColors.label
+        // Base text colour: defer to the applied theme's editor.foreground
+        // when present so config changes don't reset the theme back to the
+        // system label colour (which goes invisible on dark themes when the
+        // window's effective appearance doesn't switch with the theme).
+        if let themeForeground = appliedTheme?.style.editor.foreground {
+            textColor = PlatformColor(tokens: themeForeground)
+        } else {
+            textColor = PlatformColors.label
+        }
 
         // Apply layout settings
         #if canImport(AppKit)

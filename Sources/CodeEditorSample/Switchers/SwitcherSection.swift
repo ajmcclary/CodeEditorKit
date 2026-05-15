@@ -1,12 +1,11 @@
 import CodeEditorPlugin
 import SwiftUI
 
-/// Single rounded card containing three switcher chips: Theme, Language,
-/// Preset. Replaces the previous trio of stacked `Picker(.menu)` blocks.
+/// Rounded card containing the Theme switcher chip. Language and preset
+/// switching are demo-only and live in the command palette (and the iOS
+/// language panel) so this Settings tab stays focused on theme selection.
 struct SwitcherSection: View {
     @Bindable var theme: ThemeModel
-    @Bindable var configuration: ConfigurationModel
-    @Bindable var documents: EditorDocuments
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,27 +15,6 @@ struct SwitcherSection: View {
                 options: ThemeCatalog.all,
                 optionLabel: { $0.name },
                 selection: themeBinding
-            )
-
-            divider
-
-            SwitcherChip(
-                icon: "chevron.left.forwardslash.chevron.right",
-                label: "Language",
-                options: LanguageCatalog.all,
-                optionLabel: { $0.name },
-                selection: languageBinding,
-                disabled: documents.activeID == nil
-            )
-
-            divider
-
-            SwitcherChip(
-                icon: "slider.horizontal.3",
-                label: "Preset",
-                options: PresetCatalog.all,
-                optionLabel: { $0.name },
-                selection: presetBinding
             )
         }
         .background(
@@ -51,45 +29,12 @@ struct SwitcherSection: View {
         .padding(.top, 12)
     }
 
-    private var divider: some View {
-        Rectangle()
-            .fill(Color(tokens: theme.current.style.borders.variant))
-            .frame(height: 0.5)
-            .padding(.horizontal, 12)
-    }
-
     // MARK: - Bindings
 
     private var themeBinding: Binding<Theme> {
         Binding(
             get: { theme.current },
             set: { newValue in theme.current = ThemeCatalog.theme(named: newValue.name) }
-        )
-    }
-
-    private var languageBinding: Binding<Language> {
-        Binding(
-            get: { documents.active?.language ?? LanguageCatalog.default },
-            set: { newValue in
-                guard let id = documents.activeID else { return }
-                documents.setLanguageRenaming(newValue, of: id)
-            }
-        )
-    }
-
-    private var presetBinding: Binding<ConfigurationPreset> {
-        Binding(
-            get: {
-                PresetCatalog.all.first { $0.configuration == configuration.current }
-                    ?? PresetCatalog.default
-            },
-            set: { newValue in
-                // Non-destructive apply: keep the user's tuned performance
-                // section; pull display/behavior/layout from the preset.
-                // Pair with the palette "Reset to preset" entry for the
-                // wholesale-replace variant.
-                configuration.current = PresetCatalog.apply(newValue, onto: configuration.current)
-            }
         )
     }
 }
