@@ -39,6 +39,11 @@ struct CodeEditorSampleApp: App {
                 }
                 .keyboardShortcut("o", modifiers: .command)
 
+                Button("Open File…") {
+                    appState.requestOpenFile()
+                }
+                .keyboardShortcut("o", modifiers: [.command, .shift])
+
                 Button("Close Tab") {
                     if let id = appState.documents.activeID {
                         appState.documents.close(id)
@@ -46,14 +51,21 @@ struct CodeEditorSampleApp: App {
                 }
                 .keyboardShortcut("w", modifiers: .command)
 
-                // ⌘S — save the active tab back to its on-disk URL.
-                // `Untitled-*` tabs have no URL and currently fall through to
-                // a logger message (Save-As is out of scope for the demo).
+                // ⌘S — save the active tab back to its on-disk URL. On Untitled
+                // tabs (no URL), requestSave transparently chains to requestSaveAs
+                // so the user sees the NSSavePanel instead of a silent log entry.
                 Button("Save") {
-                    let outcome = appState.documents.save()
-                    appState.handleSaveOutcome(outcome)
+                    appState.requestSave()
                 }
                 .keyboardShortcut("s", modifiers: .command)
+
+                // ⇧⌘S — explicit Save As…. Always presents NSSavePanel; on confirm
+                // the active document rebinds (url, name, language, isDirty all
+                // update). The previous on-disk file (if any) is left untouched.
+                Button("Save As…") {
+                    appState.requestSaveAs()
+                }
+                .keyboardShortcut("s", modifiers: [.command, .shift])
             }
 
             CommandGroup(after: .textEditing) {
@@ -71,7 +83,7 @@ struct CodeEditorSampleApp: App {
                     appState.editorController.refreshSymbols()
                     appState.gotoSymbolSheetVisible = true
                 }
-                .keyboardShortcut("o", modifiers: [.command, .shift])
+                .keyboardShortcut("o", modifiers: [.command, .control])
 
                 Button("Command Palette…") {
                     appState.paletteVisible.toggle()
