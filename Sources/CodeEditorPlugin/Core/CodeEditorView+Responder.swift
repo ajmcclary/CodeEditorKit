@@ -2,13 +2,13 @@
 import AppKit
 
 extension CodeEditorView {
-    open override func becomeFirstResponder() -> Bool {
+    override open func becomeFirstResponder() -> Bool {
         let became = super.becomeFirstResponder()
         if became { publishEvent(.didBecomeFirstResponder) }
         return became
     }
 
-    open override func resignFirstResponder() -> Bool {
+    override open func resignFirstResponder() -> Bool {
         let resigned = super.resignFirstResponder()
         if resigned { publishEvent(.didResignFirstResponder) }
         return resigned
@@ -18,13 +18,13 @@ extension CodeEditorView {
 import UIKit
 
 extension CodeEditorView {
-    open override func becomeFirstResponder() -> Bool {
+    override open func becomeFirstResponder() -> Bool {
         let became = super.becomeFirstResponder()
         if became { publishEvent(.didBecomeFirstResponder) }
         return became
     }
 
-    open override func resignFirstResponder() -> Bool {
+    override open func resignFirstResponder() -> Bool {
         let resigned = super.resignFirstResponder()
         if resigned { publishEvent(.didResignFirstResponder) }
         return resigned

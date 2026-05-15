@@ -1,8 +1,8 @@
 #if canImport(AppKit)
 import AppKit
+@testable import CodeEditorPlugin
 import Combine
 import XCTest
-@testable import CodeEditorPlugin
 
 /// Verifies that `CodeEditorView` events fan out through `publishEvent(_:)`
 /// into a customer-supplied `UnifiedEventSystem`. This guards the
@@ -10,7 +10,6 @@ import XCTest
 /// modifier silently delivers nothing.
 @MainActor
 final class PublishEventFanOutTests: XCTestCase {
-
     /// Make a hosted `CodeEditorView` with a `UnifiedEventSystem` wired
     /// through the framework runtime so `publishEvent(_:)` fans out.
     private func makeHostedView(
@@ -68,7 +67,7 @@ final class PublishEventFanOutTests: XCTestCase {
         var cancellables: Set<AnyCancellable> = []
         eventSystem.events
             .sink { event in
-                if case .textSelectionDidChange(let r) = event { received.append(r) }
+                if case .textSelectionDidChange(let range) = event { received.append(range) }
             }
             .store(in: &cancellables)
 
