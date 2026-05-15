@@ -1,4 +1,5 @@
 import Foundation
+import Security
 
 /// Configuration for remote LSP server connections
 ///
@@ -138,6 +139,17 @@ public struct SecurityOptions: Sendable, Codable {
         case tls11 = "1.1"
         case tls12 = "1.2"
         case tls13 = "1.3"
+
+        /// Map to the `tls_protocol_version_t` value `URLSessionConfiguration`
+        /// expects for `tlsMinimumSupportedProtocolVersion`.
+        public var tlsProtocolVersion: tls_protocol_version_t {
+            switch self {
+            case .tls10: return .TLSv10
+            case .tls11: return .TLSv11
+            case .tls12: return .TLSv12
+            case .tls13: return .TLSv13
+            }
+        }
     }
 }
 
@@ -268,7 +280,10 @@ public enum LSPServerConfiguration: Sendable {
             return WebSocketTransport(
                 url: config.serverURL,
                 headers: headers,
-                configuration: transportConfig
+                configuration: transportConfig,
+                securityOptions: config.securityOptions,
+                certificatePinning: config.certificatePinning,
+                validateSSLCertificates: config.validateSSLCertificates
             )
         }
     }

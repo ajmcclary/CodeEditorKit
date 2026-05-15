@@ -29,9 +29,13 @@ public actor WebSocketTransport: LSPTransport {
     private let url: URL
     private let headers: [String: String]
     private let configuration: LSPTransportConfiguration
+    private let securityOptions: SecurityOptions
+    private let certificatePinning: CertificatePinning?
+    private let validateSSLCertificates: Bool
 
     private var webSocketTask: URLSessionWebSocketTask?
     private var urlSession: URLSession?
+    private var sessionDelegate: WebSocketPinningDelegate?
     private var dataHandler: (@Sendable (Data) async -> Void)?
     private var receiveTask: Task<Void, Never>?
 
@@ -46,11 +50,55 @@ public actor WebSocketTransport: LSPTransport {
     public init(
         url: URL,
         headers: [String: String] = [:],
-        configuration: LSPTransportConfiguration = LSPTransportConfiguration()
+        configuration: LSPTransportConfiguration = LSPTransportConfiguration(),
+        securityOptions: SecurityOptions = SecurityOptions(),
+        certificatePinning: CertificatePinning? = nil,
+        validateSSLCertificates: Bool = true
     ) {
         self.url = url
         self.headers = headers
         self.configuration = configuration
+        self.securityOptions = securityOptions
+        self.certificatePinning = certificatePinning
+        self.validateSSLCertificates = validateSSLCertificates
+    }
+
+    // MARK: - Configuration Builders
+
+    /// Snapshot of the security-relevant settings the transport applies on
+    /// connect. Exposed for unit tests; not part of the production API
+    /// surface used at runtime.
+    public struct SecuritySnapshot: Sendable {
+        public let minimumTLSVersion: SecurityOptions.TLSVersion
+        public let pinningMethod: CertificatePinning.PinningMethod?
+        public let pinnedDataCount: Int
+        public let validateSSLCertificates: Bool
+    }
+
+    /// Read back the configured security settings. Useful for verifying
+    /// that `RemoteLSPConfiguration` plumbed through correctly.
+    public func securityConfigurationSnapshot() -> SecuritySnapshot {
+        SecuritySnapshot(
+            minimumTLSVersion: securityOptions.minimumTLSVersion,
+            pinningMethod: certificatePinning?.method,
+            pinnedDataCount: (certificatePinning?.pinnedData.count ?? 0)
+                + (certificatePinning?.backupPins.count ?? 0),
+            validateSSLCertificates: validateSSLCertificates
+        )
+    }
+
+    /// Build a `URLSessionConfiguration` honoring the transport's connection
+    /// timeouts and the security options' minimum TLS version. Extracted so
+    /// the mapping can be unit-tested without spinning up a real session.
+    public static func makeURLSessionConfiguration(
+        transport: LSPTransportConfiguration,
+        security: SecurityOptions
+    ) -> URLSessionConfiguration {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = transport.connectionTimeout
+        config.timeoutIntervalForResource = transport.connectionTimeout
+        config.tlsMinimumSupportedProtocolVersion = security.minimumTLSVersion.tlsProtocolVersion
+        return config
     }
 
     // MARK: - LSPTransport Implementation
@@ -66,12 +114,28 @@ public actor WebSocketTransport: LSPTransport {
 
         logger.info("Connecting to WebSocket LSP server: \(url)")
 
-        // Create URLSession with custom configuration
-        let sessionConfig = URLSessionConfiguration.default
-        sessionConfig.timeoutIntervalForRequest = configuration.connectionTimeout
-        sessionConfig.timeoutIntervalForResource = configuration.connectionTimeout
+        let sessionConfig = Self.makeURLSessionConfiguration(
+            transport: configuration, security: securityOptions
+        )
 
-        urlSession = URLSession(configuration: sessionConfig)
+        // Only install a delegate when the caller asked for non-default trust
+        // handling. Default-cert validation is already what `URLSession`
+        // does with a `nil` delegate, so avoid paying the actor-hop cost
+        // when nothing custom is requested.
+        let needsCustomTrustHandling = certificatePinning != nil || !validateSSLCertificates
+        if needsCustomTrustHandling {
+            let delegate = WebSocketPinningDelegate(
+                pinning: certificatePinning,
+                validateSSLCertificates: validateSSLCertificates
+            )
+            sessionDelegate = delegate
+            urlSession = URLSession(
+                configuration: sessionConfig, delegate: delegate, delegateQueue: nil
+            )
+        } else {
+            sessionDelegate = nil
+            urlSession = URLSession(configuration: sessionConfig)
+        }
 
         // Create WebSocket task
         var request = URLRequest(url: url)
@@ -127,6 +191,7 @@ public actor WebSocketTransport: LSPTransport {
         webSocketTask = nil
         urlSession?.invalidateAndCancel()
         urlSession = nil
+        sessionDelegate = nil
         messageQueue.removeAll()
         isReconnecting = false
     }
