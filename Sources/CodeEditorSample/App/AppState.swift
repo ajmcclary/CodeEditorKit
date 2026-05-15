@@ -268,4 +268,43 @@ final class AppState {
         pendingOpenFile = true
         #endif
     }
+
+    // MARK: - Save/open sheet state (iOS)
+
+    #if !canImport(AppKit)
+    /// State driving the iOS Save-As sheet. `IOSRootView` binds
+    /// `.sheet(item: $appState.pendingSaveAs)`; setting nil dismisses.
+    var pendingSaveAs: SaveSheetState?
+
+    /// State driving the iOS Open File… sheet. `IOSRootView` binds
+    /// `.sheet(isPresented: $appState.pendingOpenFile)`.
+    var pendingOpenFile: Bool = false
+
+    /// Writes the active document's text to `NSTemporaryDirectory()/<name>`
+    /// so `UIDocumentPickerViewController(forExporting:asCopy: false)` has
+    /// a file to move to the user's chosen destination. Returns the
+    /// `SaveSheetState` that drives the export sheet, or nil if the temp
+    /// write fails (failure is reported through `handleSaveOutcome`).
+    @MainActor
+    private func prepareSaveAsTemporaryFile(for active: EditorDocument) -> SaveSheetState? {
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(active.name)
+        do {
+            try active.text.write(to: tempURL, atomically: true, encoding: .utf8)
+            return SaveSheetState(temporaryURL: tempURL, suggestedName: active.name)
+        } catch {
+            handleSaveOutcome(.failed(error: error))
+            return nil
+        }
+    }
+
+    /// Invoked by `ExportDocumentSheet.onPick` after the user confirms the
+    /// iOS document picker. Performs the rebind via `EditorDocuments.saveAs`
+    /// and routes the outcome through the standard feedback channel.
+    @MainActor
+    func finalizeSaveAs(to url: URL) {
+        let outcome = documents.saveAs(to: url)
+        handleSaveOutcome(outcome)
+    }
+    #endif
 }
