@@ -14,6 +14,7 @@ The codebase is structurally sound and convention-compliant at the level lint ca
 ## Fix log
 
 - **2026-05-15 — FIXED Critical #1 (string regex escapes).** `SyntaxHighlighting/RegexSyntaxHighlighter+BuilderExtensions.swift:35,41,47` — replaced the four-backslash sequences inside raw strings with two backslashes so NSRegex now sees `\\.` (escape-any). Added regression test `testStringHighlightingPreservesEscapedQuotes` in `Tests/CodeEditorPluginTests/SyntaxHighlightingTests.swift` that asserts `"hello \"world\""` tokenizes as a single string token spanning the full literal (test failed pre-fix returning `""`, passes post-fix). All 24 `SyntaxHighlightingTests` and 41 highlight-related Swift Testing cases pass; lint clean.
+- **2026-05-15 — FIXED Critical #2 (theme palette appearance fallbacks).** Every leaf palette decoder (`Theming/{EditorColors,BorderColors,ChromeColors,ElementStates,HintColors,IconLevels,PredictiveColors,ScrollbarColors,StatusPalette,TextLevels,VCSPalette}.swift`) and `ThemeStyle`'s outer `background`/`drop_target.background`/`link_text.hover` fallbacks used to hard-code `let appearance: Theme.Appearance = .dark`, so light themes missing any key silently picked up dark fallback colors. Threaded the in-flight theme's appearance through decode by adding `AppearanceHolder` to `Loader/WarningCollector.swift` and a new `CodingUserInfoKey.themeAppearance` slot, populated in `Loader/ThemeFamily+Loader.swift` and written by `Theme.init(from:)` after the `appearance` key decodes. `ThemeStyle.init(from:)` now reads the holder and forwards `appearance` to each palette's new `init(flat:warnings:path:appearance:)`; `Theme.fallback(appearance:)` does the same. Added `Tests/CodeEditorPluginTests/Theming/ThemeAppearanceFallbackTests.swift` with three cases covering `Theme.fallback(.light)` text/icon/border palettes and a JSON-decoded light theme with missing leaf keys; all three failed pre-fix (dark substitutes leaking) and pass post-fix. Updated existing `SubStructFlatInitTests` and `TextLevelsTests` call sites for the new signature. All 49 theme-related Swift Testing cases pass; build clean.
 
 ---
 
@@ -46,7 +47,7 @@ The codebase is structurally sound and convention-compliant at the level lint ca
 - **`Annotations/Annotation.swift:97`** — Silently substitutes `NSRange(location: NSNotFound, length: 0)` when conversion fails. Downstream consumers will crash on layout math.
 
 ### Theming
-- **All sub-palette decoders (`Theming/{EditorColors,BorderColors,ChromeColors,ElementStates,HintColors,IconLevels,PredictiveColors,ScrollbarColors,StatusPalette,TextLevels,VCSPalette}.swift`)** — Every leaf hard-codes `let appearance: Theme.Appearance = .dark` before pulling fallback colors. **Light themes that omit any key get the dark fallback color.** The 11 bundled light variants in `Resources/` are all at risk.
+- ~~**All sub-palette decoders (`Theming/{EditorColors,BorderColors,ChromeColors,ElementStates,HintColors,IconLevels,PredictiveColors,ScrollbarColors,StatusPalette,TextLevels,VCSPalette}.swift`)** — Every leaf hard-codes `let appearance: Theme.Appearance = .dark` before pulling fallback colors. **Light themes that omit any key get the dark fallback color.** The 11 bundled light variants in `Resources/` are all at risk.~~ **FIXED 2026-05-15** (see Fix log).
 - **`Core/CodeEditorView+Theme.swift:53-54`** — Indexes `theme.style.players[0]` without checking emptiness. `ThemeStyle.init` decodes `players` with `try? ... ?? []`, so an empty list traps on every `apply(theme:)`.
 
 ### Tests
@@ -145,7 +146,7 @@ The codebase is structurally sound and convention-compliant at the level lint ca
 ## Suggested first 10 fixes (impact × cost)
 
 1. ~~Fix the regex string-pattern escapes in `RegexSyntaxHighlighter+BuilderExtensions.swift:35,41,47`~~ — **DONE 2026-05-15**.
-2. Thread `appearance` through theme palette fallbacks — light themes are silently dark on any missing key.
+2. ~~Thread `appearance` through theme palette fallbacks — light themes are silently dark on any missing key.~~ — **DONE 2026-05-15**.
 3. Apply TLS pinning / min-TLS settings in `WebSocketTransport` — security correctness.
 4. Restore real assertions in `MemoryLeakTests.swift`.
 5. Fix `LSPCompletionProvider.convertLSPRangeToNSRange` UTF-16 math.

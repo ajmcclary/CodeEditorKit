@@ -36,9 +36,14 @@ public struct TextLevels: Hashable, Sendable, Codable {
     }
 
     /// Build from a flat dictionary keyed by Zed dotted names, recording
-    /// `.missingKey` warnings as we go.
-    init(flat: [String: Tokens.Color], warnings: WarningCollector, path: String) {
-        let appearance: Theme.Appearance = .dark
+    /// `.missingKey` warnings as we go. `appearance` selects between light
+    /// and dark fallback colors when a key is missing.
+    init(
+        flat: [String: Tokens.Color],
+        warnings: WarningCollector,
+        path: String,
+        appearance: Theme.Appearance
+    ) {
         self.base = flat["text"]
             ?? warnings.missing(
                 path: path, key: "text", fallback: ThemeFallbackPalette.textBase(appearance)

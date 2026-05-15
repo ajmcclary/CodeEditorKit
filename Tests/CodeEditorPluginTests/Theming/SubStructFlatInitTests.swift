@@ -15,7 +15,9 @@ struct SubStructFlatInitTests {
             "icon.disabled": Tokens.Color(hex: 0xDD_DD_DD),
             "icon.accent": Tokens.Color(hex: 0xEE_EE_EE)
         ]
-        let icons = IconLevels(flat: flat, warnings: collector, path: "style")
+        let icons = IconLevels(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(icons.base == Tokens.Color(hex: 0xAA_AA_AA))
         #expect(icons.accent == Tokens.Color(hex: 0xEE_EE_EE))
         #expect(collector.warnings.isEmpty)
@@ -32,7 +34,9 @@ struct SubStructFlatInitTests {
             "border.transparent": Tokens.Color(hex: 0x55_55_55),
             "border.variant": Tokens.Color(hex: 0x66_66_66)
         ]
-        let borders = BorderColors(flat: flat, warnings: collector, path: "style")
+        let borders = BorderColors(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(borders.base == Tokens.Color(hex: 0x11_11_11))
         #expect(borders.variant == Tokens.Color(hex: 0x66_66_66))
     }
@@ -47,7 +51,9 @@ struct SubStructFlatInitTests {
             "scrollbar.thumb.border": Tokens.Color(hex: 0x44_44_44),
             "scrollbar.thumb.hover_background": Tokens.Color(hex: 0x55_55_55)
         ]
-        let scrollbar = ScrollbarColors(flat: flat, warnings: collector, path: "style")
+        let scrollbar = ScrollbarColors(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(scrollbar.trackBackground == Tokens.Color(hex: 0x11_11_11))
         #expect(scrollbar.thumbHoverBackground == Tokens.Color(hex: 0x55_55_55))
     }
@@ -70,7 +76,9 @@ struct SubStructFlatInitTests {
             "predictive.background": Tokens.Color(hex: 0x22_22_22),
             "predictive.border": Tokens.Color(hex: 0x33_33_33)
         ]
-        let predictive = PredictiveColors(flat: flat, warnings: collector, path: "style")
+        let predictive = PredictiveColors(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(predictive.base == Tokens.Color(hex: 0x11_11_11))
         #expect(predictive.border == Tokens.Color(hex: 0x33_33_33))
     }
@@ -83,7 +91,9 @@ struct SubStructFlatInitTests {
             "hint.background": Tokens.Color(hex: 0x22_22_22),
             "hint.border": Tokens.Color(hex: 0x33_33_33)
         ]
-        let hint = HintColors(flat: flat, warnings: collector, path: "style")
+        let hint = HintColors(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(hint.base == Tokens.Color(hex: 0x11_11_11))
         #expect(hint.border == Tokens.Color(hex: 0x33_33_33))
     }
@@ -108,7 +118,9 @@ struct SubStructFlatInitTests {
             "conflict.background": Tokens.Color(hex: 0x52_12_12),
             "conflict.border": Tokens.Color(hex: 0x53_13_13)
         ]
-        let status = StatusPalette(flat: flat, warnings: collector, path: "style")
+        let status = StatusPalette(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(status.info.base == Tokens.Color(hex: 0x11_11_11))
         #expect(status.error.background == Tokens.Color(hex: 0x42_12_12))
         #expect(status.conflict.border == Tokens.Color(hex: 0x53_13_13))
@@ -124,7 +136,9 @@ struct SubStructFlatInitTests {
             flat["\(kind).background"] = Tokens.Color(hex: UInt32(idx + 1) * 0x02_02_02)
             flat["\(kind).border"] = Tokens.Color(hex: UInt32(idx + 1) * 0x03_03_03)
         }
-        let vcs = VCSPalette(flat: flat, warnings: collector, path: "style")
+        let vcs = VCSPalette(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(vcs.created.base == Tokens.Color(hex: 0x01_01_01))
         #expect(vcs.deleted.border == Tokens.Color(hex: 0x09_09_09))
     }
@@ -150,7 +164,9 @@ struct SubStructFlatInitTests {
             "editor.document_highlight.write_background": Tokens.Color(hex: 0x15_15_15),
             "editor.document_highlight.bracket_background": Tokens.Color(hex: 0x16_16_16)
         ]
-        let editor = EditorColors(flat: flat, warnings: collector, path: "style")
+        let editor = EditorColors(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(editor.background == Tokens.Color(hex: 0x01_02_04))
         #expect(editor.foreground == Tokens.Color(hex: 0xDF_E7_F1))
         #expect(editor.documentHighlightBracket == Tokens.Color(hex: 0x16_16_16))
@@ -177,7 +193,9 @@ struct SubStructFlatInitTests {
             "pane.focused_border": Tokens.Color(hex: 0x1F_1F_1F),
             "pane_group.border": Tokens.Color(hex: 0x20_20_20)
         ]
-        let chrome = ChromeColors(flat: flat, warnings: collector, path: "style")
+        let chrome = ChromeColors(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(chrome.titleBarBackground == Tokens.Color(hex: 0x11_11_11))
         #expect(chrome.paneGroupBorder == Tokens.Color(hex: 0x20_20_20))
     }
@@ -197,7 +215,9 @@ struct SubStructFlatInitTests {
             "ghost_element.selected": Tokens.Color(hex: 0x66_44_44),
             "ghost_element.disabled": Tokens.Color(hex: 0x66_55_55)
         ]
-        let elements = ElementStates(flat: flat, warnings: collector, path: "style")
+        let elements = ElementStates(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(elements.element.background == Tokens.Color(hex: 0x11_11_11))
         #expect(elements.ghostElement.disabled == Tokens.Color(hex: 0x66_55_55))
     }

@@ -45,9 +45,14 @@ public struct ElementStates: Hashable, Sendable, Codable {
         self.ghostElement = ghostElement
     }
 
-    /// Build from a flat dictionary keyed by Zed dotted names.
-    init(flat: [String: Tokens.Color], warnings: WarningCollector, path: String) {
-        let appearance: Theme.Appearance = .dark
+    /// Build from a flat dictionary keyed by Zed dotted names. `appearance`
+    /// selects between light and dark fallback colors when a key is missing.
+    init(
+        flat: [String: Tokens.Color],
+        warnings: WarningCollector,
+        path: String,
+        appearance: Theme.Appearance
+    ) {
         let surface = ThemeFallbackPalette.surface(appearance)
         let accent = ThemeFallbackPalette.textAccent(appearance)
         let translucent = Tokens.Color(red: accent.red, green: accent.green, blue: accent.blue, alpha: 0.10)

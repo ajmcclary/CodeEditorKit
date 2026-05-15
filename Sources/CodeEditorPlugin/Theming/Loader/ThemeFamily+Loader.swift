@@ -40,6 +40,7 @@ extension ThemeFamily {
         let collector = WarningCollector()
         let decoder = JSONDecoder()
         decoder.userInfo[.themeWarnings] = collector
+        decoder.userInfo[.themeAppearance] = AppearanceHolder()
         let family = try decoder.decode(ThemeFamily.self, from: data)
         return (family, collector.warnings)
     }

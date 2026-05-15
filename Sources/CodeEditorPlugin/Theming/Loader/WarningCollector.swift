@@ -24,6 +24,18 @@ final class WarningCollector: @unchecked Sendable {
     }
 }
 
+/// Mutable carrier for the current theme's `appearance` during decode. The
+/// outer `Theme.init(from:)` decodes the `appearance` key before the nested
+/// `style` decode runs, then writes it here so `ThemeStyle` and its leaf
+/// palettes can pick light vs. dark fallback colors. `JSONDecoder.userInfo`
+/// is itself a `let`, so we hang a class on it and mutate that.
+final class AppearanceHolder: @unchecked Sendable {
+    /// Appearance for the theme currently being decoded; defaults to `.dark`
+    /// so that pre-pass reads (before `Theme.init(from:)` sets it) match the
+    /// historical behavior.
+    var appearance: Theme.Appearance = .dark
+}
+
 extension CodingUserInfoKey {
     /// Slot for a `WarningCollector` on a configured `JSONDecoder.userInfo`.
     /// `CodingUserInfoKey(rawValue:)` is a failable initializer for purely
@@ -31,6 +43,15 @@ extension CodingUserInfoKey {
     /// string, so the guard is functionally unreachable.
     static let themeWarnings: CodingUserInfoKey = {
         guard let key = CodingUserInfoKey(rawValue: "themeWarnings") else {
+            fatalError("CodingUserInfoKey rejected non-empty string literal")
+        }
+        return key
+    }()
+
+    /// Slot for an `AppearanceHolder` carrying the in-flight theme's
+    /// appearance value across nested decoders.
+    static let themeAppearance: CodingUserInfoKey = {
+        guard let key = CodingUserInfoKey(rawValue: "themeAppearance") else {
             fatalError("CodingUserInfoKey rejected non-empty string literal")
         }
         return key

@@ -105,6 +105,8 @@ public struct ThemeStyle: Hashable, Sendable, Codable {
     public init(from decoder: Decoder) throws {
         let warnings = decoder.userInfo[.themeWarnings] as? WarningCollector
             ?? WarningCollector()
+        let appearance = (decoder.userInfo[.themeAppearance] as? AppearanceHolder)?.appearance
+            ?? .dark
         let dyn = try decoder.container(keyedBy: DynamicCodingKey.self)
 
         // Pass 1: separate structured keys from flat color keys.
@@ -125,34 +127,58 @@ public struct ThemeStyle: Hashable, Sendable, Codable {
 
         self.background = flat["background"]
             ?? warnings.missing(
-                path: "style", key: "background", fallback: ThemeFallbackPalette.background(.dark)
+                path: "style",
+                key: "background",
+                fallback: ThemeFallbackPalette.background(appearance)
             )
         self.backgroundAppearance = bgAppearance
         self.dropTarget = flat["drop_target.background"]
             ?? warnings.missing(
                 path: "style",
                 key: "drop_target.background",
-                fallback: ThemeFallbackPalette.dropTarget(.dark)
+                fallback: ThemeFallbackPalette.dropTarget(appearance)
             )
         self.linkTextHover = flat["link_text.hover"]
             ?? warnings.missing(
                 path: "style",
                 key: "link_text.hover",
-                fallback: ThemeFallbackPalette.textAccent(.dark)
+                fallback: ThemeFallbackPalette.textAccent(appearance)
             )
 
-        let editor = EditorColors(flat: flat, warnings: warnings, path: "style")
-        let chrome = ChromeColors(flat: flat, warnings: warnings, path: "style")
-        let elements = ElementStates(flat: flat, warnings: warnings, path: "style")
-        let borders = BorderColors(flat: flat, warnings: warnings, path: "style")
-        let text = TextLevels(flat: flat, warnings: warnings, path: "style")
-        let icon = IconLevels(flat: flat, warnings: warnings, path: "style")
-        let status = StatusPalette(flat: flat, warnings: warnings, path: "style")
-        let vcs = VCSPalette(flat: flat, warnings: warnings, path: "style")
-        let scrollbar = ScrollbarColors(flat: flat, warnings: warnings, path: "style")
+        let editor = EditorColors(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let chrome = ChromeColors(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let elements = ElementStates(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let borders = BorderColors(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let text = TextLevels(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let icon = IconLevels(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let status = StatusPalette(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let vcs = VCSPalette(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let scrollbar = ScrollbarColors(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
         let search = SearchColors(flat: flat, warnings: warnings, path: "style")
-        let predictive = PredictiveColors(flat: flat, warnings: warnings, path: "style")
-        let hint = HintColors(flat: flat, warnings: warnings, path: "style")
+        let predictive = PredictiveColors(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
+        let hint = HintColors(
+            flat: flat, warnings: warnings, path: "style", appearance: appearance
+        )
         self.editor = editor
         self.chrome = chrome
         self.elements = elements

@@ -42,6 +42,9 @@ public struct Theme: Hashable, Sendable, Codable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.name = try container.decode(String.self, forKey: .name)
         self.appearance = try container.decode(Appearance.self, forKey: .appearance)
+        // Publish appearance to the shared holder so nested ThemeStyle/leaf
+        // palette decoders pick the right light/dark fallback colors.
+        (decoder.userInfo[.themeAppearance] as? AppearanceHolder)?.appearance = self.appearance
         self.style = try container.decode(ThemeStyle.self, forKey: .style)
         if let explicit = try? container.decode(PlatformExtension.self, forKey: .platform) {
             self.platform = explicit
@@ -66,18 +69,40 @@ public struct Theme: Hashable, Sendable, Codable, Identifiable {
         let style = ThemeStyle(
             background: ThemeFallbackPalette.background(appearance),
             backgroundAppearance: "opaque",
-            editor: EditorColors(flat: [:], warnings: collector, path: "fallback"),
-            chrome: ChromeColors(flat: [:], warnings: collector, path: "fallback"),
-            elements: ElementStates(flat: [:], warnings: collector, path: "fallback"),
-            borders: BorderColors(flat: [:], warnings: collector, path: "fallback"),
-            text: TextLevels(flat: [:], warnings: collector, path: "fallback"),
-            icon: IconLevels(flat: [:], warnings: collector, path: "fallback"),
-            status: StatusPalette(flat: [:], warnings: collector, path: "fallback"),
-            vcs: VCSPalette(flat: [:], warnings: collector, path: "fallback"),
-            scrollbar: ScrollbarColors(flat: [:], warnings: collector, path: "fallback"),
+            editor: EditorColors(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            chrome: ChromeColors(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            elements: ElementStates(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            borders: BorderColors(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            text: TextLevels(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            icon: IconLevels(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            status: StatusPalette(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            vcs: VCSPalette(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            scrollbar: ScrollbarColors(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
             search: SearchColors(flat: [:], warnings: collector, path: "fallback"),
-            predictive: PredictiveColors(flat: [:], warnings: collector, path: "fallback"),
-            hint: HintColors(flat: [:], warnings: collector, path: "fallback"),
+            predictive: PredictiveColors(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
+            hint: HintColors(
+                flat: [:], warnings: collector, path: "fallback", appearance: appearance
+            ),
             dropTarget: ThemeFallbackPalette.dropTarget(appearance),
             linkTextHover: ThemeFallbackPalette.textAccent(appearance),
             players: [

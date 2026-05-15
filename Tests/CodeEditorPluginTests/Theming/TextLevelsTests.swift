@@ -15,7 +15,9 @@ struct TextLevelsTests {
             "text.disabled": Tokens.Color(hex: 0x44_44_44),
             "text.accent": Tokens.Color(hex: 0x55_55_55)
         ]
-        let levels = TextLevels(flat: flat, warnings: collector, path: "style")
+        let levels = TextLevels(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(levels.base == Tokens.Color(hex: 0x11_11_11))
         #expect(levels.muted == Tokens.Color(hex: 0x22_22_22))
         #expect(levels.placeholder == Tokens.Color(hex: 0x33_33_33))
@@ -31,7 +33,8 @@ struct TextLevelsTests {
         let levels = TextLevels(
             flat: ["text": Tokens.Color(hex: 0x11_11_11)],
             warnings: collector,
-            path: "style"
+            path: "style",
+            appearance: .dark
         )
         #expect(levels.base == Tokens.Color(hex: 0x11_11_11))
         #expect(levels.muted == ThemeFallbackPalette.textMuted(.dark))
@@ -51,7 +54,9 @@ struct TextLevelsTests {
             "text.accent": Tokens.Color(hex: 0x55_55_55),
             "text.brand": Tokens.Color(hex: 0xAA_AA_AA)
         ]
-        let levels = TextLevels(flat: flat, warnings: collector, path: "style")
+        let levels = TextLevels(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         #expect(levels.extras == ["text.brand": Tokens.Color(hex: 0xAA_AA_AA)])
     }
 
@@ -66,7 +71,9 @@ struct TextLevelsTests {
             "text.accent": Tokens.Color(hex: 0x55_55_55),
             "text.brand": Tokens.Color(hex: 0xAA_AA_AA)
         ]
-        let levels = TextLevels(flat: flat, warnings: collector, path: "style")
+        let levels = TextLevels(
+            flat: flat, warnings: collector, path: "style", appearance: .dark
+        )
         var out: [String: Tokens.Color] = [:]
         levels.flatten(into: &out)
         #expect(out["text"] == flat["text"])

@@ -56,9 +56,14 @@ public struct VCSPalette: Hashable, Sendable, Codable {
         self.unreachable = unreachable
     }
 
-    /// Build from a flat dictionary keyed by Zed dotted names.
-    init(flat: [String: Tokens.Color], warnings: WarningCollector, path: String) {
-        let appearance: Theme.Appearance = .dark
+    /// Build from a flat dictionary keyed by Zed dotted names. `appearance`
+    /// selects between light and dark fallback colors when a key is missing.
+    init(
+        flat: [String: Tokens.Color],
+        warnings: WarningCollector,
+        path: String,
+        appearance: Theme.Appearance
+    ) {
         func make(_ kind: String, fallback: Tokens.Color) -> VCS {
             let base = flat[kind]
                 ?? warnings.missing(path: path, key: kind, fallback: fallback)

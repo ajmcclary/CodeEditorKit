@@ -79,9 +79,14 @@ public struct EditorColors: Hashable, Sendable, Codable {
         self.extras = extras
     }
 
-    /// Build from a flat dictionary keyed by Zed dotted names.
-    init(flat: [String: Tokens.Color], warnings: WarningCollector, path: String) {
-        let appearance: Theme.Appearance = .dark
+    /// Build from a flat dictionary keyed by Zed dotted names. `appearance`
+    /// selects between light and dark fallback colors when a key is missing.
+    init(
+        flat: [String: Tokens.Color],
+        warnings: WarningCollector,
+        path: String,
+        appearance: Theme.Appearance
+    ) {
         let bgFallback = ThemeFallbackPalette.background(appearance)
         let textFallback = ThemeFallbackPalette.textBase(appearance)
         let mutedFallback = ThemeFallbackPalette.textMuted(appearance)
