@@ -77,8 +77,8 @@ Docs claim "remote servers on iOS" but the implementation of `LSPManager`, `LSPC
 
 Spec draft exists at `docs/superpowers/specs/2026-05-14-lsp-ios-coverage-design.md`.
 
-### B.2 `.codeCompletion(provider:)` modifier is unread
-After the SwiftUI modifier return-types migration, `CodeEditorIntent.completionProvider` is set by the modifier but never read anywhere in `Sources/CodeEditorPlugin/`. The pre-existing bug was preserved — fixing it requires deciding how a host-supplied SwiftUI-shape provider should compose with `CompletionManager`'s provider registry.
+### ~~B.2 `.codeCompletion(provider:) modifier is unread~~ — done
+The modifier's closure is now wrapped as a `SwiftUIClosureCompletionProvider` and registered with the editor's `CompletionManager` from `CodeEditorBaseCoordinator` on every representable update (idempotent — only register/unregister on transitions, slot-swap on re-render). Built-in keyword completions are also live again: `LanguageKeywordCompletionProvider` is auto-registered per language by `CompletionManager.ensureBuiltInProvider(for:)`, called from `CodeEditorView.setupCompletionProviders()` and `language { didSet }`. The dead parallel `CompletionProviderRegistry` / `CompletionGenerationService` / `CompletionViewModel` / `EditorContainerViewModel` chain (plus the `EditorRuntime.completionProviderRegistry` accessor and `EditorCompletionRuntimeDependencies` struct) is gone. Spec: `docs/superpowers/specs/2026-05-15-completion-provider-unification-design.md`; plan: `docs/superpowers/plans/2026-05-15-completion-provider-unification.md`.
 
 ### B.3 `EditorState.isDirty` and `EditorState.hardwareAccelerationActive` never written
 The framework's `EditorState` mirror writes `language`, `selection`, and `lineCount`; the remaining two fields (`isDirty`, `hardwareAccelerationActive`) have no writer. `isDirty` needs an initial-text tracking design; `hardwareAccelerationActive` needs adaptive-perf-mode bridging.
