@@ -348,6 +348,13 @@ extension CodeEditorContainerView {
         } else {
             minimapView.isHidden = true
 
+            // Snapshot scroll position before mutating the text container —
+            // toggling widthTracksTextView / isHorizontallyResizable forces a
+            // TextKit reflow that resets the scroll origin to 0. Mirrors the
+            // minimap-visible branch's preserve-and-restore.
+            let savedVisibleRect = scrollView.contentView.visibleRect
+            let savedScrollPosition = scrollView.contentView.bounds.origin
+
             // Restore normal behavior when minimap is hidden
             if configuration.layout.wrapLines {
                 // When word wrap is enabled without minimap
@@ -375,6 +382,18 @@ extension CodeEditorContainerView {
 
                 // Text container should not track width when not wrapping
                 textView.textContainer?.widthTracksTextView = false
+            }
+
+            // Restore scroll position immediately (not async) for the same
+            // reason as the minimap-visible branch: TK2 can reset bounds.origin
+            // during the reflow triggered by the container width change.
+            if savedVisibleRect.width > 0 && savedVisibleRect.height > 0 {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                CATransaction.setValue(true, forKey: kCATransactionDisableActions)
+                scrollView.contentView.bounds.origin = savedScrollPosition
+                scrollView.contentView.setBoundsOrigin(savedScrollPosition)
+                CATransaction.commit()
             }
         }
 

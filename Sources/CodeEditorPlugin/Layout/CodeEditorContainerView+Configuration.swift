@@ -18,6 +18,15 @@ extension CodeEditorContainerView {
         isApplyingConfiguration = true
         defer { isApplyingConfiguration = false }
 
+        // Snapshot scroll position before mutating layout — toggling
+        // wrapLines / widthTracksTextView triggers a TextKit reflow that
+        // resets scrollView.contentView.bounds.origin to 0 on macOS.
+        // Restored at the bottom of this method.
+        #if canImport(AppKit)
+        let savedScrollOrigin = scrollView.contentView.bounds.origin
+        let savedDocumentVisibleRect = scrollView.contentView.visibleRect
+        #endif
+
         // Apply configuration to text view, but disable its internal line numbers
         // since we manage the gutter externally
         var textViewConfig = configuration
@@ -99,6 +108,18 @@ extension CodeEditorContainerView {
         needsDisplay = true
         scrollView.needsDisplay = true
         textView.needsDisplay = true
+
+        // Restore scroll position after layout-affecting mutations above.
+        // CATransaction with disabled actions prevents an animation flash
+        // and matches the pattern used in layoutViewsAppKit's minimap branch.
+        if savedDocumentVisibleRect.width > 0 && savedDocumentVisibleRect.height > 0 {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            CATransaction.setValue(true, forKey: kCATransactionDisableActions)
+            scrollView.contentView.bounds.origin = savedScrollOrigin
+            scrollView.contentView.setBoundsOrigin(savedScrollOrigin)
+            CATransaction.commit()
+        }
         #else
         setNeedsDisplay()
         #endif

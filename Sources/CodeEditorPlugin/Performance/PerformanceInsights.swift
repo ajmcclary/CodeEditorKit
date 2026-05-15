@@ -98,6 +98,14 @@ public final class PerformanceInsights: ObservableObject {
         updateTimer = nil
     }
 
+    /// Force-refreshes `metrics` from the injected monitors. Equivalent to one
+    /// tick of the 1 Hz timer but synchronous. Useful in headless test
+    /// environments where `Timer.scheduledTimer` is not guaranteed to fire on
+    /// the current run loop.
+    public func refresh() {
+        updateMetrics()
+    }
+
     /// Get detailed performance report
     public func generateDetailedReport() async -> DetailedPerformanceReport {
         let performanceReport = await performanceMonitor.generateReport()

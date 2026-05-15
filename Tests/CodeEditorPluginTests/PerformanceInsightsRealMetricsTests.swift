@@ -6,13 +6,17 @@ struct PerformanceInsightsRealFPSTests {
     @Test
     @MainActor
     func currentFPSReflectsInjectedMonitor() async {
+        // Headless test runs don't pump a run loop in a way that triggers
+        // `Timer.scheduledTimer` reliably, so we drive the metric refresh
+        // explicitly via the public `refresh()` hook instead of sleeping
+        // for a timer tick that may never fire.
         let memory = MemoryMonitor.mock(memoryUsage: 100)
         let frames = FrameRateMonitor()
         let insights = PerformanceInsights(
             memoryMonitor: memory,
             frameRateMonitor: frames
         )
-        try? await Task.sleep(for: .milliseconds(1_100))
+        insights.refresh()
         #expect(insights.metrics.currentFPS == frames.currentFPS)
     }
 }
@@ -25,7 +29,7 @@ struct PerformanceInsightsRealCPUTests {
         let memory = MemoryMonitor.mock(memoryUsage: 100)
         let frames = FrameRateMonitor()
         let insights = PerformanceInsights(memoryMonitor: memory, frameRateMonitor: frames)
-        try? await Task.sleep(for: .milliseconds(1_100))
+        insights.refresh()
         let cpu = insights.metrics.cpuUsage
         #expect(cpu >= 0)
         #expect(cpu <= 100)

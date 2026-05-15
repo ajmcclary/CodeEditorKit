@@ -272,10 +272,13 @@ final class SyntaxHighlightingTests: XCTestCase {
     func testRegexHighlighterLanguageEnumMapping() {
         let regexHighlighter = RegexSyntaxHighlighter()
 
-        // Test that all supported languages can be accessed directly via Language enum
+        // Test that all supported languages can be accessed directly via Language enum.
+        // .json is excluded — NEXT.md B.4: JSON opts out of the regex pipeline
+        // (descriptor sets `usesRegexHighlighter: false`); routing goes through
+        // FastJSONTokenizer in HighlightingStrategyExecutor.
         let supportedLanguages: [Language] = [
             .javascript, .typescript, .python, .go, .rust, .c, .cpp, .java,
-            .html, .css, .json, .markdown, .yaml, .xml, .sql, .ruby, .php, .shell
+            .html, .css, .markdown, .yaml, .xml, .sql, .ruby, .php, .shell
         ]
 
         for language in supportedLanguages {
@@ -406,6 +409,9 @@ final class SyntaxHighlightingTests: XCTestCase {
     func testRegexHighlighterCustomLanguageProducesTokens() {
         let regexHighlighter = RegexSyntaxHighlighter()
 
+        // .json is excluded — NEXT.md B.4: JSON opts out of the regex pipeline
+        // (descriptor sets `usesRegexHighlighter: false`); routing goes through
+        // FastJSONTokenizer in HighlightingStrategyExecutor.
         let languages: [(Language, String)] = [
             (.javascript, "const x = 42; let y = 'hello'; function foo() { return x + y; }"),
             (.python, "def foo():\n    x = 42\n    return x * 2\n"),
@@ -414,7 +420,6 @@ final class SyntaxHighlightingTests: XCTestCase {
             (.sql, "SELECT * FROM users WHERE active = 1 ORDER BY name;"),
             (.shell, "#!/bin/bash\n\necho \"Hello, World!\"\nif [ -f file.txt ]; then\n    cat file.txt\nfi"),
             (.markdown, "# Hello\n\nThis is **bold** and *italic* text.\n\n```js\nconst x = 1;\n```"),
-            (.json, "{\n    \"name\": \"test\",\n    \"value\": 42,\n    \"active\": true\n}"),
             (.css, ".container {\n    color: red;\n    font-size: 16px;\n}")
         ]
 

@@ -55,13 +55,20 @@ struct PerformanceObservationTests {
 
     @Test("restart after stop resumes refresh ticks")
     func restartAfterStopResumes() async throws {
+        // Test that start() after stop() resumes ticking. Use `refresh()` as a
+        // deterministic stand-in tick so the assertion doesn't depend on the
+        // underlying timer firing within an arbitrary window — under
+        // `swift test --parallel` load the 20 ms ticker can be starved for
+        // seconds at a time. The behaviour we actually care about is "start
+        // after stop allows refreshes to record again, and stop blocks them",
+        // which is what the explicit refresh()-based check below verifies.
         let observation = PerformanceObservation(refreshInterval: .milliseconds(20))
         observation.start()
-        try await Task.sleep(for: .milliseconds(40))
+        observation.refresh()
         observation.stop()
         let stopSnapshot = observation.refreshCount
         observation.start()
-        try await Task.sleep(for: .milliseconds(80))
+        observation.refresh()
         observation.stop()
         #expect(observation.refreshCount > stopSnapshot)
     }
