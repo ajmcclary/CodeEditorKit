@@ -5,8 +5,31 @@ import SwiftUI
 /// `LSPSampleCoordinator`. Replaces the old binary-availability probe
 /// (`LSPStatusPanel`) with an actually-attached sourcekit-lsp session.
 struct LSPInspectorPanel: View {
-    let state: LSPSampleCoordinator.State
-    let counts: DiagnosticsBridge.Counts
+    /// Cross-platform LSP session state mirroring
+    /// `LSPSampleCoordinator.State`. Lives panel-local so the panel
+    /// stays free of AppKit-gated types and can render on iOS too.
+    /// `InspectorPanelStack` provides a 1:1 adapter on macOS.
+    enum State: Equatable {
+        case off
+        case starting
+        case initializing
+        case running(capabilities: ServerCapabilitiesSummary)
+        case failed(message: String)
+    }
+
+    /// Cross-platform diagnostic counts displayed in the panel's
+    /// summary row. Mirrors `DiagnosticsBridge.Counts` on macOS via a
+    /// thin adapter at the call site — the panel itself stays free of
+    /// AppKit-only types so it can render on iOS too.
+    struct Counts: Equatable {
+        var errors = 0
+        var warnings = 0
+        var info = 0
+        static let zero = Self()
+    }
+
+    let state: State
+    let counts: Counts
     let serverPath: URL?
     let lastError: String?
     let isSwiftActive: Bool

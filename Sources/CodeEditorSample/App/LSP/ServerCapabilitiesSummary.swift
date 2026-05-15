@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorPlugin
 
 /// Human-readable digest of the LSP server's advertised capabilities.
@@ -36,4 +35,3 @@ struct ServerCapabilitiesSummary: Equatable {
         self.hasCompletion = hasCompletion
     }
 }
-#endif
