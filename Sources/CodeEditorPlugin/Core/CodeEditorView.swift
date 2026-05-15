@@ -414,6 +414,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// `handleTextStorageDidProcessEditing` (see C1 perf fix).
     internal var lastGutterLineCount: Int = -1
 
+    /// Weak back-pointer to the coordinator that mounted this view. Set
+    /// during `CodeEditorBaseCoordinator.setupContainer` so host-facing
+    /// controller methods (`EditorController.markClean()`) can route
+    /// through the coordinator that owns the dirty tracker.
+    internal weak var coordinator: CodeEditorBaseCoordinator?
+
     /// Line highlight view
     internal var lineHighlightView: PlatformView?
 
