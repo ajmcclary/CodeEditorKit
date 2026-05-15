@@ -118,6 +118,9 @@ let package = Package(
                 "CodeEditorPlugin",
                 "CodeEditorUI"
             ],
+            exclude: [
+                "README.md"
+            ],
             resources: [
                 .process("Resources/SampleSnippets")
             ],

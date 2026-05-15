@@ -34,43 +34,60 @@ extension CodeEditorView {
         }
     }
 
-    /// Apply a theme to the text view. Equality-gated; updates the
-    /// selection-background attribute (macOS) or tintColor (iOS), sets the
-    /// base text foreground from `style.editor.foreground` so untokenized
-    /// ranges render visibly, and stores the applied theme for downstream
-    /// consumers.
+    /// Apply a theme to the text view. Equality-gated for the cheap colour
+    /// setters; the storage foreground stamp always runs so a setText that
+    /// wiped per-range attributes since the last call gets re-stamped with
+    /// `style.editor.foreground`. Without that stamp, TextKit2 glyphs render
+    /// transparent — `NSTextView.textColor` is not honoured as a glyph
+    /// fallback for unattributed runs under TK2.
     public func apply(theme: Theme) {
-        if appliedTheme == theme { return }
-        appliedTheme = theme
-        let cursorColor = PlatformColor(tokens: theme.style.players[0].cursor)
-        let selectionColor = PlatformColor(tokens: theme.style.players[0].selection)
-        let foregroundColor = PlatformColor(tokens: theme.style.editor.foreground)
-        let backgroundColor = PlatformColor(tokens: theme.style.editor.background)
+        if appliedTheme != theme {
+            appliedTheme = theme
+            let cursorColor = PlatformColor(tokens: theme.style.players[0].cursor)
+            let selectionColor = PlatformColor(tokens: theme.style.players[0].selection)
+            let foregroundColor = PlatformColor(tokens: theme.style.editor.foreground)
+            let backgroundColor = PlatformColor(tokens: theme.style.editor.background)
 
-        // Base text + background. Without this the text view falls back to
-        // system label/background, which goes invisible on dark themes when
-        // the editor's effective appearance disagrees with the theme's
-        // background.
-        textColor = foregroundColor
-        self.backgroundColor = backgroundColor
+            // Base text + background. Both AppKit and UIKit read these for
+            // their non-glyph chrome (selection rendering compositing,
+            // backgroundDrawing, etc.).
+            textColor = foregroundColor
+            self.backgroundColor = backgroundColor
 
-        // Typing attributes for newly-inserted text — keeps the caret colour
-        // matched even before the syntax pass adds rendering attributes.
-        var typingAttrs = typingAttributes
-        typingAttrs[.foregroundColor] = foregroundColor
-        typingAttributes = typingAttrs
+            // Keep newly-inserted text in the theme's foreground until the
+            // syntax pass adds per-token rendering attributes.
+            var typingAttrs = typingAttributes
+            typingAttrs[.foregroundColor] = foregroundColor
+            typingAttributes = typingAttrs
 
-        #if canImport(AppKit)
-        var attrs = selectedTextAttributes
-        attrs[.backgroundColor] = selectionColor
-        selectedTextAttributes = attrs
-        insertionPointColor = cursorColor
-        #else
-        // UITextView renders the selection background as `tintColor` with a
-        // system-defined alpha multiplier. Per Q3=C in the spec, the
-        // resulting α may differ slightly from `players[0].selection.alpha`.
-        tintColor = cursorColor
-        _ = selectionColor // selection-fill alpha is system-driven on iOS
-        #endif
+            #if canImport(AppKit)
+            var attrs = selectedTextAttributes
+            attrs[.backgroundColor] = selectionColor
+            selectedTextAttributes = attrs
+            insertionPointColor = cursorColor
+            #else
+            // UITextView renders the selection background as `tintColor`
+            // with a system-defined alpha multiplier.
+            tintColor = cursorColor
+            _ = selectionColor // selection-fill alpha is system-driven on iOS
+            #endif
+        }
+
+        stampThemeForeground()
+    }
+
+    /// Stamps the applied theme's foreground colour onto every character in
+    /// the text storage. Idempotent and safe to call repeatedly. Required
+    /// after any `.string =` replacement, which wipes per-range attributes;
+    /// TK2 glyph rendering will fall through to nothing otherwise.
+    internal func stampThemeForeground() {
+        guard let theme = appliedTheme,
+              let textStorage = textContentStorage?.textStorage,
+              textStorage.length > 0 else { return }
+        let foreground = PlatformColor(tokens: theme.style.editor.foreground)
+        let range = NSRange(location: 0, length: textStorage.length)
+        textStorage.beginEditing()
+        textStorage.addAttribute(.foregroundColor, value: foreground, range: range)
+        textStorage.endEditing()
     }
 }

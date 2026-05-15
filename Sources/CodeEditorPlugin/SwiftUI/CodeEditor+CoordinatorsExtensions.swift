@@ -377,13 +377,14 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Set language
         textView.language = language
 
-        // Editor background + foreground intentionally use system-adaptive
-        // colors so they follow the SwiftUI .preferredColorScheme tied to
-        // the active theme's appearance. This keeps the canvas legible
-        // when switching between dark and light theme variants without
-        // baking specific theme tokens (some are near-black even for
-        // "light" theme families).
-        platformAdapter.applySystemEditorColors(to: textView)
+        // Editor background + foreground default to system-adaptive colors
+        // until `apply(theme:)` lands, which owns the colour state from
+        // then on. Re-asserting system colours after a theme is applied
+        // would clobber `editor.foreground` and (under TK2) leave glyphs
+        // transparent on any later update.
+        if textView.appliedTheme == nil {
+            platformAdapter.applySystemEditorColors(to: textView)
+        }
 
         // Apply initial configuration
         container.configuration = configuration
@@ -454,6 +455,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         if isHostBindingSwap {
             dirtyTracker.setBaseline(text)
+            // `setText` replaces the text storage and drops per-range
+            // attributes; the syntax pass re-applies token colours
+            // asynchronously, but untokenized characters need the theme
+            // foreground stamped synchronously or TK2 renders them with
+            // no glyph colour at all.
+            textView.stampThemeForeground()
         }
 
         // Update language if changed
@@ -461,9 +468,13 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
             textView.language = language
         }
 
-        // Re-assert system-adaptive editor colors so the canvas tracks
-        // the theme appearance via .preferredColorScheme on every update.
-        platformAdapter.applySystemEditorColors(to: textView)
+        // System colours only matter until `apply(theme:)` lands; once a
+        // theme is applied it owns `textColor`/`backgroundColor`. Skipping
+        // the re-assert here is what allows the theme's foreground to
+        // survive between updateContainer cycles.
+        if textView.appliedTheme == nil {
+            platformAdapter.applySystemEditorColors(to: textView)
+        }
 
         // Update configuration if changed
         if container.configuration != configuration {
