@@ -83,12 +83,14 @@ struct EventLogPanel: View {
             if entries.isEmpty {
                 emptyState
             } else {
-                List(entries) { entry in
-                    EventLogRow(entry: entry)
-                        .listRowInsets(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
-                        .listRowSeparator(.hidden)
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 2) {
+                        ForEach(entries) { entry in
+                            EventLogRow(entry: entry)
+                        }
+                    }
+                    .padding(.vertical, 4)
                 }
-                .listStyle(.plain)
                 .frame(minHeight: 200, maxHeight: 360)
             }
         }
