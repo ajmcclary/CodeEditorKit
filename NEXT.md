@@ -12,15 +12,15 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 ~~**Event stream invisible.**~~ — done. `EventLogSampleCoordinator` + `EventLogPanel` now surface `UnifiedEventSystem.events` (text / selection / focus) layered with `controller.completionEvents()` in the macOS `InspectorSidebar` and the iOS `IOSRootView` Inspectors detail. Framework wiring converted three `eventPublisher.publishSync(...)` sites to `publishEvent(...)` and added focus-event responder overrides in `CodeEditorView+Responder.swift`. Spec: `docs/superpowers/specs/2026-05-14-event-log-panel-design.md`; plan: `docs/superpowers/plans/2026-05-14-event-log-panel.md`.
 
-**Workspace search.** `PortableProjectSearchAdapter` and `ProjectSearchProvider` exist; the sample's find/replace is single-file only. A workspace search sidebar is the obvious demo.
+~~**Workspace search.**~~ — done. New `ProjectSearchPanelView` (Search tab of `WorkspaceSidebar`) drives `PortableProjectSearchAdapter` with case-sensitive / regex / file-extension controls; smart tab routing opens the file and selects the matched substring via `EditorController.selectMatch(_:)` + new `selectRange(_:scroll:)`. Spec: `docs/superpowers/specs/2026-05-14-workspace-surface-design.md`; plan: `docs/superpowers/plans/2026-05-14-workspace-surface.md`.
 
 **Symbol navigation backed by real data.** `SymbolNavigator` + `DocumentSymbolProvider` are framework-grade; `GotoSymbolSheet.swift` likely fakes the symbol list. Verify it queries the provider.
 
-**File tree / workspace browser.** Workspace root is configurable but nothing displays its contents. A `FileSystemActor`-backed file tree in the left sidebar would close the loop.
+~~**File tree / workspace browser.**~~ — done. `WorkspaceSidebar` (new left rail) hosts `FilePanelView` driven by a now-public `MacOSWorkspaceFileManager` (`WorkspaceFileTree` + `WorkspaceFileWatching`). Lazy disclosure, incremental updates from `WorkspaceFileWatching.events`, empty-state with Open Folder…, and File ▸ Open Folder… (⌘O). Spec / plan as above.
 
 **Save-As for `Untitled-*` tabs.** `⌘S` writes through `EditorDocuments.save(_:)` with `SaveOutcome` routing, but Save-As for untitled tabs was deliberately deferred. Needs an `NSSavePanel` flow on macOS and an iOS document-picker variant. `⌘O` is still a no-op.
 
-**`CodeEditorUI` components underused.** `EditorTitleBar`, `EditorTrafficLights`, `EditorBreadcrumbView`, and `PlatformGlassSurface` are now exercised via `.windowStyle(.hiddenTitleBar)` + `RootWindow` chrome. Only `EditorSidebarShell` remains unconsumed.
+~~**`CodeEditorUI` components underused.**~~ — done. `EditorTitleBar`, `EditorTrafficLights`, `EditorBreadcrumbView`, and `PlatformGlassSurface` are exercised via `.windowStyle(.hiddenTitleBar)` + `RootWindow` chrome. `EditorSidebarShell` is now consumed three times: `WorkspaceSidebar` (Files / Search), `InspectorSidebar`, and via `SettingsScene`'s nested usage.
 
 **Theme authoring.** Only the bundled `zed-trek` family is shown. Loading a user-supplied Zed JSON from disk would showcase `ThemeFamily.bundled(...)` as well as the JSON pipeline.
 
@@ -58,7 +58,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 7. **iOS feature parity.** `IOSRootView.swift` exposes Editor/Settings/Themes/Languages/Inspectors only — no presets, no annotations panel, no workspace knobs. Mirror the macOS knob sections through `NavigationSplitView`. (Partial progress: the Inspectors detail now hosts `EventLogPanel` cross-platform — the first cross-platform inspector — alongside the existing macOS-only explainer.)
 
-8. **`SettingsScene.swift`** (macOS ⌘,) is reportedly untouched boilerplate. It should host the more "global" settings (theme, presets, performance), while the inline sidebar focuses on per-document knobs — current arrangement has both showing everything.
+8. ~~**`SettingsScene.swift`** (macOS ⌘,)~~ — done. The inline `SettingsSidebar` is gone (deleted); `Settings { SettingsScene(...) }` is the only home for global settings. The left rail now hosts the workspace surface. Note: `SettingsScene` was already wired and populated before this work landed — the migration was a single-file deletion + binding rename, not a port of contents.
 
 9. **`canImport(AppKit)` switching is fine, but `RootWindow.swift`/`WindowBody.swift`/`IOSRootView.swift` re-implement layout twice.** Extract a shared `EditorWorkspaceScene` view that composes sidebars + main editor and let each platform supply its own chrome.
 
@@ -110,6 +110,8 @@ These were observed during the review pass and reproduce on bare `main`. Not int
 | ~~`RegexRangeHighlightProviderTests.testParsePerformance100KLines`~~ | Fixed: not a flake — fixture exceeded the parser's intentional 1 MB sync cap, so it returned 0 captures fast. Renamed to `testParseBailsOutForVeryLargeFiles` and rewritten to validate the cap contract. |
 | `LineGeometryStoreBenchmarkTests.testFuzzIncrementalEditCorrectness` | Flake under parallel load; passes in isolation |
 | `ScrollPositionPreservationTests.testScrollPositionPreservedWhenTogglingWordWrap` | Consistent failure on `main` — not investigated |
+| `SyntaxHighlightingTests.testRegexHighlighterLanguageEnumMapping` | Asserts a regex def exists for `json`, but B.4 made JSON opt out of the regex pipeline. Test is stale; delete or rewrite. |
+| `SyntaxHighlightingTests.testRegexHighlighterCustomLanguageProducesTokens` | Same root cause as the row above — depends on a JSON regex definition that no longer exists. |
 | `EditorStatusBarSnapshots/*` | SIGSEGV/SIGBUS under `swift test --parallel` — swift-testing helper launching XCTest snapshot suites in parallel |
 | `PerformanceObservationTests.restartAfterStopResumesRefreshTicks` | Flake under parallel load; passes in isolation |
 | `PerformanceInsightsRealMetricsTests.currentFPSReflectsInjectedMonitor` | FPS counter doesn't run in headless test env |
