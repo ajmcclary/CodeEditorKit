@@ -404,7 +404,8 @@ public struct CodeEditor: View {
             editorController: codeEditorIntent.editorController,
             hostEditorState: hostEditorState,
             onTextChange: textCallback,
-            onSelectionChange: selectionCallback
+            onSelectionChange: selectionCallback,
+            swiftUICompletionProvider: codeEditorIntent.completionProvider
         )
         // No `.searchable(...)` here on purpose. The old wrapper added a
         // toolbar search field that competes for first responder on macOS,

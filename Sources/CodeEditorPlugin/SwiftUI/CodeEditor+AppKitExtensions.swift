@@ -17,6 +17,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     let hostEditorState: EditorState
     let onTextChange: ((String) -> Void)?
     let onSelectionChange: ((NSRange) -> Void)?
+    let swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
 
     func makeNSView(context: Context) -> CodeEditorContainerView {
         let parameters = CodeEditorRepresentableHelper.ContainerParameters(
@@ -29,7 +30,8 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             editorController: editorController,
             hostEditorState: hostEditorState,
             onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
+            onSelectionChange: onSelectionChange,
+            swiftUICompletionProvider: swiftUICompletionProvider
         )
 
         return CodeEditorRepresentableHelper.createAndSetupContainer(
@@ -48,7 +50,8 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             interactionState: interactionState,
             editorController: editorController,
             hostEditorState: hostEditorState,
-            environment: context.environment
+            environment: context.environment,
+            swiftUICompletionProvider: swiftUICompletionProvider
         )
 
         CodeEditorRepresentableHelper.updateContainer(

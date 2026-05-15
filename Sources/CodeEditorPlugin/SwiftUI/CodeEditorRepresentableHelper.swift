@@ -33,6 +33,7 @@ enum CodeEditorRepresentableHelper {
         let hostEditorState: EditorState
         let onTextChange: ((String) -> Void)?
         let onSelectionChange: ((NSRange) -> Void)?
+        let swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
     }
 
     struct UpdateParameters {
@@ -45,6 +46,7 @@ enum CodeEditorRepresentableHelper {
         let editorController: EditorController?
         let hostEditorState: EditorState
         let environment: EnvironmentValues
+        let swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
     }
 
     // MARK: - Container Creation and Setup
