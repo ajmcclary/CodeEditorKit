@@ -144,6 +144,64 @@ final class FeatureBehaviorTests: CleanupTestCase {
         XCTAssertEqual(backgroundColor(at: secondLoc, in: editor), options.highlightColor)
     }
 
+    func testFindNextRepaintsPreviousCurrentToHighlightColor() async {
+        let editor = createCodeEditorView()
+        editor.text = "alpha beta alpha gamma alpha"
+
+        var options = SearchOptions()
+        options.flashResult = false
+        options.highlightColor = PlatformColor.yellow.withAlphaComponent(0.3)
+        options.currentMatchColor = PlatformColor.systemBlue.withAlphaComponent(0.5)
+
+        let engine = SearchReplaceEngine()
+        engine.attach(to: editor)
+        _ = await engine.findAll(pattern: "alpha", options: options)
+        XCTAssertEqual(engine.currentSearchIndex, 0)
+
+        _ = engine.findNext(from: nil)
+        XCTAssertEqual(engine.currentSearchIndex, 1)
+
+        let firstRange = engine.currentSearchResults[0].range
+        let secondRange = engine.currentSearchResults[1].range
+
+        XCTAssertEqual(
+            backgroundColor(at: firstRange.location, in: editor),
+            options.highlightColor,
+            "previous current should revert to highlightColor"
+        )
+        XCTAssertEqual(
+            backgroundColor(at: secondRange.location, in: editor),
+            options.currentMatchColor,
+            "new current should adopt currentMatchColor"
+        )
+    }
+
+    func testFindPreviousRepaintsCorrectly() async {
+        let editor = createCodeEditorView()
+        editor.text = "alpha beta alpha gamma alpha"
+
+        var options = SearchOptions()
+        options.flashResult = false
+        options.highlightColor = PlatformColor.yellow.withAlphaComponent(0.3)
+        options.currentMatchColor = PlatformColor.systemBlue.withAlphaComponent(0.5)
+
+        let engine = SearchReplaceEngine()
+        engine.attach(to: editor)
+        _ = await engine.findAll(pattern: "alpha", options: options)
+        _ = engine.findNext(from: nil)
+        _ = engine.findNext(from: nil)
+        XCTAssertEqual(engine.currentSearchIndex, 2)
+
+        _ = engine.findPrevious(from: nil)
+        XCTAssertEqual(engine.currentSearchIndex, 1)
+
+        let secondRange = engine.currentSearchResults[1].range
+        let thirdRange = engine.currentSearchResults[2].range
+
+        XCTAssertEqual(backgroundColor(at: secondRange.location, in: editor), options.currentMatchColor)
+        XCTAssertEqual(backgroundColor(at: thirdRange.location, in: editor), options.highlightColor)
+    }
+
     func testCodeFoldingDetectsAndTogglesSwiftRegions() async throws {
         let editor = createCodeEditorView()
         editor.language = .swift

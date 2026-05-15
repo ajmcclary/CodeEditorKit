@@ -98,11 +98,13 @@ public final class SearchReplaceEngine: ObservableObject {
     public func findNext(from range: NSRange? = nil) -> SearchResult? {
         guard !currentSearchResults.isEmpty else { return nil }
 
+        let previousIndex = currentSearchIndex
         let startLocation = range?.location ?? textView?.selectedRange.location ?? 0
 
         // Find next result after current location
         if let nextIndex = currentSearchResults.firstIndex(where: { $0.range.location > startLocation }) {
             currentSearchIndex = nextIndex
+            repaintCurrentMatch(previousIndex: previousIndex)
             scrollToResult(currentSearchResults[nextIndex])
             return currentSearchResults[nextIndex]
         }
@@ -110,6 +112,7 @@ public final class SearchReplaceEngine: ObservableObject {
         // Wrap around to beginning if enabled
         if searchOptions.wrapAround && !currentSearchResults.isEmpty {
             currentSearchIndex = 0
+            repaintCurrentMatch(previousIndex: previousIndex)
             scrollToResult(currentSearchResults[0])
             return currentSearchResults[0]
         }
@@ -121,11 +124,13 @@ public final class SearchReplaceEngine: ObservableObject {
     public func findPrevious(from range: NSRange? = nil) -> SearchResult? {
         guard !currentSearchResults.isEmpty else { return nil }
 
+        let previousIndex = currentSearchIndex
         let startLocation = range?.location ?? textView?.selectedRange.location ?? Int.max
 
         // Find previous result before current location
         if let prevIndex = currentSearchResults.lastIndex(where: { $0.range.location < startLocation }) {
             currentSearchIndex = prevIndex
+            repaintCurrentMatch(previousIndex: previousIndex)
             scrollToResult(currentSearchResults[prevIndex])
             return currentSearchResults[prevIndex]
         }
@@ -134,6 +139,7 @@ public final class SearchReplaceEngine: ObservableObject {
         if searchOptions.wrapAround,
            let lastResult = currentSearchResults.last {
             currentSearchIndex = currentSearchResults.count - 1
+            repaintCurrentMatch(previousIndex: previousIndex)
             scrollToResult(lastResult)
             return lastResult
         }
@@ -365,6 +371,32 @@ public final class SearchReplaceEngine: ObservableObject {
             bridge.addPersistentAttributes(
                 [.backgroundColor: currentColor],
                 range: results[currentSearchIndex].range
+            )
+        }
+    }
+
+    private func repaintCurrentMatch(previousIndex: Int) {
+        guard let textView else { return }
+        guard searchOptions.highlightResults else { return }
+        guard searchOptions.currentMatchColor != nil else { return }
+        let bridge = textView.textKitBridge
+
+        if currentSearchResults.indices.contains(previousIndex), previousIndex != currentSearchIndex {
+            let range = currentSearchResults[previousIndex].range
+            bridge.removePersistentAttribute(.backgroundColor, range: range)
+            bridge.addPersistentAttributes(
+                [.backgroundColor: searchOptions.highlightColor],
+                range: range
+            )
+        }
+
+        if let currentColor = searchOptions.currentMatchColor,
+           currentSearchResults.indices.contains(currentSearchIndex) {
+            let range = currentSearchResults[currentSearchIndex].range
+            bridge.removePersistentAttribute(.backgroundColor, range: range)
+            bridge.addPersistentAttributes(
+                [.backgroundColor: currentColor],
+                range: range
             )
         }
     }
