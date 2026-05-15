@@ -28,7 +28,7 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 **Error recovery UI.** `ErrorRecoveryCoordinator` and `RecoverableAsyncError` are unexercised — no demo error state with a user-triggered recovery affordance. `CodeEditorError.languageServerNotAvailable` / `.languageServerCommunicationFailed` already surface in `LSPSampleCoordinator` via `userFacingMessage(for:)` so the recovery-copy plumbing is wired; only the user-facing affordance is missing.
 
-**Find/Replace match highlighting.** `EditorActions/FindReplaceOverlay.swift` tracks counts but doesn't decorate matches in the text. `SearchReplaceEngine` supports this.
+~~**Find/Replace match highlighting.**~~ — done. `FindReplaceOverlay` rewritten as a view-only host bound to a feature-scoped `FindReplaceModel`; framework `SearchOptions` gained `currentMatchColor` and the engine paints two layers + repaints on `findNext`/`findPrevious`. `EditorController.clearSearch` now actually clears highlights, and `replaceCurrent(with:)` lands the Xcode-style "replace then advance". Overlay also gained an expandable options row (case / whole-word / regex), live 150 ms debounced search, an Invalid-regex badge, and a single-match Replace button alongside Replace All. Spec: `docs/superpowers/specs/2026-05-15-find-replace-overlay-upgrade-design.md`; plan: `docs/superpowers/plans/2026-05-15-find-replace-overlay-upgrade.md`.
 
 **Design tokens.** `CodeEditorDesignTokens` is imported across UI but the sample never *teaches* it — no panel showing token swatches, type ramp, or how to consume `Tokens.Color.EditorColors`/`Tokens.Spacing`.
 
@@ -46,11 +46,13 @@ The sample already covers a lot: 25 languages, 20 themes, 8 presets, all four kn
 
 1. **`AppState` is a god object.** It owns theme, configuration, documents, editor controller, annotations, find state, performance observation, and a host of coordinators. Split into feature-scoped `@Observable` models (`ThemeModel`, `ConfigurationModel`, `FindReplaceModel`, etc.) — the `pfw-observable-models` and `pfw-dependencies` conventions favor this, and the framework's DI story is "no singletons."
 
+   > First slice extracted: `FindReplaceModel` (find/replace state, debounce, lifecycle). The remaining decomposition (Theme / Configuration / Annotations / etc.) is unchanged in scope. Spec: `docs/superpowers/specs/2026-05-15-find-replace-overlay-upgrade-design.md`.
+
 2. ~~**`PresetCatalog.swift` likely duplicates framework presets.**~~ Verified: already uses `EditorConfiguration.default` / `.minimal` / `.readOnly` / `.markdown` / `.presentation` / `.macOS` / `.iOS` / `.platformOptimized` directly. Smoke-tested in `SwitcherCatalogTests`.
 
 3. ~~**`GotoSymbolSheet.swift`**~~ Verified: already reads from `controller.symbols` (`SymbolNavigator`-backed) and calls `controller.gotoSymbol(_:)` — no static stub to replace.
 
-4. **Find/Replace overlay** should call `SearchReplaceEngine` for both navigation and decoration, not maintain its own match counter logic.
+4. ~~**Find/Replace overlay** should call `SearchReplaceEngine` for both navigation and decoration, not maintain its own match counter logic.~~ — done alongside the A.1 entry above. Overlay now reads counters from `FindReplaceModel` (which mirrors `EditorController`); the framework paints both highlight layers via `SearchOptions.currentMatchColor` and the new `repaintCurrentMatch` hook.
 
 5. **`InspectorSidebar.swift`'s config export** should also accept paste-in (round-trip), demonstrating `EditorConfiguration` parsing/validation (`validate()`, `validateAndThrow()`).
 
