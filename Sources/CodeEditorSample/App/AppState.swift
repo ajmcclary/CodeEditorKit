@@ -82,30 +82,29 @@ final class AppState {
     /// FocusedValue channel.
     var paletteVisible: Bool = false
 
-    #if canImport(AppKit)
-    /// Shared `MemoryMonitor` instance fed into both `lsp` and
-    /// `performance` coordinators so the panel readouts and LSP
-    /// coordination agree on a single source of memory truth.
+    /// Shared `MemoryMonitor` instance fed into the `performance`
+    /// coordinator (and into `lsp` on macOS) so memory readouts agree
+    /// on a single source of truth.
     let memoryMonitor = MemoryMonitor()
 
     /// Shared `PerformanceObservation` instance. Installed onto the
     /// editor view via `.performanceObserver(_:)`.
     let performanceObservation = PerformanceObservation(refreshInterval: .seconds(1))
 
-    /// Sample-side LSP coordinator. Owns the `LSPManager`, document
-    /// mirroring, and the diagnostics bridge. macOS-only. IUO for the
-    /// same reason as `documents` — coordinator wiring closures must
-    /// `[weak self]` capture, which the DI analyzer rejects during
-    /// `let` field initialization. Set once in `init()`.
-    private(set) var lsp: LSPSampleCoordinator! // swiftlint:disable:this implicitly_unwrapped_optional
-
-    /// Sample-side Performance Inspector coordinator. macOS-only.
-    /// IUO; see `lsp` above.
+    /// Sample-side Performance Inspector coordinator. Cross-platform.
+    /// IUO; see `documents` rationale.
     private(set) var performance: PerformanceSampleCoordinator! // swiftlint:disable:this implicitly_unwrapped_optional
 
-    /// Sample-side Completion Inspector coordinator. macOS-only.
-    /// IUO; see `lsp` above.
+    /// Sample-side Completion Inspector coordinator. Cross-platform.
+    /// IUO; see `documents` rationale.
     private(set) var completion: CompletionSampleCoordinator! // swiftlint:disable:this implicitly_unwrapped_optional
+
+    #if canImport(AppKit)
+    /// Sample-side LSP coordinator. Owns the `LSPManager`, document
+    /// mirroring, and the diagnostics bridge. macOS-only because
+    /// `LSPManager` itself is AppKit-gated until B.1 iOS coverage lands.
+    /// IUO; see `documents` rationale.
+    private(set) var lsp: LSPSampleCoordinator! // swiftlint:disable:this implicitly_unwrapped_optional
     #endif
 
     init() {
@@ -144,8 +143,9 @@ final class AppState {
         coordinator.onRequestScroll = { [weak editorControllerRef] line in
             editorControllerRef?.gotoLine(line)
         }
+        #endif
 
-        // Performance Inspector wiring.
+        // Performance Inspector wiring. Cross-platform.
         let perfCoordinator = PerformanceSampleCoordinator(
             memoryMonitor: memoryMonitor,
             performanceObservation: performanceObservation
@@ -153,10 +153,10 @@ final class AppState {
         perfCoordinator.attach(controller: documents.editorController)
         self.performance = perfCoordinator
 
+        // Completion Inspector wiring. Cross-platform.
         let completionCoordinator = CompletionSampleCoordinator()
         self.completion = completionCoordinator
         completionCoordinator.attach(controller: documents.editorController)
-        #endif
 
         // EventLog coordinator wiring. Cross-platform.
         eventLog.attach(
