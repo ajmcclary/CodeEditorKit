@@ -53,6 +53,16 @@ Observed on macOS, `swift run CodeEditorSample`, branch `main` at
   `LineGeometryStore.defaultEstimatedHeight` is `17.0`pt and is **never**
   reconciled with measured TK2 line-fragment heights — `updateMeasuredHeight`
   has no callers anywhere in the repo.
+- **2026-05-15 root-cause update:** two diagnostics reproduced
+  TextKit2 loss before the third fix attempt:
+  - Calling `CodeEditorRepresentableHelper.calculateSize(...)` with an
+    unspecified AppKit proposal reads `textView.layoutManager` and makes
+    `textView.textLayoutManager` become `nil`.
+  - Applying a wrapped layout configuration (`configuration.layout.wrapLines = true`)
+    reads the legacy `textStorage` / `textContainer.layoutManager` path in
+    `CodeEditorView.updateTextContainerSize()`, also making
+    `textView.textLayoutManager` become `nil`.
+  These are deterministic TK2 → TK1 coercion points, not just timing races.
 
 ## Update / setup pipeline (current)
 
@@ -160,11 +170,35 @@ case (screenshot 11) — see "Hypotheses → Gutter" below.
 gated — verified by inspection — and the storage stamp is being called.
 Something else is preventing glyphs from rendering.
 
-## Hypotheses (still open)
+## Root cause / hypotheses
+
+### Confirmed root cause
+
+The current `main` branch still reads AppKit TextKit1 accessors on live
+`CodeEditorView` instances:
+
+1. `CodeEditorRepresentableHelper.calculateAppKitSize(...)` reads
+   `textView.layoutManager` in `sizeThatFits` when SwiftUI does not provide
+   both dimensions. A temporary regression test confirmed that this single
+   call clears `textView.textLayoutManager`.
+2. `CodeEditorView.updateTextContainerSize()` reads the inherited
+   `textStorage` property and `textContainer.layoutManager` while applying
+   `wrapLines`. A temporary regression test confirmed that enabling wrapped
+   layout clears `textView.textLayoutManager`.
+
+Once the view is coerced to TK1, several assumptions in the shipped fixes no
+longer hold: `stampThemeForeground()` only looks at
+`textContentStorage?.textStorage`, the TK2 rendering-attribute path is gone,
+and gutter drawing starts mixing real TK2 fragment y-values with fallback
+estimated line geometry.
 
 ### Invisible text
 
-1. **Order-of-operations across SwiftUI ticks.** SwiftUI may call
+1. **TK2 → TK1 coercion from SwiftUI sizing and wrapped layout.**
+   Confirmed by temporary focused tests on 2026-05-15. This is now the
+   primary explanation for text remaining invisible after the previous two
+   fixes.
+2. **Order-of-operations across SwiftUI ticks.** SwiftUI may call
    `updateContainer` multiple times. `apply(theme:)` runs first in the
    helper, *then* `coordinator.updateContainer` runs `setText`. On the
    first call, `appliedTheme` is `nil`, so `apply(theme:)` records the
@@ -173,33 +207,31 @@ Something else is preventing glyphs from rendering.
    post-setText `stampThemeForeground` doesn't fire, and `apply(theme:)`
    short-circuits because the theme is unchanged. The "always stamp"
    branch in `apply(theme:)` runs but happens *before* `setText` for that
-   tick, so it stamps then gets wiped immediately. **This is the most
-   likely failure mode and would explain the current observation.**
-2. **TK2 → TK1 coercion races.** The `NSRulerView` gutter has historically
+   tick, so it stamps then gets wiped immediately. Still plausible, but it
+   is secondary to the confirmed TK1 coercion points above.
+3. **TK2 → TK1 coercion from the ruler draw path.** The `NSRulerView` gutter has historically
    coerced the view to TK1. After coercion, `textContentStorage` may still
    be present but the `NSTextLayoutManager` is nil and rendering goes
    through TK1's `NSLayoutManager`. The stamp writes to NSTextStorage
    attributes; TK1 should honour them. Verify whether
    `textContentStorage?.textStorage` is the right surface after coercion
    versus `safeTextStorage` (the TK2-safe accessor used elsewhere).
-3. **Another path is wiping `.foregroundColor`.** Candidates:
+4. **Another path is wiping `.foregroundColor`.** Candidates:
    `RangeAttributeApplier.textStorageDidApplyEdit` (clears attributes near
    edited ranges on every edit-with-characters-changed), the
    `AsyncSyntaxHighlighter` finalisation path, or `applyParagraphStyle`
    which calls `beginEditing/endEditing` on the storage and might emit a
    notification that another observer reacts to by stripping colour.
-4. **Glyphs are drawn off-screen.** The gutter coordinate-space changes in
+5. **Glyphs are drawn off-screen.** The gutter coordinate-space changes in
    `d026d42` shouldn't have moved the *text* view, but the
    `textContainerOrigin` override in
    `CodeEditorView+LayoutExtensions.swift` (≈ line 127) explicitly chose
    not to offset when an `NSRulerView` is present. Worth re-reading.
 
-**Cheap diagnostic to run first:** before any rendering work, log
-`textColor`, `textContentStorage?.textStorage?.length`,
-`textContentStorage?.textStorage?.attributes(at: 0, effectiveRange: nil)`,
-and `textLayoutManager == nil` at three checkpoints: end of
-`setupContainer`, end of `apply(theme:)`, end of `updateContainer`. That
-nails down which assumption is wrong.
+**Diagnostic status:** the original three-checkpoint logging is no longer
+the cheapest next step. The failing boundary has been reproduced with
+targeted tests; fix the known TK1 accessor reads first, then reassess the
+theme-stamping order only if glyphs remain invisible.
 
 ### Gutter regression (screenshot 11)
 
@@ -285,24 +317,27 @@ Sources/CodeEditorSample/Switchers/SwitcherSection.swift                        
   applied (the visible line-spacing in screenshots is consistent with
   `lineHeightMultiple = 1.2`).
 
-## Suggested next steps (no code yet)
+## Suggested next steps / fix plan
 
-1. **Add the three-checkpoint diagnostic logging** described above to
-   confirm whether the storage attribute is actually present at draw
-   time. The current commits work in theory; we need ground truth before
-   the next fix.
-2. **Move `container.apply(theme:)` in `CodeEditorRepresentableHelper.updateContainer`
+1. **Add permanent regression tests** for the two confirmed TK1 coercion
+   points:
+   - SwiftUI AppKit size calculation must preserve `textLayoutManager`.
+   - Applying `wrapLines = true` must preserve `textLayoutManager`.
+2. **Remove live-editor TK1 accessor reads** from:
+   - `CodeEditorRepresentableHelper.calculateAppKitSize(...)`
+   - `CodeEditorView.updateTextContainerSize()`
+3. **Move `container.apply(theme:)` in `CodeEditorRepresentableHelper.updateContainer`
    to run *after* `coordinator.updateContainer`.** This makes the stamp
    the very last thing the pipeline does, so it can't be undone by
    `setText`. Right now `stampThemeForeground` runs both before (via
    `apply(theme:)`) and after (via the isHostBindingSwap branch), but the
    "after" stamp only fires on a swap, not on a same-text re-render.
-3. **Rewrite the gutter draw loop** to iterate
+4. **Rewrite the gutter draw loop** to iterate
    `textLayoutManager.enumerateTextLayoutFragments` and use
    `textLineFragments` per-fragment, then drop the
    `LineGeometryStore.yPosition` path and the index-times-line-height
    fallback. Fixes screenshot 11 and gives a single coordinate space.
-4. **Consider whether the editor should be rendering glyphs from a TK2
+5. **Consider whether the editor should be rendering glyphs from a TK2
    surface at all** given how often the rest of the codebase comments
    about the NSRulerView coercing back to TK1. If the view spends most of
    its life on TK1, structure colour management around NSTextStorage
