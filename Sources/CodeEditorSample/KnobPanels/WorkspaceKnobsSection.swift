@@ -56,7 +56,7 @@ struct WorkspaceKnobsSection: View {
             Spacer().frame(width: 28, height: 0)
             #if canImport(AppKit)
             Button {
-                presentOpenPanel()
+                WorkspacePicker.choose(currentRoot: workspaceRoot) { workspaceRoot = $0 }
             } label: {
                 Label("Choose…", systemImage: "folder.badge.plus")
                     .labelStyle(.titleAndIcon)
@@ -80,21 +80,4 @@ struct WorkspaceKnobsSection: View {
     private var pathDisplay: String {
         workspaceRoot?.path ?? "Not set"
     }
-
-    #if canImport(AppKit)
-    @MainActor
-    private func presentOpenPanel() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Select Workspace"
-        if let current = workspaceRoot {
-            panel.directoryURL = current
-        }
-        if panel.runModal() == .OK, let url = panel.url {
-            workspaceRoot = url
-        }
-    }
-    #endif
 }
