@@ -26,7 +26,7 @@ extension EditorDocuments {
             setActive(existing.id)
             return existing.id
         }
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else {
+        guard let text = try? Self.readWithSecurityScope(url) else {
             return nil
         }
         let language = LanguageDetectionService().detectLanguage(fromExtension: url.pathExtension)
@@ -52,12 +52,36 @@ extension EditorDocuments {
             return .untitled
         }
         do {
-            try document.text.write(to: url, atomically: true, encoding: .utf8)
+            try Self.writeWithSecurityScope(text: document.text, to: url)
             markClean(target)
             return .saved(url: url)
         } catch {
             return .failed(error: error)
         }
+    }
+
+    // MARK: - Security-scoped I/O helpers
+
+    /// Writes `text` to `url`. On iOS, brackets the write in
+    /// `startAccessingSecurityScopedResource` / `stopAccessingSecurityScopedResource`
+    /// so URLs returned by `UIDocumentPickerViewController` (or sandbox URLs from
+    /// any other picker) are written correctly. macOS compiles the bracket out.
+    private static func writeWithSecurityScope(text: String, to url: URL) throws {
+        #if !canImport(AppKit)
+        let acquired = url.startAccessingSecurityScopedResource()
+        defer { if acquired { url.stopAccessingSecurityScopedResource() } }
+        #endif
+        try text.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    /// Reads UTF-8 text from `url`. iOS bracket-pairs the read with
+    /// security-scope access; macOS compiles the bracket out.
+    private static func readWithSecurityScope(_ url: URL) throws -> String {
+        #if !canImport(AppKit)
+        let acquired = url.startAccessingSecurityScopedResource()
+        defer { if acquired { url.stopAccessingSecurityScopedResource() } }
+        #endif
+        return try String(contentsOf: url, encoding: .utf8)
     }
 
     // MARK: - Untitled naming
