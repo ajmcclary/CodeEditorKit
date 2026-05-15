@@ -39,7 +39,7 @@ What works on the package's declared Apple platforms. Reflects the package as of
 | Demo | macOS shell | iOS shell | Notes |
 |---|:---:|:---:|---|
 | 8 built-in presets (Default / Minimal / Read-only / Markdown / Presentation / macOS / iOS / Platform-Optimized) | ✅ | ✅ | exposed via `PresetCatalog` |
-| Theme picker (zed-trek family, 20 variants) | ✅ | ✅ | `ThemeCatalog.bundled("zed-trek")` |
+| Theme picker (zed-trek family, 20 variants) | ✅ | ✅ | `ThemeCatalog.all` / `ThemeCatalog.theme(named:)` in the sample, backed by `ThemeFamily.bundled("zed-trek")` |
 | Language picker (all 25 concrete languages + plain text) | ✅ | ✅ | `LanguageCatalog` |
 | Per-section knob panels (Display / Layout / Behavior / Performance / Workspace / Annotations) | ✅ | ✅ | iOS shows the same controls in a NavigationSplitView sidebar |
 | `Layout.textContainerInset` sliders | ✅ | ✅ | top / left / bottom / right edge controls |

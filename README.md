@@ -1,12 +1,12 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/test%20files-168-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/test%20files-199-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
 [![Swift](https://img.shields.io/badge/Swift-6.3%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS-lightgrey)](#requirements)
-[![Files](https://img.shields.io/badge/source%20files-543-blue)](#architecture)
+[![Files](https://img.shields.io/badge/source%20files-563-blue)](#architecture)
 
-A powerful, production-ready code editor component for native macOS and iOS / iPadOS. Built with Swift 6.3 and featuring syntax highlighting for 25 concrete languages plus plain text, comprehensive theming, and a modern architecture designed for performance and extensibility.
+A powerful, production-ready code editor component for native macOS and iOS / iPadOS. Built with Swift 6.3, TextKit2, and Swift 6 strict concurrency, featuring syntax highlighting for 25 concrete languages plus plain text, comprehensive theming, and a modern architecture designed for performance and extensibility.
 
 ## ✨ Key Features
 
@@ -14,7 +14,7 @@ A powerful, production-ready code editor component for native macOS and iOS / iP
 - **Cross-Platform**: Native performance on macOS and iOS / iPadOS
 - **Swift 6 Concurrency**: Actor-based architecture for thread safety and performance
 - **Rich Editing**: Line numbers, code folding, annotations, smart indentation
-- **Themeable**: Bundled LCARS Dark theme plus Zed-compatible JSON theme loading
+- **Themeable**: Bundled Zed Trek theme family (20 Star-Trek-inspired variants, default `LCARS Dark`) plus Zed-compatible JSON theme loading
 - **SwiftUI Native**: First-class SwiftUI integration with environment-based configuration
 - **Extensible**: Language Server Protocol support with local server management on macOS and remote WebSocket clients on all supported platforms
 
@@ -114,7 +114,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in [`docs/`](docs/README.md), organized by topic.
 
-21 top-level main-target directories, 469 Swift files in the main target, and 543 Swift files under `Sources/`.
+21 top-level main-target directories, 470 Swift files in the main target, and 563 Swift files under `Sources/`.
 
 ### Core Components
 
@@ -152,7 +152,7 @@ CodeEditor(text: $code)
 
 ### Themes
 
-The bundled default theme is LCARS Dark. Additional Zed-compatible theme JSON can be decoded through the theme loader APIs.
+The bundled default theme is `LCARS Dark`, drawn from the `Zed Trek` family (20 Star-Trek-inspired dark/light variants shipped in `Sources/CodeEditorPlugin/Resources/Themes/zed-trek.json`). `Theme.default`, `Theme.dark`, and `Theme.lcarsDark` all resolve to the same variant. Additional Zed-compatible theme JSON can be decoded through `ThemeFamily.bundled(_:)`, `ThemeFamily(jsonData:)`, `ThemeFamily(contentsOf:)`, and `Theme.bundled(family:variant:)`.
 
 ```swift
 CodeEditor(text: $code)
@@ -230,7 +230,7 @@ try await client.connect(configuration: server, language: .swift)
 
 ## 🧪 Testing
 
-The package includes 4 test targets and 168 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
+The package includes 4 test targets and 199 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
 
 ```bash
 # Run tests in parallel (faster)

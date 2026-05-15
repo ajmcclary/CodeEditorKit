@@ -25,23 +25,24 @@ The coordinator manages these specialized actors:
 // Recommended: Create new instances via dependency injection
 let coordinator = ActorCoordinator.create()
 
-// Configure in EditorConfiguration
+// Inject through EditorSetup / EditorRuntimeDependencies
 var config = EditorConfiguration()
-let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(actorCoordinator: coordinator))
-
-// Deprecated: Avoid using the singleton
-// let coordinator = ActorCoordinator.shared  // ⚠️ Deprecated
+let setup = EditorSetup(
+    runtimeDependencies: EditorRuntimeDependencies(actorCoordinator: coordinator)
+)
 ```
+
+`ActorCoordinator` has no singleton. Always pass an instance through `EditorRuntimeDependencies`.
 
 ### Accessing from CodeEditorView
 
 ```swift
-// The editor view provides convenient access
+// The editor view exposes the coordinator it was set up with.
 let coordinator = codeEditorView.actorCoordinator
 
-// Process text through the coordinator
+// Process the current buffer using the integrated actor system.
 try await codeEditorView.processText(
-    with: .formatter,
+    with: .whitespaceNormalization,
     priority: .high
 )
 ```
@@ -53,31 +54,31 @@ try await codeEditorView.processText(
 ```swift
 // Process text with automatic error recovery
 let processed = try await coordinator.processText(
-    "func example() { print(\"Hello\") }",
-    processorType: .formatter,
+    "    func example() {  }",
+    processorType: .whitespaceNormalization,
     priority: .high
 )
 
-// Available processor types:
-// - .tokenizer: Tokenize for syntax highlighting
-// - .formatter: Format code
-// - .linter: Lint for issues
-// - .minifier: Minify code
-// - .prettifier: Pretty print
+// Available processor types (TextProcessingActor.TextProcessor.ProcessorType):
+// - .indentation                  Indent / re-indent
+// - .bracketMatching              Bracket-pair processing
+// - .lineWrapping                 Soft-wrap normalization
+// - .whitespaceNormalization      Collapse / clean whitespace
+// - .encoding(String.Encoding)    Re-encode to a target encoding
 ```
 
 ### Error Recovery
 
 ```swift
-// The coordinator automatically handles recoverable errors
+// The coordinator automatically retries recoverable errors via ErrorRecoveryCoordinator.
 do {
     let result = try await coordinator.processText(
         text,
-        processorType: .formatter
+        processorType: .whitespaceNormalization
     )
 } catch {
-    // Only non-recoverable errors reach here
-    // Recoverable errors are automatically retried
+    // Only non-recoverable errors reach here.
+    // Recoverable errors are retried inside processText().
 }
 ```
 
@@ -104,13 +105,14 @@ await coordinator.trackPerformance(
 ### Accessing Metrics
 
 ```swift
-// Get aggregated metrics from the performance actor
-let metrics = await coordinator.performanceMetrics.getMetrics(
-    for: "syntax-highlighting"
-)
+// Get aggregated stats from the performance actor.
+if let stats = await coordinator.performanceMetrics.getStats(for: "syntax-highlighting") {
+    CrossPlatformLogger.logger().info("Average duration: \(stats.averageDuration)")
+    CrossPlatformLogger.logger().info("Total samples: \(stats.count)")
+}
 
-CrossPlatformLogger.logger().info("Average duration: \(metrics.averageDuration)")
-CrossPlatformLogger.logger().info("Total operations: \(metrics.count)")
+// Or read every recorded category at once.
+let all = await coordinator.performanceMetrics.getAllStats()
 ```
 
 ## Document Management
@@ -143,8 +145,9 @@ await coordinator.documentState.updateContent(
     content: newContent
 )
 
-// Track document lifecycle
-await coordinator.documentState.markAsModified(documentId)
+// Mark as saved or close when the host app is done with the document.
+await coordinator.documentState.markSaved(documentId)
+await coordinator.documentState.closeDocument(documentId)
 ```
 
 ## Cache Integration
@@ -152,15 +155,17 @@ await coordinator.documentState.markAsModified(documentId)
 ### Using the Cache System
 
 ```swift
-// The cache coordinator manages all caches
+// The cache coordinator routes through any number of registered caches.
 let cache = coordinator.cacheCoordinator
 
-// Cache syntax tokens
-await cache.cacheTokens(tokens, for: cacheKey)
+// Register a cache (e.g. SmartTokenCache implements CacheProtocol).
+await cache.registerCache(tokenCache, identifier: "syntax-tokens")
 
-// Retrieve cached data
-let cachedTokens = await cache.getCachedTokens(for: cacheKey)
+// Clear a specific cache by identifier.
+await cache.clearCache("syntax-tokens")
 ```
+
+Individual caches (such as `SmartTokenCache`) handle the actual `getValue` / `setValue` plumbing through `CacheProtocol`.
 
 ### Smart Token Cache Integration
 
@@ -180,15 +185,17 @@ extension SmartTokenCache: CacheProtocol {
 // Perform file operations through the actor
 let content = try await coordinator.fileSystem.readFile(at: url)
 
-// Write with automatic backup
-try await coordinator.fileSystem.writeFile(
-    content: content,
-    to: url,
-    createBackup: true
-)
+// Write to disk
+try await coordinator.fileSystem.writeFile(content, to: url)
 
-// List directory contents
-let files = try await coordinator.fileSystem.listDirectory(at: directoryURL)
+// Open / close handles
+try coordinator.fileSystem.openFile(at: url)
+coordinator.fileSystem.closeFile(at: url)
+
+// Observe changes to a file
+try await coordinator.fileSystem.watchFile(at: url) { event in
+    // ...
+}
 ```
 
 ## Error Recovery
@@ -222,19 +229,17 @@ ActorCoordinator requires:
 ### Dependency Injection
 
 ```swift
-// ✅ Good: Pass coordinator through configuration
+// ✅ Good: Pass coordinator explicitly through EditorRuntimeDependencies.
 class MyEditorViewController {
     let coordinator: ActorCoordinator
-    
-    init(configuration: EditorConfiguration) {
-        self.coordinator = runtime.dependencies.actorCoordinator
+
+    init(coordinator: ActorCoordinator) {
+        self.coordinator = coordinator
     }
 }
 
-// ❌ Bad: Using deprecated singleton
-class MyEditorViewController {
-    let coordinator = ActorCoordinator.shared  // Deprecated!
-}
+// ❌ Bad: There is no singleton. Don't invent one.
+//   `ActorCoordinator.shared` does not exist.
 ```
 
 ### Lifecycle Management
@@ -251,14 +256,14 @@ func createEditor() -> CodeEditorView {
 ### Error Handling
 
 ```swift
-// Let the coordinator handle recoverable errors
+// Let the coordinator handle recoverable errors.
 do {
     let result = try await coordinator.processText(
         text,
-        processorType: .formatter
+        processorType: .whitespaceNormalization
     )
 } catch {
-    // Only handle non-recoverable errors
+    // Only handle non-recoverable errors.
     CrossPlatformLogger.logger().error("Unrecoverable error: \(error)")
 }
 ```
@@ -283,11 +288,11 @@ class EditorViewModel: ObservableObject {
         self.coordinator = coordinator
     }
     
-    func formatCode(_ code: String) async {
+    func normalizeWhitespace(_ code: String) async {
         do {
             processedText = try await coordinator.processText(
                 code,
-                processorType: .formatter
+                processorType: .whitespaceNormalization
             )
         } catch {
             // Handle error

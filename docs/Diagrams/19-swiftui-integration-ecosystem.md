@@ -48,9 +48,9 @@ classDiagram
         +makeCoordinator() CodeEditorCoordinator
     }
 
-    %% Row 2 - Platform Representables
+    %% Row 2 - Platform Representable (single type, conditionally compiled)
     class CodeEditorRepresentable {
-        <<cross-platform representable>>
+        <<platform-conditional struct>>
         @Binding text String
         +language Language
         +theme Theme
@@ -61,23 +61,10 @@ classDiagram
         +onTextChange ((String) -> Void)?
         +onSelectionChange ((NSRange) -> Void)?
         +typealias Coordinator CodeEditorCoordinator
-    }
-
-    class AppKitCodeEditorRepresentable {
-        <<NSViewRepresentable macOS 26.3+>>
-        +makeNSView(context) CodeEditorContainerView
-        +updateNSView(nsView, context) Void
-        +dismantleNSView(_, coordinator) Void
-        +sizeThatFits(proposal, nsView, context) CGSize?
-        +makeCoordinator() CodeEditorCoordinator
-    }
-
-    class UIKitCodeEditorRepresentable {
-        <<UIViewRepresentable iOS 26.3+>>
-        +makeUIView(context) CodeEditorContainerView
-        +updateUIView(uiView, context) Void
-        +dismantleUIView(_, coordinator) Void
-        +sizeThatFits(proposal, uiView, context) CGSize?
+        +makeNSView/makeUIView(context) CodeEditorContainerView
+        +updateNSView/updateUIView(_, context) Void
+        +dismantleNSView/dismantleUIView(_, coordinator) Void
+        +sizeThatFits(proposal, view, context) CGSize?
         +makeCoordinator() CodeEditorCoordinator
     }
 
@@ -343,8 +330,10 @@ classDiagram
     CodeEditor --> CodeEditorRepresentable : creates representable
     CodeEditor --> MemoryMonitor : manages default monitor
     
-    CodeEditorRepresentable <|-- AppKitCodeEditorRepresentable : platform-specific
-    CodeEditorRepresentable <|-- UIKitCodeEditorRepresentable : platform-specific
+    %% CodeEditorRepresentable is a single struct conformed to
+    %% NSViewRepresentable (AppKit) or UIViewRepresentable (UIKit) via
+    %% #if canImport(AppKit) / #if canImport(UIKit) in separate extensions.
+
     
     CodeEditorRepresentableHelper --> CodeEditorCoordinator : creates coordinator
     CodeEditorRepresentableHelper --> CodeEditorContainerView : manages container
@@ -395,8 +384,6 @@ classDiagram
     class BecomeFirstResponderOption environment
     
     class CodeEditorRepresentable representable
-    class AppKitCodeEditorRepresentable representable
-    class UIKitCodeEditorRepresentable representable
     class CodeEditorRepresentableHelper representable
     
     class CodeEditorBaseCoordinator coordinator
@@ -556,7 +543,7 @@ struct AdvancedCodeEditor: View {
             .codeEditorEnvironment {
                 CodeEditorEnvironment(
                     language: .swift,
-                    theme: .monokai,
+                    theme: .dark,
                     configuration: .presentation,
                     memoryMonitor: customMemoryMonitor
                 )
@@ -596,9 +583,12 @@ struct PerformanceAwareEditor: View {
 ```
 
 ### @Observable ViewModel Integration
+
+> The host app provides its own `@Observable` state container — this is **not** a framework type. The sample app uses `AppState` in the `CodeEditorSample` target; replace it with whatever your app exposes.
+
 ```swift
 @Observable
-final class CodeEditorAppState {
+final class EditorAppState {
     var code: String = ""
     var language: Language = .swift
     var theme: Theme = .default
@@ -610,7 +600,7 @@ final class CodeEditorAppState {
 }
 
 struct ObservableCodeEditor: View {
-    @State private var appState = CodeEditorAppState()
+    @State private var appState = EditorAppState()
     
     var body: some View {
         CodeEditor(text: $appState.code)
@@ -671,11 +661,10 @@ struct FactoryExampleView: View {
 
 ## Technical Highlights
 
-- **401 Source Files** with comprehensive SwiftUI integration
-- **66 Test Files** ensuring reliability across all platforms
+- **563 Swift files** under `Sources/` (470 in the main `CodeEditorPlugin` target) — see [CLAUDE.md](../../CLAUDE.md) for the up-to-date breakdown.
 - **20+ View Modifiers** for declarative configuration
-- **Zero SwiftLint Violations** maintained for code quality
-- **Swift 6 Ready** with full concurrency compliance
+- **Zero SwiftLint Violations** maintained for code quality (strict mode)
+- **Swift 6.3 Ready** with full concurrency compliance
 - **@Observable ViewModels** for modern state management
 - **Real-time Performance Monitoring** with adaptive behavior
-- **Cross-platform Representables** with shared helper logic
+- **Platform-conditional Representable** with a shared helper for setup, sizing, and dismantling

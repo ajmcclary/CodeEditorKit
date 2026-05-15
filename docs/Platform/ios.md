@@ -21,6 +21,7 @@ let textColor = PlatformColors.label
 let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14)
 
 // Use platform values when building app chrome; editor color comes from Theme.
+// Theme.default resolves to the bundled "LCARS Dark" variant of the Zed Trek family.
 var config = EditorConfiguration()
 config.display.fontSize = 16
 config.layout.tabWidth = 4

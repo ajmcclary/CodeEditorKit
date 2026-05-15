@@ -76,7 +76,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-21 top-level directories, 469 Swift source files in the main target, and 543 Swift source files under `Sources/`.
+21 top-level directories, 470 Swift source files in the main target, and 563 Swift source files under `Sources/`.
 
 Other source roots:
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
@@ -153,7 +153,7 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 - **Custom lint rule `no_print_statements`** matches `///` doc comment lines in source, but the regex exempts them. Edits to that regex must preserve the `///` exclusion.
 
-- **`canImport` conventions are enforced across ~296 files**. Adding a new `#if os()` is a regression.
+- **`canImport` conventions are enforced across ~247 files**. Adding a new `#if os()` is a regression.
 
 - **Test count varies**: the codebase uses both `@Suite` (Swift Testing) and `XCTestCase` (XCTest). Counting "tests" depends on framework — `swift test --parallel` runs all of them regardless.
 

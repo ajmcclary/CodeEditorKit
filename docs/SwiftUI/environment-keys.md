@@ -84,13 +84,20 @@ struct ThemedEditor: View {
     
     var body: some View {
         CodeEditor(text: .constant(""))
-            .environment(\.codeEditorTheme, colorScheme == .dark ? .dark : .default)
+            .environment(
+                \.codeEditorTheme,
+                colorScheme == .dark
+                    ? Theme.bundled(family: "zed-trek", variant: "LCARS Dark") ?? .dark
+                    : Theme.bundled(family: "zed-trek", variant: "LCARS Light") ?? .default
+            )
     }
 }
 ```
 
+> The built-in `Theme.default`, `Theme.dark`, and `Theme.lcarsDark` all resolve to the bundled `"LCARS Dark"` variant of the `Zed Trek` family. For a light/dark split, load specific variants via `Theme.bundled(family:variant:)` as shown above, or define your own helpers.
+
 **Type**: `Theme`  
-**Default**: `.default`
+**Default**: `.default` (resolves to `Theme.lcarsDark` → `"LCARS Dark"`)
 
 > **Related Modifier**: Use `.codeTheme(_:)` for setting the theme on individual editors.
 
