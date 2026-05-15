@@ -394,6 +394,21 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Update internal state
         updateState(text: text, language: language, configuration: configuration)
 
+        // Mirror the effective hardware-acceleration state once at mount.
+        // Sticky — live config changes do not toggle this field. UIKit
+        // views are always layer-backed by definition; AppKit reflects
+        // the knob.
+        if let hostEditorState {
+            #if canImport(AppKit)
+            let effective = configuration.performance.useHardwareAcceleration
+            #else
+            let effective = true
+            #endif
+            if hostEditorState.hardwareAccelerationActive != effective {
+                hostEditorState.hardwareAccelerationActive = effective
+            }
+        }
+
         // Reconcile the .codeCompletion modifier closure against the
         // text view's completion manager. First-call path; subsequent
         // updates flow through `updateContainer`.
