@@ -24,6 +24,25 @@ struct IOSRootView: View {
         }
         .codeTheme(appState.theme)
         .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
+        .sheet(item: $appState.pendingSaveAs) { state in
+            ExportDocumentSheet(
+                temporaryURL: state.temporaryURL,
+                onPick: { url in
+                    appState.finalizeSaveAs(to: url)
+                    appState.pendingSaveAs = nil
+                },
+                onCancel: { appState.pendingSaveAs = nil }
+            )
+        }
+        .sheet(isPresented: $appState.pendingOpenFile) {
+            ImportDocumentSheet(
+                onPick: { url in
+                    appState.documents.openFile(url: url)
+                    appState.pendingOpenFile = false
+                },
+                onCancel: { appState.pendingOpenFile = false }
+            )
+        }
     }
 
     private var sidebar: some View {
@@ -208,10 +227,20 @@ struct IOSRootView: View {
     @ToolbarContentBuilder
     private func toolbar(documents: EditorDocuments) -> some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
-            Button {
-                documents.newTab()
+            Menu {
+                Button("Save", action: appState.requestSave)
+                    .keyboardShortcut("s", modifiers: .command)
+                    .disabled(appState.documents.active == nil)
+                Button("Save As…", action: appState.requestSaveAs)
+                    .keyboardShortcut("s", modifiers: [.command, .shift])
+                    .disabled(appState.documents.active == nil)
+                Divider()
+                Button("New Tab") { documents.newTab() }
+                    .keyboardShortcut("t", modifiers: .command)
+                Button("Open File…", action: appState.requestOpenFile)
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
             } label: {
-                Label("New Tab", systemImage: "plus")
+                Label("File", systemImage: "doc")
             }
         }
     }
