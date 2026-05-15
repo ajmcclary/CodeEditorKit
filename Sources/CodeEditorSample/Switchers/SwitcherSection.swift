@@ -5,7 +5,7 @@ import SwiftUI
 /// Preset. Replaces the previous trio of stacked `Picker(.menu)` blocks.
 struct SwitcherSection: View {
     @Bindable var theme: ThemeModel
-    @Binding var configuration: EditorConfiguration
+    @Bindable var configuration: ConfigurationModel
     @Bindable var documents: EditorDocuments
 
     var body: some View {
@@ -80,7 +80,7 @@ struct SwitcherSection: View {
     private var presetBinding: Binding<ConfigurationPreset> {
         Binding(
             get: {
-                PresetCatalog.all.first { $0.configuration == configuration }
+                PresetCatalog.all.first { $0.configuration == configuration.current }
                     ?? PresetCatalog.default
             },
             set: { newValue in
@@ -88,7 +88,7 @@ struct SwitcherSection: View {
                 // section; pull display/behavior/layout from the preset.
                 // Pair with the palette "Reset to preset" entry for the
                 // wholesale-replace variant.
-                configuration = PresetCatalog.apply(newValue, onto: configuration)
+                configuration.current = PresetCatalog.apply(newValue, onto: configuration.current)
             }
         )
     }

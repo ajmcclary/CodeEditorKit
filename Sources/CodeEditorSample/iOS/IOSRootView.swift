@@ -156,7 +156,7 @@ struct IOSRootView: View {
             CodeEditor()
                 .editorController(appState.editorController)
                 .activeDocument(in: appState.documents)
-                .environment(\.codeEditorConfiguration, appState.configuration)
+                .environment(\.codeEditorConfiguration, appState.configuration.current)
                 .codeTheme(appState.theme.current)
                 .codeWorkspaceRoot(appState.workspaceRoot)
                 .becomeFirstResponder()
@@ -174,10 +174,10 @@ struct IOSRootView: View {
     private var settingsPanel: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 4) {
-                DisplayKnobsSection(configuration: $appState.configuration, expansion: .always)
-                LayoutKnobsSection(configuration: $appState.configuration, expansion: .always)
-                BehaviorKnobsSection(configuration: $appState.configuration, expansion: .always)
-                PerformanceKnobsSection(configuration: $appState.configuration, expansion: .always)
+                DisplayKnobsSection(configuration: appState.configuration, expansion: .always)
+                LayoutKnobsSection(configuration: appState.configuration, expansion: .always)
+                BehaviorKnobsSection(configuration: appState.configuration, expansion: .always)
+                PerformanceKnobsSection(configuration: appState.configuration, expansion: .always)
                 WorkspaceKnobsSection(workspaceRoot: $appState.workspaceRoot, expansion: .always)
                 AnnotationsKnobsSection(appState: appState, expansion: .always)
             }

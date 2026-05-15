@@ -16,8 +16,9 @@ final class AppState {
     let theme = ThemeModel()
 
     /// Active editor configuration. Bound directly from the knob panels;
-    /// flows into the editor via `\.codeEditorConfiguration`.
-    var configuration: EditorConfiguration = PresetCatalog.default.configuration
+    /// flows into the editor via `\.codeEditorConfiguration`. Second
+    /// slice of the AppState decomposition (NEXT.md A.3 #1).
+    let configuration = ConfigurationModel()
 
     /// Workspace root for runtime-only LSP/file integrations.
     var workspaceRoot: URL?

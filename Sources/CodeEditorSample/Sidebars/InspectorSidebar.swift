@@ -134,7 +134,7 @@ struct InspectorSidebar: View {
     }
 
     private var rendered: String {
-        ConfigurationCodeFormatter.render(appState.configuration)
+        ConfigurationCodeFormatter.render(appState.configuration.current)
     }
 
     private func copyToPasteboard(_ string: String) {

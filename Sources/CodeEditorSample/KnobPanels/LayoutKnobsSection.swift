@@ -6,7 +6,7 @@ import SwiftUI
 // `EdgeInsets`, just under a non-conflicting name.
 
 struct LayoutKnobsSection: View {
-    @Binding var configuration: EditorConfiguration
+    @Bindable var configuration: ConfigurationModel
     @State private var expanded: Bool = false
     var expansion: KnobSectionExpansion = .toggleable
 
@@ -62,17 +62,17 @@ struct LayoutKnobsSection: View {
         _ keyPath: WritableKeyPath<FrameworkEdgeInsets, CGFloat>
     ) -> Binding<CGFloat> {
         Binding(
-            get: { configuration.layout.textContainerInset[keyPath: keyPath] },
-            set: { configuration.layout.textContainerInset[keyPath: keyPath] = $0 }
+            get: { configuration.current.layout.textContainerInset[keyPath: keyPath] },
+            set: { configuration.current.layout.textContainerInset[keyPath: keyPath] = $0 }
         )
     }
 
     @ViewBuilder
     private var tabsSection: some View {
         KnobSubsection(title: "Tabs")
-        StepperRow(label: "tabWidth", value: $configuration.layout.tabWidth, range: 1...8)
-        ToggleRow(label: "insertSpacesForTabs", value: $configuration.layout.insertSpacesForTabs)
-        ToggleRow(label: "wrapLines", value: $configuration.layout.wrapLines)
+        StepperRow(label: "tabWidth", value: $configuration.current.layout.tabWidth, range: 1...8)
+        ToggleRow(label: "insertSpacesForTabs", value: $configuration.current.layout.insertSpacesForTabs)
+        ToggleRow(label: "wrapLines", value: $configuration.current.layout.wrapLines)
     }
 
     @ViewBuilder
@@ -80,25 +80,25 @@ struct LayoutKnobsSection: View {
         KnobSubsection(title: "Spacing")
         CGFloatSliderRow(
             label: "gutterWidth",
-            value: $configuration.layout.gutterWidth,
+            value: $configuration.current.layout.gutterWidth,
             range: 0...80,
             step: 0.5
         )
         CGFloatSliderRow(
             label: "lineNumberPadding",
-            value: $configuration.layout.lineNumberPadding,
+            value: $configuration.current.layout.lineNumberPadding,
             range: 0...40,
             step: 0.5
         )
         CGFloatSliderRow(
             label: "lineHeightMultiple",
-            value: $configuration.layout.lineHeightMultiple,
+            value: $configuration.current.layout.lineHeightMultiple,
             range: 0.0...2.0,
             step: 0.05
         )
         CGFloatSliderRow(
             label: "characterSpacing",
-            value: $configuration.layout.characterSpacing,
+            value: $configuration.current.layout.characterSpacing,
             range: 0.0...4.0,
             step: 0.05
         )
@@ -109,19 +109,19 @@ struct LayoutKnobsSection: View {
         KnobSubsection(title: "Width & Badges")
         CGFloatSliderRow(
             label: "textContainerWidthFraction",
-            value: $configuration.layout.textContainerWidthFraction,
+            value: $configuration.current.layout.textContainerWidthFraction,
             range: 0.5...1.0,
             step: 0.05
         )
         CGFloatSliderRow(
             label: "annotationBadgeSize",
-            value: $configuration.layout.annotationBadgeSize,
+            value: $configuration.current.layout.annotationBadgeSize,
             range: 6...32,
             step: 0.5
         )
         CGFloatSliderRow(
             label: "annotationBadgePadding",
-            value: $configuration.layout.annotationBadgePadding,
+            value: $configuration.current.layout.annotationBadgePadding,
             range: 0...16,
             step: 0.5
         )
@@ -132,19 +132,19 @@ struct LayoutKnobsSection: View {
         KnobSubsection(title: "Minimap & Folding")
         CGFloatSliderRow(
             label: "minimapWidth",
-            value: $configuration.layout.minimapWidth,
+            value: $configuration.current.layout.minimapWidth,
             range: 40...240,
             step: 1
         )
         CGFloatSliderRow(
             label: "foldingControlSize",
-            value: $configuration.layout.foldingControlSize,
+            value: $configuration.current.layout.foldingControlSize,
             range: 6...24,
             step: 0.5
         )
         CGFloatSliderRow(
             label: "foldingControlPadding",
-            value: $configuration.layout.foldingControlPadding,
+            value: $configuration.current.layout.foldingControlPadding,
             range: 0...12,
             step: 0.5
         )

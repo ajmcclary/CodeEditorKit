@@ -66,8 +66,8 @@ struct WindowBody: View {
                 }
                 .activeDocument(in: appState.documents)
                 .codeWorkspaceRoot(appState.workspaceRoot)
-                .environment(\.codeEditorConfiguration, appState.configuration)
-                .lineNumbers(appState.configuration.display.isLineNumbersEnabled)
+                .environment(\.codeEditorConfiguration, appState.configuration.current)
+                .lineNumbers(appState.configuration.current.display.isLineNumbersEnabled)
                 .becomeFirstResponder()
                 .performanceObserver(appState.performanceObservation)
                 .eventSystem(appState.eventSystem)
@@ -133,7 +133,7 @@ struct WindowBody: View {
                 FindReplaceOverlay(
                     model: appState.findReplace,
                     controller: appState.editorController,
-                    isReadOnly: !appState.configuration.behavior.isEditable
+                    isReadOnly: !appState.configuration.current.behavior.isEditable
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
             }

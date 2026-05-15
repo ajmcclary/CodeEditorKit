@@ -47,7 +47,7 @@ enum CommandPaletteCatalog {
             // configuration, preserving the user's tuned performance knobs.
             let apply = CommandPaletteItem(title: "Preset: \(preset.name)", kind: .setting)
             actions[apply.id] = {
-                appState.configuration = PresetCatalog.apply(preset, onto: appState.configuration)
+                appState.configuration.current = PresetCatalog.apply(preset, onto: appState.configuration.current)
             }
             items.append(apply)
 
@@ -55,7 +55,7 @@ enum CommandPaletteCatalog {
             // variant — kept separate so the merge above stays safe to
             // explore without clobbering the user's tuning.
             let reset = CommandPaletteItem(title: "Reset to preset: \(preset.name)", kind: .setting)
-            actions[reset.id] = { appState.configuration = preset.configuration }
+            actions[reset.id] = { appState.configuration.current = preset.configuration }
             items.append(reset)
         }
 

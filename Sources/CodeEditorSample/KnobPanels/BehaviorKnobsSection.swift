@@ -2,7 +2,7 @@ import CodeEditorPlugin
 import SwiftUI
 
 struct BehaviorKnobsSection: View {
-    @Binding var configuration: EditorConfiguration
+    @Bindable var configuration: ConfigurationModel
     @State private var expanded: Bool = false
     var expansion: KnobSectionExpansion = .toggleable
 
@@ -27,10 +27,10 @@ struct BehaviorKnobsSection: View {
     @ViewBuilder
     private var editingSection: some View {
         KnobSubsection(title: "Editing")
-        ToggleRow(label: "isEditable", value: $configuration.behavior.isEditable)
-        ToggleRow(label: "isSelectable", value: $configuration.behavior.isSelectable)
-        ToggleRow(label: "isAutoIndentEnabled", value: $configuration.behavior.isAutoIndentEnabled)
-        ToggleRow(label: "autoScrollToCursor", value: $configuration.behavior.autoScrollToCursor)
+        ToggleRow(label: "isEditable", value: $configuration.current.behavior.isEditable)
+        ToggleRow(label: "isSelectable", value: $configuration.current.behavior.isSelectable)
+        ToggleRow(label: "isAutoIndentEnabled", value: $configuration.current.behavior.isAutoIndentEnabled)
+        ToggleRow(label: "autoScrollToCursor", value: $configuration.current.behavior.autoScrollToCursor)
     }
 
     @ViewBuilder
@@ -38,18 +38,18 @@ struct BehaviorKnobsSection: View {
         KnobSubsection(title: "Auto-Substitution")
         ToggleRow(
             label: "isAutomaticLinkDetectionEnabled",
-            value: $configuration.behavior.isAutomaticLinkDetectionEnabled
+            value: $configuration.current.behavior.isAutomaticLinkDetectionEnabled
         )
         ToggleRow(
             label: "isAutomaticQuoteSubstitutionEnabled",
-            value: $configuration.behavior.isAutomaticQuoteSubstitutionEnabled
+            value: $configuration.current.behavior.isAutomaticQuoteSubstitutionEnabled
         )
         ToggleRow(
             label: "isAutomaticDashSubstitutionEnabled",
-            value: $configuration.behavior.isAutomaticDashSubstitutionEnabled
+            value: $configuration.current.behavior.isAutomaticDashSubstitutionEnabled
         )
-        ToggleRow(label: "autoCloseBrackets", value: $configuration.behavior.autoCloseBrackets)
-        ToggleRow(label: "autoCloseQuotes", value: $configuration.behavior.autoCloseQuotes)
+        ToggleRow(label: "autoCloseBrackets", value: $configuration.current.behavior.autoCloseBrackets)
+        ToggleRow(label: "autoCloseQuotes", value: $configuration.current.behavior.autoCloseQuotes)
     }
 
     @ViewBuilder
@@ -57,37 +57,37 @@ struct BehaviorKnobsSection: View {
         KnobSubsection(title: "Spell-Check")
         ToggleRow(
             label: "isContinuousSpellCheckingEnabled",
-            value: $configuration.behavior.isContinuousSpellCheckingEnabled
+            value: $configuration.current.behavior.isContinuousSpellCheckingEnabled
         )
         ToggleRow(
             label: "isGrammarCheckingEnabled",
-            value: $configuration.behavior.isGrammarCheckingEnabled
+            value: $configuration.current.behavior.isGrammarCheckingEnabled
         )
         ToggleRow(
             label: "isAutomaticTextReplacementEnabled",
-            value: $configuration.behavior.isAutomaticTextReplacementEnabled
+            value: $configuration.current.behavior.isAutomaticTextReplacementEnabled
         )
         ToggleRow(
             label: "isAutomaticSpellingCorrectionEnabled",
-            value: $configuration.behavior.isAutomaticSpellingCorrectionEnabled
+            value: $configuration.current.behavior.isAutomaticSpellingCorrectionEnabled
         )
     }
 
     @ViewBuilder
     private var completionSection: some View {
         KnobSubsection(title: "Completion")
-        ToggleRow(label: "isCodeCompletionEnabled", value: $configuration.behavior.isCodeCompletionEnabled)
+        ToggleRow(label: "isCodeCompletionEnabled", value: $configuration.current.behavior.isCodeCompletionEnabled)
         ToggleRow(
             label: "isAutomaticTextCompletionEnabled",
-            value: $configuration.behavior.isAutomaticTextCompletionEnabled
+            value: $configuration.current.behavior.isAutomaticTextCompletionEnabled
         )
         ToggleRow(
             label: "showInlineCompletionSuggestions",
-            value: $configuration.behavior.showInlineCompletionSuggestions
+            value: $configuration.current.behavior.showInlineCompletionSuggestions
         )
         CharSetRow(
             label: "completionTriggerCharacters",
-            value: $configuration.behavior.completionTriggerCharacters
+            value: $configuration.current.behavior.completionTriggerCharacters
         )
     }
 }

@@ -84,16 +84,16 @@ struct SettingsScene: View {
     private var detailContent: some View {
         switch selection {
         case .display:
-            DisplayKnobsSection(configuration: $appState.configuration, expansion: .always)
+            DisplayKnobsSection(configuration: appState.configuration, expansion: .always)
 
         case .layout:
-            LayoutKnobsSection(configuration: $appState.configuration, expansion: .always)
+            LayoutKnobsSection(configuration: appState.configuration, expansion: .always)
 
         case .behavior:
-            BehaviorKnobsSection(configuration: $appState.configuration, expansion: .always)
+            BehaviorKnobsSection(configuration: appState.configuration, expansion: .always)
 
         case .performance:
-            PerformanceKnobsSection(configuration: $appState.configuration, expansion: .always)
+            PerformanceKnobsSection(configuration: appState.configuration, expansion: .always)
 
         case .workspace:
             WorkspaceKnobsSection(workspaceRoot: $appState.workspaceRoot, expansion: .always)
@@ -104,7 +104,7 @@ struct SettingsScene: View {
         case .theme:
             SwitcherSection(
                 theme: appState.theme,
-                configuration: $appState.configuration,
+                configuration: appState.configuration,
                 documents: appState.documents
             )
             .padding(.top, 4)

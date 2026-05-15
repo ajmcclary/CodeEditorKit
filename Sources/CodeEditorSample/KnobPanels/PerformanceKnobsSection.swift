@@ -2,7 +2,7 @@ import CodeEditorPlugin
 import SwiftUI
 
 struct PerformanceKnobsSection: View {
-    @Binding var configuration: EditorConfiguration
+    @Bindable var configuration: ConfigurationModel
     @State private var expanded: Bool = false
     var expansion: KnobSectionExpansion = .toggleable
 
@@ -29,25 +29,25 @@ struct PerformanceKnobsSection: View {
         KnobSubsection(title: "Limits")
         StepperRow(
             label: "maxSyntaxHighlightingLength",
-            value: $configuration.performance.maxSyntaxHighlightingLength,
+            value: $configuration.current.performance.maxSyntaxHighlightingLength,
             range: 1_024...10_485_760,
             step: 1_024
         )
         StepperRow(
             label: "maxVisibleLines",
-            value: $configuration.performance.maxVisibleLines,
+            value: $configuration.current.performance.maxVisibleLines,
             range: 1...100_000,
             step: 100
         )
         StepperRow(
             label: "maxFileSize",
-            value: $configuration.performance.maxFileSize,
+            value: $configuration.current.performance.maxFileSize,
             range: 0...100_000_000,
             step: 1_024
         )
         StepperRow(
             label: "maxEventsPerSecond",
-            value: $configuration.performance.maxEventsPerSecond,
+            value: $configuration.current.performance.maxEventsPerSecond,
             range: 1...240
         )
     }
@@ -57,20 +57,20 @@ struct PerformanceKnobsSection: View {
         KnobSubsection(title: "Strategy")
         ToggleRow(
             label: "useHardwareAcceleration",
-            value: $configuration.performance.useHardwareAcceleration
+            value: $configuration.current.performance.useHardwareAcceleration
         )
-        ToggleRow(label: "smoothScrolling", value: $configuration.performance.smoothScrolling)
+        ToggleRow(label: "smoothScrolling", value: $configuration.current.performance.smoothScrolling)
         ToggleRow(
             label: "animateCodeFolding (perf)",
-            value: $configuration.performance.animateCodeFolding
+            value: $configuration.current.performance.animateCodeFolding
         )
         ToggleRow(
             label: "usesRangeBasedHighlighting",
-            value: $configuration.performance.usesRangeBasedHighlighting
+            value: $configuration.current.performance.usesRangeBasedHighlighting
         )
         PickerRow(
             label: "renderingUpdateStrategy",
-            value: $configuration.performance.renderingUpdateStrategy,
+            value: $configuration.current.performance.renderingUpdateStrategy,
             cases: [.adaptive, .immediate, .batched]
         ) {
             String(describing: $0).capitalized
@@ -82,12 +82,12 @@ struct PerformanceKnobsSection: View {
         KnobSubsection(title: "Debounce")
         DurationRow(
             label: "highlightingDebounceInterval",
-            value: $configuration.performance.highlightingDebounceInterval,
+            value: $configuration.current.performance.highlightingDebounceInterval,
             rangeMS: 0...1_000
         )
         DurationRow(
             label: "textChangeDebounceInterval",
-            value: $configuration.performance.textChangeDebounceInterval,
+            value: $configuration.current.performance.textChangeDebounceInterval,
             rangeMS: 0...1_000
         )
     }
@@ -98,17 +98,17 @@ struct PerformanceKnobsSection: View {
         KnobSubsection(title: "iOS Large Files")
         ToggleRow(
             label: "enableIOSOptimizations",
-            value: $configuration.performance.enableIOSOptimizations
+            value: $configuration.current.performance.enableIOSOptimizations
         )
         StepperRow(
             label: "iOSLargeFileThreshold",
-            value: $configuration.performance.iOSLargeFileThreshold,
+            value: $configuration.current.performance.iOSLargeFileThreshold,
             range: 65_536...10_485_760,
             step: 65_536
         )
         StepperRow(
             label: "iOSMaxHighlightingChunk",
-            value: $configuration.performance.iOSMaxHighlightingChunk,
+            value: $configuration.current.performance.iOSMaxHighlightingChunk,
             range: 4_096...1_048_576,
             step: 4_096
         )
