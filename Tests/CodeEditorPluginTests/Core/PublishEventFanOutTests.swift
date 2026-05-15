@@ -83,5 +83,47 @@ final class PublishEventFanOutTests: XCTestCase {
             "Setting selection should fan out a textSelectionDidChange event into the customer-supplied UnifiedEventSystem."
         )
     }
+
+    func testBecomeFirstResponderFansOutFocusEvent() throws {
+        let (view, eventSystem, window) = try makeHostedView()
+        defer { window.close() }
+
+        // makeKeyAndOrderFront may have auto-promoted the text view to first
+        // responder already. Drop the responder before attaching the sink so
+        // we observe the next become transition cleanly.
+        _ = window.makeFirstResponder(window.contentView)
+
+        var becameCount = 0
+        var cancellables: Set<AnyCancellable> = []
+        eventSystem.events
+            .sink { event in
+                if case .didBecomeFirstResponder = event { becameCount += 1 }
+            }
+            .store(in: &cancellables)
+
+        let became = window.makeFirstResponder(view)
+        XCTAssertTrue(became, "Window must be able to make the editor view first responder for this test to be meaningful.")
+
+        XCTAssertEqual(becameCount, 1, "becomeFirstResponder() should fan out exactly one didBecomeFirstResponder event.")
+    }
+
+    func testResignFirstResponderFansOutFocusEvent() throws {
+        let (view, eventSystem, window) = try makeHostedView()
+        defer { window.close() }
+
+        var resignedCount = 0
+        var cancellables: Set<AnyCancellable> = []
+        eventSystem.events
+            .sink { event in
+                if case .didResignFirstResponder = event { resignedCount += 1 }
+            }
+            .store(in: &cancellables)
+
+        _ = window.makeFirstResponder(view)
+        // Move focus off — back to the window's contentView, then nil.
+        _ = window.makeFirstResponder(window.contentView)
+
+        XCTAssertEqual(resignedCount, 1, "Losing first-responder status should fan out exactly one didResignFirstResponder event.")
+    }
 }
 #endif
