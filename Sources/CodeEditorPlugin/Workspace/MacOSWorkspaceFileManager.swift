@@ -11,7 +11,7 @@ import Foundation
 /// for file watching. Children are loaded lazily — only cached
 /// directories are refreshed on FSEvents.
 @MainActor
-final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching {
+public final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching {
     // MARK: - Types
 
     private struct CacheEntry {
@@ -29,11 +29,11 @@ final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching 
     private var streamTask: Task<Void, Never>?
 
     private let rootURL: URL
-    let root: WorkspaceFileNode
+    public let root: WorkspaceFileNode
 
     // MARK: - Initialization
 
-    init(rootURL: URL) {
+    public init(rootURL: URL) {
         self.rootURL = rootURL
         let rootName = rootURL.lastPathComponent
         self.root = WorkspaceFileNode(
@@ -47,7 +47,7 @@ final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching 
 
     // MARK: - WorkspaceFileTree
 
-    func children(of node: WorkspaceFileNode) -> [WorkspaceFileNode] {
+    public func children(of node: WorkspaceFileNode) -> [WorkspaceFileNode] {
         guard node.isDirectory else { return [] }
 
         // Return cached children if loaded.
@@ -61,15 +61,15 @@ final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching 
         return loaded
     }
 
-    func isDirectory(_ node: WorkspaceFileNode) -> Bool {
+    public func isDirectory(_ node: WorkspaceFileNode) -> Bool {
         node.isDirectory
     }
 
-    func fileURL(for node: WorkspaceFileNode) -> URL {
+    public func fileURL(for node: WorkspaceFileNode) -> URL {
         node.url
     }
 
-    func refresh(node: WorkspaceFileNode) async throws {
+    public func refresh(node: WorkspaceFileNode) async throws {
         guard node.isDirectory else { return }
         let loaded = loadChildren(of: node.url)
         cache[node.id] = CacheEntry(node: node, children: loaded, isLoaded: true)
@@ -77,7 +77,7 @@ final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching 
 
     // MARK: - WorkspaceFileWatching
 
-    func startWatching(root: URL) async throws {
+    public func startWatching(root: URL) async throws {
         // Create the event stream.
         let (stream, continuation) = AsyncStream<WorkspaceFileEvent>.makeStream()
         eventStream = stream
@@ -99,7 +99,7 @@ final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching 
         }
     }
 
-    func stopWatching() {
+    public func stopWatching() {
         streamTask?.cancel()
         streamTask = nil
         eventContinuation?.finish()
@@ -107,7 +107,7 @@ final class MacOSWorkspaceFileManager: WorkspaceFileTree, WorkspaceFileWatching 
         eventStream = nil
     }
 
-    var events: AsyncStream<WorkspaceFileEvent> {
+    public var events: AsyncStream<WorkspaceFileEvent> {
         eventStream ?? AsyncStream { $0.finish() }
     }
 
