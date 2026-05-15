@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import Combine
 import Foundation
 import Observation
 
@@ -88,6 +89,59 @@ final class EventLogSampleCoordinator {
 
     @ObservationIgnored
     private var totals: [EventCategory: Int] = [:]
+
+    @ObservationIgnored
+    private var eventSystemCancellable: AnyCancellable?
+
+    // MARK: - Lifecycle
+
+    /// Subscribe to the shared `UnifiedEventSystem` for first-class editor
+    /// events and to `controller.completionEvents()` for completion activity.
+    /// Idempotent — calling `attach` again replaces both subscriptions.
+    func attach(controller _: EditorController, eventSystem: UnifiedEventSystem) {
+        detach()
+        eventSystemCancellable = eventSystem.events
+            .sink { [weak self] event in
+                guard let self else { return }
+                if let entry = Self.translate(editorEvent: event) {
+                    self.append(entry)
+                }
+            }
+        // Completion subscription is wired in Task 7.
+    }
+
+    /// Tear down all subscriptions. Safe to call multiple times.
+    func detach() {
+        eventSystemCancellable?.cancel()
+        eventSystemCancellable = nil
+    }
+
+    // MARK: - Translators
+
+    static func translate(editorEvent event: EditorEvent) -> LoggedEvent? {
+        switch event {
+        case .textDidChange(let text):
+            return .text(summary: "textDidChange (len=\(text.utf16.count))")
+
+        case .textSelectionDidChange(let range):
+            return .selection(summary: "selection=[loc=\(range.location), len=\(range.length)]")
+
+        case .didBecomeFirstResponder:
+            return .focus(summary: "didBecomeFirstResponder")
+
+        case .didResignFirstResponder:
+            return .focus(summary: "didResignFirstResponder")
+
+        // Annotation, completion, error, performanceWarning are intentionally
+        // unhandled at v1 — none are emitted by the framework today, and
+        // completion events arrive through the dedicated AsyncSequence.
+        case .completionRequested, .completionItemSelected,
+             .annotationHovered, .annotationClicked,
+             .performanceWarning, .error,
+             .textWillChange:
+            return nil
+        }
+    }
 
     // MARK: - Append (test-visible)
 

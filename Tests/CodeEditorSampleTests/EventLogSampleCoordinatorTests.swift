@@ -1,5 +1,5 @@
 #if canImport(AppKit)
-import CodeEditorPlugin
+@testable import CodeEditorPlugin
 @testable import CodeEditorSample
 import Foundation
 import Testing
@@ -78,6 +78,45 @@ struct EventLogSampleCoordinatorTests {
         #expect(coordinator.snapshot.entries.isEmpty)
         #expect(coordinator.snapshot.totals.isEmpty)
         #expect(coordinator.snapshot.ringCount == 0)
+    }
+
+    @Test("textDidChange from UnifiedEventSystem lands in the .text category")
+    func attachReceivesTextDidChange() {
+        let coordinator = EventLogSampleCoordinator()
+        let controller = EditorController()
+        let view = CodeEditorView(frame: .zero)
+        controller.attach(to: view)
+        let eventSystem = UnifiedEventSystem()
+        coordinator.attach(controller: controller, eventSystem: eventSystem)
+        defer { coordinator.detach() }
+
+        eventSystem.publish(.textDidChange("hello"))
+
+        #expect(coordinator.snapshot.entries.count == 1)
+        let entry = coordinator.snapshot.entries.first
+        #expect(entry?.category == .text)
+        #expect(entry?.summary == "textDidChange (len=5)")
+    }
+
+    @Test("selection and focus events land in their categories")
+    func attachReceivesSelectionAndFocus() {
+        let coordinator = EventLogSampleCoordinator()
+        let controller = EditorController()
+        let view = CodeEditorView(frame: .zero)
+        controller.attach(to: view)
+        let eventSystem = UnifiedEventSystem()
+        coordinator.attach(controller: controller, eventSystem: eventSystem)
+        defer { coordinator.detach() }
+
+        eventSystem.publish(.textSelectionDidChange(NSRange(location: 3, length: 2)))
+        eventSystem.publish(.didBecomeFirstResponder)
+
+        // Two events; newest-first means focus is at .first.
+        #expect(coordinator.snapshot.entries.count == 2)
+        #expect(coordinator.snapshot.entries.first?.category == .focus)
+        #expect(coordinator.snapshot.entries.first?.summary == "didBecomeFirstResponder")
+        #expect(coordinator.snapshot.entries.last?.category == .selection)
+        #expect(coordinator.snapshot.entries.last?.summary == "selection=[loc=3, len=2]")
     }
 }
 #endif
