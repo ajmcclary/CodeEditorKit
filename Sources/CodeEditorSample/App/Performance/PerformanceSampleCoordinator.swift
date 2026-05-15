@@ -1,5 +1,8 @@
 #if canImport(AppKit)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 import CodeEditorPlugin
 import Foundation
 import Observation
@@ -50,6 +53,18 @@ final class PerformanceSampleCoordinator {
     @ObservationIgnored
     private var refreshTimer: Timer?
 
+    /// Platform's max screen refresh rate, with a 60 fallback. Used as
+    /// the `targetFPS` baseline for the performance inspector.
+    private static func screenMaxFPS() -> Int {
+        #if canImport(AppKit)
+        return NSScreen.main?.maximumFramesPerSecond ?? 60
+        #elseif canImport(UIKit)
+        return UIScreen.main.maximumFramesPerSecond
+        #else
+        return 60
+        #endif
+    }
+
     init(
         memoryMonitor: MemoryMonitor,
         performanceObservation: PerformanceObservation
@@ -63,7 +78,7 @@ final class PerformanceSampleCoordinator {
             frameRateMonitor: frames
         )
         self.memoryStats = memoryMonitor.memoryStats
-        self.targetFPS = NSScreen.main?.maximumFramesPerSecond ?? 60
+        self.targetFPS = Self.screenMaxFPS()
     }
 
     func attach(controller: EditorController) {
@@ -117,4 +132,3 @@ final class PerformanceSampleCoordinator {
         memorySparkline = Array(memoryStats.usageHistory.suffix(100))
     }
 }
-#endif

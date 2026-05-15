@@ -1,4 +1,3 @@
-#if canImport(AppKit)
 import CodeEditorPlugin
 @testable import CodeEditorSample
 import Testing
@@ -87,4 +86,3 @@ struct PerformanceSampleCoordinatorTests {
         #expect(coordinator.targetFPS >= 60)
     }
 }
-#endif
