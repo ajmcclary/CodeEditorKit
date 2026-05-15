@@ -292,6 +292,18 @@ public final class EditorController {
         symbolNavigator.navigate(to: symbol)
     }
 
+    /// Selects `range` in the attached view and (optionally) scrolls it
+    /// into visible. No-op when no view is attached. Mirrors the
+    /// select+scroll primitive used internally by `gotoSymbol(_:)`,
+    /// without requiring a `DocumentSymbol`.
+    public func selectRange(_ range: NSRange, scroll: Bool = true) {
+        guard let view = codeEditorView else { return }
+        view.setSelectedRangeWithoutScrolling(range)
+        if scroll {
+            view.scrollRangeToVisible(range)
+        }
+    }
+
     /// Re-run symbol detection against the current document.
     public func refreshSymbols() {
         symbolNavigator.updateSymbols()
