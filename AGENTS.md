@@ -63,7 +63,7 @@ Sources/CodeEditorPlugin/
 ├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
 ├── SwiftUI/                 # SwiftUI wrappers and modifiers
 ├── Platform/                # Cross-platform color/font/view abstractions
-├── Extensions/              # Type extensions (all use +Extensions suffix)
+├── Extensions/              # Catch-all type extensions (+Extensions suffix; see Conventions)
 ├── Performance/             # Monitoring, profiling, memory tracking
 ├── LSP/                     # Language Server Protocol support
 ├── Annotations/             # Data-source driven annotation badges
@@ -76,7 +76,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-21 top-level directories, 470 Swift source files in the main target, and 563 Swift source files under `Sources/`.
+21 top-level directories, 478 Swift source files in the main target, and 570 Swift source files under `Sources/`.
 
 Other source roots:
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
@@ -104,7 +104,12 @@ Never use `print()`. Use `CrossPlatformLogger.logger()` instead. This is enforce
 Never use `!`. Always safe-unwrap. Enforced by SwiftLint `force_unwrapping` rule.
 
 ### Extension Files
-All extension files use the `+Extensions` suffix: `String+Extensions.swift`, `NSParagraphStyle+Extensions.swift`, etc. When an extension is specific to a domain (e.g., text layout helpers), co-locate it in that domain's directory rather than the global `Extensions/` folder.
+Two naming patterns are in active use; both are accepted:
+
+- **Catch-all type extensions** use the `+Extensions` suffix and live in `Sources/CodeEditorPlugin/Extensions/`: `String+Extensions.swift`, `NSParagraphStyle+Extensions.swift`, etc.
+- **Domain-scoped extensions** use a `+<Topic>` suffix that names the slice they implement, and live in the domain's own directory: `CodeEditorView+Theme.swift`, `EditorController+Completion.swift`, `LSPClient+Transport.swift`, `CodeEditorContainerView+Minimap.swift`. These are partial-file extensions that decompose a single owning type's API surface by feature rather than acting as a generic type extension.
+
+When in doubt, prefer the domain-scoped form for files that extend one specific framework type with a feature-scoped slice, and the `+Extensions` form for type extensions that don't belong to a single domain.
 
 ### Dependency Injection
 No singletons. Pass dependencies through `EditorConfiguration` or service initializers:
@@ -147,13 +152,15 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 - **Sample app is a target, not a directory**: `cd CodeEditorSample && swift build` will fail. Use `swift run CodeEditorSample` or `swift build --target CodeEditorSample`.
 
+- **`CodeEditorSample` uses the native NSWindow chrome**: do NOT add `EditorTitleBar`, `EditorTrafficLights`, or `.windowStyle(.hiddenTitleBar)` to `RootWindow` / `CodeEditorSampleApp`. `.hiddenTitleBar` hides the title-bar background but leaves the OS traffic-light buttons drawn in the window's top-left corner, so embedding `EditorTitleBar` on top produces a visible "app inside an app." `EditorTitleBar` is a public `CodeEditorUI` component for hosts that genuinely own their chrome (and hide the standard NSWindow buttons themselves); it remains covered by `EditorTitleBarSnapshots` / `EditorTrafficLightsSnapshots` and the `ConformanceAuditTests` type audit — none of that requires the sample to embed it.
+
 - **No DocC catalog**: this project ships plain Markdown in `docs/`, not a DocC bundle. Don't add `@Metadata`, `<doc:>`, `## Topics`, or `.tutorial` directives to files in `docs/` — they won't render and they re-introduce a toolchain dependency that was deliberately removed.
 
 - **SwiftLint strict mode** is on (`strict: true` in `.swiftlint.yml`). Warnings are treated as errors. Always run `swiftlint --fix` before `swiftlint`.
 
 - **Custom lint rule `no_print_statements`** matches `///` doc comment lines in source, but the regex exempts them. Edits to that regex must preserve the `///` exclusion.
 
-- **`canImport` conventions are enforced across ~247 files**. Adding a new `#if os()` is a regression.
+- **`canImport` conventions are enforced across ~217 files**. Adding a new `#if os()` is a regression.
 
 - **Test count varies**: the codebase uses both `@Suite` (Swift Testing) and `XCTestCase` (XCTest). Counting "tests" depends on framework — `swift test --parallel` runs all of them regardless.
 
