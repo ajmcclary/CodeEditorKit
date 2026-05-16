@@ -2,45 +2,19 @@
 
 Five parallel review passes across concurrency, platform hygiene, TextKit2/memory, configuration/highlighting, and testing/organization/lint. Overall posture is strong — Swift 6 strict concurrency is genuinely respected, `#if os(...)` has zero hits, no production `print()`, no Catalyst residue. Three SwiftLint strict-mode errors are blocking CI; two `🔴` regressions in the public `attributedContent` API silently coerce TextKit2 → TextKit1, mirroring the bug that motivated commit `3503955d`.
 
+**Update:** B-1 and B-2 fixed — `attributedContent` getter/setter now route through `textContentStorage?.textStorage` / `textKitBridge.replaceCharacters`, with `testAttributedContentRoundTripPreservesTK2Stack` covering the regression. Remaining 🔴: B-3, B-4, B-5.
+
 ---
 
-## 🔴 Blocking findings (5)
+## 🔴 Blocking findings (5 — 2 fixed, 3 remaining)
 
-### B-1. `attributedContent` setter coerces TK2 → TK1 (public API regression)
-**File:** `Sources/CodeEditorPlugin/Core/CodeEditorView+CodeEditorAPIExtensions.swift:30`
-**Rule:** Never read/write `NSTextView.textStorage` directly on AppKit — it triggers TK1 compat shim and clears `textLayoutManager`. Documented invariant in `CodeEditorView.swift:194-235`; same root cause as the deleted `ModernTextKit2Bridge` (commit `3503955d`).
-```swift
-set {
-    #if canImport(AppKit)
-    textStorage?.setAttributedString(newValue ?? NSAttributedString())
-    #else
-    attributedText = newValue
-    #endif
-}
-```
-**Fix:**
-```swift
-#if canImport(AppKit)
-if let storage = textContentStorage?.textStorage {
-    storage.setAttributedString(newValue ?? NSAttributedString())
-    rebuildLineGeometryStoreFromCurrentTextStorage()
-}
-#else
-attributedText = newValue
-#endif
-```
-**Rationale:** This is the public `CodeEditorAPI.attributedContent` setter. Any host calling `editor.attributedContent = …` after init silently degrades the view to TK1. Add a regression test in `CodeEditorViewTextKit2InitTests` that round-trips through this property.
+### ✅ B-1. `attributedContent` setter coerces TK2 → TK1 (public API regression) — FIXED
+**File:** `Sources/CodeEditorPlugin/Core/CodeEditorView+CodeEditorAPIExtensions.swift:20-44`
+**Status:** Fixed. Setter now routes through `textKitBridge.replaceCharacters(in:with:)` (wrapped in `NSTextContentStorage.performEditingTransaction`) and rebuilds the line-geometry store. Regression test `testAttributedContentRoundTripPreservesTK2Stack` added in `CodeEditorViewTextKit2InitTests`.
 
-### B-2. `attributedContent` getter also reads `textStorage` directly
-**File:** `Sources/CodeEditorPlugin/Core/CodeEditorView+CodeEditorAPIExtensions.swift:23`
-```swift
-get {
-    #if canImport(AppKit)
-    return textStorage
-    ...
-}
-```
-**Fix:** `return textContentStorage?.textStorage`. Same TK1-coercion risk on the read path.
+### ✅ B-2. `attributedContent` getter also reads `textStorage` directly — FIXED
+**File:** `Sources/CodeEditorPlugin/Core/CodeEditorView+CodeEditorAPIExtensions.swift:20-44`
+**Status:** Fixed. Getter now returns `textContentStorage?.textStorage` (TK2-safe accessor). Covered by the round-trip regression test alongside B-1.
 
 ### B-3. SwiftLint strict mode failing: `multiline_function_chains` (×2)
 **File:** `Sources/CodeEditorPlugin/Utilities/CodeEditorRenderingDiagnostics.swift:399, 403`
@@ -183,16 +157,16 @@ The `NSEvent.addLocalMonitorForEvents` closure isn't `@Sendable`; the shuttle wr
 | Concurrency | 0 | 2 | 4 |
 | Platform | 0 | 1 | 0 |
 | Configuration | 0 | 2 | 2 |
-| TextKit2 | 2 | 2 | 0 |
+| TextKit2 | 0 (was 2) | 2 | 0 |
 | Memory | 0 | 1 | 1 |
 | Highlighting | 0 | 0 | 1 |
 | Testing | 2 | 2 | 1 |
 | Organization | 0 | 0 | 1 |
 | Lint | 2 | 0 | 1 |
-| **Total** | **5** | **10** | **11** |
+| **Total** | **3** (was 5) | **10** | **11** |
 
 ### Recommended fix order
-1. **B-1, B-2** — TK2 coercion in the public `attributedContent` API (highest production risk).
+1. ~~**B-1, B-2** — TK2 coercion in the public `attributedContent` API.~~ ✅ Fixed.
 2. **B-3, B-4, B-5** — re-green `swiftlint --strict` and the broken test reference.
 3. **W-1** — `TemporaryAttributesStore` transaction discipline (same fault family as B-1).
 4. **W-2** — `MemoryManagementCoordinator` cleanup-handler leak.

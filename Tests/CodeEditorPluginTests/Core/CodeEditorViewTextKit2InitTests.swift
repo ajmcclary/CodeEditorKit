@@ -55,5 +55,25 @@ final class CodeEditorViewTextKit2InitTests: XCTestCase {
         XCTAssertNotNil(view.textLayoutManager,
                         "TextKit 2 stack must survive enabling wrapped layout")
     }
+
+    /// Round-trips through the public `attributedContent` setter and getter.
+    /// Both paths must avoid `NSTextView.textStorage`, which would coerce the
+    /// view to TextKit 1.
+    func testAttributedContentRoundTripPreservesTK2Stack() {
+        let view = CodeEditorView(frame: .zero)
+        XCTAssertNotNil(view.textLayoutManager)
+
+        let replacement = NSAttributedString(string: "let answer = 42\n")
+        view.attributedContent = replacement
+        XCTAssertNotNil(view.textLayoutManager,
+                        "Setting attributedContent must not coerce the view to TextKit 1")
+        XCTAssertNotNil(view.textContentStorage,
+                        "TextKit 2 content storage must survive attributedContent setter")
+
+        let readback = view.attributedContent
+        XCTAssertEqual(readback?.string, replacement.string)
+        XCTAssertNotNil(view.textLayoutManager,
+                        "Reading attributedContent must not coerce the view to TextKit 1")
+    }
     #endif
 }

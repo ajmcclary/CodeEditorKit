@@ -16,18 +16,26 @@ extension CodeEditorView {
         set { text = newValue }
     }
 
-    /// The attributed text content (if supported)
+    /// The attributed text content (if supported).
+    ///
+    /// On AppKit, reads and writes route through `textContentStorage?.textStorage`
+    /// (the TK2-safe accessor). Reading `NSTextView.textStorage` directly
+    /// triggers the TextKit 1 compatibility shim and clears `textLayoutManager`
+    /// — see the invariant documented in `CodeEditorView.swift` and covered by
+    /// `CodeEditorViewTextKit2InitTests`.
     public var attributedContent: NSAttributedString? {
         get {
             #if canImport(AppKit)
-            return textStorage
+            return textContentStorage?.textStorage
             #else
             return attributedText
             #endif
         }
         set {
             #if canImport(AppKit)
-            textStorage?.setAttributedString(newValue ?? NSAttributedString())
+            let fullRange = NSRange(location: 0, length: textKitBridge.documentLength)
+            textKitBridge.replaceCharacters(in: fullRange, with: newValue ?? NSAttributedString())
+            rebuildLineGeometryStoreFromCurrentTextStorage()
             #else
             attributedText = newValue
             #endif
