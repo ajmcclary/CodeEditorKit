@@ -63,14 +63,18 @@ internal final class FoldingProviderRegistry {
         registerProvider(braceProvider, for: .json)
         registerProvider(braceProvider, for: .php)
 
-        // Delegating providers wire newly added languages into the folding
-        // pipeline while preserving existing heuristic behavior.
+        // Delegating providers wire newly added brace-style languages into
+        // the folding pipeline via `HeuristicFoldProvider`, which forwards
+        // to `BraceFoldingProvider` for these cases. Dockerfile, TOML, and
+        // Lua are intentionally NOT registered here — `HeuristicFoldProvider`
+        // has no heuristic for them, so it would return `[]` for every
+        // request. Advertising a provider that produces no folds is worse
+        // than admitting the language isn't folded: the gutter shows
+        // chevron affordances that never expand anything. Re-register
+        // these languages once a real heuristic exists.
         registerProvider(HeuristicFoldProvider(language: .csharp), for: .csharp)
         registerProvider(HeuristicFoldProvider(language: .kotlin), for: .kotlin)
         registerProvider(HeuristicFoldProvider(language: .dart), for: .dart)
-        registerProvider(HeuristicFoldProvider(language: .dockerfile), for: .dockerfile)
-        registerProvider(HeuristicFoldProvider(language: .toml), for: .toml)
-        registerProvider(HeuristicFoldProvider(language: .lua), for: .lua)
 
         // Python and YAML use indentation-based folding
         let indentationProvider = IndentationFoldingProvider()

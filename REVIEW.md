@@ -129,25 +129,22 @@ Added `CodeFoldingEngine.lineSpan(of:in:)`, a UTF-16-correct helper that counts 
 
 Tangential cleanup (same commit): deleted `Sources/CodeEditorPlugin/Text/LineIndexCache.swift` and `Tests/CodeEditorPluginTests/LineIndexCacheTests.swift`. The cache was already `@available(*, deprecated, message: "Use LineGeometryStore for UTF-16-correct line geometry")` and had no production consumers — only its own tests. Eliminates the chronic deprecation warning in test builds.
 
-### M3. Folding providers are registered for Dockerfile, TOML, and Lua but return no folds
+### M3. Folding providers are registered for Dockerfile, TOML, and Lua but return no folds — RESOLVED
 
 Files:
 
-- `Sources/CodeEditorPlugin/Features/FoldingProviderRegistry.swift:66-73`
-- `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/HeuristicFoldProvider.swift:14-40`
-- `Tests/CodeEditorPluginTests/FeatureBehaviorTests.swift:333-338`
+- `Sources/CodeEditorPlugin/Features/FoldingProviderRegistry.swift:66-76`
+- `Tests/CodeEditorPluginTests/FeatureBehaviorTests.swift:333-361`
 
-What's wrong:
+What was wrong:
 
-The registry installs `HeuristicFoldProvider` for `.dockerfile`, `.toml`, and `.lua`, but `HeuristicFoldProvider` falls through to `default: return []` for those languages. The test only verifies a provider exists, not that it detects folds.
+The registry installed `HeuristicFoldProvider` for `.dockerfile`, `.toml`, and `.lua`, but the provider's switch had no case for those languages — every detection pass returned `[]`. The gutter advertised foldability (chevron affordances appeared) while no folds existed to expand. The existing test only checked `hasProvider(for:)`, not that the provider produced anything.
 
-Why it matters:
+Resolution (commit pending):
 
-The feature surface claims folding support for these languages while the implementation is effectively a no-op.
+Removed the three `registerProvider(HeuristicFoldProvider(language: …), for: …)` calls for Dockerfile, TOML, and Lua from `FoldingProviderRegistry.setupDefaultProviders()`, with a comment explaining the contract: re-register only once a real heuristic exists. With no provider registered, `CodeFoldingEngine.detectFoldableRegions` cleanly skips folding for these languages instead of producing chevrons that never expand. Split the old `testNewLanguagesHaveFoldingProviders` test into two cases: `testNewBraceLanguagesHaveFoldingProviders` confirms C#, Kotlin, and Dart still get folding via the brace-style heuristic; `testLanguagesWithoutFoldingHeuristicsAreNotRegistered` asserts Dockerfile/TOML/Lua do NOT advertise folding until real heuristics land. `HeuristicFoldProvider` itself is left unchanged — its `default: return []` arm is still relevant for any hypothetical future caller.
 
-Concrete fix:
-
-Either implement real heuristics for those languages or stop registering providers for them. Replace the current presence-only test with sample input assertions that require at least one expected fold per advertised language.
+Chose this over implementing real heuristics for the three languages because that's a meaningful feature project (TOML section folding, Lua `do...end` and `function...end` blocks, Dockerfile multi-line `RUN` continuations) that exceeds the scope of a single medium-severity fix.
 
 ### M4. Remote LSP security options still expose deprecated TLS 1.0 and 1.1
 
@@ -251,15 +248,16 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
-| Medium | 6 | 2 | 4 |
+| Medium | 6 | 3 | 3 |
 | Low | 2 | 0 | 2 |
 
-Overall health: green. The codebase builds, lint passes (deprecated-LineIndexCache warnings retired), the CodeEditorPlugin test suite is green, and all four High-severity items plus M1 and M2 are resolved. Remaining open items are four Medium-severity fixes and two Low-severity nits.
+Overall health: green. The codebase builds, lint passes (deprecated-LineIndexCache warnings retired), the CodeEditorPlugin test suite is green, and all four High-severity items plus M1, M2, and M3 are resolved. Remaining open items are three Medium-severity fixes and two Low-severity nits.
 
 Notes flagged for separate triage:
 
 - `CodeEditorSampleTests/PerformanceInspectorPanelSnapshotTests` fails 5/5 on `main` due to stale snapshot baselines (verified pre-existing during H3).
 - `cleanupKeyboardObservers()` is defined in `CodeEditorContainerView+Keyboard.swift` but never invoked — same shape of leak as M1, latent on iOS (surfaced while fixing M1).
+- Real folding heuristics for Dockerfile / TOML / Lua are a follow-up feature project (surfaced while fixing M3 by un-registering the no-op providers).
 
 Most impactful fixes first:
 
@@ -269,3 +267,4 @@ Most impactful fixes first:
 4. ~~Correct viewport-token cache completeness and add scrolling/full-document cache regression tests.~~ Resolved (see H4).
 5. ~~Plug the minimap block-observer-token leak in `CodeEditorContainerView`.~~ Resolved (see M1).
 6. ~~Compare folding's `minimumLineCount` against actual line span, not UTF-16 length.~~ Resolved (see M2).
+7. ~~Stop advertising folding for languages whose heuristic returns nothing.~~ Resolved (see M3).

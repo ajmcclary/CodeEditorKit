@@ -330,11 +330,32 @@ final class FeatureBehaviorTests: CleanupTestCase {
         XCTAssertEqual(shiftedFold?.range.location, region.range.location + 2)
     }
 
-    func testNewLanguagesHaveFoldingProviders() {
+    func testNewBraceLanguagesHaveFoldingProviders() {
         let registry = FoldingProviderRegistry()
 
-        for language in [Language.csharp, .kotlin, .dart, .dockerfile, .toml, .lua] {
-            XCTAssertTrue(registry.hasProvider(for: language), "\(language.name) should have a folding provider registration")
+        // C#, Kotlin, and Dart get folding via the brace-style heuristic.
+        for language in [Language.csharp, .kotlin, .dart] {
+            XCTAssertTrue(
+                registry.hasProvider(for: language),
+                "\(language.name) should have a folding provider registration"
+            )
+        }
+    }
+
+    func testLanguagesWithoutFoldingHeuristicsAreNotRegistered() {
+        let registry = FoldingProviderRegistry()
+
+        // Dockerfile, TOML, and Lua were previously registered with
+        // `HeuristicFoldProvider`, whose switch falls through to
+        // `default: return []` for those languages — so the gutter
+        // advertised foldability but every detection pass produced no
+        // folds. The fix is to NOT register a provider until a real
+        // heuristic exists, so the engine cleanly skips folding.
+        for language in [Language.dockerfile, Language.toml, Language.lua] {
+            XCTAssertFalse(
+                registry.hasProvider(for: language),
+                "\(language.name) must not advertise folding while HeuristicFoldProvider has no rule for it — re-register only when a real heuristic lands"
+            )
         }
     }
 
