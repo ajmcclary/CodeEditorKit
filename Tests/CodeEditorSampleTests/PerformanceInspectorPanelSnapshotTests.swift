@@ -8,6 +8,20 @@ import XCTest
 
 @MainActor
 final class PerformanceInspectorPanelSnapshotTests: XCTestCase {
+    /// Toggle to `true` locally to re-record baselines after intentional
+    /// visual changes. Keep `false` on commit.
+    private static let isRecording = false
+
+    override func setUp() {
+        super.setUp()
+        SnapshotTesting.isRecording = Self.isRecording
+    }
+
+    override func tearDown() {
+        SnapshotTesting.isRecording = false
+        super.tearDown()
+    }
+
     func testStoppedState() {
         let view = panel(
             state: .stopped,
