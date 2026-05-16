@@ -100,8 +100,11 @@ private struct WeakParticipant {
 extension TextViewDelegateMultiplexer {
     /// Veto chain for `shouldChangeTextIn:`. Walks `.gating` first; a
     /// gating veto short-circuits before any `.behavior` fires. After
-    /// both phases vote allow, publishes `WillEditEvent` as the
-    /// multiplexer's intrinsic side-effect, then returns `true`.
+    /// both phases vote allow, fans out `textViewWillChangeText` to all
+    /// participants in phase order, then publishes `WillEditEvent` as
+    /// the multiplexer's intrinsic side-effect, and finally returns
+    /// `true`. The pre-edit hook fires only on allowed edits — a veto
+    /// at either phase suppresses both the hook and the event.
     internal func shouldChangeText(
         in codeEditorView: CodeEditorView,
         range: NSRange,
@@ -124,6 +127,12 @@ extension TextViewDelegateMultiplexer {
                 replacementString: replacementString
             ) ?? true
             guard allowed else { return false }
+        }
+        for entry in gatingParticipants {
+            entry.value?.textViewWillChangeText(codeEditorView)
+        }
+        for entry in behaviorParticipants {
+            entry.value?.textViewWillChangeText(codeEditorView)
         }
         codeEditorView.publishWillEditEvent(
             range: range,

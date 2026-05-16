@@ -44,26 +44,22 @@ Resolution (commit pending):
 
 Added a `guard !Task.isCancelled else { return }` after `Task.sleep` returns and before the refresh call in `start()`. The check runs synchronously on the MainActor between the sleep boundary and `self?.refresh()`, closing the enqueued-continuation window. `swift test --parallel` now reports 455 tests / 114 suites passing with 1 known issue; the `stop cancels the refresh task` regression test passes on three consecutive parallel runs.
 
-### H2. Public `textViewWillChangeText` delegate callbacks are never delivered
+### H2. Public `textViewWillChangeText` delegate callbacks are never delivered — RESOLVED
 
 Files:
 
 - `Sources/CodeEditorPlugin/Core/CodeEditorViewDelegate.swift:74-95`
-- `Sources/CodeEditorPlugin/Core/TextViewDelegateMultiplexer.swift:100-132`
+- `Sources/CodeEditorPlugin/Core/TextViewDelegateMultiplexer.swift:101-141`
 - `Sources/CodeEditorPlugin/Core/CodeEditorViewDelegateProxy.swift:52-55`
-- `Tests/CodeEditorPluginTests/Core/TextViewDelegateMultiplexerTests.swift` has counters for this path but no assertion that it fires
+- `Tests/CodeEditorPluginTests/Core/TextViewDelegateMultiplexerTests.swift`
 
-What's wrong:
+What was wrong:
 
-`CodeEditorViewDelegate` documents `textViewWillChangeText(_:)` as firing before every text modification, and the proxy implements the participant hook. The multiplexer `shouldChangeText` path only asks gating and behavior participants for vetoes, publishes `WillEditEvent`, and returns `true`; it never calls `participant.textViewWillChangeText(...)`.
+`CodeEditorViewDelegate` documented `textViewWillChangeText(_:)` as firing before every text modification, and the proxy implemented the participant hook. But the multiplexer's `shouldChangeText` path only asked gating and behavior participants for vetoes, published `WillEditEvent`, and returned `true` — it never called `participant.textViewWillChangeText(...)`. The existing test had a `willChangeTextCalls` counter but no assertion on it, so the regression slipped through.
 
-Why it matters:
+Resolution (commit pending):
 
-This breaks a public delegate contract. Hosts relying on the pre-edit hook for undo grouping, autosave snapshots, dirty-state comparison, or UI preparation never receive the callback.
-
-Concrete fix:
-
-Once all veto participants allow the edit, snapshot the active participants and call `textViewWillChangeText(codeEditorView)` before publishing the will-edit event. Add tests for allow and veto paths: allowed edits should call the hook once in phase order; vetoed edits should not call it.
+After both veto phases pass and before `publishWillEditEvent`, `shouldChangeText` now fans out `textViewWillChangeText(codeEditorView)` to gating then behavior participants in registration order. Added three new XCTest cases: `testAllAllowFiresWillChangeTextOnEachParticipantInPhaseOrder` (asserts phase order via a shared `CallLog`), `testGatingVetoSuppressesWillChangeText`, and `testBehaviorVetoSuppressesWillChangeText`. `swift test --parallel` reports 455 / 114 passing with 1 known issue; `TextViewDelegateMultiplexerTests` now executes 16 XCTest cases (13 prior + 3 new), all passing.
 
 ### H3. `LSPClient.disconnect()` can hang forever waiting for shutdown
 
@@ -266,15 +262,15 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 | Severity | Total | Resolved | Open |
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
-| High | 4 | 1 | 3 |
+| High | 4 | 2 | 2 |
 | Medium | 6 | 0 | 6 |
 | Low | 2 | 0 | 2 |
 
-Overall health: yellow. The codebase builds, lint passes, and the full test suite is now green with H1 resolved. The remaining correctness concerns sit at lifecycle and cache boundaries: LSP disconnect can hang on unresponsive servers, the pre-edit delegate hook is never delivered, and large-file viewport highlighting can return incomplete cached results.
+Overall health: yellow. The codebase builds, lint passes, and the full test suite is green with H1 and H2 resolved. The remaining correctness concerns sit at lifecycle and cache boundaries: LSP disconnect can hang on unresponsive servers, and large-file viewport highlighting can return incomplete cached results.
 
 Most impactful fixes first:
 
 1. ~~Fix `PerformanceObservation` stop semantics so `swift test --parallel` is green again.~~ Resolved (see H1).
-2. Make `LSPClient.disconnect()` bounded and cleanup-guaranteed (H3).
-3. Correct viewport-token cache completeness and add scrolling/full-document cache regression tests (H4).
-4. Wire `textViewWillChangeText` through the multiplexer so the public pre-edit hook actually fires (H2).
+2. ~~Wire `textViewWillChangeText` through the multiplexer so the public pre-edit hook actually fires.~~ Resolved (see H2).
+3. Make `LSPClient.disconnect()` bounded and cleanup-guaranteed (H3).
+4. Correct viewport-token cache completeness and add scrolling/full-document cache regression tests (H4).

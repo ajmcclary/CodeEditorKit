@@ -62,6 +62,76 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
         XCTAssertEqual(observer.willEditCount, 1, "Exactly one WillEditEvent must be published")
     }
 
+    // MARK: - WillChangeText Fan-out
+
+    func testAllAllowFiresWillChangeTextOnEachParticipantInPhaseOrder() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+        let log = CallLog()
+
+        let gating1 = MockParticipant(name: "gating1", shouldChangeReturn: true)
+        let gating2 = MockParticipant(name: "gating2", shouldChangeReturn: true)
+        let behavior1 = MockParticipant(name: "behavior1", shouldChangeReturn: true)
+        let behavior2 = MockParticipant(name: "behavior2", shouldChangeReturn: true)
+        for participant in [gating1, gating2, behavior1, behavior2] {
+            participant.callLog = log
+        }
+        multiplexer.addParticipant(gating1, phase: .gating)
+        multiplexer.addParticipant(gating2, phase: .gating)
+        multiplexer.addParticipant(behavior1, phase: .behavior)
+        multiplexer.addParticipant(behavior2, phase: .behavior)
+
+        let allowed = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+
+        XCTAssertTrue(allowed, "All-allow must permit the edit")
+        XCTAssertEqual(gating1.willChangeTextCalls, 1)
+        XCTAssertEqual(gating2.willChangeTextCalls, 1)
+        XCTAssertEqual(behavior1.willChangeTextCalls, 1)
+        XCTAssertEqual(behavior2.willChangeTextCalls, 1)
+        XCTAssertEqual(
+            log.events,
+            [
+                "willChangeText:gating1",
+                "willChangeText:gating2",
+                "willChangeText:behavior1",
+                "willChangeText:behavior2"
+            ],
+            "WillChangeText must fan out in phase order (gating then behavior, registration order within phase)"
+        )
+    }
+
+    func testGatingVetoSuppressesWillChangeText() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        let gating = MockParticipant(name: "gating", shouldChangeReturn: false)
+        let behavior = MockParticipant(name: "behavior", shouldChangeReturn: true)
+        multiplexer.addParticipant(gating, phase: .gating)
+        multiplexer.addParticipant(behavior, phase: .behavior)
+
+        let allowed = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+
+        XCTAssertFalse(allowed, "Gating veto must block the edit")
+        XCTAssertEqual(gating.willChangeTextCalls, 0, "Vetoed edits must not fire textViewWillChangeText")
+        XCTAssertEqual(behavior.willChangeTextCalls, 0, "Vetoed edits must not fire textViewWillChangeText")
+    }
+
+    func testBehaviorVetoSuppressesWillChangeText() throws {
+        let codeEditorView = CodeEditorView(frame: .zero)
+        let multiplexer = codeEditorView.delegateMultiplexer
+
+        let gating = MockParticipant(name: "gating", shouldChangeReturn: true)
+        let behavior = MockParticipant(name: "behavior", shouldChangeReturn: false)
+        multiplexer.addParticipant(gating, phase: .gating)
+        multiplexer.addParticipant(behavior, phase: .behavior)
+
+        let allowed = invokeShouldChange(multiplexer, codeEditorView: codeEditorView)
+
+        XCTAssertFalse(allowed, "Behavior veto must block the edit")
+        XCTAssertEqual(gating.willChangeTextCalls, 0, "Vetoed edits must not fire textViewWillChangeText")
+        XCTAssertEqual(behavior.willChangeTextCalls, 0, "Vetoed edits must not fire textViewWillChangeText")
+    }
+
     // MARK: - Fan-out notifications
 
     func testFanOutNotificationsHitAllParticipantsInRegistrationOrder() throws {
@@ -369,6 +439,7 @@ private final class MockParticipant: TextViewDelegateParticipant {
     var undoManagerToReturn: UndoManager?
     var clickedOnLinkReturn = false
     var shouldAllowInteractionReturn = true
+    var callLog: CallLog?
 
     init(name: String, shouldChangeReturn: Bool = true) {
         self.name = name
@@ -394,6 +465,7 @@ private final class MockParticipant: TextViewDelegateParticipant {
 
     func textViewWillChangeText(_: CodeEditorView) {
         willChangeTextCalls += 1
+        callLog?.record("willChangeText:\(name)")
     }
 
     func undoManager(for _: CodeEditorView) -> UndoManager? {
@@ -428,6 +500,18 @@ private final class WillEditObserver: WillEditEventObserving {
 
     func textStorageWillApplyEdit(_: WillEditEvent) {
         willEditCount += 1
+    }
+}
+
+// MARK: - CallLog
+
+/// Shared invocation recorder for cross-participant ordering assertions.
+@MainActor
+private final class CallLog {
+    private(set) var events: [String] = []
+
+    func record(_ event: String) {
+        events.append(event)
     }
 }
 
