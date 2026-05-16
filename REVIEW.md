@@ -207,23 +207,20 @@ Final state: `swiftlint` reports 0 violations / 0 serious across 805 files with 
 
 ## Low
 
-### L1. `completionTriggerCharacters` encoding is nondeterministic
+### L1. `completionTriggerCharacters` encoding is nondeterministic — RESOLVED
 
-File:
+Files:
 
-- `Sources/CodeEditorPlugin/Configuration/EditorConfiguration+BehaviorExtensions.swift:111-138`
+- `Sources/CodeEditorPlugin/Configuration/EditorConfiguration+BehaviorExtensions.swift:128-148`
+- `Tests/CodeEditorPluginTests/EditorConfigurationBehaviorEncodingTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-Decode turns the stored string into `Set<Character>`, and encode writes `String(completionTriggerCharacters)`. Set iteration order is not stable.
+Decode turned the stored string into `Set<Character>` and encode wrote `String(completionTriggerCharacters)` directly. Set iteration order is unstable across runs, so two equivalent configurations could produce different JSON strings — noisy snapshot diffs and broken content-hash-based caching.
 
-Why it matters:
+Resolution (commit pending):
 
-Equivalent configurations can produce different JSON orderings, causing avoidable snapshot churn or noisy diffs.
-
-Concrete fix:
-
-Encode a stable representation such as `String(completionTriggerCharacters.sorted())`, or store trigger characters as an ordered collection if order has semantic value.
+Encode side now sorts the set first: `String(completionTriggerCharacters.sorted())`. Decode side is unchanged (it accepts any character order). Added `EditorConfigurationBehaviorEncodingTests` with four Swift Testing cases: encoding the same Behavior twice yields byte-identical JSON; two Behaviors built from the same characters in different insertion orders encode identically; the encoded trigger-characters string is in sorted ascending order; encode→decode round-trips preserve the set.
 
 ### L2. `CodeFoldingEngine` cache eviction says FIFO but sorts hash keys
 
@@ -250,9 +247,9 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
 | Medium | 6 | 6 | 0 |
-| Low | 2 | 0 | 2 |
+| Low | 2 | 1 | 1 |
 
-Overall health: green. The codebase builds (no deprecation warnings remaining), lint passes (now with the `no_print_statements` rule enforced across tests too), the CodeEditorPlugin test suite is green, and every High and Medium item from the original review is resolved. Only the two Low-severity nits remain.
+Overall health: green. The codebase builds (no deprecation warnings remaining), lint passes (now with the `no_print_statements` rule enforced across tests too), the CodeEditorPlugin test suite is green, and only one Low-severity nit (L2) remains from the original review.
 
 Notes flagged for separate triage:
 
@@ -272,3 +269,4 @@ Most impactful fixes first:
 8. ~~Make `TextProcessingActor.cancelAllProcessing()` actually abort inflight work.~~ Resolved (see M5).
 9. ~~Remove TLS 1.0 / 1.1 from `SecurityOptions.TLSVersion`.~~ Resolved (see M4).
 10. ~~Enforce no-`print()` convention in tests and clean up the offending diagnostics.~~ Resolved (see M6).
+11. ~~Stabilize JSON encoding of `completionTriggerCharacters`.~~ Resolved (see L1).

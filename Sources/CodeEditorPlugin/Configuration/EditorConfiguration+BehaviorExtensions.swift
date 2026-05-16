@@ -135,7 +135,12 @@ extension EditorConfiguration.Behavior: Codable {
         try container.encode(isAutomaticQuoteSubstitutionEnabled, forKey: .isAutomaticQuoteSubstitutionEnabled)
         try container.encode(isAutomaticDashSubstitutionEnabled, forKey: .isAutomaticDashSubstitutionEnabled)
         try container.encode(showInlineCompletionSuggestions, forKey: .showInlineCompletionSuggestions)
-        try container.encode(String(completionTriggerCharacters), forKey: .completionTriggerCharacters)
+        // Encode as a sorted string so equivalent configurations
+        // produce identical JSON. `Set<Character>` iteration order is
+        // unstable across runs, which would otherwise cause noisy
+        // snapshot diffs and break content-hash-based caching of
+        // encoded configurations.
+        try container.encode(String(completionTriggerCharacters.sorted()), forKey: .completionTriggerCharacters)
         try container.encode(autoCloseBrackets, forKey: .autoCloseBrackets)
         try container.encode(autoCloseQuotes, forKey: .autoCloseQuotes)
         try container.encode(isContinuousSpellCheckingEnabled, forKey: .isContinuousSpellCheckingEnabled)
