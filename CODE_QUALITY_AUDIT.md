@@ -58,7 +58,20 @@ Net impact: `CompletionManager.swift` 711 → 661 lines (−50); `CompletionRank
 
 Verification: `swift build` clean, `swiftlint --strict` clean. `swift test --parallel` shows the same two pre-existing failures only (`testCodeEditorRendersSwiftSnippet` and `equatableIgnoresUnifiedPerformanceSystem`).
 
-Remaining groups (4–7) from the prioritized roadmap below are unchanged and pending.
+### Group 4 — Split `LineGeometryStore` Internals: **COMPLETE**
+
+| Finding | Status | Notes |
+|---|---|---|
+| A2 — Tree mechanics extracted | ✅ Resolved | New internal `LineGeometryTree` (`Sources/CodeEditorPlugin/Text/LineGeometryTree.swift`, 712 lines) owns the `Node` class (now private to the tree), rotations, insertion/deletion fixups, balanced-build/coloring, all lookups (`forUtf16Offset` / `forLineIndex` / `forYPosition`), all mutations (`insertLines` / `removeLines` / `replaceLine` / `updateMeasuredHeight` / `setEstimatedHeight` / `setFolded`), and `validateTree`. |
+| A2 — `NSTextStorage` parsing extracted | ✅ Resolved | New internal `LineGeometryBuilder` (`Sources/CodeEditorPlugin/Text/LineGeometryBuilder.swift`, 72 lines) wraps the `NSString` line-enumeration loop in a single static method. |
+| A2 — Edit projection seam | ✅ Already in place | `LineGeometryEditHandler.swift` already translates `TextEditEvent`s into tree mutations; the audit's "`LineGeometryEditProjector`" concern was satisfied before remediation began. |
+| A2 — `LineGeometryStore` reduced to a facade | ✅ Resolved | `LineGeometryStore.swift` shrank from 998 → 258 lines. It now holds a `LineGeometryTree` and the `defaultEstimatedHeight`; every public method is a one-line delegation. The full public API surface (including `LineGeometry` struct, `lineCount` / `totalUtf16Length` / `totalHeight`, all lookups, all mutations, iteration helpers in `LineGeometryStore+GeometryHelpers`, and `CustomStringConvertible`) is preserved byte-for-byte. |
+
+Net impact: `LineGeometryStore.swift` 998 → 258 lines (−740, −74.1%). Tree + builder add 784 lines in their own files. Total LOC across the three files: 998 → 1,042 (+44 net because the split adds two new file headers and additional doc comments — the audit's win is structural, not LOC). Total Swift lines: 132,688 → 132,732 (+44 in Group 4, −1,808 cumulative since baseline). `Sources/` file count 562 → 564 (two new files).
+
+Verification: `swift build` clean, `swiftlint --strict` clean. The 74-test `LineGeometryStoreBenchmarkTests` suite — which covers ASCII / emoji / ZWJ sequences / composed characters / LF / CRLF / CR / mixed line endings, NSRange round trips, **fuzz incremental edit correctness** under random edit sequences, edge cases (single newline, only newlines, very long line, very many short lines), and the 10k / 100k / 1M-line build and lookup performance benchmarks — passed in its entirety. `swift test --parallel` shows the same two pre-existing failures only.
+
+Remaining groups (5–7) from the prioritized roadmap below are unchanged and pending.
 
 ## Abstraction Analysis
 
