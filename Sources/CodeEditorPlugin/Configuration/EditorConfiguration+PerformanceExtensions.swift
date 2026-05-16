@@ -107,12 +107,13 @@ extension EditorConfiguration {
         /// metrics. When non-nil, the syntax highlighter records
         /// `.syntaxHighlighting` metrics here.
         ///
-        /// - `Codable`: intentionally excluded. The reference identifies a
-        ///   live performance system, which has no serializable representation;
-        ///   `encode → decode` always yields `nil` for this field.
-        /// - `Equatable`: compared by **reference identity** so two
-        ///   `Performance` values that differ only in this field — including
-        ///   the round-trip case above — do not falsely compare equal.
+        /// Excluded from both `Codable` and `Equatable`: the reference
+        /// identifies a live, injected runtime dependency with no serializable
+        /// representation, so it is not part of the configuration's value
+        /// identity. An encode/decode round trip drops it to `nil`, and two
+        /// otherwise-equal `Performance` values compare equal regardless of
+        /// what is in this field — the contract asserted by
+        /// `equatableIgnoresUnifiedPerformanceSystem`.
         public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
 
         // MARK: - Initialization
@@ -220,7 +221,6 @@ extension EditorConfiguration.Performance: Equatable {
         lhs.maxEventsPerSecond == rhs.maxEventsPerSecond &&
         lhs.enableIOSOptimizations == rhs.enableIOSOptimizations &&
         lhs.iOSLargeFileThreshold == rhs.iOSLargeFileThreshold &&
-        lhs.iOSMaxHighlightingChunk == rhs.iOSMaxHighlightingChunk &&
-        lhs.unifiedPerformanceSystem === rhs.unifiedPerformanceSystem
+        lhs.iOSMaxHighlightingChunk == rhs.iOSMaxHighlightingChunk
     }
 }

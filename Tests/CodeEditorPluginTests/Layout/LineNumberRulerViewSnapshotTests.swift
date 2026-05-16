@@ -23,12 +23,22 @@ final class LineNumberRulerViewSnapshotTests: XCTestCase {
     /// Renders the ruler into a bitmap and returns the resulting NSImage. The
     /// helper bypasses the AppKit display cycle so the test does not depend
     /// on a real window appearing on-screen.
+    ///
+    /// The draw call runs inside `performAsCurrentDrawingAppearance` so
+    /// `NSColor.textColor` and other appearance-sensitive named colors
+    /// resolve against the ruler's own effective appearance instead of
+    /// whatever the test runner's current drawing appearance happens to be.
+    /// Without this wrapper, custom bitmap-context rendering picks up the
+    /// system appearance and the snapshot drifts when the host machine is
+    /// in dark mode.
     private func renderedImage(of ruler: LineNumberRulerView) throws -> NSImage {
         let rep = try XCTUnwrap(ruler.bitmapImageRepForCachingDisplay(in: ruler.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        ruler.effectiveAppearance.performAsCurrentDrawingAppearance {
+            ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        }
         NSGraphicsContext.restoreGraphicsState()
         let image = NSImage(size: ruler.bounds.size)
         image.addRepresentation(rep)
@@ -42,7 +52,9 @@ final class LineNumberRulerViewSnapshotTests: XCTestCase {
             backing: .buffered,
             defer: false
         )
+        window.appearance = NSAppearance(named: .aqua)
         let container = CodeEditorContainerView(frame: window.contentLayoutRect)
+        container.appearance = NSAppearance(named: .aqua)
         container.textView.string = """
         alpha
         beta

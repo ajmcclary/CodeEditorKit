@@ -100,8 +100,14 @@ final class CompletionInspectorPanelSnapshotTests: XCTestCase {
         .frame(width: 360)
     }
 
+    /// Renders the panel against the requested appearance. The explicit
+    /// `appearance` makes the test deterministic regardless of the host
+    /// machine's system appearance — `Color.primary`, control fills, and
+    /// other appearance-aware system colors resolve against the chosen
+    /// scheme instead of leaking through from the runner environment.
     private func host<V: View>(_ view: V, scheme: ColorScheme) -> NSView {
         let hosting = NSHostingView(rootView: view.preferredColorScheme(scheme))
+        hosting.appearance = NSAppearance(named: scheme == .light ? .aqua : .darkAqua)
         hosting.frame = CGRect(x: 0, y: 0, width: 360, height: 460)
         return hosting
     }
