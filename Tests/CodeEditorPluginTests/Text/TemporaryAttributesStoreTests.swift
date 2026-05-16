@@ -4,13 +4,16 @@ import AppKit
 import XCTest
 
 final class TemporaryAttributesStoreTests: XCTestCase {
-    private func makeStorage(_ text: String) -> NSTextStorage {
-        NSTextStorage(string: text, attributes: [:])
+    private func makeContentStorage(_ text: String) -> NSTextContentStorage {
+        let contentStorage = NSTextContentStorage()
+        contentStorage.textStorage?.setAttributedString(NSAttributedString(string: text))
+        return contentStorage
     }
 
-    func testApplyAddsAttributesInRange() {
-        let storage = makeStorage("hello world")
-        let store = TemporaryAttributesStore(textStorage: storage)
+    func testApplyAddsAttributesInRange() throws {
+        let contentStorage = makeContentStorage("hello world")
+        let storage = try XCTUnwrap(contentStorage.textStorage)
+        let store = TemporaryAttributesStore(contentStorage: contentStorage)
         let range = NSRange(location: 0, length: 5)
 
         store.apply([.underlineColor: NSColor.red], to: range)
@@ -21,9 +24,10 @@ final class TemporaryAttributesStoreTests: XCTestCase {
         XCTAssertEqual(effectiveRange, range)
     }
 
-    func testClearInRangeRemovesAttributes() {
-        let storage = makeStorage("hello world")
-        let store = TemporaryAttributesStore(textStorage: storage)
+    func testClearInRangeRemovesAttributes() throws {
+        let contentStorage = makeContentStorage("hello world")
+        let storage = try XCTUnwrap(contentStorage.textStorage)
+        let store = TemporaryAttributesStore(contentStorage: contentStorage)
         store.apply([.underlineColor: NSColor.red], to: NSRange(location: 0, length: 5))
 
         store.clear(in: NSRange(location: 0, length: 5))
@@ -32,9 +36,10 @@ final class TemporaryAttributesStoreTests: XCTestCase {
         XCTAssertNil(color)
     }
 
-    func testClearAllRemovesEverythingWeApplied() {
-        let storage = makeStorage("hello world")
-        let store = TemporaryAttributesStore(textStorage: storage)
+    func testClearAllRemovesEverythingWeApplied() throws {
+        let contentStorage = makeContentStorage("hello world")
+        let storage = try XCTUnwrap(contentStorage.textStorage)
+        let store = TemporaryAttributesStore(contentStorage: contentStorage)
         store.apply([.underlineColor: NSColor.red], to: NSRange(location: 0, length: 5))
         store.apply([.underlineColor: NSColor.blue], to: NSRange(location: 6, length: 5))
 
@@ -46,9 +51,10 @@ final class TemporaryAttributesStoreTests: XCTestCase {
         XCTAssertNil(secondColor)
     }
 
-    func testClearAllToleratesStaleRanges() {
-        let storage = makeStorage("hello world")
-        let store = TemporaryAttributesStore(textStorage: storage)
+    func testClearAllToleratesStaleRanges() throws {
+        let contentStorage = makeContentStorage("hello world")
+        let storage = try XCTUnwrap(contentStorage.textStorage)
+        let store = TemporaryAttributesStore(contentStorage: contentStorage)
         store.apply([.underlineColor: NSColor.red], to: NSRange(location: 0, length: 5))
 
         storage.replaceCharacters(in: NSRange(location: 0, length: storage.length), with: "")

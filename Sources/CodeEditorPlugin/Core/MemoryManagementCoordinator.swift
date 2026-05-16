@@ -51,9 +51,15 @@ public final class MemoryManagementCoordinator {
     }
 
     deinit {
-        // Cleanup is handled when the view is removed
-        // The cleanup handler will be unregistered by the memory monitor
-        // when it detects the weak reference is nil
+        // The cleanup handler captures `[weak self]`, so it survives this
+        // deinit and the monitor never reclaims its dictionary slot on its
+        // own. Unregister explicitly so closing many editors doesn't
+        // accumulate dead handlers that fire on every periodic cleanup pass.
+        guard let identifier = cleanupIdentifier else { return }
+        let monitor = memoryMonitor
+        Task { @MainActor in
+            monitor.unregisterCleanupHandler(identifier: identifier)
+        }
     }
 
     // MARK: - Component Creation

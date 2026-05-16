@@ -30,23 +30,15 @@ Five parallel review passes across concurrency, platform hygiene, TextKit2/memor
 
 ---
 
-## 🟡 Warnings (10)
+## 🟡 Warnings (10 — 2 fixed, 8 remaining)
 
-### W-1. `TemporaryAttributesStore` mutates storage outside `performEditingTransaction`
-**File:** `Sources/CodeEditorPlugin/Text/TemporaryAttributesStore.swift:26-28, 34-35, 55-56`
-Bare `storage.beginEditing() / addAttributes / endEditing` without outer `NSTextContentStorage.performEditingTransaction`. Triggers the exact race documented at `TextKitBridge.swift:55-59` (`NSTextContentStorageBreakOnEnumerateWhileEditing`). Visible in interactive find/replace flows. **Fix:** route through `TextKitBridge.addPersistentAttributes(_:range:)` or plumb the content storage through the store.
+### ✅ W-1. `TemporaryAttributesStore` mutates storage outside `performEditingTransaction` — FIXED
+**File:** `Sources/CodeEditorPlugin/Text/TemporaryAttributesStore.swift`
+**Status:** Fixed. Store now takes an `NSTextContentStorage` (instead of a raw `NSTextStorage`) and wraps every `beginEditing/addAttributes/removeAttribute/endEditing` cycle in `contentStorage.performEditingTransaction { … }`. `EditorController.temporaryAttributesStore` and `TemporaryAttributesStoreTests` updated to the new signature; all four tests pass.
 
-### W-2. `MemoryManagementCoordinator.deinit` leaks cleanup-handler slots
-**File:** `Sources/CodeEditorPlugin/Core/MemoryManagementCoordinator.swift:53-57`
-Comment claims handlers auto-unregister when weak self goes nil; no such mechanism exists. Every closed editor leaves a dead handler in the shared `MemoryMonitor.cleanupHandlers` dictionary that fires every periodic cleanup. **Fix:** unregister explicitly:
-```swift
-deinit {
-    if let identifier = cleanupIdentifier {
-        let monitor = memoryMonitor
-        Task { @MainActor in monitor.unregisterCleanupHandler(identifier: identifier) }
-    }
-}
-```
+### ✅ W-2. `MemoryManagementCoordinator.deinit` leaks cleanup-handler slots — FIXED
+**File:** `Sources/CodeEditorPlugin/Core/MemoryManagementCoordinator.swift:53-63`
+**Status:** Fixed. `deinit` now hops to `@MainActor` via `Task { @MainActor in monitor.unregisterCleanupHandler(identifier:) }` so closing editors no longer leaves dead handlers in `MemoryMonitor.cleanupHandlers`. The stale comment about weak-reference auto-unregister is gone.
 
 ### W-3. `RangeAttributeApplier.clearAttributes` computes negative length on stale ranges
 **File:** `Sources/CodeEditorPlugin/SyntaxHighlighting/RangeAttributeApplier.swift:96-99`
@@ -139,20 +131,20 @@ The `NSEvent.addLocalMonitorForEvents` closure isn't `@Sendable`; the shuttle wr
 
 | Category | 🔴 Blocking | 🟡 Warnings | 🔵 Info |
 |---|---|---|---|
-| Concurrency | 0 | 2 | 4 |
+| Concurrency | 0 | 1 (was 2) | 4 |
 | Platform | 0 | 1 | 0 |
 | Configuration | 0 | 2 | 2 |
-| TextKit2 | 0 (was 2) | 2 | 0 |
-| Memory | 0 | 1 | 1 |
+| TextKit2 | 0 (was 2) | 1 (was 2) | 0 |
+| Memory | 0 | 0 (was 1) | 1 |
 | Highlighting | 0 | 0 | 1 |
 | Testing | 0 (was 2) | 2 | 1 |
 | Organization | 0 | 0 | 1 |
 | Lint | 0 (was 2) | 0 | 1 |
-| **Total** | **0** (was 5) | **10** | **11** |
+| **Total** | **0** (was 5) | **8** (was 10) | **11** |
 
 ### Recommended fix order
 1. ~~**B-1, B-2** — TK2 coercion in the public `attributedContent` API.~~ ✅ Fixed.
 2. ~~**B-3, B-4, B-5** — re-green `swiftlint --strict` and the broken test reference.~~ ✅ Fixed.
-3. **W-1** — `TemporaryAttributesStore` transaction discipline (same fault family as B-1).
-4. **W-2** — `MemoryManagementCoordinator` cleanup-handler leak.
+3. ~~**W-1** — `TemporaryAttributesStore` transaction discipline (same fault family as B-1).~~ ✅ Fixed.
+4. ~~**W-2** — `MemoryManagementCoordinator` cleanup-handler leak.~~ ✅ Fixed.
 5. The rest are quality/consistency cleanups; bundle as a hygiene PR.
