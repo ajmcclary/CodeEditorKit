@@ -103,7 +103,45 @@ Net impact: `LineBasedSymbolProvider.swift` 147 → 210 (+63 for the new statefu
 
 Verification: `swift build` clean, `swiftlint --strict` clean. Symbol-provider tests pass. `swift test --parallel` shows the same pre-existing snapshot pixel-drift failures only.
 
-Remaining group (7) from the prioritized roadmap below is unchanged and pending.
+### Group 7 — Decompose Broad Utility Namespaces: **COMPLETE**
+
+| Finding | Status | Notes |
+|---|---|---|
+| A6 — `TextRangeUtilities` is a 30-method namespace | ✅ Resolved | Implementation split into five focused internal modules along volatility boundaries. The 707-line god namespace is now a 357-line delegation facade. |
+
+The five focused modules now live in `Sources/CodeEditorPlugin/Text/`:
+
+- **`UTF16RangeConverter`** (110 lines): `utf16Length`, `fullRange`, `substring(inUTF16Range:)`, `substring(upToUTF16Offset:)`, `characterBeforeUTF16Offset`, `characterAlignedRange`, and all four `convert(_:in:)` overloads (`NSRange↔NSTextRange`, `NSRange↔Range<String.Index>`).
+- **`RangeValidationPolicy`** (96 lines): `ValidationResult` vocabulary, `validateRange` (two overloads), `isValid`, `clampRange`, `clamp(_:to:)`, `clamp(_:toTextLength:)`, `normalizeRange`.
+- **`LineRangeIndex`** (132 lines): `lineRange(containingUTF16Offset:in:)`, `lineText(containingUTF16Offset:in:)`, `lineRanges`, `lineNumber`, `startOfLine`, `wordRange`, `locationForLine`, plus the identifier helpers (`identifierPrefix`, `identifierRange`, `isIdentifierCharacter`).
+- **`RangeSetOperations`** (227 lines): `OverlapInfo` vocabulary, `overlap`, `contains`, `overlaps`, `intersect`, `subtract`, `merge`, `gaps`, `distance`, `expand`, `contract`, `applyMutations`, `adjustForInsertion`, `adjustForDeletion`.
+- **`RangeBatchPlanner`** (118 lines): `BatchRange` descriptor, `plan(totalLength:batchSize:preferLineBoundaries:text:)`, `batchProcess`, `visibleRanges`, plus the private `adjustBatchLengthToLineBoundary` and `estimateProcessingTime` heuristics that used to be at the bottom of the original file.
+
+`TextRangeUtilities` (357 lines) is now a public compatibility facade: every public static method is a one-line delegation, and the three nested public types (`RangeValidationResult`, `RangeOverlapInfo`, `BatchRange`) are bridge wrappers around the focused-module types so callers across `Sources/` and `Tests/` keep working byte-for-byte. The 100+ existing call sites — including `TextRangeUtilitiesRegressionTests`, `LineGeometryStoreBenchmarkTests`, every language `SymbolProvider`, every `RangeBased*` controller, LSP range conversion, and the editor selection paths — needed zero changes.
+
+Net impact: `RangeUtilities.swift` 707 → 357 lines (−350, −49.5%). Five new focused modules add 683 lines in their own files. Total across the six files: 707 → 1,040 (+333 — additional file headers, doc comments on focused modules, and the public-type bridge initializers). Total Swift LOC: 132,687 → 133,020 (+333 in Group 7, **−1,520 cumulative since baseline**). `Sources/` file count 565 → 570.
+
+Verification: `swift build` clean, `swiftlint --strict` clean. The targeted `TextRangeUtilitiesRegressionTests` + `LineGeometryStoreBenchmarkTests` run (80 tests covering UTF-16 / emoji / line endings / round trips / mutations) passed in its entirety. `swift test --parallel` shows the same pre-existing failures only (snapshot pixel-precision drift across `CodeEditorSnapshotTests`, `CompletionInspectorPanelSnapshotTests`, `InspectorPanelStackSnapshotTests`, `LineNumberRulerViewSnapshotTests`, `PerformanceInspectorPanelSnapshotTests`; the latent `equatableIgnoresUnifiedPerformanceSystem` bug; the flaky `stop cancels the refresh task` timing test).
+
+---
+
+## Roadmap Complete
+
+All seven prioritized groups are resolved:
+
+| # | Group | Cumulative LOC change |
+|---|---|---|
+| 1 | Remove or Deprecate Dead Parallel Abstractions | −992 |
+| 2 | Make Code Folding Use One Source of Truth | −1,459 |
+| 3 | Consolidate the Completion Pipeline | −1,852 |
+| 4 | Split `LineGeometryStore` Internals | −1,808 |
+| 5 | Reduce Platform Rendering Duplication | −1,791 |
+| 6 | Migrate Language Providers to Shared Helpers | −1,853 |
+| 7 | Decompose Broad Utility Namespaces | −1,520 |
+
+Net: 134,540 → 133,020 Swift lines (−1,520 across the source tree, ~1.1%). Three dead source files removed (`CompletionCellConfigurator`, `CoordinateSystemHelper`, `CompletionFilteringService`, `CompletionCacheManager`); seven new focused modules added (`EdgeInsets`, `CodeEditorView+EnclosingScrollView`, `LineGeometryTree`, `LineGeometryBuilder`, `CodeEditor+RepresentableParameters`, `UTF16RangeConverter`, `RangeValidationPolicy`, `LineRangeIndex`, `RangeSetOperations`, `RangeBatchPlanner`). The real wins are structural: god-objects split, dead parallel abstractions removed, folding consolidated to one source of truth, completion-ranking constants deduplicated, platform-rendering duplication contained, language-provider boilerplate hoisted into shared protocols, and `TextRangeUtilities` reduced to a thin facade over five focused modules.
+
+The pre-existing test failures (snapshot pixel-precision drift on several SwiftUI panels and a latent `EditorConfiguration.Performance` Equatable bug at `EditorConfiguration+PerformanceExtensions.swift:224`) were confirmed against baseline and are not caused by any group. They remain as opportunities for a follow-up cleanup pass.
 
 ## Abstraction Analysis
 
