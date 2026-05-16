@@ -1,84 +1,77 @@
 import Foundation
 
 /// PHP symbol provider for detecting PHP classes, functions, methods, and variables
-struct PHPSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
+struct PHPSymbolProvider: StatefulLineBasedSymbolProvider {
+    struct State {
         var inClass = false
         var inFunction = false
-
-        for (lineIndex, line) in lines.enumerated() {
-            if let symbol = detectPHPSymbol(in: line, at: currentLocation, line: lineIndex, inClass: &inClass, inFunction: &inFunction) {
-                symbols.append(symbol)
-            }
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-
-        return symbols
     }
 
-    private func detectPHPSymbol(in line: String, at location: Int, line _: Int, inClass: inout Bool, inFunction: inout Bool) -> DocumentSymbol? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
+    func makeState() -> State { State() }
 
+    func detectSymbols(
+        in line: String,
+        at location: Int,
+        lineIndex _: Int,
+        fullLine: String,
+        state: inout State
+    ) -> [DocumentSymbol] {
         // Skip comments and empty lines
-        if trimmed.hasPrefix("//") || trimmed.hasPrefix("#") || trimmed.hasPrefix("/*") || trimmed.isEmpty {
-            return nil
+        if line.hasPrefix("//") || line.hasPrefix("#") || line.hasPrefix("/*") || line.isEmpty {
+            return []
         }
 
         // Track context
-        if trimmed.contains("}") {
-            if inFunction {
-                inFunction = false
-            } else if inClass {
-                inClass = false
+        if line.contains("}") {
+            if state.inFunction {
+                state.inFunction = false
+            } else if state.inClass {
+                state.inClass = false
             }
         }
 
         // Class detection
-        if trimmed.hasPrefix("class ") || trimmed.contains(" class ") {
-            inClass = true
-            return extractPHPClass(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("class ") || line.contains(" class ") {
+            state.inClass = true
+            return extractPHPClass(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
         }
 
         // Interface detection
-        if trimmed.hasPrefix("interface ") || trimmed.contains(" interface ") {
-            return extractPHPInterface(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("interface ") || line.contains(" interface ") {
+            return extractPHPInterface(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
         }
 
         // Trait detection
-        if trimmed.hasPrefix("trait ") || trimmed.contains(" trait ") {
-            return extractPHPTrait(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("trait ") || line.contains(" trait ") {
+            return extractPHPTrait(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
         }
 
         // Function detection
-        if trimmed.hasPrefix("function ") || trimmed.contains(" function ") {
-            if inClass {
-                return extractPHPMethod(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("function ") || line.contains(" function ") {
+            if state.inClass {
+                return extractPHPMethod(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
             } else {
-                inFunction = true
-                return extractPHPFunction(from: trimmed, at: location, fullLine: line)
+                state.inFunction = true
+                return extractPHPFunction(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
             }
         }
 
         // Constant detection
-        if trimmed.hasPrefix("const ") || trimmed.contains(" const ") {
-            return extractPHPConstant(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("const ") || line.contains(" const ") {
+            return extractPHPConstant(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
         }
 
         // Property detection (in class context)
-        if inClass && (trimmed.hasPrefix("public ") || trimmed.hasPrefix("private ") || trimmed.hasPrefix("protected ") || trimmed.hasPrefix("var ")) {
-            return extractPHPProperty(from: trimmed, at: location, fullLine: line)
+        if state.inClass && (line.hasPrefix("public ") || line.hasPrefix("private ") || line.hasPrefix("protected ") || line.hasPrefix("var ")) {
+            return extractPHPProperty(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
         }
 
         // Global variable detection
-        if !inClass && !inFunction && trimmed.hasPrefix("$") && trimmed.contains("=") {
-            return extractPHPVariable(from: trimmed, at: location, fullLine: line)
+        if !state.inClass && !state.inFunction && line.hasPrefix("$") && line.contains("=") {
+            return extractPHPVariable(from: line, at: location, fullLine: fullLine).map { [$0] } ?? []
         }
 
-        return nil
+        return []
     }
 
     private func extractPHPClass(from line: String, at location: Int, fullLine: String) -> DocumentSymbol? {

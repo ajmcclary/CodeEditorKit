@@ -1,47 +1,29 @@
 import Foundation
 
 /// C-style language symbol provider for C, C++, Java, Go, Rust
-struct CStyleSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
-
-        for (lineIndex, line) in lines.enumerated() {
-            if let symbol = detectCStyleSymbol(in: line, at: currentLocation, line: lineIndex) {
-                symbols.append(symbol)
-            }
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-
-        return symbols
-    }
-
-    private func detectCStyleSymbol(in line: String, at location: Int, line _: Int) -> DocumentSymbol? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-
+struct CStyleSymbolProvider: LineBasedSymbolProvider {
+    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Function detection (simplified)
-        if trimmed.contains("(") && trimmed.contains(")") && !trimmed.hasPrefix("//") && !trimmed.hasPrefix("/*") {
+        if line.contains("(") && line.contains(")") && !line.hasPrefix("//") && !line.hasPrefix("/*") {
             // Try to extract function name
-            if let parenIndex = trimmed.firstIndex(of: "(") {
-                let beforeParen = trimmed[..<parenIndex].trimmingCharacters(in: .whitespaces)
+            if let parenIndex = line.firstIndex(of: "(") {
+                let beforeParen = line[..<parenIndex].trimmingCharacters(in: .whitespaces)
                 let parts = beforeParen.split(separator: " ")
                 if let lastPart = parts.last, !lastPart.isEmpty {
                     return DocumentSymbol(
                         name: String(lastPart),
                         kind: .function,
-                        range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
-                        detail: line
+                        range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
+                        detail: fullLine
                     )
                 }
             }
         }
 
         // Class/struct detection
-        if trimmed.hasPrefix("class ") || trimmed.hasPrefix("struct ") {
-            let prefix = trimmed.hasPrefix("class ") ? "class" : "struct"
-            return extractCStyleSymbol(from: trimmed, prefix: prefix, kind: .class, at: location, fullLine: line)
+        if line.hasPrefix("class ") || line.hasPrefix("struct ") {
+            let prefix = line.hasPrefix("class ") ? "class" : "struct"
+            return extractCStyleSymbol(from: line, prefix: prefix, kind: .class, at: location, fullLine: fullLine)
         }
 
         return nil

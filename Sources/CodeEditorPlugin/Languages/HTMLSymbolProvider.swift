@@ -1,7 +1,7 @@
 import Foundation
 
 /// HTML symbol provider for detecting HTML elements and structure
-struct HTMLSymbolProvider: DocumentSymbolProvider {
+struct HTMLSymbolProvider: LineBasedSymbolProvider {
     /// Pre-compiled regex for the only two attributes this provider ever
     /// extracts — `id` and `class`. Previously the pattern was rebuilt and
     /// the regex re-compiled on every call to `extractAttribute(_:from:)`,
@@ -17,33 +17,15 @@ struct HTMLSymbolProvider: DocumentSymbolProvider {
         options: .caseInsensitive
     )
 
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
-
-        for (lineIndex, line) in lines.enumerated() {
-            if let symbol = detectHTMLSymbol(in: line, at: currentLocation, line: lineIndex) {
-                symbols.append(symbol)
-            }
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-
-        return symbols
-    }
-
-    private func detectHTMLSymbol(in line: String, at location: Int, line _: Int) -> DocumentSymbol? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-
+    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and doctype
-        if trimmed.hasPrefix("<!--") || trimmed.hasPrefix("<!DOCTYPE") || trimmed.hasPrefix("<?") {
+        if line.hasPrefix("<!--") || line.hasPrefix("<!DOCTYPE") || line.hasPrefix("<?") {
             return nil
         }
 
         // Detect opening tags
-        if trimmed.hasPrefix("<") && !trimmed.hasPrefix("</") {
-            return extractHTMLElement(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("<") && !line.hasPrefix("</") {
+            return extractHTMLElement(from: line, at: location, fullLine: fullLine)
         }
 
         return nil

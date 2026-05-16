@@ -1,40 +1,33 @@
 import Foundation
 
 /// XML symbol provider for detecting XML elements and structure
-struct XMLSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
+struct XMLSymbolProvider: StatefulLineBasedSymbolProvider {
+    typealias State = [String] // element stack
+
+    func makeState() -> State { [] }
+
+    func detectSymbols(
+        in line: String,
+        at location: Int,
+        lineIndex _: Int,
+        fullLine: String,
+        state: inout State
+    ) -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
-        var elementStack: [String] = []
-
-        for (lineIndex, line) in lines.enumerated() {
-            let lineSymbols = detectXMLSymbols(in: line, at: currentLocation, line: lineIndex, elementStack: &elementStack)
-            symbols.append(contentsOf: lineSymbols)
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-
-        return symbols
-    }
-
-    private func detectXMLSymbols(in line: String, at location: Int, line _: Int, elementStack: inout [String]) -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
 
         // Skip comments and declarations
-        if trimmed.hasPrefix("<!--") || trimmed.hasPrefix("<?") || trimmed.hasPrefix("<!DOCTYPE") {
+        if line.hasPrefix("<!--") || line.hasPrefix("<?") || line.hasPrefix("<!DOCTYPE") {
             return symbols
         }
 
         // Process all XML tags in the line
-        var searchText = trimmed
+        var searchText = line
         var currentOffset = 0
 
         while let tagRange = findNextXMLTag(in: searchText) {
             let tag = String(searchText[tagRange])
 
-            if let symbol = processXMLTag(tag, at: location + currentOffset, fullLine: line, elementStack: &elementStack) {
+            if let symbol = processXMLTag(tag, at: location + currentOffset, fullLine: fullLine, elementStack: &state) {
                 symbols.append(symbol)
             }
 

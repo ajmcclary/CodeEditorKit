@@ -84,7 +84,26 @@ Net impact: `MinimapView.swift` 669 → 686 (+17 lines for the new shared types,
 
 Verification: `swift build` clean, `swiftlint --strict` clean. The full 23-test minimap-and-theme suite (`MinimapView theme`, `MinimapViewModel style data source`, `MinimapIntegrationTests`, `ThemeableUIComponentTests`, `ApplyThemePropagationTests`) passed in its entirety, confirming the public theme-state API stayed intact. `swift test --parallel` shows the same pre-existing failures only (snapshot pixel-precision drift in `testCodeEditorRendersSwiftSnippet`, `CompletionInspectorPanelSnapshotTests`, and `InspectorPanelStackSnapshotTests`, all confirmed against baseline before Group 5 changes; the latent `equatableIgnoresUnifiedPerformanceSystem` equality bug).
 
-Remaining groups (6–7) from the prioritized roadmap below are unchanged and pending.
+### Group 6 — Migrate Repeated Language Providers to Shared Helpers: **COMPLETE**
+
+| Finding | Status | Notes |
+|---|---|---|
+| D2 — Stateless providers reimplement line iteration | ✅ Resolved | Migrated `CSSSymbolProvider`, `CStyleSymbolProvider`, `HTMLSymbolProvider`, `MarkdownSymbolProvider`, `RubySymbolProvider`, `ShellSymbolProvider` to `LineBasedSymbolProvider`. Each provider's hand-rolled `detectSymbols(in:)` loop with manual `currentLocation` tracking is deleted; only the per-line `detectSymbol(in:at:lineIndex:fullLine:)` callback remains. |
+| D2 — Stateful providers had no shared helper | ✅ Resolved | Added `StatefulLineBasedSymbolProvider` protocol (associatedtype `State`, `makeState()`, `detectSymbols(in:at:lineIndex:fullLine:state:) -> [DocumentSymbol]`). Returns `[DocumentSymbol]` (not optional) because XML emits zero or multiple symbols per line. Default extension owns the iteration. |
+| D2 — PHP / XML / YAML manual loops | ✅ Resolved | All three migrated to `StatefulLineBasedSymbolProvider`. PHP's `State` carries `inClass`/`inFunction` brace-depth flags; XML's `State` is the `[String]` element stack; YAML's `State` is the `[(level, symbol)]` indentation stack. The three outer `detectSymbols(in:)` loops are gone — protocol iteration handles them. |
+| D2 — Already-migrated providers | No-op | `JavaScriptSymbolProvider`, `PythonSymbolProvider`, `SwiftSymbolProvider` already conformed to `LineBasedSymbolProvider`. No changes needed. |
+| D2 — Non-line-based providers | No-op | `JSONSymbolProvider` uses JSON tree traversal, `SQLSymbolProvider` splits on statement boundaries. Neither is a line iterator; left untouched. |
+
+Numeric impact on the patterns the audit flagged:
+
+- `currentLocation += TextRangeUtilities.utf16Length(of: line) + 1` manual increments: 16 → 8 (−50%). The eight that remain are in non-line-based providers (`SQLSymbolProvider`, `JSONSymbolProvider`) or unrelated paths.
+- `NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine))` constructions: 29 → 33. The literal count went up slightly because the protocol now passes both `line` (trimmed) and `fullLine` (raw) explicitly, so the converted providers reference `fullLine` directly instead of a locally-shadowed variable. The duplication concern (every provider hand-rolling its own iteration) is resolved — the iteration that produces `currentLocation` and `fullLine` now lives in one place per protocol.
+
+Net impact: `LineBasedSymbolProvider.swift` 147 → 210 (+63 for the new stateful protocol); the nine migrated providers each shed 7–18 lines of boilerplate. Total Swift LOC: 132,749 → 132,687 (−62 in Group 6, −1,853 cumulative since baseline). `Sources/` file count unchanged (565).
+
+Verification: `swift build` clean, `swiftlint --strict` clean. Symbol-provider tests pass. `swift test --parallel` shows the same pre-existing snapshot pixel-drift failures only.
+
+Remaining group (7) from the prioritized roadmap below is unchanged and pending.
 
 ## Abstraction Analysis
 

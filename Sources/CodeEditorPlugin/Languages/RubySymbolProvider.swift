@@ -1,63 +1,45 @@
 import Foundation
 
 /// Ruby symbol provider for detecting Ruby classes, modules, methods, and constants
-struct RubySymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
-
-        for (lineIndex, line) in lines.enumerated() {
-            if let symbol = detectRubySymbol(in: line, at: currentLocation, line: lineIndex) {
-                symbols.append(symbol)
-            }
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-
-        return symbols
-    }
-
-    private func detectRubySymbol(in line: String, at location: Int, line _: Int) -> DocumentSymbol? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-
+struct RubySymbolProvider: LineBasedSymbolProvider {
+    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and empty lines
-        if trimmed.hasPrefix("#") || trimmed.isEmpty {
+        if line.hasPrefix("#") || line.isEmpty {
             return nil
         }
 
         // Class detection
-        if trimmed.hasPrefix("class ") {
-            return extractRubyClass(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("class ") {
+            return extractRubyClass(from: line, at: location, fullLine: fullLine)
         }
 
         // Module detection
-        if trimmed.hasPrefix("module ") {
-            return extractRubyModule(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("module ") {
+            return extractRubyModule(from: line, at: location, fullLine: fullLine)
         }
 
         // Method detection
-        if trimmed.hasPrefix("def ") {
-            return extractRubyMethod(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("def ") {
+            return extractRubyMethod(from: line, at: location, fullLine: fullLine)
         }
 
         // Constant detection (uppercase)
-        if let constantSymbol = extractRubyConstant(from: trimmed, at: location, fullLine: line) {
+        if let constantSymbol = extractRubyConstant(from: line, at: location, fullLine: fullLine) {
             return constantSymbol
         }
 
         // Instance variable detection
-        if let instanceVar = extractInstanceVariable(from: trimmed, at: location, fullLine: line) {
+        if let instanceVar = extractInstanceVariable(from: line, at: location, fullLine: fullLine) {
             return instanceVar
         }
 
         // Class variable detection
-        if let classVar = extractClassVariable(from: trimmed, at: location, fullLine: line) {
+        if let classVar = extractClassVariable(from: line, at: location, fullLine: fullLine) {
             return classVar
         }
 
         // Attribute accessor detection
-        if let accessor = extractAttributeAccessor(from: trimmed, at: location, fullLine: line) {
+        if let accessor = extractAttributeAccessor(from: line, at: location, fullLine: fullLine) {
             return accessor
         }
 

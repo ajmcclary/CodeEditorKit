@@ -1,82 +1,79 @@
 import Foundation
 
 /// YAML symbol provider for detecting YAML structure and keys
-struct YAMLSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
-        var indentationStack: [(level: Int, symbol: DocumentSymbol)] = []
+struct YAMLSymbolProvider: StatefulLineBasedSymbolProvider {
+    typealias State = [(level: Int, symbol: DocumentSymbol)] // indentation stack
 
-        for (lineIndex, line) in lines.enumerated() {
-            if let symbol = detectYAMLSymbol(in: line, at: currentLocation, line: lineIndex) {
-                // Calculate indentation level
-                let indentLevel = line.prefix { $0.isWhitespace }.count
+    func makeState() -> State { [] }
 
-                // Pop symbols from stack that are at same or deeper level
-                while let lastItem = indentationStack.last, lastItem.level >= indentLevel {
-                    indentationStack.removeLast()
-                }
-
-                // Add symbol to appropriate parent
-                var symbolToAdd = symbol
-                if !indentationStack.isEmpty {
-                    // This would be a child symbol - in a more complete implementation,
-                    // we'd modify the parent's children array
-                    symbolToAdd.detail = "\(symbol.detail ?? "") (level \(indentLevel))"
-                }
-
-                symbols.append(symbolToAdd)
-
-                // Add to stack if it might have children
-                if symbol.kind.canContainSymbols || indentLevel == 0 {
-                    indentationStack.append((level: indentLevel, symbol: symbolToAdd))
-                }
-            }
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
+    func detectSymbols(
+        in line: String,
+        at location: Int,
+        lineIndex _: Int,
+        fullLine: String,
+        state: inout State
+    ) -> [DocumentSymbol] {
+        guard let symbol = detectYAMLSymbol(in: line, at: location, fullLine: fullLine) else {
+            return []
         }
 
-        return symbols
+        // Calculate indentation level from the raw line (state is indent-driven).
+        let indentLevel = fullLine.prefix { $0.isWhitespace }.count
+
+        // Pop symbols from stack that are at same or deeper level.
+        while let lastItem = state.last, lastItem.level >= indentLevel {
+            state.removeLast()
+        }
+
+        // Tag children with their nesting level for now (existing behavior).
+        var symbolToAdd = symbol
+        if !state.isEmpty {
+            symbolToAdd.detail = "\(symbol.detail ?? "") (level \(indentLevel))"
+        }
+
+        // Push onto the stack if this symbol can contain children.
+        if symbol.kind.canContainSymbols || indentLevel == 0 {
+            state.append((level: indentLevel, symbol: symbolToAdd))
+        }
+
+        return [symbolToAdd]
     }
 
-    private func detectYAMLSymbol(in line: String, at location: Int, line _: Int) -> DocumentSymbol? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-
+    private func detectYAMLSymbol(in line: String, at location: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and empty lines
-        if trimmed.hasPrefix("#") || trimmed.isEmpty {
+        if line.hasPrefix("#") || line.isEmpty {
             return nil
         }
 
         // Detect YAML document separators
-        if trimmed == "---" || trimmed == "..." {
+        if line == "---" || line == "..." {
             return DocumentSymbol(
-                name: trimmed,
+                name: line,
                 kind: .module,
-                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
+                range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                 detail: "Document separator"
             )
         }
 
         // Detect array items
-        if trimmed.hasPrefix("- ") {
-            let content = String(trimmed.dropFirst(2)).trimmingCharacters(in: .whitespaces)
+        if line.hasPrefix("- ") {
+            let content = String(line.dropFirst(2)).trimmingCharacters(in: .whitespaces)
             if content.contains(":") {
                 // Array item with nested object
-                return extractYAMLKey(from: content, at: location, fullLine: line, isArrayItem: true)
+                return extractYAMLKey(from: content, at: location, fullLine: fullLine, isArrayItem: true)
             } else {
                 return DocumentSymbol(
                     name: content.isEmpty ? "[item]" : content,
                     kind: .enumMember,
-                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: line)),
+                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: fullLine)),
                     detail: "Array item"
                 )
             }
         }
 
         // Detect key-value pairs
-        if trimmed.contains(":") {
-            return extractYAMLKey(from: trimmed, at: location, fullLine: line, isArrayItem: false)
+        if line.contains(":") {
+            return extractYAMLKey(from: line, at: location, fullLine: fullLine, isArrayItem: false)
         }
 
         return nil

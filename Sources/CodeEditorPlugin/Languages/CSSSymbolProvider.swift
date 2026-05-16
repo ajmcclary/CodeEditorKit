@@ -1,39 +1,21 @@
 import Foundation
 
 /// CSS symbol provider for detecting CSS rules, selectors, and at-rules
-struct CSSSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
-
-        for (lineIndex, line) in lines.enumerated() {
-            if let symbol = detectCSSSymbol(in: line, at: currentLocation, line: lineIndex) {
-                symbols.append(symbol)
-            }
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-
-        return symbols
-    }
-
-    private func detectCSSSymbol(in line: String, at location: Int, line _: Int) -> DocumentSymbol? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-
+struct CSSSymbolProvider: LineBasedSymbolProvider {
+    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and empty lines
-        if trimmed.hasPrefix("/*") || trimmed.isEmpty {
+        if line.hasPrefix("/*") || line.isEmpty {
             return nil
         }
 
         // Detect at-rules
-        if trimmed.hasPrefix("@") {
-            return extractAtRule(from: trimmed, at: location, fullLine: line)
+        if line.hasPrefix("@") {
+            return extractAtRule(from: line, at: location, fullLine: fullLine)
         }
 
         // Detect CSS selectors (lines ending with { or containing {)
-        if trimmed.hasSuffix("{") || (trimmed.contains("{") && !trimmed.contains("}")) {
-            return extractCSSSelector(from: trimmed, at: location, fullLine: line)
+        if line.hasSuffix("{") || (line.contains("{") && !line.contains("}")) {
+            return extractCSSSelector(from: line, at: location, fullLine: fullLine)
         }
 
         return nil

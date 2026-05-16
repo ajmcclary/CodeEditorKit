@@ -1,48 +1,30 @@
 import Foundation
 
 /// Shell script symbol provider for detecting functions, variables, and aliases
-struct ShellSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
-        var symbols: [DocumentSymbol] = []
-        let lines = text.components(separatedBy: .newlines)
-        var currentLocation = 0
-
-        for (lineIndex, line) in lines.enumerated() {
-            if let symbol = detectShellSymbol(in: line, at: currentLocation, line: lineIndex) {
-                symbols.append(symbol)
-            }
-
-            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-
-        return symbols
-    }
-
-    private func detectShellSymbol(in line: String, at location: Int, line _: Int) -> DocumentSymbol? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-
+struct ShellSymbolProvider: LineBasedSymbolProvider {
+    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and empty lines
-        if trimmed.hasPrefix("#") || trimmed.isEmpty {
+        if line.hasPrefix("#") || line.isEmpty {
             return nil
         }
 
         // Function detection (various forms)
-        if let functionSymbol = extractShellFunction(from: trimmed, at: location, fullLine: line) {
+        if let functionSymbol = extractShellFunction(from: line, at: location, fullLine: fullLine) {
             return functionSymbol
         }
 
         // Variable assignment detection
-        if let variableSymbol = extractShellVariable(from: trimmed, at: location, fullLine: line) {
+        if let variableSymbol = extractShellVariable(from: line, at: location, fullLine: fullLine) {
             return variableSymbol
         }
 
         // Alias detection
-        if let aliasSymbol = extractShellAlias(from: trimmed, at: location, fullLine: line) {
+        if let aliasSymbol = extractShellAlias(from: line, at: location, fullLine: fullLine) {
             return aliasSymbol
         }
 
         // Export detection
-        if let exportSymbol = extractShellExport(from: trimmed, at: location, fullLine: line) {
+        if let exportSymbol = extractShellExport(from: line, at: location, fullLine: fullLine) {
             return exportSymbol
         }
 

@@ -63,6 +63,69 @@ extension LineBasedSymbolProvider {
     }
 }
 
+// MARK: - Stateful Line-Based Symbol Provider Protocol
+
+/// Variant of `LineBasedSymbolProvider` for languages whose per-line detection
+/// carries state across lines (e.g. brace-depth context, element-tag stack,
+/// indentation stack). Conforming providers implement
+/// `detectSymbols(in:at:lineIndex:fullLine:state:)` and a `makeState()` factory;
+/// the default `detectSymbols(in:)` runs the line iteration with one state
+/// instance per call.
+///
+/// The per-line callback returns `[DocumentSymbol]` (not optional) because
+/// some providers (e.g. XML) emit zero or multiple symbols from a single line.
+public protocol StatefulLineBasedSymbolProvider: DocumentSymbolProvider {
+    /// Per-call state type carried across the line loop.
+    associatedtype State
+
+    /// Build a fresh state value for one `detectSymbols(in:)` invocation.
+    func makeState() -> State
+
+    /// Detect symbols on a single line, mutating `state` as needed.
+    ///
+    /// - Parameters:
+    ///   - line: The trimmed line content.
+    ///   - location: UTF-16 character offset from the start of the text.
+    ///   - lineIndex: Zero-based line index.
+    ///   - fullLine: The original line with whitespace preserved.
+    ///   - state: Mutable per-call state (e.g. element stack, brace depth).
+    /// - Returns: Zero or more symbols detected on this line.
+    func detectSymbols(
+        in line: String,
+        at location: Int,
+        lineIndex: Int,
+        fullLine: String,
+        state: inout State
+    ) -> [DocumentSymbol]
+}
+
+extension StatefulLineBasedSymbolProvider {
+    /// Default implementation: iterate lines, threading one `State` instance
+    /// through every call.
+    public func detectSymbols(in text: String) async -> [DocumentSymbol] {
+        var symbols: [DocumentSymbol] = []
+        var state = makeState()
+        let lines = text.components(separatedBy: .newlines)
+        var currentLocation = 0
+
+        for (lineIndex, line) in lines.enumerated() {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            let lineSymbols = detectSymbols(
+                in: trimmedLine,
+                at: currentLocation,
+                lineIndex: lineIndex,
+                fullLine: line,
+                state: &state
+            )
+            symbols.append(contentsOf: lineSymbols)
+
+            currentLocation += TextRangeUtilities.utf16Length(of: line) + 1 // +1 for newline
+        }
+
+        return symbols
+    }
+}
+
 // MARK: - Utility Methods for Symbol Providers
 
 extension LineBasedSymbolProvider {
