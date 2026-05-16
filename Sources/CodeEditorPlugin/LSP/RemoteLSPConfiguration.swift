@@ -133,10 +133,15 @@ public struct SecurityOptions: Sendable, Codable {
         self.securityValidationTimeout = securityValidationTimeout
     }
 
-    /// TLS Version
+    /// TLS Version. Only TLS 1.2 and 1.3 are exposed — TLS 1.0/1.1 were
+    /// deprecated in macOS 12.0 / iOS 15.0 and the corresponding
+    /// `tls_protocol_version_t` constants now emit compiler warnings.
+    /// Removing the cases also closes a security footgun: hosts can no
+    /// longer downgrade remote LSP connections below TLS 1.2. Decoding
+    /// a config that stored `"1.0"` or `"1.1"` will throw at
+    /// `init(from:)` — the auto-synthesized `RawRepresentable` decoder
+    /// rejects unknown raw values, which is the correct behavior here.
     public enum TLSVersion: String, Sendable, Codable {
-        case tls10 = "1.0"
-        case tls11 = "1.1"
         case tls12 = "1.2"
         case tls13 = "1.3"
 
@@ -144,8 +149,6 @@ public struct SecurityOptions: Sendable, Codable {
         /// expects for `tlsMinimumSupportedProtocolVersion`.
         public var tlsProtocolVersion: tls_protocol_version_t {
             switch self {
-            case .tls10: return .TLSv10
-            case .tls11: return .TLSv11
             case .tls12: return .TLSv12
             case .tls13: return .TLSv13
             }

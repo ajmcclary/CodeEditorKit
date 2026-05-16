@@ -146,23 +146,22 @@ Removed the three `registerProvider(HeuristicFoldProvider(language: …), for: �
 
 Chose this over implementing real heuristics for the three languages because that's a meaningful feature project (TOML section folding, Lua `do...end` and `function...end` blocks, Dockerfile multi-line `RUN` continuations) that exceeds the scope of a single medium-severity fix.
 
-### M4. Remote LSP security options still expose deprecated TLS 1.0 and 1.1
+### M4. Remote LSP security options still expose deprecated TLS 1.0 and 1.1 — RESOLVED
 
-File:
+Files:
 
-- `Sources/CodeEditorPlugin/LSP/RemoteLSPConfiguration.swift:136-151`
+- `Sources/CodeEditorPlugin/LSP/RemoteLSPConfiguration.swift:136-158`
+- `Tests/CodeEditorPluginTests/LSP/SecurityOptionsTLSVersionTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-`SecurityOptions.TLSVersion` exposes `.tls10` and `.tls11`, and maps them to deprecated `tls_protocol_version_t` constants. The compiler warns on both mappings during `swift build`.
+`SecurityOptions.TLSVersion` exposed `.tls10` and `.tls11` mapped to `tls_protocol_version_t.TLSv10` / `.TLSv11`, both deprecated in macOS 12.0 / iOS 15.0. Every clean `swift build` emitted two deprecation warnings, and the public API let hosts downgrade remote LSP connections below TLS 1.2 — both warning noise and a security footgun.
 
-Why it matters:
+Resolution (commit pending):
 
-The default minimum is TLS 1.2, but the public API still permits callers to downgrade remote LSP connections to deprecated protocol versions. That is both warning noise and a security footgun.
+Removed the `.tls10` and `.tls11` cases (and their `tls_protocol_version_t` mappings) from `SecurityOptions.TLSVersion`. The only consumers of those raw values lived inside the enum itself — no other source or test referenced them, so dropping the cases was source-safe. The default minimum was already `.tls12`, so no caller relying on default-initialized `SecurityOptions` is affected. Decoding a stored config that requested `"1.0"` or `"1.1"` now throws `DecodingError` via the auto-synthesized `RawRepresentable` decoder — the correct behavior; silent downgrade would defeat the security goal.
 
-Concrete fix:
-
-Remove the cases if source compatibility allows it. Otherwise mark them deprecated and clamp/validate effective minimum TLS to 1.2 or newer when constructing URL session configuration.
+Added `SecurityOptionsTLSVersionTests` with six Swift Testing cases: surface is limited to `.tls12` / `.tls13`; mappings hit non-deprecated `TLSv12` / `TLSv13`; default `SecurityOptions` minimum is `.tls12`; decoding `"1.0"` and `"1.1"` raw values throws; `"1.2"` still round-trips. Clean `swift build` after removal emits zero TLS deprecation warnings.
 
 ### M5. `TextProcessingActor.cancelAllProcessing()` marks state that processors never read — RESOLVED
 
@@ -246,10 +245,10 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
-| Medium | 6 | 4 | 2 |
+| Medium | 6 | 5 | 1 |
 | Low | 2 | 0 | 2 |
 
-Overall health: green. The codebase builds, lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items plus M1, M2, M3, and M5 are resolved. Remaining open items are two Medium-severity fixes (M4, M6) and two Low-severity nits.
+Overall health: green. The codebase builds (no deprecation warnings remaining), lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items plus M1–M5 are resolved. Remaining open items are one Medium-severity fix (M6) and two Low-severity nits.
 
 Notes flagged for separate triage:
 
@@ -267,3 +266,4 @@ Most impactful fixes first:
 6. ~~Compare folding's `minimumLineCount` against actual line span, not UTF-16 length.~~ Resolved (see M2).
 7. ~~Stop advertising folding for languages whose heuristic returns nothing.~~ Resolved (see M3).
 8. ~~Make `TextProcessingActor.cancelAllProcessing()` actually abort inflight work.~~ Resolved (see M5).
+9. ~~Remove TLS 1.0 / 1.1 from `SecurityOptions.TLSVersion`.~~ Resolved (see M4).
