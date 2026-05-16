@@ -252,12 +252,15 @@ force_unwrapping:
 custom_rules:
   no_print_statements:
     included: '.*\.swift'
-    excluded: '.*Tests\.swift'
     name: "No print statements"
-    # Match `print(` only in real code; skip doc-comment example lines
-    # that start with `///`, which SwiftLint cannot easily exclude via
-    # `match_kinds` for custom rules under all configurations.
-    regex: '^(?!\s*///)[^\n]*\bprint\('
+    # Match `print(` only when it appears as an identifier in real
+    # code. `match_kinds: identifier` restricts matches to SourceKit's
+    # identifier kind, which excludes `print(...)` text that lives
+    # inside string literals (test sample code) or comments. The rule
+    # applies to test files too — that's the point of dropping the
+    # previous `excluded: '.*Tests\.swift'`.
+    regex: '\bprint\('
+    match_kinds: identifier
     message: "Use CrossPlatformLogger.logger() instead of print statements"
     severity: warning
 

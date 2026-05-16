@@ -456,14 +456,14 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
             eventSystem: eventSystem
         )
 
-        // Apply everything
+        // Apply everything. The closures below are never invoked in
+        // this test — it only verifies the modifier chain type-checks
+        // and `codeEditorEnvironment(_:)` accepts the composed editor.
+        // Closure bodies are intentionally empty (was `print(...)` for
+        // historical sample purposes).
         let baseEditor = CodeEditor(text: binding, debounceInterval: .milliseconds(300))
-            .onTextChange { text in
-                print("Text changed: \(text.count) characters")
-            }
-            .onSelectionChange { range in
-                print("Selection: \(range?.description ?? "none")")
-            }
+            .onTextChange { _ in }
+            .onSelectionChange { _ in }
             .codeCompletion { _ in
                 [SwiftUICompletionItem(label: "test", kind: .function)]
             }

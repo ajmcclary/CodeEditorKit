@@ -180,26 +180,30 @@ Added a private `checkCancellation(id:)` helper that both honors the caller's `T
 
 Added `TextProcessingActorCancellationTests` with three XCTest cases covering: an inflight processor aborting when `cancelAllProcessing()` runs without the caller cancelling its own `Task` (the exact regression the review called out); a subsequent `process()` call after `cancelAllProcessing` running cleanly (scoped per-processor); and three concurrent processors all observing the flag flip. The tests exercise the cancellation contract through an internal test seam `processForCancellationTesting(text:)` that simulates a real long-running processor by inserting a brief sleep between two `checkCancellation(id:)` boundaries — the production stubs finish synchronously today and have no observable suspension window, so the seam is the honest way to pin the contract without embedding `Task.sleep` in production code.
 
-### M6. Test logging and SwiftLint configuration contradict the no-`print()` convention
+### M6. Test logging and SwiftLint configuration contradict the no-`print()` convention — RESOLVED
 
 Files:
 
-- `.swiftlint.yml:252-262`
-- `Tests/CodeEditorPluginTests/LargeFileHighlightingBenchmarkTests.swift:82-149`
-- `Tests/CodeEditorPluginTests/PerformanceRegressionTests.swift:53-74`
-- `Tests/CodeEditorPluginTests/SwiftUIEnvironmentConfigurationTests.swift:459-465`
+- `.swiftlint.yml:252-265`
+- `Tests/CodeEditorPluginTests/LargeFileHighlightingBenchmarkTests.swift`
+- `Tests/CodeEditorPluginTests/PerformanceRegressionTests.swift`
+- `Tests/CodeEditorPluginTests/SwiftUIEnvironmentConfigurationTests.swift`
 
-What's wrong:
+What was wrong:
 
-The hard convention says `print()` is forbidden and the custom lint rule exists to enforce it, but the custom rule excludes `.*Tests\.swift`. Several active tests still call `print(...)` directly for diagnostics or sample closures.
+The hard convention said `print()` was forbidden and the custom lint rule existed to enforce it, but the custom rule had `excluded: '.*Tests\.swift'` — the entire test target was exempt. Several active tests called `print(...)` directly for diagnostics or as bodies of never-invoked sample closures, and the lint config silently let the convention drift.
 
-Why it matters:
+Resolution (commit pending):
 
-The test suite emits uncontrolled output and the lint rule does not enforce the stated convention over the whole repository. This also makes it easier for real `print()` usage in tests to mask accidental production-like logging patterns.
+Dropped the `.*Tests\.swift` exclusion from the `no_print_statements` rule and switched the matcher from a hand-rolled regex to `regex: '\bprint\(' + match_kinds: identifier`. SwiftLint's identifier-kind filter excludes `print(...)` text that lives inside string literals (test sample code representing user source) and comments, so the rule now catches real `print()` calls anywhere in the repo without false positives from sample data — no per-line `swiftlint:disable` comments needed.
 
-Concrete fix:
+Cleaned up the three review-flagged files:
 
-Replace active test diagnostics with XCTest activities, attachments, or `CrossPlatformLogger.logger()` where logging is necessary. If source-code snippets must contain `print`, keep those as string literals and use local SwiftLint disables or a more precise rule strategy instead of excluding every test file.
+- `LargeFileHighlightingBenchmarkTests`: replaced five active `print(...)` diagnostics with a class-scoped `CrossPlatformLogger`. Also removed four blocks of `/* ... */` disabled tests (marked "Disabled: Takes too long") that held production-style `print(...)` lines and stale code — revive properly via a budgeted assertion if needed.
+- `PerformanceRegressionTests`: replaced two diagnostic `print(...)` calls with the logger; deleted the dead `measureAndReport` helper (no callers, contained another `print(...)`).
+- `SwiftUIEnvironmentConfigurationTests`: replaced the two `print(...)` bodies in `.onTextChange` / `.onSelectionChange` callbacks with empty closures (the test only verifies the modifier chain type-checks; closures are never invoked).
+
+Final state: `swiftlint` reports 0 violations / 0 serious across 805 files with the tightened rule. `swift test --parallel` passes 461 tests in 115 suites with 1 known issue.
 
 ## Low
 
@@ -245,10 +249,10 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
-| Medium | 6 | 5 | 1 |
+| Medium | 6 | 6 | 0 |
 | Low | 2 | 0 | 2 |
 
-Overall health: green. The codebase builds (no deprecation warnings remaining), lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items plus M1–M5 are resolved. Remaining open items are one Medium-severity fix (M6) and two Low-severity nits.
+Overall health: green. The codebase builds (no deprecation warnings remaining), lint passes (now with the `no_print_statements` rule enforced across tests too), the CodeEditorPlugin test suite is green, and every High and Medium item from the original review is resolved. Only the two Low-severity nits remain.
 
 Notes flagged for separate triage:
 
@@ -267,3 +271,4 @@ Most impactful fixes first:
 7. ~~Stop advertising folding for languages whose heuristic returns nothing.~~ Resolved (see M3).
 8. ~~Make `TextProcessingActor.cancelAllProcessing()` actually abort inflight work.~~ Resolved (see M5).
 9. ~~Remove TLS 1.0 / 1.1 from `SecurityOptions.TLSVersion`.~~ Resolved (see M4).
+10. ~~Enforce no-`print()` convention in tests and clean up the offending diagnostics.~~ Resolved (see M6).

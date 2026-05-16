@@ -4,6 +4,11 @@ import XCTest
 
 @MainActor
 final class LargeFileHighlightingBenchmarkTests: XCTestCase {
+    private let logger = CrossPlatformLogger.logger(
+        subsystem: "com.codeeditor.tests",
+        category: "LargeFileHighlightingBenchmark"
+    )
+
     // swiftlint:disable:next unneeded_override
     override func setUp() {
         super.setUp()
@@ -79,7 +84,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         await highlighter.highlightImmediately(for: editorView, language: .swift)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
-        print("Small file highlighting: \(String(format: "%.3f", elapsed))s")
+        logger.info("Small file highlighting: \(String(format: "%.3f", elapsed))s")
 
         XCTAssertLessThan(elapsed, 2.0, "Small file should highlight in less than 2 seconds")
     }
@@ -96,7 +101,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         await highlighter.highlightImmediately(for: editorView, language: .swift)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
-        print("Medium file highlighting: \(String(format: "%.3f", elapsed))s")
+        logger.info("Medium file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 3.0, "Medium file should highlight in less than 3 seconds")
     }
 
@@ -112,7 +117,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         await highlighter.highlightImmediately(for: editorView, language: .swift)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
-        print("Large file highlighting: \(String(format: "%.3f", elapsed))s")
+        logger.info("Large file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 5.0, "Large file should highlight in less than 5 seconds")
     }
 
@@ -130,7 +135,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         await highlighter.highlightImmediately(for: editorView, language: .json)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
-        print("JSON small file highlighting: \(String(format: "%.3f", elapsed))s")
+        logger.info("JSON small file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 3.0, "JSON small file should highlight quickly")
     }
 
@@ -146,179 +151,15 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         await highlighter.highlightImmediately(for: editorView, language: .json)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
-        print("JSON large file highlighting: \(String(format: "%.3f", elapsed))s")
+        logger.info("JSON large file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 5.0, "JSON large file should highlight in reasonable time")
     }
 
-    // MARK: - Memory Usage Tests
-
-    // Disabled: Takes too long
-    /*
-    func testMemoryUsageDuringLargeFileHighlighting() async throws {
-        let (highlighter, editorView, memoryMonitor) = createTestComponents()
-        defer { highlighter.cleanup() }
-        
-        // Reset memory statistics
-        memoryMonitor.resetStatistics()
-        
-        // Generate a very large file
-        let code = generateLargeSwiftFile(lines: 200) // ~20KB
-        
-        // Get initial memory
-        let initialMemory = memoryMonitor.getCurrentMemoryUsage()
-        
-        // Set the text and highlight
-        editorView.text = code
-        editorView.language = .swift
-        
-        await highlighter.highlightImmediately(for: editorView, language: .swift)
-        
-        // Wait for memory to settle
-        try await Task.sleep(for: .seconds(1))
-        
-        // Get final memory
-        let finalMemory = memoryMonitor.getCurrentMemoryUsage()
-        let memoryIncrease = finalMemory - initialMemory
-        
-        // Get memory statistics
-        let stats = memoryMonitor.getMemoryStatistics()
-        
-        // Verify memory usage is reasonable
-        XCTAssertLessThan(memoryIncrease, 50.0, "Memory increase should be less than 50MB for 1MB file")
-        XCTAssertGreaterThan(stats.peakUsageMB, initialMemory, "Peak usage should be recorded")
-        
-        // Log results for analysis
-        print("""
-        Memory Usage Results:
-        - Initial: \(String(format: "%.1f", initialMemory))MB
-        - Final: \(String(format: "%.1f", finalMemory))MB
-        - Increase: \(String(format: "%.1f", memoryIncrease))MB
-        - Peak: \(String(format: "%.1f", stats.peakUsageMB))MB
-        """)
-    }
-    */
-
-    // MARK: - Background Highlighting Tests
-
-    // Disabled: Takes too long
-    /*
-    func testBackgroundHighlightingActivation() async throws {
-        let (highlighter, editorView, _) = createTestComponents()
-        defer { highlighter.cleanup() }
-        
-        // Configure threshold
-        highlighter.enableBackgroundHighlighting = true
-        highlighter.backgroundHighlightingThreshold = 50_000 // 50KB
-        
-        // Test with file below threshold (should use regular highlighting)
-        let smallCode = generateLargeSwiftFile(lines: 50) // ~5KB
-        editorView.text = smallCode
-        editorView.language = .swift
-        
-        let start1 = CFAbsoluteTimeGetCurrent()
-        await highlighter.highlightImmediately(for: editorView, language: .swift)
-        let time1 = CFAbsoluteTimeGetCurrent() - start1
-        
-        // Test with file above threshold (should use background highlighting)
-        let largeCode = generateLargeSwiftFile(lines: 200) // ~20KB
-        editorView.text = largeCode
-        
-        let start2 = CFAbsoluteTimeGetCurrent()
-        await highlighter.highlightImmediately(for: editorView, language: .swift)
-        let time2 = CFAbsoluteTimeGetCurrent() - start2
-        
-        // Get background highlighting statistics
-        let bgStats = highlighter.backgroundStatistics
-        
-        // Verify background highlighting was used for large file
-        XCTAssertGreaterThan(bgStats.totalRequests, 0, "Background highlighting should have been used")
-        
-        print("""
-        Background Highlighting Results:
-        - Small file time: \(String(format: "%.3f", time1))s
-        - Large file time: \(String(format: "%.3f", time2))s
-        - Background requests: \(bgStats.totalRequests)
-        - Background completions: \(bgStats.completedRequests)
-        """)
-    }
-    */
-
-    // MARK: - Incremental Highlighting Tests
-
-    // Disabled: Takes too long
-    /*
-    func testIncrementalHighlightingPerformance() async throws {
-        let (highlighter, editorView, _) = createTestComponents()
-        defer { highlighter.cleanup() }
-        
-        // Start with a medium-sized file
-        let initialCode = generateLargeSwiftFile(lines: 500)
-        editorView.text = initialCode
-        editorView.language = .swift
-        
-        // Initial highlighting
-        await highlighter.highlightImmediately(for: editorView, language: .swift)
-        
-        // Measure incremental updates
-        var times: [TimeInterval] = []
-        for iteration in 0..<5 {
-            let newCode = initialCode + "\n// Comment line \(iteration)"
-            editorView.text = newCode
-            
-            let start = CFAbsoluteTimeGetCurrent()
-            await highlighter.highlightImmediately(for: editorView, language: .swift)
-            let elapsed = CFAbsoluteTimeGetCurrent() - start
-            times.append(elapsed)
-        }
-        
-        let averageTime = times.reduce(0, +) / Double(times.count)
-        print("Incremental update average: \(String(format: "%.3f", averageTime))s")
-        
-        XCTAssertLessThan(averageTime, 0.5, "Incremental updates should be fast")
-    }
-    */
-
-    // MARK: - Multi-Language Performance
-
-    /*
-    func testMultiLanguageHighlightingComparison() async throws {
-        let (highlighter, editorView, _) = createTestComponents()
-        defer { highlighter.cleanup() }
-        
-        let languages: [(Language, String)] = [
-            (.swift, generateLargeSwiftFile(lines: 500)),
-            (.python, String(repeating: "def function_\(UUID())():\n    pass\n\n", count: 500)),
-            (.javascript, String(repeating: "function test() { return Math.random(); }\n", count: 500)),
-            (.json, generateLargeJSONFile(objects: 500)),
-            (.markdown, String(repeating: "# Heading\n\nParagraph with **bold** and *italic*.\n\n", count: 500))
-        ]
-        
-        var results: [(Language, TimeInterval)] = []
-        
-        for (language, code) in languages {
-            editorView.text = code
-            editorView.language = language
-            
-            let start = CFAbsoluteTimeGetCurrent()
-            await highlighter.highlightImmediately(for: editorView, language: language)
-            let elapsed = CFAbsoluteTimeGetCurrent() - start
-            
-            results.append((language, elapsed))
-            
-            // Clear cache between languages for fair comparison
-            await highlighter.clearCache()
-        }
-        
-        // Print comparison results
-        print("\nLanguage Performance Comparison:")
-        for (language, time) in results.sorted(by: { $0.1 < $1.1 }) {
-            print("- \(language): \(String(format: "%.3f", time))s")
-        }
-        
-        // Verify all languages completed in reasonable time
-        for (language, time) in results {
-            XCTAssertLessThan(time, 5.0, "\(language) highlighting should complete within 5 seconds")
-        }
-    }
-    */
+    // Memory-usage, background-highlighting, incremental, and
+    // multi-language benchmarks lived here in `/* ... */` blocks marked
+    // "Disabled: Takes too long". They were dead source containing
+    // production-style `print(...)` lines that would have re-tripped
+    // the tightened no_print_statements rule. Removed wholesale; revive
+    // by writing a new test with proper budgeted assertions and the
+    // `CrossPlatformLogger`-based diagnostic pattern this file now uses.
 }

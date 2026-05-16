@@ -3,6 +3,11 @@ import XCTest
 
 /// Performance regression tests to ensure optimizations don't degrade over time
 final class PerformanceRegressionTests: CleanupTestCase {
+    private let logger = CrossPlatformLogger.logger(
+        subsystem: "com.codeeditor.tests",
+        category: "PerformanceRegression"
+    )
+
     override func setUp() async throws {
         try await super.setUp()
         // Give the system time to settle between tests
@@ -51,7 +56,7 @@ final class PerformanceRegressionTests: CleanupTestCase {
         let duration = CFAbsoluteTimeGetCurrent() - startTime
 
         // Log performance for debugging
-        print("[testAsyncOperationManagerRegressionCheck] Duration: \(duration)s for 50 operations")
+        logger.info("[testAsyncOperationManagerRegressionCheck] Duration: \(duration)s for 50 operations")
 
         // Allow generous time when running in full suite
         XCTAssertLessThan(duration, 10.0, "Debounce operations took too long: \(duration)s")
@@ -71,7 +76,7 @@ final class PerformanceRegressionTests: CleanupTestCase {
         let duration = CFAbsoluteTimeGetCurrent() - startTime
 
         // Log performance for debugging
-        print("[testAsyncOperationManagerPerformanceBaseline] Duration: \(duration)s for 200 operations")
+        logger.info("[testAsyncOperationManagerPerformanceBaseline] Duration: \(duration)s for 200 operations")
 
         // Use a very forgiving baseline for suite runs to avoid flaky failures
         let suiteAdjustedBaseline = 15.0 // 15 seconds should be enough even under heavy load
@@ -316,7 +321,11 @@ final class PerformanceRegressionTests: CleanupTestCase {
         let editorView = createCodeEditorView()
 
         try await measureAsyncAgainstBudget("memory_pressure_recovery") { @MainActor in
-            // Simulate memory pressure with smaller text
+            // Simulate memory pressure with smaller text. The string
+            // literal embeds `print(...)` as Swift sample content; the
+            // tightened no_print_statements rule uses match_kinds:
+            // identifier so it correctly ignores string-literal
+            // content like this without needing a per-line disable.
             let largeText = String(repeating: "func test() { print(\"memory test\") }\n", count: 100)
             editorView.text = largeText
 
@@ -343,26 +352,9 @@ final class PerformanceRegressionTests: CleanupTestCase {
         XCTAssertNotNil(menu)
     }
 
-    // MARK: - Performance Monitoring Helpers
-
-    private func measureAndReport<T>(
-        operation: String,
-        baseline: TimeInterval,
-        block: () throws -> T
-    ) rethrows -> T {
-        let startTime = CFAbsoluteTimeGetCurrent()
-        let result = try block()
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
-
-        let percentageOfBaseline = (duration / baseline) * 100.0
-        print("[\(operation)] Duration: \(String(format: "%.3f", duration))s (\(String(format: "%.1f", percentageOfBaseline))% of baseline)")
-
-        if duration > baseline * 1.2 {
-            XCTFail("\(operation) exceeded baseline by >20%: \(duration)s vs \(baseline)s")
-        }
-
-        return result
-    }
+    // `measureAndReport` used to live here but had no callers — every
+    // existing test uses `measureAsyncAgainstBudget` / `XCTClockMetric`
+    // instead. Removed wholesale alongside its `print()` call.
 }
 
 // MARK: - Mock Providers for Testing
