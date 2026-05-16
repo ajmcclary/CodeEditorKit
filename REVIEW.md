@@ -77,25 +77,22 @@ Resolution (commit pending):
 
 `sendShutdownRequest` now takes a `timeout: Duration` (default 2s) and resolves a race between the shutdown attempt and the deadline via a single `withCheckedThrowingContinuation`. When the timeout wins it throws `LSPError.timeout` and returns immediately, leaving the abandoned shutdown task suspended in the background. Note: a structured `withThrowingTaskGroup` could not be used here because `Task<T>.value` and `withCheckedThrowingContinuation` do not honor cancellation, so the group would hang waiting for the cancelled child. `LSPClient.disconnect()` now drains `pendingRequests` after the shutdown attempt — including the abandoned task's continuation — so the background task can complete and a follow-up `connect()` doesn't observe stale pending entries. Transport/process teardown follows unconditionally as before. Added `LSPConnectionManagerShutdownTests` with three XCTest cases: hung-server timeout (asserts the call returns under 2s when `sendRequest` sleeps for 60s), normal completion (asserts `shutdown` request then `exit` notification fire in order), and server-error propagation (asserts a real error wins over the timeout).
 
-### H4. Viewport highlighting caches partial tokens under a full-document key
+### H4. Viewport highlighting caches partial tokens under a full-document key — RESOLVED
 
 Files:
 
-- `Sources/CodeEditorPlugin/SyntaxHighlighting/OptimizedSyntaxHighlightingCoordinator.swift:121-175`
-- `Sources/CodeEditorPlugin/SyntaxHighlighting/OptimizedSyntaxHighlightingCoordinator.swift:236-284`
-- `Sources/CodeEditorPlugin/SyntaxHighlighting/SmartTokenCache.swift:96-130`
+- `Sources/CodeEditorPlugin/SyntaxHighlighting/OptimizedSyntaxHighlightingCoordinator.swift:120-185`
+- `Sources/CodeEditorPlugin/SyntaxHighlighting/OptimizedSyntaxHighlightingCoordinator.swift:235-298`
+- `Sources/CodeEditorPlugin/SyntaxHighlighting/SmartTokenCache.swift:37-148`
+- `Tests/CodeEditorPluginTests/SyntaxHighlighting/SmartTokenCacheCoverageTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-For large files with a visible range, `highlight(...)` calls `highlightViewport(...)`, which returns tokens only for an expanded viewport slice. Those partial tokens are then cached under `CacheKey(text:language:version:)`, which does not include viewport identity or cache completeness. Later calls for a different viewport filter that same partial token array, and a later full-document request can return the partial viewport tokens as if they represented the whole document.
+For large files with a visible range, `highlight(...)` called `highlightViewport(...)`, which returned tokens only for an expanded viewport slice. Those partial tokens were cached under `CacheKey(text:language:version:)`, which did not include viewport identity or cache completeness. A later full-document request was satisfied from this partial entry as if it represented the whole document; large-file highlighting silently missed tokens outside the first cached viewport.
 
-Why it matters:
+Resolution (commit pending):
 
-Large-file highlighting can silently miss tokens outside the first cached viewport. This is exactly the kind of cache correctness bug that presents as inconsistent coloring while scrolling.
-
-Concrete fix:
-
-Model cache completeness explicitly. Either include viewport range in the cache key, or store entries as `fullDocument` versus `viewport(range:)` and reject incompatible cache hits. Never satisfy a full-document request from a viewport-only cache entry. Add a regression that highlights viewport A, then viewport B, then the full document, and verifies tokens outside A are present.
+`SmartTokenCache.CacheEntry` now carries an explicit `Coverage` enum (`.fullDocument` / `.viewport(NSRange)`). `getCachedTokens` rejects hits via a new `CacheEntry.canSatisfy(_:)` check whenever the cached coverage cannot serve the requested range — viewport-only entries can never satisfy a full-document request, and viewport entries only satisfy viewport requests fully contained in the cached slice. `setCachedTokens` takes a `coverage:` parameter (default `.fullDocument`) replacing the old metadata-only `viewportRange:`. `optimizeForMemory` updates the coverage of entries it narrows so future reads can't be misled. `highlightViewport` now returns `(tokens, coveredRange)` and the coordinator stores `.viewport(coveredRange)` for viewport results vs `.fullDocument` for full passes. Added `SmartTokenCacheCoverageTests` with five XCTest cases: full-doc-satisfies-any, viewport-rejects-full, viewport-rejects-non-overlapping, viewport-satisfies-contained, and the reviewer-requested coordinator regression that highlights viewport A → viewport B → full document and asserts the full-document result contains tokens in both regions and past region B.
 
 ## Medium
 
@@ -258,15 +255,17 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 | Severity | Total | Resolved | Open |
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
-| High | 4 | 3 | 1 |
+| High | 4 | 4 | 0 |
 | Medium | 6 | 0 | 6 |
 | Low | 2 | 0 | 2 |
 
-Overall health: yellow. The codebase builds, lint passes, and the CodeEditorPlugin test suite is green with H1, H2, and H3 resolved. The remaining high-severity correctness concern is viewport highlighting cache completeness (H4); the medium and low items are mostly tidy-ups.
+Overall health: yellow → green-ish. The codebase builds, lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items are resolved. Remaining open items are six Medium-severity fixes (mostly lifecycle/configuration tidy-ups) and two Low-severity nits.
+
+Note unrelated to the original review: `CodeEditorSampleTests/PerformanceInspectorPanelSnapshotTests` fails 5/5 on `main` due to stale snapshot baselines (verified pre-existing during H3); flagged for separate triage.
 
 Most impactful fixes first:
 
 1. ~~Fix `PerformanceObservation` stop semantics so `swift test --parallel` is green again.~~ Resolved (see H1).
 2. ~~Wire `textViewWillChangeText` through the multiplexer so the public pre-edit hook actually fires.~~ Resolved (see H2).
 3. ~~Make `LSPClient.disconnect()` bounded and cleanup-guaranteed.~~ Resolved (see H3).
-4. Correct viewport-token cache completeness and add scrolling/full-document cache regression tests (H4).
+4. ~~Correct viewport-token cache completeness and add scrolling/full-document cache regression tests.~~ Resolved (see H4).

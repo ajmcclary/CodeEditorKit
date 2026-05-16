@@ -35,12 +35,25 @@ actor SmartTokenCache {
     }
 
     struct CacheEntry {
+        /// What portion of the cached text the stored tokens actually
+        /// cover. Reads are rejected when the request's coverage
+        /// requirement isn't satisfied — without this, partial viewport
+        /// results would be returned to full-document callers and
+        /// non-overlapping viewport callers as if they were complete.
+        enum Coverage: Equatable {
+            /// Tokens span the entire document for this cache key.
+            case fullDocument
+            /// Tokens cover only the given UTF-16 range; reads asking
+            /// for content outside this range must miss.
+            case viewport(NSRange)
+        }
+
         let tokens: [HighlightedToken]
         let timestamp: Date
         let accessCount: Int
         let computationTime: Duration
         let textLength: Int
-        let lastViewportRange: NSRange? // Track last visible range
+        let coverage: Coverage
 
         var score: Double {
             // Calculate cache value score based on multiple factors
@@ -51,6 +64,23 @@ actor SmartTokenCache {
             let computationFactor = computationTime.timeInterval * 10.0 // Favor expensive computations
 
             return ageFactor * 0.3 + accessFactor * 0.3 + sizeFactor * 0.2 + computationFactor * 0.2
+        }
+
+        /// Whether this entry can serve a request for `requestedRange`
+        /// (nil meaning a full-document request). The cached tokens are
+        /// only complete enough to satisfy:
+        /// - any request when coverage is `.fullDocument`;
+        /// - viewport requests fully contained in the cached viewport.
+        func canSatisfy(_ requestedRange: NSRange?) -> Bool {
+            switch coverage {
+            case .fullDocument:
+                return true
+
+            case .viewport(let cached):
+                guard let requestedRange else { return false }
+                return cached.location <= requestedRange.location
+                    && NSMaxRange(cached) >= NSMaxRange(requestedRange)
+            }
         }
 
         /// Get viewport-filtered tokens to reduce memory usage
@@ -94,7 +124,7 @@ actor SmartTokenCache {
     // MARK: - Public Methods
 
     func getCachedTokens(for key: CacheKey, viewportRange: NSRange? = nil) -> [HighlightedToken] {
-        if var entry = cache[key] {
+        if let entry = cache[key] {
             // Check if entry is stale
             let age = Duration.seconds(Date.now.timeIntervalSince(entry.timestamp))
             if age > staleThreshold {
@@ -105,16 +135,25 @@ actor SmartTokenCache {
                 return []
             }
 
+            // Reject hits the cached coverage can't satisfy. A partial
+            // viewport entry must never serve a full-document request
+            // (or a viewport request outside its slice) — that would
+            // silently drop tokens the caller expects to receive.
+            guard entry.canSatisfy(viewportRange) else {
+                missCount += 1
+                return []
+            }
+
             // Update access count and order
-            entry = CacheEntry(
+            let updated = CacheEntry(
                 tokens: entry.tokens,
                 timestamp: entry.timestamp,
                 accessCount: entry.accessCount + 1,
                 computationTime: entry.computationTime,
                 textLength: entry.textLength,
-                lastViewportRange: viewportRange ?? entry.lastViewportRange
+                coverage: entry.coverage
             )
-            cache[key] = entry
+            cache[key] = updated
 
             // Move to end of access order
             accessOrder.removeAll { $0 == key }
@@ -124,9 +163,9 @@ actor SmartTokenCache {
 
             // Return viewport-filtered tokens if viewport is provided
             if let viewportRange {
-                return entry.tokensInViewport(viewportRange)
+                return updated.tokensInViewport(viewportRange)
             }
-            return entry.tokens
+            return updated.tokens
         }
 
         missCount += 1
@@ -137,7 +176,7 @@ actor SmartTokenCache {
         _ tokens: [HighlightedToken],
         for key: CacheKey,
         computationTime: Duration,
-        viewportRange: NSRange? = nil
+        coverage: CacheEntry.Coverage = .fullDocument
     ) {
         // Don't cache trivial computations
         guard computationTime >= minComputationTimeToCache else { return }
@@ -148,7 +187,7 @@ actor SmartTokenCache {
             accessCount: 1,
             computationTime: computationTime,
             textLength: key.textLength,
-            lastViewportRange: viewportRange
+            coverage: coverage
         )
 
         cache[key] = entry
@@ -177,13 +216,17 @@ actor SmartTokenCache {
 
             // Only update if we're actually reducing token count significantly
             if Double(viewportTokens.count) < Double(entry.tokens.count) * 0.8 {
+                // Coverage must reflect what the stored tokens actually
+                // cover. Dropping tokens outside `viewport` narrows the
+                // entry to viewport-only; future full-doc reads must
+                // miss against it.
                 let optimizedEntry = CacheEntry(
                     tokens: viewportTokens,
                     timestamp: entry.timestamp,
                     accessCount: entry.accessCount,
                     computationTime: entry.computationTime,
                     textLength: entry.textLength,
-                    lastViewportRange: viewport
+                    coverage: .viewport(viewport)
                 )
                 cache[key] = optimizedEntry
             }

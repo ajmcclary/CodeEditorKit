@@ -145,17 +145,20 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
         // Determine highlighting strategy
         let tokens: [HighlightedToken]
+        let coverage: SmartTokenCache.CacheEntry.Coverage
 
         if configuration.enableViewportOptimization,
            let visibleRange,
            textLength > 10_000 {
-            tokens = await highlightViewport(
+            let result = await highlightViewport(
                 text: text,
                 language: language,
                 visibleRange: visibleRange,
                 cacheCheckTime: cacheCheckTime,
                 totalStartTime: startTime
             )
+            tokens = result.tokens
+            coverage = .viewport(result.coveredRange)
         } else {
             tokens = await highlightFull(
                 text: text,
@@ -163,15 +166,18 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 cacheCheckTime: cacheCheckTime,
                 totalStartTime: startTime
             )
+            coverage = .fullDocument
         }
 
-        // Cache the result
+        // Cache the result with explicit coverage so a later
+        // full-document or non-overlapping viewport read doesn't get a
+        // false hit against this partial result.
         let totalTime = CFAbsoluteTimeGetCurrent() - startTime
         await tokenCache.setCachedTokens(
             tokens,
             for: cacheKey,
             computationTime: Duration.seconds(totalTime),
-            viewportRange: visibleRange
+            coverage: coverage
         )
 
         return tokens
@@ -232,7 +238,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         visibleRange: NSRange,
         cacheCheckTime: TimeInterval,
         totalStartTime: TimeInterval
-    ) async -> [HighlightedToken] {
+    ) async -> (tokens: [HighlightedToken], coveredRange: NSRange) {
         // Expand visible range with padding
         let textLength = TextRangeUtilities.utf16Length(of: text)
         let visibleRange = TextRangeUtilities.clampRange(visibleRange, toTextLength: textLength)
@@ -245,12 +251,12 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
         // Extract viewport text
         guard let viewportSlice = textSlice(from: text, range: expandedRange) else {
-            return []
+            return ([], visibleRange)
         }
 
         let viewportText = viewportSlice.text
         guard !viewportText.isEmpty else {
-            return []
+            return ([], viewportSlice.range)
         }
 
         let highlightStart = CFAbsoluteTimeGetCurrent()
@@ -281,7 +287,10 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             totalStartTime: totalStartTime
         ))
 
-        return tokens
+        // Coverage reflects the slice we actually tokenized, including
+        // the padding expansion — that's what the caller stores in the
+        // cache entry so future overlapping requests can hit safely.
+        return (tokens, viewportSlice.range)
     }
 
     private func highlightFull(
