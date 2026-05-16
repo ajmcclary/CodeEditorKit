@@ -16,9 +16,10 @@ struct CodeEditorSampleApp: App {
             RootWindow(appState: appState)
                 .frame(minWidth: 980, minHeight: 640)
         }
-        // Hide the standard NSWindow title bar so the embedded
-        // `EditorTitleBar` chrome owns the top of the window.
-        .windowStyle(.hiddenTitleBar)
+        // The sample uses the native NSWindow title bar + traffic
+        // lights. Do NOT add `.windowStyle(.hiddenTitleBar)` or embed
+        // `EditorTitleBar` in RootWindow — see RootWindow's doc
+        // comment for why.
         .defaultSize(width: 1_380, height: 880)
         .windowResizability(.contentMinSize)
         .commands {

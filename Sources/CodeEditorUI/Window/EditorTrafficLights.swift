@@ -5,8 +5,13 @@ import SwiftUI
 /// Optional callbacks for the three traffic-light buttons.
 ///
 /// `.standard` is the decorative form (no callbacks attached). Hosts
-/// embedding `EditorTrafficLights` inside a real `NSWindow` can wire
-/// `onClose` to `NSApp.keyWindow?.close()`, etc.
+/// that have replaced the OS traffic-light buttons with this view —
+/// e.g. by hosting the editor in a borderless `NSWindow` or by hiding
+/// the standard window buttons themselves — can wire `onClose` to
+/// `NSApp.keyWindow?.performClose(nil)`, etc. Embedding this view
+/// inside a window that still shows its OS buttons stacks two sets of
+/// traffic lights and is not a supported configuration; see
+/// `EditorTitleBar` for the hosting requirements.
 public struct TrafficLightsConfiguration: Sendable {
     /// Invoked when the user clicks the close button.
     public var onClose: (@Sendable () -> Void)?

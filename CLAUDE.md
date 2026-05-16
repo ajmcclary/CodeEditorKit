@@ -147,6 +147,8 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 - **Sample app is a target, not a directory**: `cd CodeEditorSample && swift build` will fail. Use `swift run CodeEditorSample` or `swift build --target CodeEditorSample`.
 
+- **`CodeEditorSample` uses the native NSWindow chrome**: do NOT add `EditorTitleBar`, `EditorTrafficLights`, or `.windowStyle(.hiddenTitleBar)` to `RootWindow` / `CodeEditorSampleApp`. `.hiddenTitleBar` hides the title-bar background but leaves the OS traffic-light buttons drawn in the window's top-left corner, so embedding `EditorTitleBar` on top produces a visible "app inside an app." `EditorTitleBar` is a public `CodeEditorUI` component for hosts that genuinely own their chrome (and hide the standard NSWindow buttons themselves); it remains covered by `EditorTitleBarSnapshots` / `EditorTrafficLightsSnapshots` and the `ConformanceAuditTests` type audit — none of that requires the sample to embed it.
+
 - **No DocC catalog**: this project ships plain Markdown in `docs/`, not a DocC bundle. Don't add `@Metadata`, `<doc:>`, `## Topics`, or `.tutorial` directives to files in `docs/` — they won't render and they re-introduce a toolchain dependency that was deliberately removed.
 
 - **SwiftLint strict mode** is on (`strict: true` in `.swiftlint.yml`). Warnings are treated as errors. Always run `swiftlint --fix` before `swiftlint`.

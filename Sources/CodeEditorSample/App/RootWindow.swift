@@ -8,6 +8,16 @@ import SwiftUI
 /// (also consumed by the Settings window) so changes made in either
 /// window propagate to the other. macOS only — see `IOSRootView`
 /// for the iOS variant.
+///
+/// The sample uses the **native NSWindow title bar and traffic lights**
+/// on purpose. Do NOT add `EditorTitleBar`, `EditorTrafficLights`, or
+/// `.windowStyle(.hiddenTitleBar)` here: `.hiddenTitleBar` hides the
+/// title bar background but leaves the real traffic-light buttons
+/// rendered in the window's top-left corner, so stacking
+/// `EditorTitleBar` on top produces a visible "app inside an app".
+/// `EditorTitleBar` remains in CodeEditorUI for hosts that genuinely
+/// own their chrome (and hide the standard NSWindow buttons themselves);
+/// it is exercised by `EditorTitleBarSnapshots`.
 struct RootWindow: View {
     @Bindable var appState: AppState
 
@@ -23,18 +33,6 @@ struct RootWindow: View {
         )
         return ZStack {
             VStack(spacing: 0) {
-                // Custom title bar from CodeEditorUI. This brings in
-                // `EditorTrafficLights` and the `.platformGlassSurface(.titleBar)`
-                // modifier transitively, so all three components are exercised
-                // by the sample.
-                EditorTitleBar(
-                    title: documents.active?.name ?? "CodeEditorSample",
-                    trafficLights: TrafficLightsConfiguration(
-                        onClose: { NSApp.keyWindow?.performClose(nil) },
-                        onMinimize: { NSApp.keyWindow?.performMiniaturize(nil) },
-                        onZoom: { NSApp.keyWindow?.performZoom(nil) }
-                    )
-                )
                 EditorTabStrip(
                     tabs: documents.tabsBinding,
                     activeTabID: $documents.activeID
@@ -69,6 +67,7 @@ struct RootWindow: View {
         }
         .codeTheme(appState.theme.current)
         .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
+        .navigationTitle(documents.active?.name ?? "CodeEditorSample")
     }
 }
 #endif

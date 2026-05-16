@@ -6,12 +6,20 @@ import SwiftUI
 /// Tahoe-styled title bar with traffic lights, centered title, and a
 /// trailing slot for toolbar pills.
 ///
-/// Available on macOS. The title bar is an embeddable
-/// SwiftUI view — it does not require `.windowStyle(.hiddenTitleBar)` and
-/// does not interact with the host `NSWindow`'s real traffic-light
-/// buttons. For real-window integration, hosts apply
-/// `.windowStyle(.hiddenTitleBar)` themselves and use SwiftUI's window
-/// toolbar APIs.
+/// Available on macOS. The title bar is an embeddable SwiftUI view —
+/// it draws its own painted traffic lights and does not interact with
+/// the host `NSWindow`'s real traffic-light buttons.
+///
+/// **Hosting requirement.** Combining this view with a standard
+/// `NSWindow` produces a visible "app inside an app": `.windowStyle(
+/// .hiddenTitleBar)` only hides the title-bar background, leaving the
+/// OS traffic lights rendered in the window's top-left corner. Hosts
+/// that embed this view are responsible for hiding the real buttons
+/// (e.g. `window.standardWindowButton(.closeButton)?.isHidden = true`
+/// for close/minimize/zoom) or for hosting the editor inside a window
+/// that has none — a borderless `NSWindow`, an `NSPanel`, or an
+/// in-process preview surface. `CodeEditorSample` deliberately uses
+/// the native NSWindow chrome instead of this view.
 public struct EditorTitleBar<Trailing: View>: View {
     @Environment(\.codeEditorTheme) private var theme
     @Environment(\.editorState) private var editorState
