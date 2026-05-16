@@ -31,7 +31,20 @@ Net impact: total Swift lines fell from 134,540 to 133,548 (−992). `LanguageRe
 
 Verification: `swift build` clean, `swiftlint --strict` clean. Full `swift test --parallel` run shows the same three pre-existing failures present on the baseline before Group 1 changes (snapshot pixel-precision drift in `testCodeEditorRendersSwiftSnippet`, the latent `equatableIgnoresUnifiedPerformanceSystem` bug at `EditorConfiguration+PerformanceExtensions.swift:224` where the `==` implementation includes `unifiedPerformanceSystem` despite the test name's claim, and the flaky `stop cancels the refresh task` timing test).
 
-Remaining groups (2–7) from the prioritized roadmap below are unchanged and pending.
+### Group 2 — Make Code Folding Use One Source of Truth: **COMPLETE**
+
+| Finding | Status | Notes |
+|---|---|---|
+| A4 — Two competing folding state models | ✅ Resolved | `CodeFoldingCoordinatorService` rewritten as a thin facade over `CodeFoldingEngine`. All parallel state (`foldedRegions` / `foldableRegions` dictionaries, `FoldingRegion` / `FoldingState` types) and duplicated brace/indentation detection removed. The service now owns only fold-control layout caching and delegates every state query (`isFoldable`, `isFolded`, `toggleFold`, `clearAllFolds`) to the engine. The gutter and the public editor API now consult the same source of truth. |
+| A4 — Dead `configureForEditor` path | ✅ Resolved | `EditorFeatureRuntimeDependencies.configureForEditor(...)` removed. The method was internal, had zero callers, and its only meaningful side effect (`updateFoldingState`) was the parallel detection path that no longer exists. |
+
+Net impact: `CodeFoldingCoordinatorService.swift` shrank from 587 → 155 lines (−432, −73.6%); `EditorRuntime.swift` shrank from 337 → 301 lines (−36). Total Swift lines fell from 133,548 to 133,081 (−467 in Group 2, −1,459 cumulative since baseline).
+
+API preserved: `GutterViewModel` consumes the same surface (`calculateFoldControlPosition`, `isFoldControlHit`, `isFoldable`, `isFolded`, `toggleFold(at:in:)`); the `CodeFoldingCoordinatorService.FoldControlLayout?` type referenced by `LineNumberDisplayInfo` is unchanged; the regression test `testCodeFoldingCoordinatorServiceReportsMissingEngineInsteadOfCrashing` still passes (the `serviceUnavailable("CodeFoldingEngine")` contract is preserved by `EditorFoldingRuntimeDependencies.coordinatorService()`).
+
+Verification: `swift build` clean, `swiftlint --strict` clean. `swift test --parallel` shows the same two pre-existing failures (`testCodeEditorRendersSwiftSnippet` snapshot drift and `equatableIgnoresUnifiedPerformanceSystem` latent equality bug); the previously-flaky `stop cancels the refresh task` test passed on this run.
+
+Remaining groups (3–7) from the prioritized roadmap below are unchanged and pending.
 
 ## Abstraction Analysis
 

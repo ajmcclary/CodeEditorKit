@@ -281,41 +281,6 @@ public final class EditorFeatureRuntimeDependencies {
         folding.registerCodeFoldingEngine(engine)
     }
 
-    internal func configureForEditor(
-        textView: CodeEditorView,
-        configuration: EditorConfiguration,
-        codeFoldingEngine: CodeFoldingEngine? = nil
-    ) {
-        if let codeFoldingEngine {
-            registerCodeFoldingEngine(codeFoldingEngine)
-        }
-
-        if configuration.display.isCodeFoldingEnabled {
-            do {
-                try codeFoldingCoordinatorService().updateFoldingState(
-                    for: textView,
-                    configuration: configuration
-                )
-            } catch {
-                CrossPlatformLogger.logger().warning("Code folding unavailable during feature configuration: \(error)")
-            }
-        }
-
-        let lineCount = (textView.text ?? "").components(separatedBy: .newlines).count
-        let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize)
-
-        _ = gutterSizingService.calculateOptimalWidth(
-            lineCount: lineCount,
-            font: font,
-            configuration: configuration
-        )
-
-        _ = lineNumberCalculationService.calculateVisibleLineRanges(
-            for: textView,
-            configuration: configuration
-        )
-    }
-
     public func invalidateCaches(for textView: CodeEditorView) {
         lineNumberCalculationService.invalidateCache(for: textView)
     }
