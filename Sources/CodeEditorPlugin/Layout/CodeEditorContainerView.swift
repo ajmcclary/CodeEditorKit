@@ -302,6 +302,9 @@ public final class CodeEditorContainerView: PlatformView {
         // storage from this nonisolated deinit context.
         MainActor.assumeIsolated {
             cleanupMinimapObservers()
+            #if canImport(UIKit)
+            cleanupKeyboardObservers()
+            #endif
         }
 
         // Selector-based observers, if any future code adds them, are

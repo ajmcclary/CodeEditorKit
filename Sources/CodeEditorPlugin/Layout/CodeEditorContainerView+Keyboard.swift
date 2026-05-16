@@ -8,6 +8,10 @@ extension CodeEditorContainerView {
     // MARK: - Keyboard Observers
 
     internal func setupKeyboardObservers() {
+        // Defensive: drop any tokens from a prior setup pass so we never orphan
+        // block-based observers if this method is invoked more than once.
+        cleanupKeyboardObservers()
+
         // Listen for keyboard notifications
         let willShow = NotificationCenter.default.addObserver(
             forName: UIResponder.keyboardWillShowNotification,
