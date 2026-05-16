@@ -187,6 +187,30 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         operationsService.isStartOfFoldableRegion(line, regions: foldableRegions)
     }
 
+    // MARK: - Line-Span Helper
+
+    /// Number of lines `range` spans in `text`. A length-zero range (or
+    /// one whose clamped slice contains no newlines) maps to 1; each
+    /// additional newline inside the slice contributes one line.
+    /// Internal-static so tests in `@testable` builds can pin the
+    /// matrix without going through the full engine pipeline.
+    internal static func lineSpan(of range: NSRange, in text: String) -> Int {
+        guard range.length > 0 else { return 1 }
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+        let clampedStart = max(0, min(range.location, textLength))
+        let clampedEnd = max(clampedStart, min(NSMaxRange(range), textLength))
+        guard clampedEnd > clampedStart else { return 1 }
+        let scanRange = NSRange(location: clampedStart, length: clampedEnd - clampedStart)
+        guard let substring = TextRangeUtilities.substring(inUTF16Range: scanRange, from: text) else {
+            return 1
+        }
+        var newlineCount = 0
+        for character in substring where character == "\n" {
+            newlineCount += 1
+        }
+        return newlineCount + 1
+    }
+
     // MARK: - Cache Management
 
     private func combineHashes(_ hash1: Int, _ hash2: Int) -> Int {
@@ -333,10 +357,14 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         // Filter and sort regions
         let validRegions = regions
             .filter { region in
-                // Validate region
+                // Validate region. `minimumLineCount` is a line-count
+                // setting, but NSRange.length is UTF-16 code units —
+                // comparing them directly let short single-line regions
+                // pass the threshold as long as they contained at least
+                // `minimumLineCount` UTF-16 characters.
                 region.range.location >= 0 &&
                 NSMaxRange(region.range) <= documentLength &&
-                region.range.length >= configuration.minimumLineCount
+                Self.lineSpan(of: region.range, in: text) >= configuration.minimumLineCount
             }
             .sorted { $0.range.location < $1.range.location }
 

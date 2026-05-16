@@ -112,24 +112,22 @@ Resolution (commit pending):
 
 Added `minimapObservers: [NSObjectProtocol]` storage on the container, mirroring the existing `keyboardObservers` pattern. `setupMinimap()` now captures every returned token, and a defensive `cleanupMinimapObservers()` runs at the top of setup so a second invocation can't orphan the previous registration. `deinit` invokes `cleanupMinimapObservers()` via `MainActor.assumeIsolated` (the established pattern in this codebase, e.g., `PerformanceInsights.swift` and `MemoryMonitor.swift`) so the isolated storage is touched safely from the nonisolated deinit. Added `CodeEditorContainerViewMinimapObserverTests` with four XCTest cases: tokens are captured on setup, cleanup empties them, re-running setup doesn't accumulate tokens, and the container still deallocates without retain cycles. Out of scope here but flagged for a follow-up: `cleanupKeyboardObservers()` is defined in `+Keyboard.swift` but never invoked, so iOS keyboard observers exhibit the same latent leak.
 
-### M2. Folding minimum-line filtering compares line count to UTF-16 length
+### M2. Folding minimum-line filtering compares line count to UTF-16 length — RESOLVED
 
 Files:
 
-- `Sources/CodeEditorPlugin/Models/FoldableRegion.swift:39-44`
-- `Sources/CodeEditorPlugin/Features/CodeFoldingEngine.swift:333-340`
+- `Sources/CodeEditorPlugin/Features/CodeFoldingEngine.swift:190-217,344-355`
+- `Tests/CodeEditorPluginTests/Features/CodeFoldingEngineLineSpanTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-`CodeFoldingConfiguration.minimumLineCount` is a line-count setting, but `processFolding` filters regions with `region.range.length >= configuration.minimumLineCount`. `NSRange.length` is UTF-16 length, not line span.
+`CodeFoldingConfiguration.minimumLineCount` is a line-count setting, but `processFolding` filtered regions with `region.range.length >= configuration.minimumLineCount`. `NSRange.length` is UTF-16 length, not line span — a single-line region passed the threshold as long as it contained enough UTF-16 code units. Folding controls appeared for regions the configuration was supposed to reject.
 
-Why it matters:
+Resolution (commit pending):
 
-Short one-line or two-line brace regions can pass the minimum-line filter if they contain at least three UTF-16 code units. That makes folding controls appear for regions the configuration says should be too small.
+Added `CodeFoldingEngine.lineSpan(of:in:)`, a UTF-16-correct helper that counts newlines inside the clamped region slice (via `TextRangeUtilities`) and returns `newlines + 1`. The filter in `detectFoldableRegions` now compares `Self.lineSpan(of: region.range, in: text) >= configuration.minimumLineCount`. Added `CodeFoldingEngineLineSpanTests` with eight XCTest cases: six unit cases for the helper covering 1-line / 2-line / 3-line spans, zero-length ranges, out-of-bounds clamping, and the exact UTF-16-vs-lines confusion (`length=3, lineSpan=1`), plus two engine-level integration tests using the real `BraceFoldingProvider` on a struct/func snippet — `minimumLineCount=4` accepts the inner four-line function while `minimumLineCount=7` rejects every region (the outer struct spans six lines, the inner four). Under the buggy filter both `minimumLineCount=7` regions pass trivially because their UTF-16 lengths are far greater.
 
-Concrete fix:
-
-Compute start and end line numbers using the existing text range utilities or `LineGeometryStore`, then compare the line span to `minimumLineCount`. Add tests for one-line, two-line, and three-line regions.
+Tangential cleanup (same commit): deleted `Sources/CodeEditorPlugin/Text/LineIndexCache.swift` and `Tests/CodeEditorPluginTests/LineIndexCacheTests.swift`. The cache was already `@available(*, deprecated, message: "Use LineGeometryStore for UTF-16-correct line geometry")` and had no production consumers — only its own tests. Eliminates the chronic deprecation warning in test builds.
 
 ### M3. Folding providers are registered for Dockerfile, TOML, and Lua but return no folds
 
@@ -253,10 +251,10 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
-| Medium | 6 | 1 | 5 |
+| Medium | 6 | 2 | 4 |
 | Low | 2 | 0 | 2 |
 
-Overall health: green. The codebase builds, lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items plus M1 are resolved. Remaining open items are five Medium-severity fixes and two Low-severity nits.
+Overall health: green. The codebase builds, lint passes (deprecated-LineIndexCache warnings retired), the CodeEditorPlugin test suite is green, and all four High-severity items plus M1 and M2 are resolved. Remaining open items are four Medium-severity fixes and two Low-severity nits.
 
 Notes flagged for separate triage:
 
@@ -270,3 +268,4 @@ Most impactful fixes first:
 3. ~~Make `LSPClient.disconnect()` bounded and cleanup-guaranteed.~~ Resolved (see H3).
 4. ~~Correct viewport-token cache completeness and add scrolling/full-document cache regression tests.~~ Resolved (see H4).
 5. ~~Plug the minimap block-observer-token leak in `CodeEditorContainerView`.~~ Resolved (see M1).
+6. ~~Compare folding's `minimumLineCount` against actual line span, not UTF-16 length.~~ Resolved (see M2).
