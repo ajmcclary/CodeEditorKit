@@ -396,11 +396,12 @@ enum CodeEditorRenderingDiagnostics {
 
     private static func subviewDescription(_ subviews: [NSView]) -> String {
         guard !subviews.isEmpty else { return "none" }
-        return subviews.prefix(6).map { view in
+        let descriptions = subviews.prefix(6).map { view in
             let className = String(describing: type(of: view))
             let layerZ = view.layer.map { String(format: "%.1f", $0.zPosition) } ?? "nil"
             return "\(className):frame=\(rectDescription(view.frame)):hidden=\(view.isHidden):alpha=\(String(format: "%.2f", view.alphaValue)):z=\(layerZ)"
-        }.joined(separator: "|")
+        }
+        return descriptions.joined(separator: "|")
     }
 
     private static func layoutFragmentDescriptions(in textView: CodeEditorView) -> [String] {

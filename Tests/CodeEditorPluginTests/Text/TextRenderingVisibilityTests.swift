@@ -11,8 +11,9 @@ final class TextRenderingVisibilityTests: XCTestCase {
             textView.textLayoutManager?.textViewportLayoutController.delegate
         )
 
-        XCTAssertTrue(
-            (viewportDelegate as AnyObject) === textView,
+        XCTAssertIdentical(
+            viewportDelegate as AnyObject,
+            textView,
             "NSTextView must remain the TextKit2 viewport delegate so AppKit can configure rendering surfaces."
         )
     }

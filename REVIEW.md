@@ -2,11 +2,11 @@
 
 Five parallel review passes across concurrency, platform hygiene, TextKit2/memory, configuration/highlighting, and testing/organization/lint. Overall posture is strong — Swift 6 strict concurrency is genuinely respected, `#if os(...)` has zero hits, no production `print()`, no Catalyst residue. Three SwiftLint strict-mode errors are blocking CI; two `🔴` regressions in the public `attributedContent` API silently coerce TextKit2 → TextKit1, mirroring the bug that motivated commit `3503955d`.
 
-**Update:** B-1 and B-2 fixed — `attributedContent` getter/setter now route through `textContentStorage?.textStorage` / `textKitBridge.replaceCharacters`, with `testAttributedContentRoundTripPreservesTK2Stack` covering the regression. Remaining 🔴: B-3, B-4, B-5.
+**Update:** All five 🔴 blockers fixed. B-1/B-2: `attributedContent` getter/setter now route through `textContentStorage?.textStorage` / `textKitBridge.replaceCharacters`, with `testAttributedContentRoundTripPreservesTK2Stack` covering the regression. B-3: `subviewDescription` split to satisfy `multiline_function_chains`. B-4: `XCTAssertIdentical` replaces the generic `XCTAssertTrue(===)`. B-5: `SwiftUIModifierTests` mutates `EditorConfiguration()` directly instead of the retired builder. `swift build`, `swiftlint --strict`, and the touched test suites are all green.
 
 ---
 
-## 🔴 Blocking findings (5 — 2 fixed, 3 remaining)
+## 🔴 Blocking findings (5 — all fixed)
 
 ### ✅ B-1. `attributedContent` setter coerces TK2 → TK1 (public API regression) — FIXED
 **File:** `Sources/CodeEditorPlugin/Core/CodeEditorView+CodeEditorAPIExtensions.swift:20-44`
@@ -16,32 +16,17 @@ Five parallel review passes across concurrency, platform hygiene, TextKit2/memor
 **File:** `Sources/CodeEditorPlugin/Core/CodeEditorView+CodeEditorAPIExtensions.swift:20-44`
 **Status:** Fixed. Getter now returns `textContentStorage?.textStorage` (TK2-safe accessor). Covered by the round-trip regression test alongside B-1.
 
-### B-3. SwiftLint strict mode failing: `multiline_function_chains` (×2)
-**File:** `Sources/CodeEditorPlugin/Utilities/CodeEditorRenderingDiagnostics.swift:399, 403`
-```swift
-return subviews.prefix(6).map { view in
-    let className = String(describing: type(of: view))
-    ...
-    return "\(className):..."
-}.joined(separator: "|")
-```
-**Fix:**
-```swift
-let descriptions = subviews.prefix(6).map { view in ... }
-return descriptions.joined(separator: "|")
-```
-**Rationale:** `swiftlint --strict` exits 2; CI gate is red.
+### ✅ B-3. SwiftLint strict mode failing: `multiline_function_chains` (×2) — FIXED
+**File:** `Sources/CodeEditorPlugin/Utilities/CodeEditorRenderingDiagnostics.swift:397-405`
+**Status:** Fixed. Hoisted `subviews.prefix(6).map { … }` into a `descriptions` local, then `joined(separator:)` on a separate line.
 
-### B-4. SwiftLint strict mode failing: `xct_specific_matcher`
-**File:** `Tests/CodeEditorPluginTests/Text/TextRenderingVisibilityTests.swift:14`
-**Fix:** `XCTAssertTrue((viewportDelegate as AnyObject) === textView, ...)` → `XCTAssertIdentical(viewportDelegate as AnyObject, textView, ...)`
+### ✅ B-4. SwiftLint strict mode failing: `xct_specific_matcher` — FIXED
+**File:** `Tests/CodeEditorPluginTests/Text/TextRenderingVisibilityTests.swift:14-18`
+**Status:** Fixed. Switched to `XCTAssertIdentical(viewportDelegate as AnyObject, textView, …)`.
 
-### B-5. Test references retired symbol `EditorConfigurationBuilder`
-**File:** `Tests/CodeEditorPluginTests/SwiftUIModifierTests.swift:291`
-```swift
-let config = EditorConfigurationBuilder().wrapLines(true).fontSize(16).isMinimapVisible(false).build()
-```
-**Fix:** Rewrite using direct mutation on `EditorConfiguration()`. The symbol does not exist in `Sources/` — this either fails to compile or this file isn't in the active test target. Both states are problems.
+### ✅ B-5. Test references retired symbol `EditorConfigurationBuilder` — FIXED
+**File:** `Tests/CodeEditorPluginTests/SwiftUIModifierTests.swift:291-294`
+**Status:** Fixed. Rewrote using direct mutation: `var config = EditorConfiguration()` then `config.layout.wrapLines = true`, `config.display.fontSize = 16`, `config.display.isMinimapVisible = false`. The dead `EditorConfigurationBuilder` reference is gone.
 
 ---
 
@@ -160,14 +145,14 @@ The `NSEvent.addLocalMonitorForEvents` closure isn't `@Sendable`; the shuttle wr
 | TextKit2 | 0 (was 2) | 2 | 0 |
 | Memory | 0 | 1 | 1 |
 | Highlighting | 0 | 0 | 1 |
-| Testing | 2 | 2 | 1 |
+| Testing | 0 (was 2) | 2 | 1 |
 | Organization | 0 | 0 | 1 |
-| Lint | 2 | 0 | 1 |
-| **Total** | **3** (was 5) | **10** | **11** |
+| Lint | 0 (was 2) | 0 | 1 |
+| **Total** | **0** (was 5) | **10** | **11** |
 
 ### Recommended fix order
 1. ~~**B-1, B-2** — TK2 coercion in the public `attributedContent` API.~~ ✅ Fixed.
-2. **B-3, B-4, B-5** — re-green `swiftlint --strict` and the broken test reference.
+2. ~~**B-3, B-4, B-5** — re-green `swiftlint --strict` and the broken test reference.~~ ✅ Fixed.
 3. **W-1** — `TemporaryAttributesStore` transaction discipline (same fault family as B-1).
 4. **W-2** — `MemoryManagementCoordinator` cleanup-handler leak.
 5. The rest are quality/consistency cleanups; bundle as a hygiene PR.

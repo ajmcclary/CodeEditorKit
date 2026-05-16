@@ -288,11 +288,10 @@ final class SwiftUIModifierTests: XCTestCase {
             set: { _ in }
         )
 
-        let config = EditorConfigurationBuilder()
-            .wrapLines(true)
-            .fontSize(16)
-            .isMinimapVisible(false)
-            .build()
+        var config = EditorConfiguration()
+        config.layout.wrapLines = true
+        config.display.fontSize = 16
+        config.display.isMinimapVisible = false
 
         let editor = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: config)
