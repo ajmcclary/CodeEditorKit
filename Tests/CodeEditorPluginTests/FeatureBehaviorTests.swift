@@ -342,19 +342,17 @@ final class FeatureBehaviorTests: CleanupTestCase {
         }
     }
 
-    func testLanguagesWithoutFoldingHeuristicsAreNotRegistered() {
+    func testDedicatedHeuristicLanguagesHaveFoldingProviders() {
         let registry = FoldingProviderRegistry()
 
-        // Dockerfile, TOML, and Lua were previously registered with
-        // `HeuristicFoldProvider`, whose switch falls through to
-        // `default: return []` for those languages — so the gutter
-        // advertised foldability but every detection pass produced no
-        // folds. The fix is to NOT register a provider until a real
-        // heuristic exists, so the engine cleanly skips folding.
+        // Dockerfile, TOML, and Lua were previously skipped because the only
+        // available `HeuristicFoldProvider` switch had no case for them and
+        // returned `[]`. Dedicated providers now produce real folds, so they
+        // must be registered.
         for language in [Language.dockerfile, Language.toml, Language.lua] {
-            XCTAssertFalse(
+            XCTAssertTrue(
                 registry.hasProvider(for: language),
-                "\(language.name) must not advertise folding while HeuristicFoldProvider has no rule for it — re-register only when a real heuristic lands"
+                "\(language.name) should have a dedicated folding provider registration"
             )
         }
     }
