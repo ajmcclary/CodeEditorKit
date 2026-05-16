@@ -71,7 +71,20 @@ Net impact: `LineGeometryStore.swift` 998 → 258 lines (−740, −74.1%). Tree
 
 Verification: `swift build` clean, `swiftlint --strict` clean. The 74-test `LineGeometryStoreBenchmarkTests` suite — which covers ASCII / emoji / ZWJ sequences / composed characters / LF / CRLF / CR / mixed line endings, NSRange round trips, **fuzz incremental edit correctness** under random edit sequences, edge cases (single newline, only newlines, very long line, very many short lines), and the 10k / 100k / 1M-line build and lookup performance benchmarks — passed in its entirety. `swift test --parallel` shows the same two pre-existing failures only.
 
-Remaining groups (5–7) from the prioritized roadmap below are unchanged and pending.
+### Group 5 — Reduce Platform Rendering Duplication: **COMPLETE**
+
+| Finding | Status | Notes |
+|---|---|---|
+| D1 — Minimap theme state duplicated | ✅ Resolved | Introduced internal `MinimapThemeState` struct (`appliedTheme` + 3 themed colors + `mutating apply(theme:) -> Bool`). `AppKitMinimapView` and `UIKitMinimapView` each own a single `themeState`; the four `public private(set) var` slots are re-exposed as public read-only computed accessors so callers and tests (`MinimapViewThemeTests`, `ThemeableUIComponentTests`, `ApplyThemePropagationTests`) still see the same API. The two `apply(theme:)` bodies shrank from 9 lines each to 4. |
+| D1 — Themed/default color resolution duplicated | ✅ Resolved | Added `MinimapRenderer.resolvedBackgroundColor / resolvedViewportIndicatorColor / resolvedTrackColor` statics. The six "themed ? themed : default" ternaries (two platforms × three colors) collapse into three callers per platform. |
+| D1 — `drawTextLines` loop duplicated | ✅ Resolved | Added `MinimapRenderer.drawTextLines(data:in:configuration:)` static that handles the per-platform y-coordinate flip behind a single `#if canImport(AppKit)` branch. Both platform views now call it directly; the per-platform copy of the iteration loop is gone. The placeholder-text and border-stroke paths are intentionally left platform-local because their drawing primitives (`bounds.fill()` vs `context.fill(bounds)`, `NSBezierPath` vs CG context) are genuinely different. |
+| P4 — Representable parameter assembly duplicated | ✅ Resolved | Added shared `Sources/CodeEditorPlugin/SwiftUI/CodeEditor+RepresentableParameters.swift` with `containerParameters` and `updateParameters(environment:)` computed properties on `CodeEditorRepresentable`. The extension resolves against whichever platform-scoped struct is in scope (AppKit's `NSViewRepresentable` or UIKit's `UIViewRepresentable`). `makeNSView`/`updateNSView` and `makeUIView`/`updateUIView` shrank from 13 lines each to 3. |
+
+Net impact: `MinimapView.swift` 669 → 686 (+17 lines for the new shared types, offset by removed duplication); `CodeEditor+AppKitExtensions.swift` 90 → 63 (−27); `CodeEditor+UIKitExtensions.swift` 90 → 63 (−27); new `CodeEditor+RepresentableParameters.swift` +54. Total Swift LOC: 132,732 → 132,749 (+17 in Group 5, −1,791 cumulative since baseline). `Sources/` file count 564 → 565 (one new file).
+
+Verification: `swift build` clean, `swiftlint --strict` clean. The full 23-test minimap-and-theme suite (`MinimapView theme`, `MinimapViewModel style data source`, `MinimapIntegrationTests`, `ThemeableUIComponentTests`, `ApplyThemePropagationTests`) passed in its entirety, confirming the public theme-state API stayed intact. `swift test --parallel` shows the same pre-existing failures only (snapshot pixel-precision drift in `testCodeEditorRendersSwiftSnippet`, `CompletionInspectorPanelSnapshotTests`, and `InspectorPanelStackSnapshotTests`, all confirmed against baseline before Group 5 changes; the latent `equatableIgnoresUnifiedPerformanceSystem` equality bug).
+
+Remaining groups (6–7) from the prioritized roadmap below are unchanged and pending.
 
 ## Abstraction Analysis
 

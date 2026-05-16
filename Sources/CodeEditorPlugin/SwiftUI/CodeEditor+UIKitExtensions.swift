@@ -20,43 +20,16 @@ struct CodeEditorRepresentable: UIViewRepresentable {
     let swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
 
     func makeUIView(context: Context) -> CodeEditorContainerView {
-        let parameters = CodeEditorRepresentableHelper.ContainerParameters(
-            text: text,
-            language: language,
-            theme: theme,
-            configuration: configuration,
-            runtimeDependencies: runtimeDependencies,
-            interactionState: interactionState,
-            editorController: editorController,
-            hostEditorState: hostEditorState,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange,
-            swiftUICompletionProvider: swiftUICompletionProvider
-        )
-
-        return CodeEditorRepresentableHelper.createAndSetupContainer(
-            parameters: parameters,
+        CodeEditorRepresentableHelper.createAndSetupContainer(
+            parameters: containerParameters,
             coordinator: context.coordinator
         )
     }
 
     func updateUIView(_ uiView: CodeEditorContainerView, context: Context) {
-        let parameters = CodeEditorRepresentableHelper.UpdateParameters(
-            text: text,
-            language: language,
-            theme: theme,
-            configuration: configuration,
-            runtimeDependencies: runtimeDependencies,
-            interactionState: interactionState,
-            editorController: editorController,
-            hostEditorState: hostEditorState,
-            environment: context.environment,
-            swiftUICompletionProvider: swiftUICompletionProvider
-        )
-
         CodeEditorRepresentableHelper.updateContainer(
             uiView,
-            parameters: parameters,
+            parameters: updateParameters(environment: context.environment),
             coordinator: context.coordinator
         )
     }

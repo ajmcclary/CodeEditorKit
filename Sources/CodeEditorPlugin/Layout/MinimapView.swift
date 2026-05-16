@@ -118,6 +118,35 @@ public struct MinimapData: Sendable {
     func lineNumber(at point: MinimapPlatformPoint) -> Int?
 }
 
+// MARK: - Shared Theme State
+
+/// Theme-derived minimap colors. Both platform minimap views own a single
+/// `MinimapThemeState` instead of duplicating four stored properties; the
+/// platform view re-exposes the slots as public read-only computed accessors
+/// so existing host code and tests continue to work.
+@MainActor
+internal struct MinimapThemeState {
+    /// Theme last applied via `apply(theme:)`. `nil` before first apply.
+    var appliedTheme: Theme?
+    /// Theme-derived minimap background color. `.clear` until first apply.
+    var themedBackgroundColor: PlatformColor = .clear
+    /// Theme-derived viewport indicator color. `.clear` until first apply.
+    var themedViewportIndicatorColor: PlatformColor = .clear
+    /// Theme-derived viewport track color. `.clear` until first apply.
+    var themedTrackColor: PlatformColor = .clear
+
+    /// Apply a theme. Returns `true` if any color changed; `false` when the
+    /// new theme equals the current one (idempotent fast-path).
+    mutating func apply(theme: Theme) -> Bool {
+        if appliedTheme == theme { return false }
+        appliedTheme = theme
+        themedBackgroundColor = PlatformColor(tokens: theme.style.editor.background)
+        themedViewportIndicatorColor = PlatformColor(tokens: theme.style.scrollbar.thumbBackground)
+        themedTrackColor = PlatformColor(tokens: theme.style.scrollbar.trackBackground)
+        return true
+    }
+}
+
 // MARK: - Base Minimap Implementation
 
 /// Shared minimap rendering logic
@@ -190,6 +219,72 @@ public enum MinimapRenderer {
 
         return max(0, min(line, totalLines - 1))
     }
+
+    // MARK: - Color Resolution
+
+    /// Background fill color — themed if a theme has been applied, otherwise
+    /// the system default.
+    @MainActor
+    static func resolvedBackgroundColor(_ themeState: MinimapThemeState) -> PlatformColor {
+        themeState.appliedTheme != nil
+            ? themeState.themedBackgroundColor
+            : MinimapConfiguration.defaultBackgroundColor
+    }
+
+    /// Viewport-indicator fill — themed if a theme has been applied, otherwise
+    /// the system default.
+    @MainActor
+    static func resolvedViewportIndicatorColor(_ themeState: MinimapThemeState) -> PlatformColor {
+        themeState.appliedTheme != nil
+            ? themeState.themedViewportIndicatorColor
+            : MinimapConfiguration.defaultViewportColor
+    }
+
+    /// Viewport-indicator border / track stroke — themed if a theme has been
+    /// applied, otherwise the system default border color.
+    @MainActor
+    static func resolvedTrackColor(_ themeState: MinimapThemeState) -> PlatformColor {
+        themeState.appliedTheme != nil
+            ? themeState.themedTrackColor
+            : MinimapConfiguration.defaultViewportBorderColor
+    }
+
+    // MARK: - Shared Text-Lines Renderer
+
+    /// Draws minimap text lines inside `bounds`. Hides the per-platform
+    /// y-coordinate flip (AppKit origin is bottom-left; UIKit is top-left)
+    /// behind a single call so each platform view body stops carrying its
+    /// own copy of the loop.
+    @MainActor
+    static func drawTextLines(
+        data: MinimapData,
+        in bounds: CGRect,
+        configuration: MinimapConfiguration
+    ) {
+        let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
+        let textColor = MinimapConfiguration.defaultTextColor
+
+        for (index, line) in data.displayLines.enumerated() {
+            let lineNumber = data.displayStartLine + index
+            let y = CGFloat(lineNumber) * data.lineHeight
+
+            if y + data.lineHeight < 0 || y > bounds.height { continue }
+
+            #if canImport(AppKit)
+            let point = NSPoint(x: 2, y: bounds.height - y - data.lineHeight)
+            #else
+            let point = CGPoint(x: 2, y: y)
+            #endif
+
+            UnifiedDrawingCoordinator.drawMinimapLine(
+                line,
+                at: point,
+                font: font,
+                color: textColor,
+                maxWidth: bounds.width - 4
+            )
+        }
+    }
 }
 
 // MARK: - Platform-Specific Implementations
@@ -210,17 +305,21 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
 
     private var trackingArea: NSTrackingArea?
 
-    /// Theme last applied via `apply(theme:)`. nil before first apply.
-    public private(set) var appliedTheme: Theme?
+    /// Shared theme state. Re-exposed below as public read-only computed
+    /// properties so the existing public API and tests are unchanged.
+    private var themeState = MinimapThemeState()
+
+    /// Theme last applied via `apply(theme:)`. `nil` before first apply.
+    public var appliedTheme: Theme? { themeState.appliedTheme }
 
     /// Theme-derived minimap background color. `.clear` until first apply.
-    public private(set) var themedBackgroundColor: PlatformColor = .clear
+    public var themedBackgroundColor: PlatformColor { themeState.themedBackgroundColor }
 
     /// Theme-derived viewport indicator color. `.clear` until first apply.
-    public private(set) var themedViewportIndicatorColor: PlatformColor = .clear
+    public var themedViewportIndicatorColor: PlatformColor { themeState.themedViewportIndicatorColor }
 
     /// Theme-derived viewport track color. `.clear` until first apply.
-    public private(set) var themedTrackColor: PlatformColor = .clear
+    public var themedTrackColor: PlatformColor { themeState.themedTrackColor }
 
     // Mark view as opaque for proper rendering
     override public var isOpaque: Bool {
@@ -230,13 +329,9 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     /// Apply a theme to the minimap. Equality-gated; updates the layer
     /// background and triggers a redraw.
     public func apply(theme: Theme) {
-        if appliedTheme == theme { return }
-        appliedTheme = theme
-        themedBackgroundColor = PlatformColor(tokens: theme.style.editor.background)
-        themedViewportIndicatorColor = PlatformColor(tokens: theme.style.scrollbar.thumbBackground)
-        themedTrackColor = PlatformColor(tokens: theme.style.scrollbar.trackBackground)
+        guard themeState.apply(theme: theme) else { return }
         if wantsLayer {
-            layer?.backgroundColor = themedBackgroundColor.cgColor
+            layer?.backgroundColor = themeState.themedBackgroundColor.cgColor
         }
         needsDisplay = true
     }
@@ -298,10 +393,7 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
 
         // Always fill the entire background first; theme-applied fill wins
         // over the system control fallback.
-        let backgroundFill = appliedTheme != nil
-            ? themedBackgroundColor
-            : MinimapConfiguration.defaultBackgroundColor
-        backgroundFill.setFill()
+        MinimapRenderer.resolvedBackgroundColor(themeState).setFill()
         bounds.fill()
 
         // Draw a subtle border to make the minimap visible even without content
@@ -326,35 +418,8 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
             return
         }
 
-        // Draw text lines
-        drawTextLines(data: data)
-
-        // Draw viewport indicator
+        MinimapRenderer.drawTextLines(data: data, in: bounds, configuration: configuration)
         drawViewportIndicator(data: data)
-    }
-
-    private func drawTextLines(data: MinimapData) {
-        let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
-        let textColor = MinimapConfiguration.defaultTextColor
-
-        for (index, line) in data.displayLines.enumerated() {
-            let lineNumber = data.displayStartLine + index
-            let y = CGFloat(lineNumber) * data.lineHeight
-
-            // Skip lines outside visible area for performance
-            if y + data.lineHeight < 0 || y > bounds.height { continue }
-
-            let point = NSPoint(x: 2, y: bounds.height - y - data.lineHeight)
-
-            // Use UnifiedDrawingCoordinator for text drawing
-            UnifiedDrawingCoordinator.drawMinimapLine(
-                line,
-                at: point,
-                font: font,
-                color: textColor,
-                maxWidth: bounds.width - 4
-            )
-        }
     }
 
     private func drawViewportIndicator(data: MinimapData) {
@@ -366,19 +431,10 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
             minimapHeight: bounds.height
         )
 
-        // Theme-applied indicator/track colors win over the static fallback.
-        let indicatorColor = appliedTheme != nil
-            ? themedViewportIndicatorColor
-            : MinimapConfiguration.defaultViewportColor
-        let trackColor = appliedTheme != nil
-            ? themedTrackColor
-            : MinimapConfiguration.defaultViewportBorderColor
-
-        // Use UnifiedDrawingCoordinator for viewport indicator
         UnifiedDrawingCoordinator.drawViewportIndicator(
             in: viewportRect,
-            backgroundColor: indicatorColor,
-            borderColor: trackColor,
+            backgroundColor: MinimapRenderer.resolvedViewportIndicatorColor(themeState),
+            borderColor: MinimapRenderer.resolvedTrackColor(themeState),
             borderWidth: 1.0
         )
     }
@@ -423,17 +479,21 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
 
     public var onNavigate: ((Int) -> Void)?
 
-    /// Theme last applied via `apply(theme:)`. nil before first apply.
-    public private(set) var appliedTheme: Theme?
+    /// Shared theme state. Re-exposed below as public read-only computed
+    /// properties so the existing public API and tests are unchanged.
+    private var themeState = MinimapThemeState()
+
+    /// Theme last applied via `apply(theme:)`. `nil` before first apply.
+    public var appliedTheme: Theme? { themeState.appliedTheme }
 
     /// Theme-derived minimap background color. `.clear` until first apply.
-    public private(set) var themedBackgroundColor: PlatformColor = .clear
+    public var themedBackgroundColor: PlatformColor { themeState.themedBackgroundColor }
 
     /// Theme-derived viewport indicator color. `.clear` until first apply.
-    public private(set) var themedViewportIndicatorColor: PlatformColor = .clear
+    public var themedViewportIndicatorColor: PlatformColor { themeState.themedViewportIndicatorColor }
 
     /// Theme-derived viewport track color. `.clear` until first apply.
-    public private(set) var themedTrackColor: PlatformColor = .clear
+    public var themedTrackColor: PlatformColor { themeState.themedTrackColor }
 
     override public init(frame: CGRect) {
         super.init(frame: frame)
@@ -443,12 +503,8 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
     /// Apply a theme to the minimap. Equality-gated; refreshes the
     /// background fill and triggers a redraw.
     public func apply(theme: Theme) {
-        if appliedTheme == theme { return }
-        appliedTheme = theme
-        themedBackgroundColor = PlatformColor(tokens: theme.style.editor.background)
-        themedViewportIndicatorColor = PlatformColor(tokens: theme.style.scrollbar.thumbBackground)
-        themedTrackColor = PlatformColor(tokens: theme.style.scrollbar.trackBackground)
-        backgroundColor = themedBackgroundColor
+        guard themeState.apply(theme: theme) else { return }
+        backgroundColor = themeState.themedBackgroundColor
         setNeedsDisplay()
     }
 
@@ -479,10 +535,7 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
 
         // Always fill the entire background first; theme-applied fill wins
         // over the system control fallback.
-        let backgroundFill = appliedTheme != nil
-            ? themedBackgroundColor
-            : MinimapConfiguration.defaultBackgroundColor
-        context.setFillColor(backgroundFill.cgColor)
+        context.setFillColor(MinimapRenderer.resolvedBackgroundColor(themeState).cgColor)
         context.fill(bounds)
 
         // Draw a subtle border to make the minimap visible even without content
@@ -506,35 +559,8 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
             return
         }
 
-        // Draw text lines
-        drawTextLines(data: data)
-
-        // Draw viewport indicator
+        MinimapRenderer.drawTextLines(data: data, in: bounds, configuration: configuration)
         drawViewportIndicator(data: data)
-    }
-
-    private func drawTextLines(data: MinimapData) {
-        let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
-        let textColor = MinimapConfiguration.defaultTextColor
-
-        for (index, line) in data.displayLines.enumerated() {
-            let lineNumber = data.displayStartLine + index
-            let y = CGFloat(lineNumber) * data.lineHeight
-
-            // Skip lines outside visible area for performance
-            if y + data.lineHeight < 0 || y > bounds.height { continue }
-
-            let point = CGPoint(x: 2, y: y)
-
-            // Use UnifiedDrawingCoordinator for text drawing
-            UnifiedDrawingCoordinator.drawMinimapLine(
-                line,
-                at: point,
-                font: font,
-                color: textColor,
-                maxWidth: bounds.width - 4
-            )
-        }
     }
 
     private func drawViewportIndicator(data: MinimapData) {
@@ -546,19 +572,10 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
             minimapHeight: bounds.height
         )
 
-        // Theme-applied indicator/track colors win over the static fallback.
-        let indicatorColor = appliedTheme != nil
-            ? themedViewportIndicatorColor
-            : MinimapConfiguration.defaultViewportColor
-        let trackColor = appliedTheme != nil
-            ? themedTrackColor
-            : MinimapConfiguration.defaultViewportBorderColor
-
-        // Use UnifiedDrawingCoordinator for viewport indicator
         UnifiedDrawingCoordinator.drawViewportIndicator(
             in: viewportRect,
-            backgroundColor: indicatorColor,
-            borderColor: trackColor,
+            backgroundColor: MinimapRenderer.resolvedViewportIndicatorColor(themeState),
+            borderColor: MinimapRenderer.resolvedTrackColor(themeState),
             borderWidth: 1.0
         )
     }
