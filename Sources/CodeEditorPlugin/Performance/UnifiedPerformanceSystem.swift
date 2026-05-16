@@ -615,11 +615,11 @@ extension Notification.Name {
 // MARK: - Integration Extensions
 
 extension CodeEditorView {
-    /// Track performance of an operation
+    /// Track performance of an operation through the editor's injected performance system.
     public func trackPerformance<T>(
         _ metric: PerformanceMetricType,
         operation: () async throws -> T
     ) async throws -> T {
-        try await CodeEditorDependencies.makeUnifiedPerformanceSystem().track(metric, operation: operation)
+        try await runtime.dependencies.unifiedPerformanceSystem.track(metric, operation: operation)
     }
 }

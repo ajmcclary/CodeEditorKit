@@ -16,6 +16,23 @@ Measured scope:
 
 Overall structural health: moderate. The project is not disorganized, but it carries accumulating technical debt from partially completed migrations and broad utility modules. The highest-value refactors are to remove dead/parallel abstractions, make completion and folding use one authoritative pipeline each, and split the largest helper objects along existing domain boundaries.
 
+## Remediation Status
+
+### Group 1 — Remove or Deprecate Dead Parallel Abstractions: **COMPLETE**
+
+| Finding | Status | Notes |
+|---|---|---|
+| P1 — `trackPerformance` bypasses runtime DI | ✅ Resolved | `CodeEditorView.trackPerformance` now routes through `runtime.dependencies.unifiedPerformanceSystem` instead of constructing a fresh system per call. |
+| D5 — `CompletionCellConfigurator` is dead | ✅ Resolved | File deleted (`Sources/CodeEditorPlugin/Completion/CompletionCellConfigurator.swift`). Zero external references confirmed prior to removal. |
+| P2 / D7 — Legacy concrete language providers are dead | ✅ Resolved | All 10 unused provider structs deleted from `LanguageRegistry.swift` (Swift/Python/JavaScript/JSON/HTML/CSS/Markdown/XML/YAML/PlainText). `PlainTextHighlighter` preserved — still used by `DescriptorLanguageProvider`. |
+| A5 / P3 — `CoordinateSystemHelper` is dead and TextKit2-unsafe | ✅ Resolved | Public `EdgeInsets` struct and `FrameworkEdgeInsets` typealias extracted to `Sources/CodeEditorPlugin/Extensions/EdgeInsets.swift`. The single externally-used member (`crossPlatformEnclosingScrollView`) moved to `Sources/CodeEditorPlugin/Platform/CodeEditorView+EnclosingScrollView.swift`. The 557-line helper file deleted entirely; the unsafe `textView.layoutManager` access is gone. |
+
+Net impact: total Swift lines fell from 134,540 to 133,548 (−992). `LanguageRegistry.swift` shrank from 450 to 223 lines. File count under `Sources/` unchanged (564, since two files were extracted as the helper was removed).
+
+Verification: `swift build` clean, `swiftlint --strict` clean. Full `swift test --parallel` run shows the same three pre-existing failures present on the baseline before Group 1 changes (snapshot pixel-precision drift in `testCodeEditorRendersSwiftSnippet`, the latent `equatableIgnoresUnifiedPerformanceSystem` bug at `EditorConfiguration+PerformanceExtensions.swift:224` where the `==` implementation includes `unifiedPerformanceSystem` despite the test name's claim, and the flaky `stop cancels the refresh task` timing test).
+
+Remaining groups (2–7) from the prioritized roadmap below are unchanged and pending.
+
 ## Abstraction Analysis
 
 ### A1. `CodeEditorView` Remains a High-Fan-In Composition and State Object
