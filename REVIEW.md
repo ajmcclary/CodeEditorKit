@@ -10,7 +10,7 @@ Scope covered: repository-wide static scans, targeted source reads across the re
 |---|---:|---|
 | `swift build` | Passed | Build completed. Compiler emitted deprecation warnings for TLS 1.0/1.1 mapping in `RemoteLSPConfiguration`. |
 | `swiftlint --fix && swiftlint` | Passed | `swiftlint` reported 0 violations. Worktree was unchanged after the lint pass. |
-| `swift test --parallel` | Failed | Swift Testing reported 455 tests in 114 suites with 1 failing issue plus 1 known issue. Failing test: `PerformanceObservation.stop cancels the refresh task`. |
+| `swift test --parallel` | Passed (after H1 fix) | Swift Testing reports 455 tests in 114 suites passing with 1 known issue. Initial review run failed on `PerformanceObservation.stop cancels the refresh task`; resolved by H1 below. |
 | `swift build --target CodeEditorSample` | Passed | Sample target builds with native window chrome intact. |
 
 ## Convention Checks
@@ -29,24 +29,20 @@ No critical findings.
 
 ## High
 
-### H1. `swift test --parallel` fails because `PerformanceObservation.stop()` can still allow a refresh
+### H1. `swift test --parallel` fails because `PerformanceObservation.stop()` can still allow a refresh — RESOLVED
 
 Files:
 
-- `Sources/CodeEditorPlugin/Performance/PerformanceObservation.swift:101-120`
+- `Sources/CodeEditorPlugin/Performance/PerformanceObservation.swift:101-126`
 - `Tests/CodeEditorPluginTests/Performance/PerformanceObservationTests.swift:45-53`
 
-What's wrong:
+What was wrong:
 
-`start()` launches a refresh loop that checks cancellation before sleeping, but it calls `self?.refresh()` immediately after `Task.sleep(for:)` returns. There is no second cancellation or ownership check between the sleep boundary and the refresh. The requested full test command failed with `refreshCount` increasing from `0` to `1` after `stop()`.
+`start()` launched a refresh loop that checked cancellation before sleeping, but called `self?.refresh()` immediately after `Task.sleep(for:)` returned. With no second cancellation check between the sleep boundary and the refresh, a continuation already enqueued on the MainActor when `stop()` ran would still execute one more refresh — `Task.cancel()` does not dequeue an enqueued continuation. The race was deterministic under `swift test --parallel` load: `refreshCount` increased from `0` to `1` after `stop()`.
 
-Why it matters:
+Resolution (commit pending):
 
-The public stop contract is not reliable. Hosts can still observe performance snapshots after stopping an inspector or tearing down an observer, and the repository's required full test command is currently red.
-
-Concrete fix:
-
-After `Task.sleep`, check cancellation again before calling `refresh()`. For stronger correctness, add a loop generation token that `start()` captures and `stop()` invalidates, then require the captured generation to still match before each refresh. Keep the regression test, but make it assert no post-stop tick after at least one deterministic pre-stop tick.
+Added a `guard !Task.isCancelled else { return }` after `Task.sleep` returns and before the refresh call in `start()`. The check runs synchronously on the MainActor between the sleep boundary and `self?.refresh()`, closing the enqueued-continuation window. `swift test --parallel` now reports 455 tests / 114 suites passing with 1 known issue; the `stop cancels the refresh task` regression test passes on three consecutive parallel runs.
 
 ### H2. Public `textViewWillChangeText` delegate callbacks are never delivered
 
@@ -267,17 +263,18 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 
 ## Summary
 
-| Severity | Count |
-|---|---:|
-| Critical | 0 |
-| High | 4 |
-| Medium | 6 |
-| Low | 2 |
+| Severity | Total | Resolved | Open |
+|---|---:|---:|---:|
+| Critical | 0 | 0 | 0 |
+| High | 4 | 1 | 3 |
+| Medium | 6 | 0 | 6 |
+| Low | 2 | 0 | 2 |
 
-Overall health: yellow. The codebase builds and lint passes, and several hard conventions are well enforced. The main concern is correctness under lifecycle and cache boundaries: the full test suite is red, LSP disconnect can hang on unresponsive servers, and large-file viewport highlighting can return incomplete cached results.
+Overall health: yellow. The codebase builds, lint passes, and the full test suite is now green with H1 resolved. The remaining correctness concerns sit at lifecycle and cache boundaries: LSP disconnect can hang on unresponsive servers, the pre-edit delegate hook is never delivered, and large-file viewport highlighting can return incomplete cached results.
 
 Most impactful fixes first:
 
-1. Fix `PerformanceObservation` stop semantics so `swift test --parallel` is green again.
-2. Make `LSPClient.disconnect()` bounded and cleanup-guaranteed.
-3. Correct viewport-token cache completeness and add scrolling/full-document cache regression tests.
+1. ~~Fix `PerformanceObservation` stop semantics so `swift test --parallel` is green again.~~ Resolved (see H1).
+2. Make `LSPClient.disconnect()` bounded and cleanup-guaranteed (H3).
+3. Correct viewport-token cache completeness and add scrolling/full-document cache regression tests (H4).
+4. Wire `textViewWillChangeText` through the multiplexer so the public pre-edit hook actually fires (H2).

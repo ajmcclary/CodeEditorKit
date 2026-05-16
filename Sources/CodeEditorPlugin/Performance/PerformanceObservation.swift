@@ -109,6 +109,12 @@ public final class PerformanceObservation {
                 } catch {
                     return
                 }
+                // Re-check cancellation after the sleep boundary. If stop()
+                // was called while the sleep's continuation was already
+                // enqueued on the MainActor, cancellation alone won't
+                // dequeue it — without this guard the resumed iteration
+                // would still call refresh() once after stop().
+                guard !Task.isCancelled else { return }
                 self?.refresh()
             }
         }
