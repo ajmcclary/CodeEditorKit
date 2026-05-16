@@ -164,24 +164,22 @@ Concrete fix:
 
 Remove the cases if source compatibility allows it. Otherwise mark them deprecated and clamp/validate effective minimum TLS to 1.2 or newer when constructing URL session configuration.
 
-### M5. `TextProcessingActor.cancelAllProcessing()` marks state that processors never read
+### M5. `TextProcessingActor.cancelAllProcessing()` marks state that processors never read — RESOLVED
 
-File:
+Files:
 
-- `Sources/CodeEditorPlugin/Core/Actors/TextProcessingActor.swift:11-20`
-- `Sources/CodeEditorPlugin/Core/Actors/TextProcessingActor.swift:88-130`
+- `Sources/CodeEditorPlugin/Core/Actors/TextProcessingActor.swift:54-159`
+- `Tests/CodeEditorPluginTests/Core/Actors/TextProcessingActorCancellationTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-`cancelAllProcessing()` sets `activeProcessors[id]?.isCancelled = true`, but the processing methods only call `Task.checkCancellation()`. They do not receive the processor ID, do not inspect `activeProcessors`, and no `Task` handles are stored for actual cancellation.
+`cancelAllProcessing()` set `activeProcessors[id]?.isCancelled = true`, but the processing methods only called `Task.checkCancellation()` — they never received the processor ID and never inspected `activeProcessors`. The public cancellation API silently no-op'd unless the caller's own `Task` was also cancelled.
 
-Why it matters:
+Resolution (commit pending):
 
-The public cancellation API gives a false sense of control. Work that is not cancelled through the surrounding Swift task will keep running despite `cancelAllProcessing()`.
+Added a private `checkCancellation(id:)` helper that both honors the caller's `Task` cancellation AND polls the actor-owned `activeProcessors[id]?.isCancelled` flag, throwing `CancellationError` when either is set. Each processing method now takes the processor ID and routes cancellation checks through the helper; `process(...)` passes the freshly minted UUID into each branch. The public stubs are still labeled "Simplified implementation" — when real long-running implementations land they'll naturally insert additional `checkCancellation(id:)` boundaries between work units.
 
-Concrete fix:
-
-Either store and cancel the actual processing `Task` handles, or pass the processor ID through each processing step and poll actor-owned cancellation state. Add a regression where cancellation occurs without externally cancelling the caller task.
+Added `TextProcessingActorCancellationTests` with three XCTest cases covering: an inflight processor aborting when `cancelAllProcessing()` runs without the caller cancelling its own `Task` (the exact regression the review called out); a subsequent `process()` call after `cancelAllProcessing` running cleanly (scoped per-processor); and three concurrent processors all observing the flag flip. The tests exercise the cancellation contract through an internal test seam `processForCancellationTesting(text:)` that simulates a real long-running processor by inserting a brief sleep between two `checkCancellation(id:)` boundaries — the production stubs finish synchronously today and have no observable suspension window, so the seam is the honest way to pin the contract without embedding `Task.sleep` in production code.
 
 ### M6. Test logging and SwiftLint configuration contradict the no-`print()` convention
 
@@ -248,10 +246,10 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
-| Medium | 6 | 3 | 3 |
+| Medium | 6 | 4 | 2 |
 | Low | 2 | 0 | 2 |
 
-Overall health: green. The codebase builds, lint passes (deprecated-LineIndexCache warnings retired), the CodeEditorPlugin test suite is green, and all four High-severity items plus M1, M2, and M3 are resolved. Remaining open items are three Medium-severity fixes and two Low-severity nits.
+Overall health: green. The codebase builds, lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items plus M1, M2, M3, and M5 are resolved. Remaining open items are two Medium-severity fixes (M4, M6) and two Low-severity nits.
 
 Notes flagged for separate triage:
 
@@ -268,3 +266,4 @@ Most impactful fixes first:
 5. ~~Plug the minimap block-observer-token leak in `CodeEditorContainerView`.~~ Resolved (see M1).
 6. ~~Compare folding's `minimumLineCount` against actual line span, not UTF-16 length.~~ Resolved (see M2).
 7. ~~Stop advertising folding for languages whose heuristic returns nothing.~~ Resolved (see M3).
+8. ~~Make `TextProcessingActor.cancelAllProcessing()` actually abort inflight work.~~ Resolved (see M5).
