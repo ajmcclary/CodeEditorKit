@@ -12,11 +12,9 @@ public enum PlatformConstants {
     /// Default monospaced font size
     public static let defaultFontSize: CGFloat = 14.0
 
-    /// Minimum allowed font size
-    public static let minimumFontSize: CGFloat = 8.0
-
-    /// Maximum allowed font size
-    public static let maximumFontSize: CGFloat = 72.0
+    // Font-size bounds live in `validFontSizeRange` (6...100) below.
+    // The previous `minimumFontSize`/`maximumFontSize` (8 / 72) duplicated
+    // that range with stricter, unused bounds and have been removed.
 
     // MARK: - Layout Constants
 
@@ -63,11 +61,20 @@ public enum PlatformConstants {
     /// Maximum visible lines to render
     public static let maxVisibleLines: Int = 1_000
 
-    /// Default highlighting debounce interval (seconds)
+    /// Default highlighting debounce interval (seconds). Used by
+    /// `EditorConfiguration.Performance.textChangeDebounceInterval` and
+    /// `highlightingDebounceInterval` to throttle highlight re-triggers
+    /// while the user is actively typing.
     public static let defaultHighlightingDebounceInterval: TimeInterval = 0.1
 
     /// Default text change debounce interval (milliseconds)
     public static let defaultTextChangeDebounceInterval: Int = 100
+
+    /// Default debounce for `AsyncSyntaxHighlighter`. Larger than
+    /// `defaultHighlightingDebounceInterval` because the async highlighter
+    /// throttles its own background work, on top of the editor-level
+    /// text-change debounce that already feeds it.
+    public static let defaultAsyncHighlightingDebounceInterval: TimeInterval = 0.3
 
     // MARK: - UI Constants
 

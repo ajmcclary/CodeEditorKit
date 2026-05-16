@@ -44,6 +44,13 @@ public struct CompletionCellConfiguration {
 /// NS/UI reference types that aren't formally `Sendable`, but in practice are
 /// treated as immutable value-likes throughout the codebase. The wrapper here
 /// makes that contract explicit.
+///
+/// **Future direction (accepted, not blocking):** hold raw design tokens
+/// (size, weight, color hex) rather than resolved `PlatformFont` /
+/// `PlatformColor` references, and resolve to platform types on
+/// `@MainActor` at render time. That removes the need for `@unchecked` at
+/// the cost of an extra resolution step per render — deferred until the
+/// theming system grows enough that the tradeoff is worth the churn.
 public struct CompletionCellTheme: @unchecked Sendable {
     public let iconFont: PlatformFont
     public let titleFont: PlatformFont

@@ -50,10 +50,11 @@ extension EditorConfiguration {
         /// Whether the minimap is visible.
         public var isMinimapVisible: Bool = false
 
-        /// When `true` AND a range-highlighting controller is active,
-        /// the legacy attributed-text highlighter is suppressed for
-        /// character edits — the range attribute applier (Phase 2A)
-        /// handles text styling instead.
+        /// **Phase-2A consumer toggle.** When `true` AND a range-highlighting
+        /// controller is active (which requires
+        /// `performance.usesRangeBasedHighlighting == true`), the legacy
+        /// attributed-text highlighter is suppressed for character edits —
+        /// the range attribute applier handles text styling instead.
         ///
         /// The legacy highlighter still runs for full-document initial
         /// highlighting when no range provider is registered for the

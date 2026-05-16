@@ -213,15 +213,16 @@ public final class MemoryMonitor: ObservableObject {
 
     /// Memory monitoring task.
     ///
-    /// `nonisolated(unsafe)` so `deinit` (which runs in a nonisolated context)
-    /// can cancel it. Writes happen only from `@MainActor` (`startMonitoring`
-    /// / `stopMonitoring`); deinit reads only after all `@MainActor`
-    /// references are released, so the read happens-after the last write.
-    nonisolated(unsafe) private var monitoringTask: Task<Void, Never>?
+    /// `Task<Void, Never>?` is implicitly `Sendable`, so bare
+    /// `nonisolated` storage suffices for `deinit` (which runs in a
+    /// nonisolated context) to cancel it. Writes happen only from
+    /// `@MainActor` (`startMonitoring` / `stopMonitoring`); the deinit
+    /// read happens-after the last `@MainActor` reference is released.
+    /// Matches the pattern in `PerformanceObservation.swift`.
+    private var monitoringTask: Task<Void, Never>?
 
-    /// Periodic cleanup task. Same `nonisolated(unsafe)` discipline as
-    /// `monitoringTask`.
-    nonisolated(unsafe) private var cleanupTask: Task<Void, Never>?
+    /// Periodic cleanup task. Same isolation discipline as `monitoringTask`.
+    private var cleanupTask: Task<Void, Never>?
 
     /// Logger
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")

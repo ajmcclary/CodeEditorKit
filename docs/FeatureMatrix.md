@@ -67,7 +67,7 @@ What works on the package's declared Apple platforms. Reflects the package as of
 | Tagged release | ⚠️ No git tags are published on `origin` yet; SwiftPM consumers should track `main` |
 | GitHub Actions CI | ✅ `swift-build-test`, `ios-build`, `lint` workflows |
 | Strict-concurrency clean build | ✅ `swift build` produces no warnings under `StrictConcurrency` |
-| Public `@unchecked Sendable` documented | ✅ all 16 sites carry safety comments |
+| Public `@unchecked Sendable` documented | ✅ all 19 sites carry safety comments |
 | Swift 6 strict concurrency | ✅ `.swiftLanguageMode(.v6)` + `.enableExperimentalFeature("StrictConcurrency")` |
 
 ## See also

@@ -14,11 +14,14 @@ extension EditorConfiguration {
         /// Maximum file length for syntax highlighting (0 = unlimited)
         public var maxSyntaxHighlightingLength: Int = PlatformConstants.maxSyntaxHighlightingLength
 
-        /// Enable the range-store-backed style pipeline for visible invalidation
-        /// and minimap style data.
+        /// **Phase-2 master gate.** Enable the range-store-backed style
+        /// pipeline for visible invalidation and minimap style data. When
+        /// `true`, a `RangeBasedHighlightingController` is instantiated and
+        /// the minimap data provider receives style runs from it.
         ///
-        /// The legacy attributed-text highlighter remains active until a
-        /// dedicated range-based text attribute applier is available.
+        /// The legacy attributed-text highlighter still owns the visible
+        /// text styling unless `display.useRangeStoreHighlighting` is
+        /// **also** set (see that flag for the Phase-2A consumer toggle).
         public var usesRangeBasedHighlighting: Bool = false
 
         /// Gates `wantsLayer` on the editor's `NSView` instances at mount

@@ -1,6 +1,5 @@
 import Foundation
 
-// SwiftSyntax is not compatible with iOS
 import SwiftParser
 import SwiftSyntax
 

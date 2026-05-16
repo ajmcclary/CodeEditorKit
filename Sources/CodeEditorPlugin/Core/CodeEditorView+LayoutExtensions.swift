@@ -282,6 +282,16 @@ extension CodeEditorView {
 
     private func restoreScrollOriginAfterLayout(_ origin: NSPoint?, visibleRect: NSRect?) {
         guard let origin, origin.y > 0, visibleRect != nil else { return }
+        // Defer until *after* the current AppKit layout pass completes.
+        // `DispatchQueue.main.async` (rather than `Task { @MainActor in … }`)
+        // is deliberate here: it enqueues on the main run loop's
+        // current-source-of-events queue, which AppKit drains in the same
+        // turn as `viewDidEndLiveResize` and the view's own
+        // `layout`/`resizeSubviews(withOldSize:)`. A `Task` would hop
+        // through the cooperative-pool scheduler and could run before the
+        // enclosing scroll view's pending subtree layout, so
+        // `layoutSubtreeIfNeeded()` would be a no-op and the scroll
+        // origin would land against stale geometry.
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.enclosingScrollView?.layoutSubtreeIfNeeded()

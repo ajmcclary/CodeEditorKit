@@ -141,11 +141,21 @@ public actor EditorEventPublisher {
     }
 
     // MARK: - Convenience Methods for Non-async Contexts
+    //
+    // **Ordering caveat.** The `*Sync` overloads spawn an unstructured
+    // `Task { … }` to hop into the publisher's actor. Two `*Sync` calls
+    // issued back-to-back create two independent tasks; the Swift runtime
+    // does not guarantee that they execute in submission order. Treat
+    // these as **best-effort bridges** from synchronous AppKit / UIKit
+    // call sites — fine for subscribe/unsubscribe lifecycle wiring and
+    // for fire-and-forget events, but do not rely on them when the order
+    // between two events (or between a publish and a subsequent
+    // unsubscribe) is load-bearing. Use `await publish(_:)` /
+    // `await subscribe(_:)` from an `async` context when ordering matters.
 
-    /// Publish an event from a non-async context.
-    ///
-    /// This is a convenience method that creates a Task to call the async publish method.
-    /// Use this when you need to publish from a synchronous context.
+    /// Publish an event from a non-async context. Best-effort: order
+    /// across consecutive `publishSync` calls is scheduler-defined; see
+    /// the section comment above.
     ///
     /// - Parameter event: The event to publish
     nonisolated public func publishSync(_ event: EditorEvent) {
@@ -154,9 +164,9 @@ public actor EditorEventPublisher {
         }
     }
 
-    /// Subscribe from a non-async context.
-    ///
-    /// This is a convenience method that creates a Task to call the async subscribe method.
+    /// Subscribe from a non-async context. Best-effort: registration is
+    /// not synchronous with the caller — a `publishSync` issued
+    /// immediately afterward may execute before the subscription lands.
     ///
     /// - Parameter handler: The event handler to add
     nonisolated public func subscribeSync(_ handler: any EditorEventHandler) {
@@ -165,9 +175,8 @@ public actor EditorEventPublisher {
         }
     }
 
-    /// Unsubscribe from a non-async context.
-    ///
-    /// This is a convenience method that creates a Task to call the async unsubscribe method.
+    /// Unsubscribe from a non-async context. Best-effort: a `publishSync`
+    /// issued just before may still deliver to the handler.
     ///
     /// - Parameter handler: The event handler to remove
     nonisolated public func unsubscribeSync(_ handler: any EditorEventHandler) {

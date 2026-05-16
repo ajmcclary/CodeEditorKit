@@ -2,7 +2,7 @@
 
 Five parallel review passes across concurrency, platform hygiene, TextKit2/memory, configuration/highlighting, and testing/organization/lint. Overall posture is strong — Swift 6 strict concurrency is genuinely respected, `#if os(...)` has zero hits, no production `print()`, no Catalyst residue. Three SwiftLint strict-mode errors are blocking CI; two `🔴` regressions in the public `attributedContent` API silently coerce TextKit2 → TextKit1, mirroring the bug that motivated commit `3503955d`.
 
-**Update:** All five 🔴 blockers and all ten 🟡 warnings fixed.
+**Update:** All five 🔴 blockers, all ten 🟡 warnings, and all eleven 🔵 informational items addressed.
 
 - **Blockers (B-1 … B-5):** `attributedContent` getter/setter routed through `textContentStorage?.textStorage` / `textKitBridge.replaceCharacters` (regression test added); `subviewDescription` split to satisfy `multiline_function_chains`; `XCTAssertIdentical` replaces the generic `XCTAssertTrue(===)`; `SwiftUIModifierTests` mutates `EditorConfiguration()` directly instead of the retired builder.
 - **Warnings (W-1 … W-10):** `TemporaryAttributesStore` now wraps every mutation in `performEditingTransaction`; `MemoryManagementCoordinator.deinit` unregisters its cleanup handler explicitly; `RangeAttributeApplier.clearAttributes` clamps stale ranges correctly; `SwiftUICoordinatorTests` uses the multiplexer participant API instead of assigning the delegate slot; `Performance` Equatable compares `unifiedPerformanceSystem` by reference identity; `validate()` covers the obvious numeric performance fields and documents the boundary-only contract; `TextMetricsCalculator.calculateLineHeight` returns `ascender + |descender| + leading` (TK1 stack removed); `MinimapStyleRun` fields are `let`; `UncheckedEventShuttle` is gone (closure runs main-actor-isolated directly); test base class migrations + the `testConfigurationHotReloadIntegration` rename.
@@ -82,19 +82,19 @@ Five parallel review passes across concurrency, platform hygiene, TextKit2/memor
 
 ---
 
-## 🔵 Informational (11)
+## 🔵 Informational (11 — all addressed)
 
-- **`EditorEventPublisher.publishSync/subscribeSync/unsubscribeSync`** spawn unstructured `Task { }` — intentional cross-isolation bridges but Task creation order is scheduler-defined. Document as best-effort.
-- **FeatureMatrix says 16 `@unchecked Sendable` sites; actual is 20.** New entries: `WarningCollector`, `AppearanceHolder`, `UncheckedEventShuttle`, `RegexIncrementalRangeQueryParser`. Update `docs/FeatureMatrix.md`.
-- **Undocumented `DispatchQueue.main.async` in `CodeEditorView+LayoutExtensions.swift:285`** (`restoreScrollOriginAfterLayout`). Add a one-line comment or convert to `Task { @MainActor in … }`.
-- **`MemoryMonitor.swift:220-241`** uses `nonisolated(unsafe)` for two `Task<Void, Never>?` fields. `Task` is unconditionally Sendable; bare `nonisolated` (no `(unsafe)`) suffices, matching `PerformanceObservation.swift`.
-- **Comment stale: "SwiftSyntax is not compatible with iOS"** at `SyntaxHighlighting/SyntaxHighlightingCoordinator.swift:3`. SwiftSyntax has no platform gate in `Package.swift`. Delete.
-- **Three different debounce defaults**: `AsyncSyntaxHighlighter` 300ms, `Performance.textChangeDebounceInterval` 100ms, `PlatformConstants.defaultHighlightingDebounceInterval` 100ms. Route through `PlatformConstants` or document the gap.
-- **Duplicate font-size constants**: `PlatformConstants.minimumFontSize=8`/`maximumFontSize=72` vs `validFontSizeRange=6...100`. Align or drop the unused pair.
-- **Two competing "range-based highlighting" flags**: `Performance.usesRangeBasedHighlighting` vs `Display.useRangeStoreHighlighting`. Consolidate or cross-reference doc-comments.
-- **`CompletionCellTheme @unchecked Sendable`** over `let PlatformFont/Color` fields. Accepted convention; consider holding theme tokens and resolving on `@MainActor` later.
-- **~20 pure-extension files use `+Topic.swift` instead of `+Extensions.swift`** (e.g., `EditorController+Completion.swift`, `LSPClient+Transport.swift`, `CodeEditorView+Theme.swift`). Style inconsistency, not lint-enforced. Pick one and document in `CLAUDE.md`.
-- **`Tests/CodeEditorPluginTests/ComprehensivePerformanceTests.swift:95`** uses `print(...)` (allowed by lint exclusion). Migrate to `CrossPlatformLogger` for parity.
+- ✅ **I-1** `EditorEventPublisher.publishSync/subscribeSync/unsubscribeSync` — doc comments now spell out the best-effort ordering (`Task { }` creation order is scheduler-defined; ordering caveats noted per method).
+- ✅ **I-2** `docs/FeatureMatrix.md` updated to **19** documented `@unchecked Sendable` sites (post-W-9 removal of `UncheckedEventShuttle`; the prior 16 count missed `WarningCollector`, `AppearanceHolder`, `RegexIncrementalRangeQueryParser`, `AwaitableQueue`, `RangeProcessor`, `ParagraphStyleCache`).
+- ✅ **I-3** `restoreScrollOriginAfterLayout` (`CodeEditorView+LayoutExtensions.swift`) annotated with the rationale for using `DispatchQueue.main.async` rather than `Task { @MainActor in … }` — the queue hop drains in the same AppKit layout pass; a Task hop wouldn't.
+- ✅ **I-4** `MemoryMonitor.monitoringTask` / `cleanupTask` switched from `nonisolated(unsafe)` to plain `nonisolated` storage (`Task<Void, Never>` is unconditionally `Sendable`), matching `PerformanceObservation.swift`.
+- ✅ **I-5** Stale "SwiftSyntax is not compatible with iOS" comment removed from `SyntaxHighlightingCoordinator.swift`.
+- ✅ **I-6** `AsyncSyntaxHighlighter` default debounce now routes through `PlatformConstants.defaultAsyncHighlightingDebounceInterval` (0.3s). A doc comment on `defaultHighlightingDebounceInterval` (0.1s) clarifies the editor-level vs background-task split.
+- ✅ **I-7** Unused `PlatformConstants.minimumFontSize` (8) / `maximumFontSize` (72) deleted; `validFontSizeRange` (6...100) is the only bound now.
+- ✅ **I-8** Cross-referenced the two range-store flags: `performance.usesRangeBasedHighlighting` is now labeled the Phase-2 master gate and `display.useRangeStoreHighlighting` the Phase-2A consumer toggle (the latter requires the former).
+- ✅ **I-9** `CompletionCellTheme @unchecked Sendable` annotated with the accepted future direction (hold design tokens, resolve on `@MainActor`); not actioned now.
+- ✅ **I-10** `CLAUDE.md` updated to document the de facto dual convention: catch-all type extensions use `+Extensions` in `Sources/CodeEditorPlugin/Extensions/`; domain-scoped extensions use `+<Topic>` (e.g. `CodeEditorView+Theme.swift`, `EditorController+Completion.swift`, `LSPClient+Transport.swift`).
+- ✅ **I-11** `ComprehensivePerformanceTests.testFuzzyMatcherPerformance` now logs via the existing `Logger` (the file's `os.Logger` instance) instead of `print(...)`.
 
 ---
 
@@ -125,16 +125,16 @@ Five parallel review passes across concurrency, platform hygiene, TextKit2/memor
 
 | Category | 🔴 Blocking | 🟡 Warnings | 🔵 Info |
 |---|---|---|---|
-| Concurrency | 0 | 0 (was 2) | 4 |
+| Concurrency | 0 | 0 (was 2) | 0 (was 4) |
 | Platform | 0 | 0 (was 1) | 0 |
-| Configuration | 0 | 0 (was 2) | 2 |
+| Configuration | 0 | 0 (was 2) | 0 (was 2) |
 | TextKit2 | 0 (was 2) | 0 (was 2) | 0 |
-| Memory | 0 | 0 (was 1) | 1 |
-| Highlighting | 0 | 0 | 1 |
-| Testing | 0 (was 2) | 0 (was 2) | 1 |
-| Organization | 0 | 0 | 1 |
-| Lint | 0 (was 2) | 0 | 1 |
-| **Total** | **0** (was 5) | **0** (was 10) | **11** |
+| Memory | 0 | 0 (was 1) | 0 (was 1) |
+| Highlighting | 0 | 0 | 0 (was 1) |
+| Testing | 0 (was 2) | 0 (was 2) | 0 (was 1) |
+| Organization | 0 | 0 | 0 (was 1) |
+| Lint | 0 (was 2) | 0 | 0 (was 1) |
+| **Total** | **0** (was 5) | **0** (was 10) | **0** (was 11) |
 
 ### Recommended fix order
 1. ~~**B-1, B-2** — TK2 coercion in the public `attributedContent` API.~~ ✅ Fixed.

@@ -63,7 +63,7 @@ Sources/CodeEditorPlugin/
 ├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
 ├── SwiftUI/                 # SwiftUI wrappers and modifiers
 ├── Platform/                # Cross-platform color/font/view abstractions
-├── Extensions/              # Type extensions (all use +Extensions suffix)
+├── Extensions/              # Catch-all type extensions (+Extensions suffix; see Conventions)
 ├── Performance/             # Monitoring, profiling, memory tracking
 ├── LSP/                     # Language Server Protocol support
 ├── Annotations/             # Data-source driven annotation badges
@@ -104,7 +104,12 @@ Never use `print()`. Use `CrossPlatformLogger.logger()` instead. This is enforce
 Never use `!`. Always safe-unwrap. Enforced by SwiftLint `force_unwrapping` rule.
 
 ### Extension Files
-All extension files use the `+Extensions` suffix: `String+Extensions.swift`, `NSParagraphStyle+Extensions.swift`, etc. When an extension is specific to a domain (e.g., text layout helpers), co-locate it in that domain's directory rather than the global `Extensions/` folder.
+Two naming patterns are in active use; both are accepted:
+
+- **Catch-all type extensions** use the `+Extensions` suffix and live in `Sources/CodeEditorPlugin/Extensions/`: `String+Extensions.swift`, `NSParagraphStyle+Extensions.swift`, etc.
+- **Domain-scoped extensions** use a `+<Topic>` suffix that names the slice they implement, and live in the domain's own directory: `CodeEditorView+Theme.swift`, `EditorController+Completion.swift`, `LSPClient+Transport.swift`, `CodeEditorContainerView+Minimap.swift`. These are partial-file extensions that decompose a single owning type's API surface by feature rather than acting as a generic type extension.
+
+When in doubt, prefer the domain-scoped form for files that extend one specific framework type with a feature-scoped slice, and the `+Extensions` form for type extensions that don't belong to a single domain.
 
 ### Dependency Injection
 No singletons. Pass dependencies through `EditorConfiguration` or service initializers:

@@ -45,7 +45,7 @@ public final class AsyncSyntaxHighlighter {
     ///   - performanceMetrics: Performance metrics instance (defaults to shared)
     ///   - debounceInterval: Time to wait before processing highlighting requests
     ///   - enablePeriodicOptimization: Whether to enable periodic cache optimization
-    public init(memoryMonitor: MemoryMonitor, performanceMetrics: ProductionPerformanceMetrics? = nil, debounceInterval: Duration = .milliseconds(300), enablePeriodicOptimization: Bool = true) {
+    public init(memoryMonitor: MemoryMonitor, performanceMetrics: ProductionPerformanceMetrics? = nil, debounceInterval: Duration = .seconds(PlatformConstants.defaultAsyncHighlightingDebounceInterval), enablePeriodicOptimization: Bool = true) {
         self.coordinator = SyntaxHighlightingCoordinator()
         self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)
         self.debounceInterval = debounceInterval

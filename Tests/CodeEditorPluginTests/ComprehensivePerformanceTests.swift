@@ -92,7 +92,9 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
         }
 
         let duration = CFAbsoluteTimeGetCurrent() - startTime
-        print("Fuzzy matcher performance: \(duration)s")
+        #if canImport(os)
+        logger.info("Fuzzy matcher performance: \(duration, privacy: .public)s")
+        #endif
         XCTAssertLessThan(duration, 5.0, "Fuzzy matching should complete within 5 seconds")
     }
 
