@@ -506,9 +506,9 @@ public final class CompletionManager {
                 return false
             }
 
-            // 4. relevance desc
-            let lhsRelevance = relevance(for: lhs, context: context)
-            let rhsRelevance = relevance(for: rhs, context: context)
+            // 4. relevance desc — single source of truth in CompletionRankingModel.
+            let lhsRelevance = CompletionRankingModel.calculateRelevance(item: lhs, context: context)
+            let rhsRelevance = CompletionRankingModel.calculateRelevance(item: rhs, context: context)
             if lhsRelevance != rhsRelevance {
                 return lhsRelevance > rhsRelevance
             }
@@ -524,56 +524,6 @@ public final class CompletionManager {
 
         // Stage 4: cap
         return Array(sorted.prefix(maxCompletions))
-    }
-
-    /// Additive of three relevance signals. Constants are duplicated from
-    /// `CompletionRankingModel.RankingWeights` (a private nested enum, not
-    /// accessible from outside that type). Drift between the two is
-    /// intentional only if a future tier needs to diverge.
-    private func relevance(
-        for item: CompletionItemModel,
-        context: CompletionContextModel
-    ) -> Double {
-        let word = context.currentWord.lowercased()
-        let label = item.label.lowercased()
-        var score = 0.0
-
-        if !word.isEmpty {
-            if label.hasPrefix(word) {
-                score += 1.0
-            }
-            if label.contains(word) {
-                score += 0.5
-            }
-        }
-
-        // Kind-contextual heuristics.
-        switch item.kind {
-        case .method, .function:
-            if context.lineText.contains("(") {
-                score += 0.3
-            }
-
-        case .property, .variable:
-            if context.lineText.contains(".") {
-                score += 0.3
-            }
-
-        case .keyword:
-            if context.lineTextBeforeCursor.trimmingCharacters(in: .whitespaces).isEmpty {
-                score += 0.3
-            }
-
-        case .class, .struct, .enum:
-            if context.lineText.contains(":") || context.lineText.contains("<") {
-                score += 0.3
-            }
-
-        default:
-            break
-        }
-
-        return score
     }
 
     // MARK: - Test Hooks

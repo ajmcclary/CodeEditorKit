@@ -44,7 +44,21 @@ API preserved: `GutterViewModel` consumes the same surface (`calculateFoldContro
 
 Verification: `swift build` clean, `swiftlint --strict` clean. `swift test --parallel` shows the same two pre-existing failures (`testCodeEditorRendersSwiftSnippet` snapshot drift and `equatableIgnoresUnifiedPerformanceSystem` latent equality bug); the previously-flaky `stop cancels the refresh task` test passed on this run.
 
-Remaining groups (3–7) from the prioritized roadmap below are unchanged and pending.
+### Group 3 — Consolidate the Completion Pipeline: **COMPLETE**
+
+| Finding | Status | Notes |
+|---|---|---|
+| A3 — `CompletionFilteringService` is dead | ✅ Resolved | Deleted (`Sources/CodeEditorPlugin/Completion/CompletionFilteringService.swift`, 182 lines). Zero external references; logic did not overlap with `CompletionManager`'s pipeline. |
+| A3 — `CompletionCacheManager` is dead | ✅ Resolved | Deleted (`Sources/CodeEditorPlugin/Completion/CompletionCacheManager.swift`, 147 lines). Wholly superseded by `CompletionManager`'s built-in `LRUCache<CompletionCacheKey, CachedCompletionResult>`. |
+| A3 — Duplicated relevance constants between `CompletionManager` and `CompletionRankingModel` | ✅ Resolved | `CompletionRankingModel.calculateRelevance(item:context:)` promoted from `private` instance method to `static` `internal` so callers in the same module can share the implementation. `CompletionManager`'s 45-line `relevance(for:context:)` duplicate is deleted; its sort key at `:510–511` now delegates to `CompletionRankingModel.calculateRelevance`. `RankingWeights` stays private — there is one source of truth for the `1.0`/`0.5`/`0.3` weights now. The comment at `CompletionManager.swift:529` explicitly flagging the duplication is gone with the method. |
+
+A3's remaining sub-recommendation (`CompletionContextExtractor` decision) is left in place: the type is kept as production code with one legitimate test caller in `CompletionSystemTests.swift:81`. No further action needed.
+
+Net impact: `CompletionManager.swift` 711 → 661 lines (−50); `CompletionRankingModel.swift` 150 → 136 lines (−14); two helper files deleted (−329). Total Swift lines fell from 133,081 to 132,688 (−393 in Group 3, −1,852 cumulative since baseline). `Sources/` file count 564 → 562.
+
+Verification: `swift build` clean, `swiftlint --strict` clean. `swift test --parallel` shows the same two pre-existing failures only (`testCodeEditorRendersSwiftSnippet` and `equatableIgnoresUnifiedPerformanceSystem`).
+
+Remaining groups (4–7) from the prioritized roadmap below are unchanged and pending.
 
 ## Abstraction Analysis
 

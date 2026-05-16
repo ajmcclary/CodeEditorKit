@@ -52,8 +52,8 @@ public final class CompletionRankingModel {
             }
 
             // Priority 3: Relevance to context
-            let relevance1 = calculateRelevance(item: item1, context: context)
-            let relevance2 = calculateRelevance(item: item2, context: context)
+            let relevance1 = Self.calculateRelevance(item: item1, context: context)
+            let relevance2 = Self.calculateRelevance(item: item2, context: context)
             if relevance1 != relevance2 {
                 return relevance1 > relevance2
             }
@@ -63,38 +63,27 @@ public final class CompletionRankingModel {
         }
     }
 
-    // MARK: - Private Methods
+    // MARK: - Relevance Scoring
 
-    /// Calculate relevance score for a completion item
-    /// - Parameters:
-    ///   - item: The completion item
-    ///   - context: The current completion context
-    /// - Returns: Relevance score
-    private func calculateRelevance(item: CompletionItemModel, context: CompletionContextModel) -> Double {
+    /// Authoritative relevance score for a completion item against a context.
+    /// Shared with `CompletionManager`'s sort key so there's a single set of
+    /// weights driving completion ordering.
+    static func calculateRelevance(item: CompletionItemModel, context: CompletionContextModel) -> Double {
         var relevance = 0.0
 
-        // Exact prefix match
         if item.label.lowercased().hasPrefix(context.currentWord.lowercased()) {
             relevance += RankingWeights.exactPrefixMatch
         }
 
-        // Contains match
         if item.label.lowercased().contains(context.currentWord.lowercased()) {
             relevance += RankingWeights.containsMatch
         }
 
-        // Kind relevance based on context
         relevance += calculateKindRelevance(item: item, context: context)
-
         return relevance
     }
 
-    /// Calculate relevance based on completion kind and context
-    /// - Parameters:
-    ///   - item: The completion item
-    ///   - context: The current completion context
-    /// - Returns: Kind-based relevance score
-    private func calculateKindRelevance(item: CompletionItemModel, context: CompletionContextModel) -> Double {
+    private static func calculateKindRelevance(item: CompletionItemModel, context: CompletionContextModel) -> Double {
         var relevance = 0.0
 
         switch item.kind {
@@ -109,14 +98,11 @@ public final class CompletionRankingModel {
             }
 
         case .keyword:
-            // Keywords are generally relevant at the start of lines or after whitespace
-            let linePrefix = context.lineTextBeforeCursor
-            if linePrefix.trimmingCharacters(in: .whitespaces).isEmpty {
+            if context.lineTextBeforeCursor.trimmingCharacters(in: .whitespaces).isEmpty {
                 relevance += RankingWeights.contextRelevance
             }
 
         case .class, .struct, .enum:
-            // Types are relevant after colons or in generic contexts
             if context.lineText.contains(":") || context.lineText.contains("<") {
                 relevance += RankingWeights.contextRelevance
             }
