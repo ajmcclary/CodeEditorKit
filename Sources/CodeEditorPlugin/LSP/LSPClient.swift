@@ -232,6 +232,15 @@ public final class LSPClient: ObservableObject {
                     self.logger.warning("Shutdown request failed: \(error.localizedDescription)")
                 }
 
+                // Capture anything still pending — typically the
+                // shutdown request's own continuation when the server
+                // didn't respond before the timeout. The abandoned
+                // shutdown Task inside sendShutdownRequest stays
+                // suspended on that continuation; failing it here
+                // releases it so the task can complete on its own.
+                let postShutdownPending = self.pendingRequests
+                self.pendingRequests.removeAll()
+
                 if let transport = self.transport {
                     await transport.disconnect()
                 } else {
@@ -240,6 +249,7 @@ public final class LSPClient: ObservableObject {
 
                 self.connectionState = .disconnected
                 Self.failPending(pendingToFail)
+                Self.failPending(postShutdownPending)
             }
         } else {
             // Not initialized (e.g. `.connecting`, `.initializing`, `.error`):

@@ -61,25 +61,21 @@ Resolution (commit pending):
 
 After both veto phases pass and before `publishWillEditEvent`, `shouldChangeText` now fans out `textViewWillChangeText(codeEditorView)` to gating then behavior participants in registration order. Added three new XCTest cases: `testAllAllowFiresWillChangeTextOnEachParticipantInPhaseOrder` (asserts phase order via a shared `CallLog`), `testGatingVetoSuppressesWillChangeText`, and `testBehaviorVetoSuppressesWillChangeText`. `swift test --parallel` reports 455 / 114 passing with 1 known issue; `TextViewDelegateMultiplexerTests` now executes 16 XCTest cases (13 prior + 3 new), all passing.
 
-### H3. `LSPClient.disconnect()` can hang forever waiting for shutdown
+### H3. `LSPClient.disconnect()` can hang forever waiting for shutdown — RESOLVED
 
 Files:
 
-- `Sources/CodeEditorPlugin/LSP/LSPClient.swift:191-243`
-- `Sources/CodeEditorPlugin/LSP/LSPClient.swift:446-473`
-- `Sources/CodeEditorPlugin/LSP/LSPConnectionManager.swift:90-95`
+- `Sources/CodeEditorPlugin/LSP/LSPClient.swift:191-263`
+- `Sources/CodeEditorPlugin/LSP/LSPConnectionManager.swift:86-160`
+- `Tests/CodeEditorPluginTests/LSP/LSPConnectionManagerShutdownTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-For initialized clients, `disconnect()` sets `.shuttingDown` and awaits `LSPConnectionManager.sendShutdownRequest`. That helper sends a normal `shutdown` request through `sendRequest`, which stores a checked continuation in `pendingRequests` with no timeout. If the language server is wedged or has stopped reading, the shutdown request never completes, so the teardown after line 235 does not run.
+For initialized clients, `disconnect()` set `.shuttingDown` and awaited `LSPConnectionManager.sendShutdownRequest`, which sent a `shutdown` request through `sendRequest` that stored a checked continuation in `pendingRequests` with no timeout. If the language server was wedged or had stopped reading, the request never completed, so the transport/process teardown that followed never ran. The client was stuck in `.shuttingDown` and leaked the server process or socket.
 
-Why it matters:
+Resolution (commit pending):
 
-A bad or dead LSP server can leave the client stuck in `.shuttingDown`, with transport/process cleanup delayed indefinitely. That is a user-visible shutdown hang and can leak the server process or socket.
-
-Concrete fix:
-
-Make shutdown best-effort and bounded. Wrap the shutdown request in a short timeout, then always close the transport/process in a `defer` or unconditional cleanup path. Also fail any pending request created during shutdown, not just the pending requests captured before shutdown starts.
+`sendShutdownRequest` now takes a `timeout: Duration` (default 2s) and resolves a race between the shutdown attempt and the deadline via a single `withCheckedThrowingContinuation`. When the timeout wins it throws `LSPError.timeout` and returns immediately, leaving the abandoned shutdown task suspended in the background. Note: a structured `withThrowingTaskGroup` could not be used here because `Task<T>.value` and `withCheckedThrowingContinuation` do not honor cancellation, so the group would hang waiting for the cancelled child. `LSPClient.disconnect()` now drains `pendingRequests` after the shutdown attempt — including the abandoned task's continuation — so the background task can complete and a follow-up `connect()` doesn't observe stale pending entries. Transport/process teardown follows unconditionally as before. Added `LSPConnectionManagerShutdownTests` with three XCTest cases: hung-server timeout (asserts the call returns under 2s when `sendRequest` sleeps for 60s), normal completion (asserts `shutdown` request then `exit` notification fire in order), and server-error propagation (asserts a real error wins over the timeout).
 
 ### H4. Viewport highlighting caches partial tokens under a full-document key
 
@@ -262,15 +258,15 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 | Severity | Total | Resolved | Open |
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
-| High | 4 | 2 | 2 |
+| High | 4 | 3 | 1 |
 | Medium | 6 | 0 | 6 |
 | Low | 2 | 0 | 2 |
 
-Overall health: yellow. The codebase builds, lint passes, and the full test suite is green with H1 and H2 resolved. The remaining correctness concerns sit at lifecycle and cache boundaries: LSP disconnect can hang on unresponsive servers, and large-file viewport highlighting can return incomplete cached results.
+Overall health: yellow. The codebase builds, lint passes, and the CodeEditorPlugin test suite is green with H1, H2, and H3 resolved. The remaining high-severity correctness concern is viewport highlighting cache completeness (H4); the medium and low items are mostly tidy-ups.
 
 Most impactful fixes first:
 
 1. ~~Fix `PerformanceObservation` stop semantics so `swift test --parallel` is green again.~~ Resolved (see H1).
 2. ~~Wire `textViewWillChangeText` through the multiplexer so the public pre-edit hook actually fires.~~ Resolved (see H2).
-3. Make `LSPClient.disconnect()` bounded and cleanup-guaranteed (H3).
+3. ~~Make `LSPClient.disconnect()` bounded and cleanup-guaranteed.~~ Resolved (see H3).
 4. Correct viewport-token cache completeness and add scrolling/full-document cache regression tests (H4).

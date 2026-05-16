@@ -83,16 +83,91 @@ enum LSPConnectionManager {
         return capabilities
     }
 
-    /// Sends shutdown request and exit notification
+    /// Default deadline for `sendShutdownRequest`. Servers that don't ack
+    /// shutdown within this window are abandoned so disconnect() can finish
+    /// cleanup; the caller is responsible for failing any continuation the
+    /// abandoned attempt left behind in `pendingRequests`.
+    static let defaultShutdownTimeout: Duration = .seconds(2)
+
+    /// Sends shutdown request and exit notification, bounded by a timeout.
+    ///
+    /// A wedged or dead language server can leave `sendRequest` suspended
+    /// on a pending-response continuation that never resumes; without a
+    /// bound, `disconnect()` cleanup never runs and the transport/process
+    /// leaks. We can't put the wait inside a structured `TaskGroup`
+    /// because `Task<T>.value` and `withCheckedThrowingContinuation`
+    /// don't honor cancellation — a structured group would itself hang
+    /// waiting for the cancelled child to complete.
+    ///
+    /// Instead, two MainActor child tasks race to resume a single
+    /// continuation:
+    ///
+    /// 1. The shutdown attempt runs unstructured; on success/failure it
+    ///    resumes the continuation if no one has yet.
+    /// 2. A timer task resumes the continuation with `LSPError.timeout`
+    ///    if the deadline elapses first.
+    ///
+    /// When the timeout wins, we return immediately and leave the
+    /// shutdown task suspended in the background. The caller is
+    /// responsible for draining `pendingRequests` so the abandoned
+    /// continuation is failed and the background task can complete.
+    /// MainActor serialization makes the `didResume` check-and-set
+    /// atomic without an explicit lock.
     /// - Parameters:
     ///   - sendRequest: Function to send requests
     ///   - sendNotification: Function to send notifications
+    ///   - timeout: Maximum time to wait for the server's shutdown ack
+    ///     before throwing `LSPError.timeout`. Defaults to
+    ///     `defaultShutdownTimeout`.
     static func sendShutdownRequest(
         sendRequest: @escaping (String, any Codable & Sendable) async throws -> LSPResponse,
-        sendNotification: @escaping (String, any Codable & Sendable) async throws -> Void
+        sendNotification: @escaping (String, any Codable & Sendable) async throws -> Void,
+        timeout: Duration = defaultShutdownTimeout
     ) async throws {
-        _ = try await sendRequest("shutdown", EmptyParams())
-        try await sendNotification("exit", EmptyParams())
+        let state = ShutdownRaceState()
+
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            // Shutdown attempt — fire-and-forget once the race resolves.
+            let shutdownTask = Task { @MainActor in
+                do {
+                    _ = try await sendRequest("shutdown", EmptyParams())
+                    try await sendNotification("exit", EmptyParams())
+                    if state.tryClaim() {
+                        continuation.resume()
+                    }
+                } catch {
+                    if state.tryClaim() {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+
+            // Timer — wins the race when the server doesn't ack in time.
+            Task { @MainActor in
+                try? await Task.sleep(for: timeout)
+                if state.tryClaim() {
+                    shutdownTask.cancel()
+                    continuation.resume(throwing: LSPError.timeout)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Shutdown Race State
+
+/// Single-resumption flag for `sendShutdownRequest`'s shutdown/timeout
+/// race. `tryClaim()` is the only mutation point and runs exclusively on
+/// the MainActor (both racing tasks inherit the enclosing `@MainActor`
+/// isolation), so the check-and-set is serialized without a lock.
+@MainActor
+private final class ShutdownRaceState {
+    private var didResume = false
+
+    func tryClaim() -> Bool {
+        if didResume { return false }
+        didResume = true
+        return true
     }
 }
 
