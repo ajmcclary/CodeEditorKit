@@ -1,10 +1,10 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/test%20files-207-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/test%20files-216-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
 [![Swift](https://img.shields.io/badge/Swift-6.3%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS-lightgrey)](#requirements)
-[![Files](https://img.shields.io/badge/source%20files-570-blue)](#architecture)
+[![Files](https://img.shields.io/badge/source%20files-572-blue)](#architecture)
 
 A powerful, production-ready code editor component for native macOS and iOS / iPadOS. Built with Swift 6.3, TextKit2, and Swift 6 strict concurrency, featuring syntax highlighting for 25 concrete languages plus plain text, comprehensive theming, and a modern architecture designed for performance and extensibility.
 
@@ -114,7 +114,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in [`docs/`](docs/README.md), organized by topic.
 
-21 top-level main-target directories, 478 Swift files in the main target, and 570 Swift files under `Sources/`.
+21 top-level main-target directories, 480 Swift files in the main target, and 572 Swift files under `Sources/`.
 
 ### Core Components
 
@@ -230,7 +230,7 @@ try await client.connect(configuration: server, language: .swift)
 
 ## 🧪 Testing
 
-The package includes 4 test targets and 207 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
+The package includes 4 test targets and 216 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
 
 ```bash
 # Run tests in parallel (faster)

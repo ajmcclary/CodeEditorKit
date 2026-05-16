@@ -661,7 +661,7 @@ struct FactoryExampleView: View {
 
 ## Technical Highlights
 
-- **563 Swift files** under `Sources/` (470 in the main `CodeEditorPlugin` target) — see [CLAUDE.md](../../CLAUDE.md) for the up-to-date breakdown.
+- **572 Swift files** under `Sources/` (480 in the main `CodeEditorPlugin` target) — see [CLAUDE.md](../../CLAUDE.md) for the up-to-date breakdown.
 - **20+ View Modifiers** for declarative configuration
 - **Zero SwiftLint Violations** maintained for code quality (strict mode)
 - **Swift 6.3 Ready** with full concurrency compliance

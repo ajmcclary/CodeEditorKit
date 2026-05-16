@@ -43,7 +43,7 @@ Sources/CodeEditorPlugin/
 (Long-form prose docs live in the top-level [`docs/`](../README.md) folder, not inside `Sources/`.)
 
 **Key Changes**:
-- **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing live in the unified `Text/` directory (53 Swift files)
+- **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing live in the unified `Text/` directory (51 Swift files)
   - Combines all text manipulation, layout fragments, and async processing
   - Improves code discoverability by grouping related functionality
 - **Merged Small Directories**: 
@@ -181,7 +181,7 @@ config.layout.tabWidth = 4
 
 ### Quality Achievements
 - **116 `*Tests.swift` files** across 4 test targets covering the major editor, configuration, platform, and language paths
-- **Zero SwiftLint violations** across 453 Swift files in the main target and 513 Swift files under `Sources/`
+- **Zero SwiftLint violations** across 480 Swift files in the main target and 572 Swift files under `Sources/`
 - **Enhanced cross-platform consistency**
 - **Directory organization** across 20 top-level main-target directories for discoverability
 

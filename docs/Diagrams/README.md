@@ -2,9 +2,11 @@
 
 This directory contains architectural diagrams for the CodeEditorPlugin framework, illustrating major components, systems, integrations, and their data flows.
 
-> **Note (0.2.0):** several diagrams in this folder were authored while Mac Catalyst was a supported platform and legacy TextKit was a live fallback. As of 0.2.0 both have been retired — the framework targets macOS and iOS only, and TextKit2 is the only supported layout system. Catalyst-specific boxes / class members in the mermaid sources below are preserved for historical context but no longer reflect source. The platform-abstraction diagram (#8) carries an explicit historical-snapshot banner. For the current state, see [`docs/Platform/platform-abstraction.md`](../Platform/platform-abstraction.md) and [`docs/FeatureMatrix.md`](../FeatureMatrix.md).
+> **Note (0.2.0):** several diagrams in this folder were authored while Mac Catalyst was a supported platform and legacy TextKit was a live fallback. As of 0.2.0 both have been retired — the framework targets macOS and iOS only, and TextKit2 is the only supported layout system. Catalyst-specific boxes / class members in the mermaid sources below are preserved for historical context but no longer reflect source. For the current state, see [`docs/Platform/platform-abstraction.md`](../Platform/platform-abstraction.md) and [`docs/FeatureMatrix.md`](../FeatureMatrix.md). The pre-0.2.0 platform-abstraction diagram is preserved as a historical snapshot in [`../archive/Diagrams/08-platform-abstraction-layer.md`](../archive/Diagrams/08-platform-abstraction-layer.md).
 
 When a diagram conflicts with source or a topic page, treat the source and topic page as authoritative. The diagrams are subsystem maps, not complete generated type inventories.
+
+Design-only diagrams covering features that are not yet implemented (the plugin system, the extended debugging-integration design, and the planned enhanced syntax-highlighting design) live in [`../archive/Diagrams/`](../archive/Diagrams/).
 
 ## Index of Diagrams
 
@@ -28,9 +30,6 @@ Complete pipeline for language detection and syntax highlighting, including both
 
 ### 7. [Completion System Architecture](07-completion-system-architecture.md)
 Code completion system including CompletionManager, provider registry, session management, caching, and UI components. Includes sequence diagram of completion flow.
-
-### 8. [Platform Abstraction Layer](08-platform-abstraction-layer.md)
-Cross-platform compatibility layer showing abstractions for macOS, iOS. Includes platform detection, type aliases, event/input adapters, and platform-specific implementations.
 
 ### 9. [Text Processing Pipeline](09-text-processing-pipeline.md)
 Text processing flow from input to rendering, including TextKit2 integration, line index management, batch processing, and performance optimizations. Shows incremental updates and viewport rendering.
@@ -65,8 +64,8 @@ Comprehensive data models and type system forming the foundation of CodeEditorPl
 ### 19. [SwiftUI Integration Complete Ecosystem](19-swiftui-integration-ecosystem.md)
 Complete SwiftUI integration ecosystem providing seamless integration between CodeEditorPlugin and SwiftUI applications. Includes platform-specific representables, environment management, and animation coordination.
 
-### 20. [Debugging Integration Architecture (Design Document)](20-debugging-integration-architecture.md)
-Planned debugging integration system design. The currently implemented debugging system is documented in [`20-debugging-integration.md`](20-debugging-integration.md).
+### 20. [Debugging Integration](20-debugging-integration.md)
+Currently implemented debugging integration. The earlier extended design document is preserved in [`../archive/Diagrams/20-debugging-integration-architecture.md`](../archive/Diagrams/20-debugging-integration-architecture.md).
 
 ### 21. [Utility Systems & Extensions Network](21-utility-systems-extensions.md)
 Utility systems and extensions network providing shared utilities, cross-platform helpers, and extensibility infrastructure. Includes async operation management, logging, caching, and extension management.
@@ -86,28 +85,18 @@ Package dependency diagram showing the main CodeEditorPlugin framework's depende
 ### 26. [Sample App Dependencies](26-sample-dependencies.md)
 CodeEditorSample demonstration app architecture showing dependencies on CodeEditorPlugin, CodeEditorUI, and CodeEditorDesignTokens, with sample code and configuration management.
 
-### 27. [Plugin System Architecture (Design Document)](27-plugin-system-architecture.md)
-Planned plugin system architecture design. Not yet implemented in the current codebase.
-
 ### 28. [Performance Budget System](28-performance-budget-system.md)
 Comprehensive performance budget system that monitors and enforces performance targets across all operations. Includes budget definitions, status tracking, violation reporting, test integration, and enforcement configuration with support for warning, critical, and exceeded thresholds.
 
-### 29. [Syntax Highlighting Architecture (Updated)](29-enhanced-syntax-highlighting-architecture-updated.md)
-Current optimized syntax highlighting system with actor-based concurrency, streaming highlighter for large files, circuit breaker patterns, and comprehensive performance tracking. The original design document is at [`29-enhanced-syntax-highlighting-architecture.md`](29-enhanced-syntax-highlighting-architecture.md).
+### 29. [Enhanced Syntax Highlighting Architecture](29-enhanced-syntax-highlighting-architecture.md)
+Current optimized syntax highlighting system with actor-based concurrency, streaming highlighter for large files, circuit breaker patterns, and comprehensive performance tracking. The original planned design document is preserved in [`../archive/Diagrams/29-enhanced-syntax-highlighting-architecture.md`](../archive/Diagrams/29-enhanced-syntax-highlighting-architecture.md).
 
 ### 30. [Diagram Colors](Colors.md)
 Shared Mermaid color palette used by the diagrams in this directory.
 
-## Current vs Design Status
+## Archived diagrams
 
-| File | Status |
-|---|---|
-| `08-platform-abstraction-layer.md` | Historical snapshot from the retired Catalyst/legacy TextKit era. |
-| `20-debugging-integration.md` | Current implemented debugging integration. |
-| `20-debugging-integration-architecture.md` | Extended design document. |
-| `27-plugin-system-architecture.md` | Planned plugin design; plugin APIs are not implemented. |
-| `29-enhanced-syntax-highlighting-architecture.md` | Planned enhanced-highlighting design. |
-| `29-enhanced-syntax-highlighting-architecture-updated.md` | Current optimized syntax-highlighting implementation. |
+Historical snapshots and design-only diagrams have been moved to [`../archive/Diagrams/`](../archive/Diagrams/) so this index reflects current implementation only. See the [archive README](../archive/README.md) for the full list.
 
 ## How to View These Diagrams
 

@@ -76,7 +76,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-21 top-level directories, 478 Swift source files in the main target, and 570 Swift source files under `Sources/`.
+21 top-level directories, 480 Swift source files in the main target, and 572 Swift source files under `Sources/`.
 
 Other source roots:
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
@@ -142,11 +142,8 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 **Watch for stale claims in diagrams:**
 - Language count is 25 concrete languages plus plain text (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, C++, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell, Dockerfile, TOML, Lua, C#, Kotlin, Dart, plus plain text).
-- `08-platform-abstraction-layer.md` is a historical snapshot from the Mac Catalyst / TextKit1 era. Current platform truth lives in `docs/Platform/platform-abstraction.md` and `docs/FeatureMatrix.md`.
-- `20-debugging-integration-architecture.md` is the extended design; `20-debugging-integration.md` reflects current implementation.
-- The plugin system (`Diagram 27`) is a design document — not yet implemented.
-- `29-enhanced-syntax-highlighting-architecture.md` is the planned design; `29-enhanced-syntax-highlighting-architecture-updated.md` reflects current code.
-- These symbols are referenced in older diagrams, scripts, or design docs but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`, `CodeEditorSwiftUITheme`, `EditorTheme`, `LanguageConfig`, `CodeEditorLayoutManager`, `ConfigurationValidator`, `EditorConfigurationBuilder`, `ConfigurationMigrator`, `ConfigurationHotReload`, `PluginAPI`, `PluginContext`, `MarkdownPlugin`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
+- Historical snapshots and design-only diagrams (pre-0.2.0 platform abstraction, the extended debugging-integration design, the plugin system, and the planned enhanced-syntax-highlighting design) live in [`docs/archive/Diagrams/`](docs/archive/Diagrams/). Treat them as point-in-time references, not current truth.
+- These symbols are referenced in those archived diagrams (and in scripts / design docs) but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`, `CodeEditorSwiftUITheme`, `EditorTheme`, `LanguageConfig`, `CodeEditorLayoutManager`, `ConfigurationValidator`, `EditorConfigurationBuilder`, `ConfigurationMigrator`, `ConfigurationHotReload`, `PluginAPI`, `PluginContext`, `MarkdownPlugin`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
 
 ## What Will Go Wrong
 
