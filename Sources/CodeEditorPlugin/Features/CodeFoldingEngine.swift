@@ -47,6 +47,11 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     // MARK: - Caching
 
     private var foldRegionCache: [Int: [FoldableRegion]] = [:] // Hash -> Regions
+    /// FIFO insertion order for `foldRegionCache`. Eviction pops from
+    /// the front so the oldest entry is dropped first. The previous
+    /// implementation sorted hash keys, which evicted the lowest hash
+    /// rather than the oldest insertion — effectively random eviction.
+    private var foldRegionCacheOrder: [Int] = []
     private var lastTextHash: Int = 0
     private var lastLanguage: Language = .plainText
 
@@ -221,23 +226,52 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         return hasher.finalize()
     }
 
+    private static let maxFoldRegionCacheSize = 10
+
     private func maintainCacheSize() {
-        let maxCacheSize = 10
-        if foldRegionCache.count > maxCacheSize {
-            // Remove oldest entries (simple FIFO)
-            let keysToRemove = foldRegionCache.count - maxCacheSize
-            let sortedKeys = foldRegionCache.keys.sorted()
-            for index in 0..<keysToRemove where index < sortedKeys.count {
-                foldRegionCache.removeValue(forKey: sortedKeys[index])
-            }
+        while foldRegionCache.count > Self.maxFoldRegionCacheSize,
+              !foldRegionCacheOrder.isEmpty {
+            let oldestKey = foldRegionCacheOrder.removeFirst()
+            foldRegionCache.removeValue(forKey: oldestKey)
         }
+    }
+
+    /// Record `cacheKey` as the most recently inserted entry so a
+    /// subsequent `maintainCacheSize()` evicts older entries first.
+    /// Re-inserting an existing key moves it to the end (so a "hot"
+    /// entry doesn't get dropped as if it were old).
+    private func recordCacheInsertion(_ cacheKey: Int) {
+        foldRegionCacheOrder.removeAll { $0 == cacheKey }
+        foldRegionCacheOrder.append(cacheKey)
     }
 
     /// Clear the cache when memory pressure is detected
     internal func clearCache() {
         foldRegionCache.removeAll()
+        foldRegionCacheOrder.removeAll()
         lastTextHash = 0
         lastLanguage = .plainText
+    }
+
+    // MARK: - Internal Test Seam
+
+    /// Snapshot of cache keys in insertion order. Tests use this to
+    /// verify FIFO eviction without exercising the full debounced
+    /// detection pipeline.
+    internal var foldRegionCacheKeysInInsertionOrderForTesting: [Int] {
+        foldRegionCacheOrder
+    }
+
+    /// Mirror of the production cache-write sequence used in
+    /// `detectFoldableRegions`: maintain the size cap, write the
+    /// entry, then record insertion order.
+    internal func setCachedFoldRegionsForTesting(
+        _ regions: [FoldableRegion],
+        forKey key: Int
+    ) {
+        maintainCacheSize()
+        foldRegionCache[key] = regions
+        recordCacheInsertion(key)
     }
 
     // MARK: - Region Detection
@@ -373,6 +407,7 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         lastLanguage = language
         maintainCacheSize()
         foldRegionCache[cacheKey] = validRegions
+        recordCacheInsertion(cacheKey)
 
         // Build hierarchy
         let hierarchicalRegions = buildHierarchy(from: validRegions)

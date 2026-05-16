@@ -222,23 +222,22 @@ Resolution (commit pending):
 
 Encode side now sorts the set first: `String(completionTriggerCharacters.sorted())`. Decode side is unchanged (it accepts any character order). Added `EditorConfigurationBehaviorEncodingTests` with four Swift Testing cases: encoding the same Behavior twice yields byte-identical JSON; two Behaviors built from the same characters in different insertion orders encode identically; the encoded trigger-characters string is in sorted ascending order; encode→decode round-trips preserve the set.
 
-### L2. `CodeFoldingEngine` cache eviction says FIFO but sorts hash keys
+### L2. `CodeFoldingEngine` cache eviction says FIFO but sorts hash keys — RESOLVED
 
-File:
+Files:
 
-- `Sources/CodeEditorPlugin/Features/CodeFoldingEngine.swift:200-208`
+- `Sources/CodeEditorPlugin/Features/CodeFoldingEngine.swift:49-53,223-272`
+- `Tests/CodeEditorPluginTests/Features/CodeFoldingEngineCacheEvictionTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-`maintainCacheSize()` comments that it removes the oldest entries using FIFO, but it sorts hash keys and removes the lowest hash values. Hash order is not insertion order and may vary across launches.
+`maintainCacheSize()`'s comment promised "simple FIFO", but it ran `foldRegionCache.keys.sorted()` and evicted whichever entries had the lowest hash values. Hash order has no relationship to insertion order — hot or recent entries could be discarded arbitrarily, making fold-cache behavior unpredictable across launches.
 
-Why it matters:
+Resolution (commit pending):
 
-This is a small cache-quality bug: hot or recent entries can be evicted arbitrarily, making folding cache behavior less predictable.
+Added a parallel `foldRegionCacheOrder: [Int]` array that mirrors `foldRegionCache`'s insertion sequence. `maintainCacheSize()` now pops from the front of that array until the size cap is satisfied. A small `recordCacheInsertion(_:)` helper runs after every cache write, moving re-inserted ("hot") keys to the back so they don't get dropped as if they were old. `clearCache()` also drops the order array so stale keys can't mislead a future eviction. Extracted the cap as `Self.maxFoldRegionCacheSize = 10`.
 
-Concrete fix:
-
-Track insertion or access order alongside `foldRegionCache`, or use a small LRU helper already present in the project.
+Added `CodeFoldingEngineCacheEvictionTests` with three XCTest cases driven through a small internal test seam (`setCachedFoldRegionsForTesting`, `foldRegionCacheKeysInInsertionOrderForTesting`): eviction drops the oldest-inserted key (`999`) even when its hash is the largest, and keeps the lowest-hash key (`50`) — exactly inverting the buggy outcome; re-inserting an existing key moves it to the end of the FIFO order; `clearCache()` empties both the dict and the order array.
 
 ## Summary
 
@@ -247,9 +246,9 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
 | Medium | 6 | 6 | 0 |
-| Low | 2 | 1 | 1 |
+| Low | 2 | 2 | 0 |
 
-Overall health: green. The codebase builds (no deprecation warnings remaining), lint passes (now with the `no_print_statements` rule enforced across tests too), the CodeEditorPlugin test suite is green, and only one Low-severity nit (L2) remains from the original review.
+Overall health: green. Every item from the original 12-finding review is resolved. The codebase builds (no deprecation warnings), lint passes (807 files, 0 violations, `no_print_statements` enforced repo-wide), the CodeEditorPlugin test suite is green (465 tests / 116 suites passing, 1 known issue from before this review).
 
 Notes flagged for separate triage:
 
@@ -270,3 +269,4 @@ Most impactful fixes first:
 9. ~~Remove TLS 1.0 / 1.1 from `SecurityOptions.TLSVersion`.~~ Resolved (see M4).
 10. ~~Enforce no-`print()` convention in tests and clean up the offending diagnostics.~~ Resolved (see M6).
 11. ~~Stabilize JSON encoding of `completionTriggerCharacters`.~~ Resolved (see L1).
+12. ~~Make `CodeFoldingEngine` cache eviction match its FIFO docstring.~~ Resolved (see L2).
