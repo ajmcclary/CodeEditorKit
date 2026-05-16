@@ -1,11 +1,6 @@
 #if canImport(AppKit)
 @preconcurrency import AppKit
 
-private struct UncheckedEventShuttle: @unchecked Sendable {
-    let event: NSEvent
-    let installer: EditorEventBusInstaller?
-}
-
 /// Bridges AppKit mouse events on a wrapped `NSTextView` into an
 /// `EditorEventBus`. The bus carries hover positions (after an idle
 /// delay) and ⌘-click positions to SwiftUI modifiers downstream.
@@ -41,17 +36,15 @@ final class EditorEventBusInstaller: NSObject {
         textView.addTrackingArea(area)
         trackingArea = area
 
-        // NSEvent isn't Sendable, so we route through an unchecked-Sendable
-        // shuttle and only let Bool cross the actor boundary. Local monitors
-        // already run on the main thread per AppKit docs, so this is safe.
+        // `addLocalMonitorForEvents` invokes its closure on the main thread
+        // per AppKit docs. The closure type is already `@MainActor` under
+        // modern AppKit SDKs, so `self` and `event` can be captured directly
+        // — no unchecked-Sendable shuttle or `assumeIsolated` hop required.
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
-            let shuttle = UncheckedEventShuttle(event: event, installer: self)
-            let consumed: Bool = MainActor.assumeIsolated {
-                guard let installer = shuttle.installer else { return false }
-                guard shuttle.event.modifierFlags.contains(.command) else { return false }
-                return installer.handleMouseDown(shuttle.event)
-            }
-            return consumed ? nil : event
+            guard let self,
+                  event.modifierFlags.contains(.command),
+                  self.handleMouseDown(event) else { return event }
+            return nil
         }
     }
 

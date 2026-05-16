@@ -100,11 +100,16 @@ extension EditorConfiguration {
         /// memory spikes. This sets the maximum characters per chunk.
         public var iOSMaxHighlightingChunk: Int = 100_000 // 100KB
 
-        /// Optional `UnifiedPerformanceSystem` for tracking editor performance metrics.
+        /// Optional `UnifiedPerformanceSystem` for tracking editor performance
+        /// metrics. When non-nil, the syntax highlighter records
+        /// `.syntaxHighlighting` metrics here.
         ///
-        /// When non-nil, the syntax highlighter records `.syntaxHighlighting` metrics
-        /// here. Excluded from `Codable` and `Equatable` (reference identity is not
-        /// configuration).
+        /// - `Codable`: intentionally excluded. The reference identifies a
+        ///   live performance system, which has no serializable representation;
+        ///   `encode → decode` always yields `nil` for this field.
+        /// - `Equatable`: compared by **reference identity** so two
+        ///   `Performance` values that differ only in this field — including
+        ///   the round-trip case above — do not falsely compare equal.
         public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
 
         // MARK: - Initialization
@@ -212,6 +217,7 @@ extension EditorConfiguration.Performance: Equatable {
         lhs.maxEventsPerSecond == rhs.maxEventsPerSecond &&
         lhs.enableIOSOptimizations == rhs.enableIOSOptimizations &&
         lhs.iOSLargeFileThreshold == rhs.iOSLargeFileThreshold &&
-        lhs.iOSMaxHighlightingChunk == rhs.iOSMaxHighlightingChunk
+        lhs.iOSMaxHighlightingChunk == rhs.iOSMaxHighlightingChunk &&
+        lhs.unifiedPerformanceSystem === rhs.unifiedPerformanceSystem
     }
 }

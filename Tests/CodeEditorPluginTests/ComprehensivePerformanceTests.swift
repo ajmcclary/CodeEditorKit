@@ -6,7 +6,7 @@ import os
 #endif
 
 /// Comprehensive performance test suite covering all major components
-final class ComprehensivePerformanceTests: XCTestCase {
+final class ComprehensivePerformanceTests: CleanupTestCase {
     #if canImport(os)
     private let logger = Logger(subsystem: "CodeEditorPlugin", category: "PerformanceTests")
     #endif
@@ -99,7 +99,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     @MainActor
     func testSymbolNavigatorPerformance() async throws {
         let navigator = SymbolNavigator()
-        let textView = CodeEditorView(frame: .zero)
+        let textView = createCodeEditorView(frame: .zero)
 
         // Generate large code file
         var largeCode = """
@@ -166,7 +166,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     @MainActor
     func testSmartEditingEnginePerformance() throws {
         let engine = SmartEditingEngine()
-        let textView = CodeEditorView(frame: .zero)
+        let textView = createCodeEditorView(frame: .zero)
 
         engine.attach(to: textView)
 
@@ -386,7 +386,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     @MainActor
     func testSearchReplaceEnginePerformance() throws {
         let engine = SearchReplaceEngine()
-        let textView = CodeEditorView(frame: .zero)
+        let textView = createCodeEditorView(frame: .zero)
 
         // Set up test content
         let testContent = """

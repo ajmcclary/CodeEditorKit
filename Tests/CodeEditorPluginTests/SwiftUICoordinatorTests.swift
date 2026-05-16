@@ -335,10 +335,11 @@ final class SwiftUICoordinatorTests: XCTestCase {
 
         #if canImport(UIKit)
         let textView = CodeEditorView()
-        // CodeEditorCoordinator always conforms to UITextViewDelegate on UIKit platforms
-        textView.delegate = coordinator
+        // textView.delegate is owned by TextViewDelegateMultiplexer; register
+        // the coordinator as a participant instead of assigning the slot.
+        coordinator.setupTextViewDelegate(textView)
 
-        // Verify delegate is set
+        // Verify the multiplexer is wired (it owns the delegate slot).
         XCTAssertNotNil(textView.delegate)
         #endif
     }

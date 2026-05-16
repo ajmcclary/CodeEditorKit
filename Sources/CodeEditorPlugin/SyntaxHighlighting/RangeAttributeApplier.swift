@@ -93,10 +93,15 @@ internal final class RangeAttributeApplier: TextEditEventObserving {
         guard let textView else { return }
         let bridge = textView.textKitBridge
         let documentLength = bridge.documentLength
-        let clamped = NSRange(
-            location: max(0, range.location),
-            length: min(range.length, documentLength - range.location)
-        )
+        // Compute the upper bound explicitly. Naively doing
+        // `length: documentLength - range.location` underflows when a stale
+        // `range.location` exceeds the current document length and produces
+        // a negative `NSRange.length`, which `removeAttributes` then treats
+        // as a wild range. Clamp `location` first, then derive `length`
+        // from the clamped upper bound.
+        let lowerBound = max(0, min(range.location, documentLength))
+        let upperBound = max(lowerBound, min(range.location + range.length, documentLength))
+        let clamped = NSRange(location: lowerBound, length: upperBound - lowerBound)
         guard clamped.length > 0 else { return }
         bridge.removeAttributes([attributeKey], range: clamped)
     }

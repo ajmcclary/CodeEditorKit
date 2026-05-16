@@ -10,18 +10,17 @@ import UIKit
 public enum TextMetricsCalculator {
     // MARK: - Line Height Calculations
 
-    /// Calculate the line height for a given font
+    /// Calculate the line height for a given font.
+    ///
+    /// Computes height from the font's own metrics (`ascender + |descender|
+    /// + leading`) rather than standing up an `NSLayoutManager` /
+    /// `NSTextContainer` / `NSTextStorage` to read
+    /// `defaultLineHeight(for:)`. That TK1 stack contradicted the framework's
+    /// "TK1 is retired" guarantee and was only being used to perform a
+    /// metrics lookup the font itself can satisfy.
     public static func calculateLineHeight(for font: PlatformFont) -> CGFloat {
         #if canImport(AppKit)
-        let layoutManager = NSLayoutManager()
-        let textContainer = NSTextContainer()
-        let textStorage = NSTextStorage(string: "M")
-
-        textStorage.addAttribute(.font, value: font, range: NSRange(location: 0, length: 1))
-        layoutManager.addTextContainer(textContainer)
-        textStorage.addLayoutManager(layoutManager)
-
-        return layoutManager.defaultLineHeight(for: font)
+        return ceil(font.ascender + abs(font.descender) + font.leading)
         #else
         return font.lineHeight
         #endif

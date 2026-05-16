@@ -139,7 +139,15 @@ public struct EditorConfiguration: Codable, Sendable {
 
     // MARK: - Validation
 
-    /// Validate the configuration and return any validation errors
+    /// Validate the configuration and return any validation errors.
+    ///
+    /// Validation is **boundary-only**: it rejects values that the
+    /// framework treats as user-facing inputs (font size, tab width,
+    /// debounce intervals, byte/line ceilings). Numeric fields that are
+    /// clamped at apply-time inside their consumer (gutter sub-widths,
+    /// folding thresholds, minimap sizings, etc.) are intentionally not
+    /// validated here — invalid values fall through to safe minima at
+    /// the consumer instead of throwing.
     public func validate() -> [ValidationError] {
         var errors: [ValidationError] = []
 
@@ -191,6 +199,46 @@ public struct EditorConfiguration: Codable, Sendable {
                 field: "performance.textChangeDebounceInterval",
                 value: performance.textChangeDebounceInterval.timeInterval,
                 constraint: "must be between \(PlatformConstants.validDebounceIntervalRange.lowerBound) and \(PlatformConstants.validDebounceIntervalRange.upperBound) seconds"
+            ))
+        }
+
+        if performance.maxVisibleLines <= 0 {
+            errors.append(ValidationError(
+                field: "performance.maxVisibleLines",
+                value: performance.maxVisibleLines,
+                constraint: "must be greater than 0"
+            ))
+        }
+
+        if performance.maxFileSize < 0 {
+            errors.append(ValidationError(
+                field: "performance.maxFileSize",
+                value: performance.maxFileSize,
+                constraint: "must be 0 (use platform default) or greater"
+            ))
+        }
+
+        if performance.maxEventsPerSecond <= 0 {
+            errors.append(ValidationError(
+                field: "performance.maxEventsPerSecond",
+                value: performance.maxEventsPerSecond,
+                constraint: "must be greater than 0"
+            ))
+        }
+
+        if performance.iOSLargeFileThreshold <= 0 {
+            errors.append(ValidationError(
+                field: "performance.iOSLargeFileThreshold",
+                value: performance.iOSLargeFileThreshold,
+                constraint: "must be greater than 0"
+            ))
+        }
+
+        if performance.iOSMaxHighlightingChunk <= 0 {
+            errors.append(ValidationError(
+                field: "performance.iOSMaxHighlightingChunk",
+                value: performance.iOSMaxHighlightingChunk,
+                constraint: "must be greater than 0"
             ))
         }
 

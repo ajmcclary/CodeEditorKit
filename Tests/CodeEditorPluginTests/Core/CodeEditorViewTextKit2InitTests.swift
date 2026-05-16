@@ -17,9 +17,9 @@ import UIKit
 ///
 /// Related: docs/superpowers/specs/2026-05-14-textkit2-coercion-design.md
 @MainActor
-final class CodeEditorViewTextKit2InitTests: XCTestCase {
+final class CodeEditorViewTextKit2InitTests: CleanupTestCase {
     func testInitFrameProducesTK2Stack() {
-        let view = CodeEditorView(frame: .zero)
+        let view = createCodeEditorView(frame: .zero)
         XCTAssertNotNil(view.textLayoutManager,
                         "CodeEditorView(frame:) must initialize with a TextKit 2 layout manager")
         XCTAssertNotNil(view.textContentStorage,
@@ -33,7 +33,7 @@ final class CodeEditorViewTextKit2InitTests: XCTestCase {
     /// reproduced on configuration didSet, so this exercises the same path
     /// the canary regression depended on.
     func testTK2StackSurvivesConfigurationChange() {
-        let view = CodeEditorView(frame: .zero)
+        let view = createCodeEditorView(frame: .zero)
         XCTAssertNotNil(view.textLayoutManager)
         var config = view.configuration
         config.display.fontSize += 1
@@ -44,7 +44,7 @@ final class CodeEditorViewTextKit2InitTests: XCTestCase {
 
     #if canImport(AppKit)
     func testTK2StackSurvivesWrappedLayoutConfigurationChange() {
-        let view = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
+        let view = createCodeEditorView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
         view.string = String(repeating: "This is a long markdown paragraph that wraps in the editor.\n", count: 3)
         XCTAssertNotNil(view.textLayoutManager)
 
@@ -60,7 +60,7 @@ final class CodeEditorViewTextKit2InitTests: XCTestCase {
     /// Both paths must avoid `NSTextView.textStorage`, which would coerce the
     /// view to TextKit 1.
     func testAttributedContentRoundTripPreservesTK2Stack() {
-        let view = CodeEditorView(frame: .zero)
+        let view = createCodeEditorView(frame: .zero)
         XCTAssertNotNil(view.textLayoutManager)
 
         let replacement = NSAttributedString(string: "let answer = 42\n")

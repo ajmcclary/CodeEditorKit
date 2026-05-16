@@ -2,7 +2,12 @@
 
 Five parallel review passes across concurrency, platform hygiene, TextKit2/memory, configuration/highlighting, and testing/organization/lint. Overall posture is strong — Swift 6 strict concurrency is genuinely respected, `#if os(...)` has zero hits, no production `print()`, no Catalyst residue. Three SwiftLint strict-mode errors are blocking CI; two `🔴` regressions in the public `attributedContent` API silently coerce TextKit2 → TextKit1, mirroring the bug that motivated commit `3503955d`.
 
-**Update:** All five 🔴 blockers fixed. B-1/B-2: `attributedContent` getter/setter now route through `textContentStorage?.textStorage` / `textKitBridge.replaceCharacters`, with `testAttributedContentRoundTripPreservesTK2Stack` covering the regression. B-3: `subviewDescription` split to satisfy `multiline_function_chains`. B-4: `XCTAssertIdentical` replaces the generic `XCTAssertTrue(===)`. B-5: `SwiftUIModifierTests` mutates `EditorConfiguration()` directly instead of the retired builder. `swift build`, `swiftlint --strict`, and the touched test suites are all green.
+**Update:** All five 🔴 blockers and all ten 🟡 warnings fixed.
+
+- **Blockers (B-1 … B-5):** `attributedContent` getter/setter routed through `textContentStorage?.textStorage` / `textKitBridge.replaceCharacters` (regression test added); `subviewDescription` split to satisfy `multiline_function_chains`; `XCTAssertIdentical` replaces the generic `XCTAssertTrue(===)`; `SwiftUIModifierTests` mutates `EditorConfiguration()` directly instead of the retired builder.
+- **Warnings (W-1 … W-10):** `TemporaryAttributesStore` now wraps every mutation in `performEditingTransaction`; `MemoryManagementCoordinator.deinit` unregisters its cleanup handler explicitly; `RangeAttributeApplier.clearAttributes` clamps stale ranges correctly; `SwiftUICoordinatorTests` uses the multiplexer participant API instead of assigning the delegate slot; `Performance` Equatable compares `unifiedPerformanceSystem` by reference identity; `validate()` covers the obvious numeric performance fields and documents the boundary-only contract; `TextMetricsCalculator.calculateLineHeight` returns `ascender + |descender| + leading` (TK1 stack removed); `MinimapStyleRun` fields are `let`; `UncheckedEventShuttle` is gone (closure runs main-actor-isolated directly); test base class migrations + the `testConfigurationHotReloadIntegration` rename.
+
+`swift build`, `swiftlint --strict`, and all touched test suites are green.
 
 ---
 
@@ -30,7 +35,7 @@ Five parallel review passes across concurrency, platform hygiene, TextKit2/memor
 
 ---
 
-## 🟡 Warnings (10 — 2 fixed, 8 remaining)
+## 🟡 Warnings (10 — all fixed)
 
 ### ✅ W-1. `TemporaryAttributesStore` mutates storage outside `performEditingTransaction` — FIXED
 **File:** `Sources/CodeEditorPlugin/Text/TemporaryAttributesStore.swift`
@@ -40,51 +45,40 @@ Five parallel review passes across concurrency, platform hygiene, TextKit2/memor
 **File:** `Sources/CodeEditorPlugin/Core/MemoryManagementCoordinator.swift:53-63`
 **Status:** Fixed. `deinit` now hops to `@MainActor` via `Task { @MainActor in monitor.unregisterCleanupHandler(identifier:) }` so closing editors no longer leaves dead handlers in `MemoryMonitor.cleanupHandlers`. The stale comment about weak-reference auto-unregister is gone.
 
-### W-3. `RangeAttributeApplier.clearAttributes` computes negative length on stale ranges
-**File:** `Sources/CodeEditorPlugin/SyntaxHighlighting/RangeAttributeApplier.swift:96-99`
-```swift
-let clamped = NSRange(
-    location: max(0, range.location),
-    length: min(range.length, documentLength - range.location)  // negative if range.location > documentLength
-)
-```
-**Fix:** use `bridge.clampedRange(...)` or compute upper bound explicitly.
+### ✅ W-3. `RangeAttributeApplier.clearAttributes` computes negative length on stale ranges — FIXED
+**File:** `Sources/CodeEditorPlugin/SyntaxHighlighting/RangeAttributeApplier.swift:92-108`
+**Status:** Fixed. Computes `lowerBound` from `min(range.location, documentLength)` and derives `length` from the clamped upper bound, so a stale `range.location` past the document end no longer produces a negative `NSRange.length`.
 
-### W-4. Test file violates `textView.delegate` ownership invariant
-**File:** `Tests/CodeEditorPluginTests/SwiftUICoordinatorTests.swift:339`
-```swift
-textView.delegate = coordinator
-```
-SwiftLint's `forbidden_text_view_delegate_assignment` is scoped to `Sources/.*`, so the test slips past. **Fix:** `textView.addDelegateParticipant(coordinator)` (or delete — the assertion only checks non-nil).
+### ✅ W-4. Test file violates `textView.delegate` ownership invariant — FIXED
+**File:** `Tests/CodeEditorPluginTests/SwiftUICoordinatorTests.swift:336-345`
+**Status:** Fixed. Test now calls `coordinator.setupTextViewDelegate(textView)` (the iOS coordinator's wrapper around `addDelegateParticipant(self, phase: .behavior)`) instead of assigning the delegate slot directly.
 
-### W-5. `EditorConfiguration.Performance.unifiedPerformanceSystem` dropped on Codable round-trip
-**File:** `Sources/CodeEditorPlugin/Configuration/EditorConfiguration+PerformanceExtensions.swift:108, 175`
-Field is excluded from `Codable` (decoded as `nil`) and from `Equatable`. `JSONEncoder` → `JSONDecoder` silently drops the system, and `cfg == cfg2` reports `true` despite the loss. **Fix:** either move to a documented non-`Codable` `PerformanceHooks` sub-struct, or make the field internal/`@MainActor`-only.
+### ✅ W-5. `EditorConfiguration.Performance.unifiedPerformanceSystem` dropped on Codable round-trip — FIXED
+**File:** `Sources/CodeEditorPlugin/Configuration/EditorConfiguration+PerformanceExtensions.swift:103-117, 215-217`
+**Status:** Fixed. `Equatable` now compares `unifiedPerformanceSystem` by reference identity (`===`), so a configuration that has lost the reference via `encode → decode` no longer compares equal to one that retains it. The doc comment spells out the Codable carve-out and the new Equatable contract.
 
-### W-6. `validate()` covers only 6 of 30+ numeric fields
-**File:** `Sources/CodeEditorPlugin/Configuration/EditorConfiguration.swift:143-198`
-Missing: `performance.maxVisibleLines`, `maxFileSize`, `maxEventsPerSecond`, `iOSLargeFileThreshold`, `iOSMaxHighlightingChunk`, `display.minimumFoldableLines`, layout/minimap/folding sizings, etc. `PlatformConstants.validHighlightingLengthRange = 0...Int.max` is a no-op. **Fix:** broaden `validate()` or document the gap as "platform-bounded inputs only; the rest clamp at apply-time."
+### ✅ W-6. `validate()` covers only 6 of 30+ numeric fields — FIXED
+**File:** `Sources/CodeEditorPlugin/Configuration/EditorConfiguration.swift:142-235`
+**Status:** Fixed. `validate()` now rejects nonsensical values on the obvious numeric fields (`performance.maxVisibleLines`, `maxFileSize`, `maxEventsPerSecond`, `iOSLargeFileThreshold`, `iOSMaxHighlightingChunk`). Doc comment documents the boundary-only contract: fields clamped at apply-time inside their consumer are intentionally not validated here.
 
-### W-7. Free-standing TK1 stack in `TextMetricsCalculator`
-**File:** `Sources/CodeEditorPlugin/Utilities/TextMetricsCalculator.swift:16`
-```swift
-let layoutManager = NSLayoutManager()
-let textContainer = NSTextContainer()
-let textStorage = NSTextStorage(...)
-```
-Only TK1 instantiation outside the `UITextView` protocol shim. Not on the `CodeEditorView` network so it doesn't trigger the view-coercion regression, but contradicts the "TK1 is retired" guarantee. **Fix:** replace with `font.ascender + abs(font.descender) + font.leading` or rename to an explicit `legacyDefaultLineHeight` helper if parity is required.
+### ✅ W-7. Free-standing TK1 stack in `TextMetricsCalculator` — FIXED
+**File:** `Sources/CodeEditorPlugin/Utilities/TextMetricsCalculator.swift:14-24`
+**Status:** Fixed. `calculateLineHeight(for:)` now returns `ceil(font.ascender + abs(font.descender) + font.leading)` and no longer stands up an `NSLayoutManager` / `NSTextContainer` / `NSTextStorage` just to read `defaultLineHeight(for:)`.
 
-### W-8. `MinimapStyleRun` declares `@unchecked Sendable` over `var` reference field
-**File:** `Sources/CodeEditorPlugin/Layout/MinimapStyleDataSource.swift:13-21`
-`var color: PlatformColor` is mutable in principle; `@unchecked Sendable` promises caller discipline. **Fix:** make both fields `let`.
+### ✅ W-8. `MinimapStyleRun` declares `@unchecked Sendable` over `var` reference field — FIXED
+**File:** `Sources/CodeEditorPlugin/Layout/MinimapStyleDataSource.swift:13-22`
+**Status:** Fixed. Both `range` and `color` are `let`; the `@unchecked Sendable` conformance over `PlatformColor` is now sound because the value is genuinely immutable after init.
 
-### W-9. `UncheckedEventShuttle` is unnecessary
-**File:** `Sources/CodeEditorPlugin/Layout/EditorEventBusInstaller.swift:4-55`
-The `NSEvent.addLocalMonitorForEvents` closure isn't `@Sendable`; the shuttle wraps `NSEvent` to satisfy a phantom `Sendable` boundary. **Fix:** drop the shuttle and capture `event` / `self` directly inside `MainActor.assumeIsolated { … }`.
+### ✅ W-9. `UncheckedEventShuttle` is unnecessary — FIXED (refined approach)
+**File:** `Sources/CodeEditorPlugin/Layout/EditorEventBusInstaller.swift:30-46`
+**Status:** Fixed. `UncheckedEventShuttle` is gone. The reviewer's literal recommendation (capture `event` / `self` inside `MainActor.assumeIsolated`) didn't quite work — `MainActor.assumeIsolated`'s closure is `@MainActor () throws -> T`, and capturing the non-`Sendable` `NSEvent` across that boundary errors under strict concurrency. Since `NSEvent.addLocalMonitorForEvents`'s handler closure is already `@MainActor`-isolated in modern AppKit SDKs, the simpler fix is to drop the `assumeIsolated` hop entirely and call `self.handleMouseDown(event)` directly inside the monitor closure.
 
-### W-10. Test name + several test files reference retired symbols / lack `CleanupTestCase`
-- `Tests/CodeEditorPluginTests/IntegrationTests.swift:244` — `testConfigurationHotReloadIntegration` references the retired `ConfigurationHotReload` term in the name only; body is fine. Rename.
-- `ComprehensivePerformanceTests.swift`, `RangeBasedHighlightingIntegrationTests.swift`, `Core/CodeEditorViewTextKit2InitTests.swift` allocate `CodeEditorView` from plain `XCTestCase` — migrate to `CleanupTestCase`.
+### ✅ W-10. Test name + non-`CleanupTestCase` migration — FIXED (with note)
+**Files:**
+- `Tests/CodeEditorPluginTests/IntegrationTests.swift:244` — renamed `testConfigurationHotReloadIntegration` → `testLiveConfigurationUpdateIntegration` (drops the retired `ConfigurationHotReload` term).
+- `Tests/CodeEditorPluginTests/Core/CodeEditorViewTextKit2InitTests.swift` — now inherits `CleanupTestCase`; editor allocations route through `createCodeEditorView(frame:)`.
+- `Tests/CodeEditorPluginTests/ComprehensivePerformanceTests.swift` — same migration; three `CodeEditorView(frame:)` allocations switched to `createCodeEditorView(frame:)`.
+- **Note:** `Tests/CodeEditorPluginTests/SyntaxHighlighting/RangeBasedHighlightingIntegrationTests.swift` uses Swift Testing (`@Suite` / `@Test`), not XCTest. `CleanupTestCase` is an `XCTestCase` subclass, so it doesn't apply. Cleanup in that suite happens via per-test init/deinit on `@MainActor` types; no migration needed here.
 
 ---
 
@@ -131,20 +125,20 @@ The `NSEvent.addLocalMonitorForEvents` closure isn't `@Sendable`; the shuttle wr
 
 | Category | 🔴 Blocking | 🟡 Warnings | 🔵 Info |
 |---|---|---|---|
-| Concurrency | 0 | 1 (was 2) | 4 |
-| Platform | 0 | 1 | 0 |
-| Configuration | 0 | 2 | 2 |
-| TextKit2 | 0 (was 2) | 1 (was 2) | 0 |
+| Concurrency | 0 | 0 (was 2) | 4 |
+| Platform | 0 | 0 (was 1) | 0 |
+| Configuration | 0 | 0 (was 2) | 2 |
+| TextKit2 | 0 (was 2) | 0 (was 2) | 0 |
 | Memory | 0 | 0 (was 1) | 1 |
 | Highlighting | 0 | 0 | 1 |
-| Testing | 0 (was 2) | 2 | 1 |
+| Testing | 0 (was 2) | 0 (was 2) | 1 |
 | Organization | 0 | 0 | 1 |
 | Lint | 0 (was 2) | 0 | 1 |
-| **Total** | **0** (was 5) | **8** (was 10) | **11** |
+| **Total** | **0** (was 5) | **0** (was 10) | **11** |
 
 ### Recommended fix order
 1. ~~**B-1, B-2** — TK2 coercion in the public `attributedContent` API.~~ ✅ Fixed.
 2. ~~**B-3, B-4, B-5** — re-green `swiftlint --strict` and the broken test reference.~~ ✅ Fixed.
 3. ~~**W-1** — `TemporaryAttributesStore` transaction discipline (same fault family as B-1).~~ ✅ Fixed.
 4. ~~**W-2** — `MemoryManagementCoordinator` cleanup-handler leak.~~ ✅ Fixed.
-5. The rest are quality/consistency cleanups; bundle as a hygiene PR.
+5. ~~**W-3 through W-10** — quality/consistency cleanups (range clamping, delegate ownership, Codable/Equatable contract, validation breadth, TK1 removal, Sendable hygiene, test base class migration).~~ ✅ Fixed.

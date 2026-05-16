@@ -239,9 +239,9 @@ final class IntegrationTests: CleanupTestCase {
         XCTAssertNotNil(editor2.text)
     }
 
-    // MARK: - Configuration Hot Reload Integration Tests
+    // MARK: - Live Configuration Update Integration Tests
 
-    func testConfigurationHotReloadIntegration() async throws {
+    func testLiveConfigurationUpdateIntegration() async throws {
         let editor = createCodeEditorView()
 
         // Initial configuration
