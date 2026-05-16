@@ -96,24 +96,21 @@ Resolution (commit pending):
 
 ## Medium
 
-### M1. Minimap notification observers leak because block observer tokens are discarded
+### M1. Minimap notification observers leak because block observer tokens are discarded — RESOLVED
 
 Files:
 
-- `Sources/CodeEditorPlugin/Layout/CodeEditorContainerView+Minimap.swift:31-65`
-- `Sources/CodeEditorPlugin/Layout/CodeEditorContainerView.swift:288-291`
+- `Sources/CodeEditorPlugin/Layout/CodeEditorContainerView+Minimap.swift:13-94`
+- `Sources/CodeEditorPlugin/Layout/CodeEditorContainerView.swift:18-32,295-313`
+- `Tests/CodeEditorPluginTests/Layout/CodeEditorContainerViewMinimapObserverTests.swift` (new)
 
-What's wrong:
+What was wrong:
 
-`setupMinimap()` installs block-based `NotificationCenter` observers and ignores the returned tokens. `deinit` calls `removeObserver(self)`, but block observers are removed by their returned token, not by `self`.
+`setupMinimap()` installed block-based `NotificationCenter` observers and ignored the returned tokens. `deinit` called `removeObserver(self)`, which only removes selector-based registrations; block observers are keyed by the returned `NSObjectProtocol` token. Every container that set up a minimap left stale observer records behind — `[weak self]` prevented retain cycles but `NotificationCenter` still retained the closures/tokens and kept evaluating dead observers.
 
-Why it matters:
+Resolution (commit pending):
 
-Each container that sets up a minimap leaves stale observer records behind. `[weak self]` avoids retaining the container, but `NotificationCenter` still retains the closure/token and will keep evaluating dead observers over time.
-
-Concrete fix:
-
-Store the returned `NSObjectProtocol` tokens on the container, remove them during cleanup/deinit, and clear them before re-running minimap setup. Consider reusing the existing observer-token storage pattern used elsewhere in the codebase.
+Added `minimapObservers: [NSObjectProtocol]` storage on the container, mirroring the existing `keyboardObservers` pattern. `setupMinimap()` now captures every returned token, and a defensive `cleanupMinimapObservers()` runs at the top of setup so a second invocation can't orphan the previous registration. `deinit` invokes `cleanupMinimapObservers()` via `MainActor.assumeIsolated` (the established pattern in this codebase, e.g., `PerformanceInsights.swift` and `MemoryMonitor.swift`) so the isolated storage is touched safely from the nonisolated deinit. Added `CodeEditorContainerViewMinimapObserverTests` with four XCTest cases: tokens are captured on setup, cleanup empties them, re-running setup doesn't accumulate tokens, and the container still deallocates without retain cycles. Out of scope here but flagged for a follow-up: `cleanupKeyboardObservers()` is defined in `+Keyboard.swift` but never invoked, so iOS keyboard observers exhibit the same latent leak.
 
 ### M2. Folding minimum-line filtering compares line count to UTF-16 length
 
@@ -256,12 +253,15 @@ Track insertion or access order alongside `foldRegionCache`, or use a small LRU 
 |---|---:|---:|---:|
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
-| Medium | 6 | 0 | 6 |
+| Medium | 6 | 1 | 5 |
 | Low | 2 | 0 | 2 |
 
-Overall health: yellow → green-ish. The codebase builds, lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items are resolved. Remaining open items are six Medium-severity fixes (mostly lifecycle/configuration tidy-ups) and two Low-severity nits.
+Overall health: green. The codebase builds, lint passes, the CodeEditorPlugin test suite is green, and all four High-severity items plus M1 are resolved. Remaining open items are five Medium-severity fixes and two Low-severity nits.
 
-Note unrelated to the original review: `CodeEditorSampleTests/PerformanceInspectorPanelSnapshotTests` fails 5/5 on `main` due to stale snapshot baselines (verified pre-existing during H3); flagged for separate triage.
+Notes flagged for separate triage:
+
+- `CodeEditorSampleTests/PerformanceInspectorPanelSnapshotTests` fails 5/5 on `main` due to stale snapshot baselines (verified pre-existing during H3).
+- `cleanupKeyboardObservers()` is defined in `CodeEditorContainerView+Keyboard.swift` but never invoked — same shape of leak as M1, latent on iOS (surfaced while fixing M1).
 
 Most impactful fixes first:
 
@@ -269,3 +269,4 @@ Most impactful fixes first:
 2. ~~Wire `textViewWillChangeText` through the multiplexer so the public pre-edit hook actually fires.~~ Resolved (see H2).
 3. ~~Make `LSPClient.disconnect()` bounded and cleanup-guaranteed.~~ Resolved (see H3).
 4. ~~Correct viewport-token cache completeness and add scrolling/full-document cache regression tests.~~ Resolved (see H4).
+5. ~~Plug the minimap block-observer-token leak in `CodeEditorContainerView`.~~ Resolved (see M1).

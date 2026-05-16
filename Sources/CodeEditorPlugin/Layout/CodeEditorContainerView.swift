@@ -18,6 +18,13 @@ public final class CodeEditorContainerView: PlatformView {
     internal var minimapDataProvider: MinimapDataProvider?
     internal var isApplyingConfiguration = false
 
+    /// Tokens returned by the block-based `NotificationCenter` observers
+    /// registered in `setupMinimap()`. The `removeObserver(self)` call in
+    /// `deinit` only removes selector-based registrations; block
+    /// observers are keyed by the returned token, so we must hold them
+    /// here and remove them explicitly in `cleanupMinimapObservers()`.
+    internal var minimapObservers: [NSObjectProtocol] = []
+
     #if canImport(UIKit)
     public let contentView: EditorContentView
     internal var keyboardObservers: [NSObjectProtocol] = []
@@ -286,8 +293,19 @@ public final class CodeEditorContainerView: PlatformView {
     // iOS-specific keyboard handling moved to CodeEditorContainerView+Keyboard.swift
 
     deinit {
-        // Remove any selector-based observers
-        // NotificationCenter automatically removes all observers for an object when it's deallocated
+        // Block-based observers (addObserver(forName:object:queue:using:))
+        // are keyed by the returned token, not by `self`. They must be
+        // removed via the stored tokens — otherwise NotificationCenter
+        // keeps evaluating dead [weak self] closures for the lifetime of
+        // the process. The container is `@MainActor`, so deinit runs on
+        // the main thread; `assumeIsolated` lets us touch the isolated
+        // storage from this nonisolated deinit context.
+        MainActor.assumeIsolated {
+            cleanupMinimapObservers()
+        }
+
+        // Selector-based observers, if any future code adds them, are
+        // removed by passing `self`.
         NotificationCenter.default.removeObserver(self)
     }
 }

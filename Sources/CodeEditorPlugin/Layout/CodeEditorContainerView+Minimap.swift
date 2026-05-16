@@ -11,6 +11,11 @@ extension CodeEditorContainerView {
     // MARK: - Minimap Setup
 
     internal func setupMinimap() {
+        // Re-running setup must drop any previously installed block
+        // observers — without this, a second setup would orphan their
+        // tokens and leak the closures NotificationCenter retains.
+        cleanupMinimapObservers()
+
         // Create data provider
         minimapDataProvider = MinimapDataProvider(textView: textView)
         minimapDataProvider?.styleDataSource = textView.rangeBasedHighlightingStyleDataSourceForTesting
@@ -30,7 +35,7 @@ extension CodeEditorContainerView {
 
         // Set up text change observer to update minimap
         #if canImport(AppKit)
-        NotificationCenter.default.addObserver(
+        let textChangeToken = NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
             queue: .main
@@ -39,8 +44,9 @@ extension CodeEditorContainerView {
                 self?.updateMinimap()
             }
         }
+        minimapObservers.append(textChangeToken)
         #else
-        NotificationCenter.default.addObserver(
+        let textChangeToken = NotificationCenter.default.addObserver(
             forName: UITextView.textDidChangeNotification,
             object: textView,
             queue: .main
@@ -49,11 +55,12 @@ extension CodeEditorContainerView {
                 self?.updateMinimap()
             }
         }
+        minimapObservers.append(textChangeToken)
         #endif
 
         // Set up scroll observer to update minimap and handle cursor tracking
         #if canImport(AppKit)
-        NotificationCenter.default.addObserver(
+        let scrollToken = NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
             object: scrollView.contentView,
             queue: .main
@@ -63,11 +70,21 @@ extension CodeEditorContainerView {
                 self?.handleScrollCursorTracking()
             }
         }
+        minimapObservers.append(scrollToken)
         #else
         // On iOS, set up scroll delegate for minimap updates
         // The textView (UITextView) handles scrolling internally
         // We'll monitor scroll changes through the delegate pattern in setupIOSViews
         #endif
+    }
+
+    // MARK: - Cleanup
+
+    /// Remove every block-based observer installed by `setupMinimap()`.
+    /// Safe to call multiple times; also invoked from `deinit`.
+    internal func cleanupMinimapObservers() {
+        minimapObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        minimapObservers.removeAll()
     }
 
     // MARK: - Minimap Updates
