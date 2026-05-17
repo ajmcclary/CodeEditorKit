@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Adapts existing `SyntaxHighlighter` instances to the `RangeHighlightProviding`

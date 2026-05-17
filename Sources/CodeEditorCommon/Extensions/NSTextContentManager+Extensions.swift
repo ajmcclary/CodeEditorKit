@@ -1,3 +1,4 @@
+// swiftlint:disable missing_docs
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -5,15 +6,15 @@ import UIKit
 #endif
 
 extension NSTextContentManager {
-    func location(at offset: Int) -> NSTextLocation? {
+    public func location(at offset: Int) -> NSTextLocation? {
         location(documentRange.location, offsetBy: offset)
     }
 
-    var length: Int {
+    public var length: Int {
         offset(from: documentRange.location, to: documentRange.endLocation)
     }
 
-    func location(line lineIdx: Int, character characterIdx: Int? = 0) -> NSTextLocation? {
+    public func location(line lineIdx: Int, character characterIdx: Int? = 0) -> NSTextLocation? {
         let linesTextElements = textElements(for: documentRange)
         guard linesTextElements.indices ~= lineIdx else {
             // https://forums.swift.org/t/invalid-diagnostic-location-after-text-edit/54761
@@ -28,7 +29,7 @@ extension NSTextContentManager {
         return location(startLocation, offsetBy: characterIdx ?? 0)
     }
 
-    func position(_ location: NSTextLocation) -> (row: Int, column: Int)? {
+    public func position(_ location: NSTextLocation) -> (row: Int, column: Int)? {
         let linesElements = textElements(for: documentRange)
         if linesElements.isEmpty {
             return nil
@@ -57,7 +58,7 @@ extension NSTextContentManager {
     /// Attributed string for the range
     /// - Parameter range: Text range, or nil for the whole document.
     /// - Returns: Attributed string, or nil.
-    func attributedString(in range: NSTextRange?) -> NSAttributedString? {
+    public func attributedString(in range: NSTextRange?) -> NSAttributedString? {
         if let range, range.isEmpty {
             return nil
         }
@@ -204,7 +205,7 @@ extension NSTextContentManager {
     /// This method can return a set of elements that don't fill the entire range if the entire range isn't synchronously available. Uses `enumerateTextElements(from:options:using:)` to fill the array.
     ///
     /// This is working implementation, in contrary to buggy `textElements(for:)` (FB10019859)
-    func textElementsNotBuggy(for range: NSTextRange) -> [NSTextElement] {
+    public func textElementsNotBuggy(for range: NSTextRange) -> [NSTextElement] {
         var elements: [NSTextElement] = []
 
         if range.location == documentRange.endLocation {
@@ -231,3 +232,5 @@ extension NSTextContentManager {
         return elements
     }
 }
+
+// swiftlint:enable missing_docs

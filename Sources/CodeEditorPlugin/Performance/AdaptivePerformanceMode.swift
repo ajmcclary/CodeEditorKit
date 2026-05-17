@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 // MARK: - Adaptive Performance Mode System

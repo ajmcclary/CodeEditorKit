@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// LSP-based completion provider that integrates with the CodeEditorView completion system

@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import AppKit
+import CodeEditorCommon
 #else
 import Foundation
 #endif

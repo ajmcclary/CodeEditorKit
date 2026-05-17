@@ -1,6 +1,7 @@
 // LSP client is available on all platforms to support remote LSP connections
 // On platforms without Process API, only remote LSP servers can be used
 
+import CodeEditorCommon
 import Foundation
 
 /// Language Server Protocol client implementation

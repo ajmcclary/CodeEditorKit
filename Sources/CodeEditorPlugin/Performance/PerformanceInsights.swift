@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 import IssueReporting
 import SwiftUI

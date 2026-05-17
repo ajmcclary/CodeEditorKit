@@ -1,12 +1,13 @@
+// swiftlint:disable missing_docs
 import Foundation
 
 extension IndexSet {
-    init(integersIn nsRange: NSRange) {
+    public init(integersIn nsRange: NSRange) {
         self.init(integersIn: Range(nsRange) ?? 0 ..< 0)
     }
 
     /// Initialize from an array of NSRanges
-    init(ranges: [NSRange]) {
+    public init(ranges: [NSRange]) {
         self.init()
         for range in ranges {
             insert(integersIn: range.location ..< (range.location + range.length))
@@ -14,17 +15,12 @@ extension IndexSet {
     }
 
     /// Insert a range into the index set
-    mutating func insert(range: NSRange) {
+    public mutating func insert(range: NSRange) {
         insert(integersIn: range.location ..< (range.location + range.length))
     }
 
-    /// Apply mutations to the index set
-    mutating func applying(_ mutations: [RangeMutation]) {
-        self = RangeMutationEngine.transform(self, applying: mutations, policy: .preserveSurvivingSegments)
-    }
-
     /// Get NSRange view of the index set
-    var nsRangeView: [NSRange] {
+    public var nsRangeView: [NSRange] {
         var ranges: [NSRange] = []
         for range in rangeView {
             ranges.append(NSRange(location: range.lowerBound, length: range.count))
@@ -32,3 +28,5 @@ extension IndexSet {
         return ranges
     }
 }
+
+// swiftlint:enable missing_docs

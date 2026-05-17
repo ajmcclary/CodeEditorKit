@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 #if canImport(Combine)
 import Combine

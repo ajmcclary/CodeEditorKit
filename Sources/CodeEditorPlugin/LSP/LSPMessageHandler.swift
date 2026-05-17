@@ -1,5 +1,6 @@
 // LSP message handling is available on all platforms to support remote LSP connections
 
+import CodeEditorCommon
 import Foundation
 
 /// LSP error response structure

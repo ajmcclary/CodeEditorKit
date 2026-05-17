@@ -7,7 +7,7 @@ import AppKit
 
 extension NSParagraphStyle {
     /// Custom line height multiple property for CodeEditorView
-    var stLineHeightMultiple: CGFloat {
+    public var stLineHeightMultiple: CGFloat {
         lineHeightMultiple > 0 ? lineHeightMultiple : 1.0
     }
 }

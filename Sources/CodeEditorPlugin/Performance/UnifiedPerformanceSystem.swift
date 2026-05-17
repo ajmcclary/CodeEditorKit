@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Unified performance monitoring and insights system

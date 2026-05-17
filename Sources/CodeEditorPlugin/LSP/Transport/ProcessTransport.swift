@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+import CodeEditorCommon
 import Foundation
 
 /// Transport implementation using Process for local LSP servers (macOS only)

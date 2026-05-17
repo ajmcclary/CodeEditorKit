@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Comprehensive configuration system for customizing code editor behavior and appearance.

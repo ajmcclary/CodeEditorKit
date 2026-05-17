@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// An actor that manages three-phase range validation with primary, fallback, and secondary validation stages.

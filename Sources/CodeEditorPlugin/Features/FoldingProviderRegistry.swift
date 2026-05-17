@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 // MARK: - Folding Provider Registry

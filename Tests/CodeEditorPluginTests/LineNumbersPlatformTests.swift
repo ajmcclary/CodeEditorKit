@@ -6,6 +6,7 @@
 //  and that there's no duplicate display of line numbers.
 //
 
+import CodeEditorCommon
 @testable import CodeEditorPlugin
 import XCTest
 #if canImport(AppKit)

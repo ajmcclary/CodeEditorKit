@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 public enum RangeTarget: Hashable, Sendable {

@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Manages document synchronization with LSP servers

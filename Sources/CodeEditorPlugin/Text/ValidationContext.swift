@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Protocol for providing version and content information in an actor-safe manner

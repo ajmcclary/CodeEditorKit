@@ -125,25 +125,3 @@ extension UITextView {
     }
 }
 #endif
-
-// MARK: - CodeEditorView Extensions
-
-extension CodeEditorView {
-    /// Get unified text container insets
-    public var unifiedTextContainerInsets: EdgeInsets {
-        #if canImport(AppKit)
-        return EdgeInsets(size: textContainerInset)
-        #else
-        return EdgeInsets(uiEdgeInsets: textContainerInset)
-        #endif
-    }
-
-    /// Set unified text container insets
-    public func setUnifiedTextContainerInsets(_ insets: EdgeInsets) {
-        #if canImport(AppKit)
-        textContainerInset = insets.nsSize
-        #else
-        textContainerInset = insets.uiEdgeInsets
-        #endif
-    }
-}

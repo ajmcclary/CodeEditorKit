@@ -1,3 +1,4 @@
+// swiftlint:disable missing_docs
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -16,12 +17,12 @@ extension NSTextRange {
         self.init(location: start, end: end)
     }
 
-    func length(in textContentManager: NSTextContentManager) -> Int {
+    public func length(in textContentManager: NSTextContentManager) -> Int {
         textContentManager.offset(from: location, to: endLocation)
     }
 
     /// Returns a copy of this range clamped to the given limiting range.
-    func clamped(to textRange: NSTextRange) -> Self? {
+    public func clamped(to textRange: NSTextRange) -> Self? {
         let beginLocation = {
             if self.location <= textRange.location {
                 return textRange.location
@@ -54,10 +55,10 @@ extension NSTextRange {
 
 /// UTF16 text location for improved TextKit 2 range handling
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
-final class UTF16TextLocation: NSObject, NSTextLocation {
-    let value: Int
+public final class UTF16TextLocation: NSObject, NSTextLocation {
+    public let value: Int
 
-    init(value: Int) {
+    public init(value: Int) {
         self.value = value
     }
 
@@ -65,7 +66,7 @@ final class UTF16TextLocation: NSObject, NSTextLocation {
         // Required by SwiftLint
     }
 
-    func compare(_ location: any NSTextLocation) -> ComparisonResult {
+    public func compare(_ location: any NSTextLocation) -> ComparisonResult {
         guard let utf16Loc = location as? Self else {
             return .orderedSame
         }
@@ -94,7 +95,7 @@ extension NSTextRange {
     }
 
     /// Initialize NSTextRange from NSRange using provider
-    convenience init?(_ range: NSRange, provider: NSTextElementProvider) {
+    public convenience init?(_ range: NSRange, provider: NSTextElementProvider) {
         let docLocation = provider.documentRange.location
 
         guard let start = provider.location?(docLocation, offsetBy: range.location) else {
@@ -109,12 +110,14 @@ extension NSTextRange {
     }
 
     /// Convert to NSRange if possible
-    func toNSRange() -> NSRange? {
+    public func toNSRange() -> NSRange? {
         NSRange(self)
     }
 
     /// Convert to NSRange using provider
-    func toNSRange(provider: NSTextElementProvider) -> NSRange {
+    public func toNSRange(provider: NSTextElementProvider) -> NSRange {
         NSRange(self, provider: provider)
     }
 }
+
+// swiftlint:enable missing_docs

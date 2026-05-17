@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Manages the lifecycle of LSP clients and language server operations

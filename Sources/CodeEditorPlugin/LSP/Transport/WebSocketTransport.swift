@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Transport implementation using WebSocket for remote LSP servers (all platforms)

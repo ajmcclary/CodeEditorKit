@@ -1,3 +1,4 @@
+// swiftlint:disable missing_docs
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -9,7 +10,7 @@ extension NSTextLayoutManager {
     ///
     /// Only valid when ``state`` greater than NSTextLayoutFragment.State.estimatedUsageBounds
     @nonobjc
-    func extraLineTextLayoutFragment() -> NSTextLayoutFragment? {
+    public func extraLineTextLayoutFragment() -> NSTextLayoutFragment? {
         var extraTextLayoutFragment: NSTextLayoutFragment?
         enumerateTextLayoutFragments(from: nil, options: .reverse) { textLayoutFragment in
             if textLayoutFragment.state.rawValue > NSTextLayoutFragment.State.estimatedUsageBounds.rawValue,
@@ -25,7 +26,7 @@ extension NSTextLayoutManager {
     ///
     /// Only valid when ``state`` greater than NSTextLayoutFragment.State.estimatedUsageBounds
     @nonobjc
-    func extraLineTextLineFragment() -> NSTextLineFragment? {
+    public func extraLineTextLineFragment() -> NSTextLineFragment? {
         if let textLayoutFragment = extraLineTextLayoutFragment() {
             let textLineFragments = textLayoutFragment.textLineFragments
             if textLineFragments.count > 1, let lastTextLineFragment = textLineFragments.last,
@@ -38,11 +39,11 @@ extension NSTextLayoutManager {
 }
 
 extension NSTextLayoutManager {
-    func textLineFragment(at location: NSTextLocation) -> NSTextLineFragment? {
+    public func textLineFragment(at location: NSTextLocation) -> NSTextLineFragment? {
         textLayoutFragment(for: location)?.textLineFragment(at: location)
     }
 
-    func textLineFragment(at point: CGPoint) -> NSTextLineFragment? {
+    public func textLineFragment(at point: CGPoint) -> NSTextLineFragment? {
         textLayoutFragment(for: point)?.textLineFragment(at: point)
     }
 }
@@ -53,7 +54,7 @@ extension NSTextLayoutManager {
     ///   - point: A CGPoint that represents the location of the tap or click.
     ///   - containerLocation: A NSTextLocation that describes the contasiner location.
     /// - Returns: A location
-    func location(
+    public func location(
         interactingAt point: CGPoint,
         inContainerAt containerLocation: NSTextLocation
     ) -> NSTextLocation? {
@@ -87,12 +88,12 @@ extension NSTextLayoutManager {
     /// - Returns: Typographic bounds of the range.
     ///
     /// Returns a union of each segment frame in the range, which may be larger than the area needed to layout the range.
-    func typographicBounds(in textRange: NSTextRange) -> CGRect? {
+    public func typographicBounds(in textRange: NSTextRange) -> CGRect? {
         textSegmentFrame(in: textRange, type: .standard, options: [.upstreamAffinity, .rangeNotRequired])
     }
 
     ///  A text segment is both logically and visually contiguous portion of the text content inside a line fragment.
-    func textSegmentFrame(
+    public func textSegmentFrame(
         at location: NSTextLocation,
         type: NSTextLayoutManager.SegmentType,
         options: SegmentOptions = [.upstreamAffinity]
@@ -103,7 +104,7 @@ extension NSTextLayoutManager {
     /// A text segment is both logically and visually contiguous portion of the text content inside a line fragment.
     /// Text segment is a logically and visually contiguous portion of the text content inside a line fragment that you specify with a single text range.
     /// The framework enumerates the segments visually from left to right.
-    func textSegmentFrame(
+    public func textSegmentFrame(
         in textRange: NSTextRange,
         type: NSTextLayoutManager.SegmentType,
         options: SegmentOptions = [.upstreamAffinity, .rangeNotRequired]
@@ -124,7 +125,7 @@ extension NSTextLayoutManager {
     }
 
     /// Enumerates text segments in the text range you provide.
-    func textSegmentFrames(
+    public func textSegmentFrames(
         in textRange: NSTextRange,
         type: NSTextLayoutManager.SegmentType,
         options: SegmentOptions = [.upstreamAffinity, .rangeNotRequired]
@@ -147,7 +148,7 @@ extension NSTextLayoutManager {
     ///   - block: A closure you provide that determines if the enumeration finishes early.
     /// - Returns: An NSTextLocation, or nil. If the method enumerates at least one fragment, it returns the edge of the enumerated range.
     @discardableResult
-    func enumerateTextLayoutFragments(
+    public func enumerateTextLayoutFragments(
         in range: NSTextRange,
         options: NSTextLayoutFragment.EnumerationOptions = [],
         using block: (NSTextLayoutFragment) -> Bool
@@ -164,11 +165,11 @@ extension NSTextLayoutManager {
 }
 
 extension NSTextLayoutManager {
-    var insertionPointLocations: [NSTextLocation] {
+    public var insertionPointLocations: [NSTextLocation] {
         insertionPointSelections.flatMap(\.textRanges).map(\.location).sorted { $0 < $1 }
     }
 
-    var insertionPointSelections: [NSTextSelection] {
+    public var insertionPointSelections: [NSTextSelection] {
         textSelections.filter(kTextSelectionInsertionPointFilter)
     }
 }
@@ -193,7 +194,7 @@ extension NSTextLayoutManager {
     /// A String in range
     /// - Parameter range: Text range
     /// - Returns: String in the range
-    func substring(in range: NSTextRange) -> String {
+    public func substring(in range: NSTextRange) -> String {
         guard !range.isEmpty else {
             return ""
         }
@@ -228,7 +229,7 @@ extension NSTextLayoutManager {
         }
     }
 
-    func textSelectionsString() -> String? {
+    public func textSelectionsString() -> String? {
         textSelectionsRanges(.withoutInsertionPoints)
             .compactMap { textRange in
                 substring(in: textRange)
@@ -236,11 +237,11 @@ extension NSTextLayoutManager {
             .joined(separator: "\n")
     }
 
-    func textSelectionsAttributedString() -> NSAttributedString? {
+    public func textSelectionsAttributedString() -> NSAttributedString? {
         textAttributedString(in: textSelectionsRanges(.withoutInsertionPoints))
     }
 
-    func textAttributedString(at location: any NSTextLocation) -> NSAttributedString? {
+    public func textAttributedString(at location: any NSTextLocation) -> NSAttributedString? {
         if let range = NSTextRange(location: location, end: self.location(location, offsetBy: 1)), !range.isEmpty {
             return textAttributedString(in: range)
         }
@@ -248,11 +249,11 @@ extension NSTextLayoutManager {
         return nil
     }
 
-    func textAttributedString(in textRange: NSTextRange) -> NSAttributedString? {
+    public func textAttributedString(in textRange: NSTextRange) -> NSAttributedString? {
         textAttributedString(in: [textRange])
     }
 
-    func textAttributedString(in textRanges: [NSTextRange]) -> NSAttributedString? {
+    public func textAttributedString(in textRanges: [NSTextRange]) -> NSAttributedString? {
         let attributedString = textRanges.reduce(NSMutableAttributedString()) { partialResult, range in
             if let attributedString = textContentManager?.attributedString(in: range) {
                 if partialResult.length != 0 {
@@ -502,3 +503,5 @@ extension NSTextLayoutManager {
         }
     }
 }
+
+// swiftlint:enable missing_docs

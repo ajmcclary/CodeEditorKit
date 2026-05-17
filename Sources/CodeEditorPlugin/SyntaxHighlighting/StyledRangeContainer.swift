@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Stores and merges style runs from multiple highlight providers.

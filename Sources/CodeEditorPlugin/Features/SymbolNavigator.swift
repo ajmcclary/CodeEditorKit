@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Symbol navigation system for code outline and breadcrumbs

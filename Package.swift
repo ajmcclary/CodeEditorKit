@@ -87,8 +87,17 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorCommon",
+            dependencies: [
+                .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
+                "CodeEditorCommon",
                 "CodeEditorDesignTokens",
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
@@ -114,6 +123,7 @@ let package = Package(
         .executableTarget(
             name: "CodeEditorSample",
             dependencies: [
+                "CodeEditorCommon",
                 "CodeEditorDesignTokens",
                 "CodeEditorPlugin",
                 "CodeEditorUI"
@@ -129,6 +139,7 @@ let package = Package(
         .testTarget(
             name: "CodeEditorPluginTests",
             dependencies: [
+                "CodeEditorCommon",
                 "CodeEditorPlugin",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
@@ -167,6 +178,7 @@ let package = Package(
         .testTarget(
             name: "CodeEditorSampleTests",
             dependencies: [
+                "CodeEditorCommon",
                 "CodeEditorSample",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],

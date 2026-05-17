@@ -2,6 +2,7 @@
 @preconcurrency import AppKit
 #endif
 #if canImport(UIKit)
+import CodeEditorCommon
 import UIKit
 #endif
 import Foundation

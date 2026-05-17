@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Performance budget configuration for monitoring and enforcing performance targets

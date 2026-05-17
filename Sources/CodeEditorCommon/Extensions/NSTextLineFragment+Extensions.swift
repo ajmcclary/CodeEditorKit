@@ -8,7 +8,7 @@ extension NSTextLineFragment {
     /// Whether the line fragment is for the extra line fragment at the end of a document.
     ///
     /// The layout manager uses the extra line fragment when the last character in a document causes a line or paragraph break. This extra line fragment has no corresponding glyph.
-    var isExtraLineFragment: Bool {
+    public var isExtraLineFragment: Bool {
         // textLineFragment.characterRange.isEmpty the extra line fragment at the end of a document.
         characterRange.isEmpty
     }
@@ -18,7 +18,7 @@ extension NSTextLineFragment {
     /// Returned range is relative to the document range origin.
     /// - Parameter textLayoutFragment: Text layout fragment
     /// - Returns: Text range or nil
-    func textRange(in textLayoutFragment: NSTextLayoutFragment) -> NSTextRange? {
+    public func textRange(in textLayoutFragment: NSTextLayoutFragment) -> NSTextRange? {
         guard let textContentManager = textLayoutFragment.textLayoutManager?.textContentManager else {
             assertionFailure()
             return nil
@@ -46,7 +46,7 @@ extension NSTextLineFragment {
 extension NSTextLineFragment {
     /// Returns the range of characters that intersect with a given horizontal span
     /// The span has to be within this fragment's coordinate system
-    func rangeOfCharacters(intersecting span: Range<CGFloat>) -> NSRange? {
+    public func rangeOfCharacters(intersecting span: Range<CGFloat>) -> NSRange? {
         // Even an empty fragment will respond to locationForCharacter(at: 0)
         let length = max(characterRange.length, 1)
 

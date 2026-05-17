@@ -1,3 +1,4 @@
+// swiftlint:disable missing_docs
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -9,7 +10,7 @@ extension NSTextLayoutFragment {
         textLineFragments.contains(where: \.isExtraLineFragment)
     }
 
-    func textLineFragment(
+    public func textLineFragment(
         at location: NSTextLocation,
         in textContentManager: NSTextContentManager? = nil
     ) -> NSTextLineFragment? {
@@ -29,7 +30,7 @@ extension NSTextLayoutFragment {
         }
     }
 
-    func textLineFragment(at location: CGPoint, in _: NSTextContentManager? = nil) -> NSTextLineFragment? {
+    public func textLineFragment(at location: CGPoint, in _: NSTextContentManager? = nil) -> NSTextLineFragment? {
         textLineFragments.first { lineFragment in
             CGRect(origin: layoutFragmentFrame.origin, size: lineFragment.typographicBounds.size).contains(location)
         }
@@ -107,7 +108,7 @@ extension NSTextLayoutFragment {
     }
 
     /// Enumerate line fragments that intersect with a given rectangle
-    func enumerateLineFragments(
+    public func enumerateLineFragments(
         with provider: NSTextElementProvider,
         intersecting rect: CGRect,
         block: (NSTextLineFragment, CGRect, NSRange) -> Bool
@@ -146,3 +147,5 @@ extension NSTextLayoutFragment {
         }
     }
 }
+
+// swiftlint:enable missing_docs

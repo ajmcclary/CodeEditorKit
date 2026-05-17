@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Enhanced performance tracking for syntax highlighting with detailed breakdowns

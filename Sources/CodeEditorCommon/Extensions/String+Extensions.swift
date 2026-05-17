@@ -1,3 +1,4 @@
+// swiftlint:disable missing_docs
 import Foundation
 
 // Text provider types for predicate support
@@ -7,7 +8,7 @@ public typealias TextProvider = (NSRange, Any?) -> String?
 public typealias TextSnapshotProvider = (NSRange, Any?) -> String?
 
 extension String {
-    static var nativeUTF16Encoding: String.Encoding {
+    public static var nativeUTF16Encoding: String.Encoding {
         #if _endian(little)
         return .utf16LittleEndian
         #else
@@ -15,7 +16,7 @@ extension String {
         #endif
     }
 
-    func data(at byteOffset: Int, limit: Int, using encoding: String.Encoding, chunkSize: Int) -> Data? {
+    public func data(at byteOffset: Int, limit: Int, using encoding: String.Encoding, chunkSize: Int) -> Data? {
         // Ensure encoding is valid for this operation
         precondition(
             encoding == .utf16 || encoding == .utf16BigEndian || encoding == .utf16LittleEndian || encoding == .utf8
@@ -41,11 +42,11 @@ extension String {
         return substring.data(using: encoding)
     }
 
-    var predicateTextProvider: TextProvider {
+    public var predicateTextProvider: TextProvider {
         predicateTextSnapshotProvider
     }
 
-    var predicateTextSnapshotProvider: TextSnapshotProvider {
+    public var predicateTextSnapshotProvider: TextSnapshotProvider {
         { nsRange, _ in
             guard let range = Range<String.Index>(nsRange, in: self) else {
                 return nil
@@ -55,3 +56,5 @@ extension String {
         }
     }
 }
+
+// swiftlint:enable missing_docs

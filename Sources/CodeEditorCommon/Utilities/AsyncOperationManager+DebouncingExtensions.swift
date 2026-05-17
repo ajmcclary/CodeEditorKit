@@ -1,3 +1,4 @@
+// swiftlint:disable missing_docs
 import Foundation
 
 // MARK: - Debouncing
@@ -124,15 +125,17 @@ extension AsyncOperationManager {
 
     // MARK: - Private Helpers
 
-    func cleanupDebounceTask(key: String) {
+    public func cleanupDebounceTask(key: String) {
         debounceTasks.removeValue(forKey: key)
     }
 
-    func storeDebounceResult(key: String, result: Any) {
+    public func storeDebounceResult(key: String, result: Any) {
         debounceResults[key] = result
     }
 
-    func storeDebounceError(key: String, error: Error) {
+    public func storeDebounceError(key: String, error: Error) {
         debounceErrors[key] = error
     }
 }
+
+// swiftlint:enable missing_docs

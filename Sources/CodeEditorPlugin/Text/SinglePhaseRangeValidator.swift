@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// An actor that manages single-phase range validation operations for versioned content.

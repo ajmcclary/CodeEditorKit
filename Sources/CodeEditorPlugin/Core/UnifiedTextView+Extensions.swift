@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import CoreGraphics
 import Foundation
 #if canImport(AppKit)
@@ -73,7 +74,7 @@ extension UnifiedTextViewProtocol {
 // MARK: - TextView Common Extensions
 
 #if canImport(AppKit) || canImport(UIKit)
-extension TextView {
+extension PlatformTextView {
     /// Returns the visible container rectangle
     var visibleContainerRect: CGRect {
         unifiedVisibleContainerRect
@@ -87,7 +88,7 @@ extension TextView {
 
 // MARK: - TextKit 2 Rendering Attributes
 
-extension TextView {
+extension PlatformTextView {
     /// Apply attributes that do not affect layout, if supported by the text system
     public func setRenderingAttributes(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
         let textKitBridge = TextKitBridge(textView: self)

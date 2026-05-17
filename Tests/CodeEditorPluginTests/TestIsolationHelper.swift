@@ -1,3 +1,4 @@
+import CodeEditorCommon
 @testable import CodeEditorPlugin
 import XCTest
 

@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import CryptoKit
 import Foundation
 import Security

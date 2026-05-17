@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Policy used when a text edit intersects an existing UTF-16 range.

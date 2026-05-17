@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import Foundation
 
 /// Validator for token system that manages validation operations for text content with token-based processing.
