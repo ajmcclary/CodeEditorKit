@@ -8,7 +8,7 @@ import Foundation
 /// Folds are stored as `RangeStore<FoldStoreElement>` runs. Query methods
 /// return fold ranges and collapse state. Edit sync is handled by
 /// `storageUpdated(replacedCharactersIn:withCount:)`.
-internal struct LineFoldStorage: Sendable {
+package struct LineFoldStorage: Sendable {
     private struct StoredFold: Sendable, Equatable {
         var range: NSRange
         var element: FoldStoreElement
@@ -17,18 +17,18 @@ internal struct LineFoldStorage: Sendable {
     private var store: RangeStore<FoldStoreElement>
     private var foldsByID: [String: StoredFold]
 
-    internal init(documentLength: Int) {
+    package init(documentLength: Int) {
         self.store = RangeStore<FoldStoreElement>(documentLength: documentLength)
         self.foldsByID = [:]
     }
 
-    var documentLength: Int { store.documentLength }
+    package var documentLength: Int { store.documentLength }
 
     // MARK: - Build from foldable regions
 
     /// Rebuild storage from detected fold regions, preserving collapse state
     /// of folds that still exist after recalculation.
-    internal mutating func updateFolds(from regions: [FoldableRegion], collapsedIDs: Set<String>) {
+    package mutating func updateFolds(from regions: [FoldableRegion], collapsedIDs: Set<String>) {
         let previous = foldsByID
         foldsByID = [:]
 
@@ -54,7 +54,7 @@ internal struct LineFoldStorage: Sendable {
     }
 
     /// Preserve collapse state across edits by applying a delta to the store.
-    internal mutating func storageUpdated(replacedCharactersIn range: Range<Int>, withCount newLength: Int) {
+    package mutating func storageUpdated(replacedCharactersIn range: Range<Int>, withCount newLength: Int) {
         let replacementLength = max(0, newLength)
         let oldDocumentLength = store.documentLength
         let editStart = max(0, min(range.lowerBound, oldDocumentLength))
@@ -83,7 +83,7 @@ internal struct LineFoldStorage: Sendable {
     // MARK: - Query
 
     /// Returns all folds intersecting the given character range.
-    internal func folds(in queryRange: NSRange) -> [FoldInfo] {
+    package func folds(in queryRange: NSRange) -> [FoldInfo] {
         guard queryRange.length > 0 else { return [] }
         return foldsByID.values
             .filter { intersects($0.range, queryRange) }
@@ -106,7 +106,7 @@ internal struct LineFoldStorage: Sendable {
     }
 
     /// Toggle collapse state for a fold by ID.
-    internal mutating func toggleCollapse(foldID: String, range: NSRange) {
+    package mutating func toggleCollapse(foldID: String, range: NSRange) {
         if let stored = foldsByID[foldID] {
             setCollapsed(foldID: foldID, collapsed: !stored.element.isCollapsed)
             return
@@ -129,7 +129,7 @@ internal struct LineFoldStorage: Sendable {
     }
 
     /// Set collapse state for a fold by ID while preserving range and metadata.
-    internal mutating func setCollapsed(foldID: String, collapsed: Bool) {
+    package mutating func setCollapsed(foldID: String, collapsed: Bool) {
         guard var stored = foldsByID[foldID] else { return }
         stored.element.isCollapsed = collapsed
         foldsByID[foldID] = stored
@@ -193,10 +193,10 @@ internal struct LineFoldStorage: Sendable {
 }
 
 /// Lightweight fold query result.
-internal struct FoldInfo: Sendable, Equatable {
-    internal var id: String
-    internal var range: NSRange
-    internal var depth: Int
-    internal var isCollapsed: Bool
-    internal var kind: FoldingType
+package struct FoldInfo: Sendable, Equatable {
+    package var id: String
+    package var range: NSRange
+    package var depth: Int
+    package var isCollapsed: Bool
+    package var kind: FoldingType
 }

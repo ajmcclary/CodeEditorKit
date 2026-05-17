@@ -4,14 +4,14 @@ import Foundation
 
 /// Adapts existing `CodeFoldingProvider` results into fold storage.
 @MainActor
-internal final class FoldRegionAdapter {
+package final class FoldRegionAdapter {
     private let provider: any CodeFoldingProvider
 
-    init(provider: any CodeFoldingProvider) {
+    package init(provider: any CodeFoldingProvider) {
         self.provider = provider
     }
 
-    func buildStorage(from text: String, existingStorage: LineFoldStorage? = nil) async -> LineFoldStorage {
+    package func buildStorage(from text: String, existingStorage: LineFoldStorage? = nil) async -> LineFoldStorage {
         let regions = await provider.detectFoldableRegions(in: text)
         let documentLength = TextRangeUtilities.utf16Length(of: text)
         let collapsedIDs: Set<String> = Set(
@@ -25,7 +25,7 @@ internal final class FoldRegionAdapter {
         return storage
     }
 
-    func applyEdit(to storage: inout LineFoldStorage, editedRange: NSRange, changeInLength: Int) {
+    package func applyEdit(to storage: inout LineFoldStorage, editedRange: NSRange, changeInLength: Int) {
         storage.storageUpdated(
             replacedCharactersIn: editedRange.location..<(editedRange.location + editedRange.length),
             withCount: editedRange.length + changeInLength

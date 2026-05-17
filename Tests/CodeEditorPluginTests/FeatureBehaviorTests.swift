@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorFolding
 import CodeEditorLanguages
 import CodeEditorPlatform
 @testable import CodeEditorPlugin

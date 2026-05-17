@@ -7,7 +7,7 @@ import Foundation
 
 /// Registry for managing language-specific code folding providers
 @MainActor
-internal final class FoldingProviderRegistry {
+package final class FoldingProviderRegistry {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "FoldingProviderRegistry")
 
     // MARK: - Properties
@@ -16,36 +16,36 @@ internal final class FoldingProviderRegistry {
 
     // MARK: - Initialization
 
-    init() {
+    package init() {
         setupDefaultProviders()
     }
 
-    // MARK: - Public Methods
+    // MARK: - Package Methods
 
     /// Register a folding provider for a language
-    internal func registerProvider(_ provider: CodeFoldingProvider, for language: Language) {
+    package func registerProvider(_ provider: CodeFoldingProvider, for language: Language) {
         providers[language] = provider
         logger.info("Registered folding provider for \(language.name)")
     }
 
     /// Get provider for a specific language
-    internal func provider(for language: Language) -> CodeFoldingProvider? {
+    package func provider(for language: Language) -> CodeFoldingProvider? {
         providers[language]
     }
 
     /// Check if a provider exists for a language
-    internal func hasProvider(for language: Language) -> Bool {
+    package func hasProvider(for language: Language) -> Bool {
         providers[language] != nil
     }
 
     /// Remove provider for a language
-    internal func removeProvider(for language: Language) {
+    package func removeProvider(for language: Language) {
         providers.removeValue(forKey: language)
         logger.info("Removed folding provider for \(language.name)")
     }
 
     /// Get all registered languages
-    internal var registeredLanguages: [Language] {
+    package var registeredLanguages: [Language] {
         Array(providers.keys)
     }
 

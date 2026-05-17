@@ -1,3 +1,4 @@
+import CodeEditorFolding
 import CodeEditorLanguages
 import Foundation
 
