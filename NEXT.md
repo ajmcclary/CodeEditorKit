@@ -249,7 +249,7 @@ Suggested ordering minimizes broken-build windows. Each step is a single commit 
 
 ### 6.0 Status (as of 2026-05-17)
 
-**Phases 0–2 complete.** Five new SPM targets exist alongside the existing `CodeEditorDesignTokens` / `CodeEditorPlugin` / `CodeEditorUI` / `CodeEditorSample`. `Sources/` now has 10 top-level entries (matching §6.2's vision). 465 tests / 116 suites passing, 0 SwiftLint violations, build green on every commit.
+**Phases 0–3 partial.** `CodeEditorLanguages` (§6.2.6) landed in `14921a61`. `CodeEditorSyntaxHighlighting` (§6.2.7) is **deferred** to a separate spec because 6 SH files hard-reference `MemoryMonitor`, `ProductionPerformanceMetrics`, and `CodeEditorDependencies`; the spec needs to choose between (a) type-erase via Common markers, (b) extract `CodeEditorDiagnostics` (§6.2.10) first, or (c) reorder. Six new SPM targets now exist alongside the existing `CodeEditorDesignTokens` / `CodeEditorPlugin` / `CodeEditorUI` / `CodeEditorSample`. 465 tests / 116 suites passing, 0 SwiftLint violations, build green on every commit.
 
 | Target | Commit | What landed | Direct deps |
 |---|---|---|---|
@@ -258,6 +258,7 @@ Suggested ordering minimizes broken-build windows. Each step is a single commit 
 | `CodeEditorPlatform` | `77880e9f` | 20 of 34 `Platform/` files (Colors, Fonts, Constants, ServiceLayer, Capabilities, ViewReuseQueue, DeviceType, etc.) | Common |
 | `CodeEditorConfiguration` | `5838c24a` | `Configuration/` (7 files) | Common, Platform, TextModel |
 | `CodeEditorTheming` | `4c71e49e` | `Theming/` (32 files) + `Resources/Themes/` | Common, DesignTokens |
+| `CodeEditorLanguages` | `14921a61` | 71 files (66 originals from `Languages/` + `Language` enum from SyntaxHighlighting + 2 Completion model files + 2 Folding/Symbol interface files split from Features/ + `SnippetTemplate` from Completion + `RegexSyntaxTokenType` enum split from SyntaxHighlighting; net of 2 files moving out: `SwiftSyntaxHighlighter*.swift` relocated to umbrella `SyntaxHighlighting/`) | Common, Platform, TextModel |
 
 Phase A access-modifier promotion landed in `8bac96cb` (116 `package` promotions across 40 files; baseline scan that made the per-target extractions near-mechanical for the symbols themselves — file coupling was the remaining work).
 
@@ -274,6 +275,16 @@ Phase A access-modifier promotion landed in `8bac96cb` (116 `package` promotions
 - **Type-erasure to break Configuration → umbrella coupling.** `UnifiedPerformanceTracking: AnyObject & Sendable` marker protocol added to Common. `EditorConfiguration.Performance.unifiedPerformanceSystem` now holds `(any UnifiedPerformanceTracking)?` instead of `UnifiedPerformanceSystem?`. The single call site (`AsyncSyntaxHighlighter`) casts back with `as? UnifiedPerformanceSystem`.
 - **Four small "method-only" umbrella extensions** created so leaf targets could stay pure: `DeviceType+RecommendedConfiguration.swift`, `PlatformCapabilities+RecommendedConfiguration.swift`, `EditorConfiguration+CodeFolding.swift`, `Theme+TokenColor.swift`.
 - **`ToolbarItem` re-export.** `ToolbarCoordinator.swift` (umbrella) adds `public typealias ToolbarItem = CodeEditorPlatform.ToolbarItem` so the file can disambiguate against `SwiftUI.ToolbarItem` without rewriting 47 call sites. External consumers continue to see a `ToolbarItem` re-exported through CodeEditorPlugin.
+
+**Deviations during §6.2.6 `CodeEditorLanguages` (commit `14921a61`):**
+
+- **`SwiftSyntaxHighlighter.swift` + `+SharedExtensions.swift` moved OUT of `Languages/` into `SyntaxHighlighting/` (umbrella).** They consume `HighlightedToken` and `TokenType` — highlighting-side concepts. Keeping them in Languages would have forced `HighlightedToken`/`TokenType` to also migrate down, dragging in `SyntaxColorScheme` and the rest of the highlighting pipeline. Cleaner to acknowledge they're a highlighting concern that happened to be filed under Languages. SwiftSyntax/SwiftParser deps therefore stay on the umbrella target rather than moving with the new target.
+- **`SnippetTemplate.swift` moved from `Completion/` to `Languages/`.** It's a `LanguageDescriptor` primitive (language descriptors carry `[SnippetTemplate]`), not a completion-engine type.
+- **`RegexSyntaxTokenType` enum split out of `SyntaxHighlighting/RegexSyntaxHighlighter+TypesExtensions.swift` into `Languages/RegexSyntaxTokenType.swift`.** Used by `DescriptorHighlightRule` (Languages) and by the regex highlighter (umbrella). The `.color` computed property stays in the umbrella as an extension since it references `SyntaxColorScheme`.
+- **Access promotions to bridge the new target boundary:** `LanguageDescriptor` + all its stored members + static factories promoted internal → `package`. `DescriptorHighlightRule` promoted internal → `package`. Per-language `*FoldingProvider` / `*SymbolProvider` structs promoted internal → `package` with explicit `package init()` and `package func` for protocol requirements. `PHPSymbolProvider.State`, `XMLSymbolProvider.State`, `YAMLSymbolProvider.State` promoted to `package`. `DocumentSymbolKind.icon` / `.canContainSymbols` promoted internal → `package`.
+- **`FoldingType` gained `Sendable` conformance.** Phase-1 promotion of `FoldableRegion` to `public` exposed that `FoldStoreElement` / `FoldInfo` (both `Sendable` structs that store `FoldingType`) now required it.
+- **CodeFoldingConfiguration stays internal in `Features/FoldableRegion.swift`.** Out of scope per the spec (its home is §6.0 question 2 / §6.2.8 territory).
+- **`CodeEditorUI`, `CodeEditorSample`, `CodeEditorPluginTests`, `CodeEditorSampleTests` targets gained `CodeEditorLanguages` as a direct dependency.** ~100 umbrella files plus a handful of UI / sample / test files now `import CodeEditorLanguages` explicitly. The umbrella target has `exclude: ["Info.plist", "Languages"]` so SwiftPM doesn't double-count the new target's source root.
 
 Sample-app theme rendering visually verified by the user on 2026-05-17.
 
@@ -347,10 +358,9 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 
 ## 10. Suggested next session
 
-Steps 6.2.1 → 6.2.5 are done (see §6.0). Remaining work:
+Steps 6.2.1 → 6.2.6 are done (see §6.0). Remaining work:
 
-- **6.2.6 `CodeEditorLanguages`** — 66 files. Moderate session. Watch for back-references into `SyntaxHighlighting/` and `Completion/`; pre-audit before moving.
-- **6.2.7 `CodeEditorSyntaxHighlighting`** — 36 files. Moderate session. Depends on Languages, so do it after 6.2.6.
+- **6.2.7 `CodeEditorSyntaxHighlighting`** — ~45 files (was 36 in the original plan; grew during phases 0–2 + the SwiftSyntaxHighlighter relocation in §6.2.6). Blocked on Performance/Core back-refs: `MemoryMonitor` (ObservableObject), `ProductionPerformanceMetrics` (actor), and `CodeEditorDependencies`. Needs its own spec choosing (a) type-erase via Common markers, (b) extract `CodeEditorDiagnostics` (§6.2.10) first then SH, or (c) reorder.
 - **6.2.8 feature engines** — `Folding`, `Symbols`, `SmartEditing`, `Search`, `Annotations`, `Workspace`, `Completion`. One session per engine. Completion last (most call sites). `Features/Debugger*` may be design-only — confirm-or-delete before promoting.
 - **6.2.9 `CodeEditorLSP` + `CodeEditorDebugger`** — own session each. Expose as separate products.
 - **6.2.10 `CodeEditorDiagnostics`** — `Performance/`. Own session. Expose as separate product so consumers can omit it from release builds.
