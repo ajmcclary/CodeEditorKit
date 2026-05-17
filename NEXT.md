@@ -249,7 +249,7 @@ Suggested ordering minimizes broken-build windows. Each step is a single commit 
 
 ### 6.0 Status (as of 2026-05-17)
 
-**Phases 0–3 partial.** `CodeEditorLanguages` (§6.2.6) landed in `14921a61`. `CodeEditorSyntaxHighlighting` (§6.2.7) is **deferred** to a separate spec because 6 SH files hard-reference `MemoryMonitor`, `ProductionPerformanceMetrics`, and `CodeEditorDependencies`; the spec needs to choose between (a) type-erase via Common markers, (b) extract `CodeEditorDiagnostics` (§6.2.10) first, or (c) reorder. Six new SPM targets now exist alongside the existing `CodeEditorDesignTokens` / `CodeEditorPlugin` / `CodeEditorUI` / `CodeEditorSample`. 465 tests / 116 suites passing, 0 SwiftLint violations, build green on every commit.
+**Phases 0–4 partial.** `CodeEditorDiagnostics` (§6.2.10) landed ahead of §6.2.7 in `e60f7857` to unblock SyntaxHighlighting. The back-references in the six SH files documented earlier are now routine `import CodeEditorDiagnostics` lines — no marker protocols were needed. Seven new SPM targets now exist alongside the existing `CodeEditorDesignTokens` / `CodeEditorPlugin` / `CodeEditorUI` / `CodeEditorSample`. 465 tests / 116 suites passing, 0 SwiftLint violations, build green on every commit.
 
 | Target | Commit | What landed | Direct deps |
 |---|---|---|---|
@@ -259,6 +259,7 @@ Suggested ordering minimizes broken-build windows. Each step is a single commit 
 | `CodeEditorConfiguration` | `5838c24a` | `Configuration/` (7 files) | Common, Platform, TextModel |
 | `CodeEditorTheming` | `4c71e49e` | `Theming/` (32 files) + `Resources/Themes/` | Common, DesignTokens |
 | `CodeEditorLanguages` | `14921a61` | 71 files (66 originals from `Languages/` + `Language` enum from SyntaxHighlighting + 2 Completion model files + 2 Folding/Symbol interface files split from Features/ + `SnippetTemplate` from Completion + `RegexSyntaxTokenType` enum split from SyntaxHighlighting; net of 2 files moving out: `SwiftSyntaxHighlighter*.swift` relocated to umbrella `SyntaxHighlighting/`) | Common, Platform, TextModel |
+| `CodeEditorDiagnostics` | `e60f7857` | 14 files (13 from `Performance/` + 1 split-out `MemoryMonitor+AvailableMemory.swift` from SH; 2 dead files deleted, 1 misfiled relocated to umbrella `Layout/`, 1 misfiled relocated to umbrella `Core/`) | Common, Configuration, Languages, Platform, IssueReporting |
 
 Phase A access-modifier promotion landed in `8bac96cb` (116 `package` promotions across 40 files; baseline scan that made the per-target extractions near-mechanical for the symbols themselves — file coupling was the remaining work).
 
@@ -285,6 +286,23 @@ Phase A access-modifier promotion landed in `8bac96cb` (116 `package` promotions
 - **`FoldingType` gained `Sendable` conformance.** Phase-1 promotion of `FoldableRegion` to `public` exposed that `FoldStoreElement` / `FoldInfo` (both `Sendable` structs that store `FoldingType`) now required it.
 - **CodeFoldingConfiguration stays internal in `Features/FoldableRegion.swift`.** Out of scope per the spec (its home is §6.0 question 2 / §6.2.8 territory).
 - **`CodeEditorUI`, `CodeEditorSample`, `CodeEditorPluginTests`, `CodeEditorSampleTests` targets gained `CodeEditorLanguages` as a direct dependency.** ~100 umbrella files plus a handful of UI / sample / test files now `import CodeEditorLanguages` explicitly. The umbrella target has `exclude: ["Info.plist", "Languages"]` so SwiftPM doesn't double-count the new target's source root.
+
+**Deviations during §6.2.10 `CodeEditorDiagnostics` (commit `e60f7857`):**
+
+- **Diagnostics is not a phase-6 leaf.** NEXT.md §4.1 originally claimed `Diag → only Common`. Reality after auditing: `AdaptivePerformanceMode` extends `EditorConfiguration.Performance` (Configuration dep); `AdaptivePerformanceMode` + `ProductionPerformanceMetrics` bucket metrics by `Language` (Languages dep); `MemoryMonitor` + `HardwareAcceleration` + `PerformanceInsights` + `PerformanceViews` use Platform types (Platform dep). `PerformanceInsights` also uses `IssueReporting`. Diagnostics ends up at **phase 4** with 5 direct deps.
+- **Dead code dropped en route.** `IncrementalSyntaxHighlighter.swift` (zero callers, imported `CodeEditorLanguages + CodeEditorTextModel`) and `OptimizedLineIndexCache.swift` (`@available(*, deprecated)`, zero callers, replacement lives in `CodeEditorTextModel`) deleted in commit `48b9fcd5`.
+- **`ViewportManager.swift` relocated to umbrella `Layout/`** rather than carried into Diagnostics. Only consumed by two test files (`IntegrationTests`, `LargeFilePerformanceTests`); structurally a viewport/layout helper that travels with the future §6.2.11 `CodeEditorLayout` target. Landed in commit `48b9fcd5`.
+- **`IOSLargeFileOptimizer.swift` relocated to umbrella `Core/` mid-extraction.** It casts to `CodeEditorView` at three sites (`.configuration`, `.adaptivePerformanceMode`, `.forceMode`) — iOS-specific integration code intrinsically coupled to the umbrella. Carrying it into Diagnostics would force Diagnostics to import umbrella. Diagnostics ends up with 14 files instead of the spec's planned 14-from-Performance + 1-split = 15.
+- **`extension CodeEditorView { trackPerformance(...) }` extracted** from `UnifiedPerformanceSystem.swift` into a new umbrella file `Core/CodeEditorView+TrackPerformance.swift`. Can't extend an umbrella type from a leaf target.
+- **Two `CodeEditorDependencies.make*()` fallback call sites inlined.** `PerformanceInsights.swift` (`makePlatformCapabilities()` → `PlatformCapabilities()`) and `AdaptivePerformanceMode.swift` (`makeProductionPerformanceMetrics()` → `ProductionPerformanceMetrics()`). Matches each key's `liveValue` closure. The spec's claim that the factory call sites could stay was wrong — Diagnostics can't reach umbrella's `CodeEditorDependencies`.
+- **Hybrid extension file split.** `SyntaxHighlighting/SyntaxHighlightingCoordinator+Extensions.swift` previously bundled two unrelated extensions; the `extension MemoryMonitor` moved out as `MemoryMonitor+AvailableMemory.swift` (carried into Diagnostics); the `extension SyntaxHighlightingCoordinator` stayed in umbrella. Landed in commit `48b9fcd5`.
+- **Spec's claim that LRUCache.swift had a stale `import CodeEditorLanguages` was wrong.** It uses `CompletionContextModel` and `CompletionResult` — both Languages-target types from §6.2.6. Import kept.
+- **`HardwareAcceleration` kept (not deleted).** The spec's conditional-delete branch (Step 1.5 audit) found many production consumers including a dedicated test file. Carries into Diagnostics with `internal → package` promotion (the enum + its `apply(_:to:)` static).
+- **Access-modifier promotions to bridge the new target boundary:** `HardwareAcceleration` enum + `apply(_:to:)` static promoted internal → `package`. `PerformanceObservation.refreshCount` and `.refreshTaskSpawnCount` promoted `internal private(set)` → `package private(set)` for test access.
+- **No marker protocols added to Common.** The original §6.0 deferred-decision option (a) — type-erase via `AnyMemoryMonitor` / `AnyProductionPerformanceMetrics` — was not needed; umbrella files that reference Diagnostics types now `import CodeEditorDiagnostics` directly.
+- **`UnifiedPerformanceTracking` marker in Common stays unchanged.** Removing it would force Configuration → Diagnostics and push Configuration out of phase 1; the marker pays its keep.
+- **`CodeEditorSample`, `CodeEditorPluginTests`, `CodeEditorSampleTests` targets gained `CodeEditorDiagnostics` as a direct dependency.** 31 umbrella files + 8 sample files + 57 test files gained `import CodeEditorDiagnostics`. The umbrella target has `exclude: ["Info.plist", "Languages", "Performance"]` so SwiftPM doesn't double-count source roots.
+- **Productized.** Unlike Languages, Diagnostics exposes a `.library(name: "CodeEditorDiagnostics", ...)` product per NEXT.md §6.3 so consumers can omit instrumentation from release builds.
 
 Sample-app theme rendering visually verified by the user on 2026-05-17.
 
@@ -358,13 +376,12 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 
 ## 10. Suggested next session
 
-Steps 6.2.1 → 6.2.6 are done (see §6.0). Remaining work:
+Steps 6.2.1 → 6.2.6 and 6.2.10 are done (see §6.0). Remaining work:
 
-- **6.2.7 `CodeEditorSyntaxHighlighting`** — ~45 files (was 36 in the original plan; grew during phases 0–2 + the SwiftSyntaxHighlighter relocation in §6.2.6). Blocked on Performance/Core back-refs: `MemoryMonitor` (ObservableObject), `ProductionPerformanceMetrics` (actor), and `CodeEditorDependencies`. Needs its own spec choosing (a) type-erase via Common markers, (b) extract `CodeEditorDiagnostics` (§6.2.10) first then SH, or (c) reorder.
+- **6.2.7 `CodeEditorSyntaxHighlighting`** — ~45 files (was 36 in the original plan; grew during phases 0–2 + the SwiftSyntaxHighlighter relocation in §6.2.6). **Unblocked by the §6.2.10 Diagnostics extraction (`e60f7857`)** — the six SH files that previously hard-referenced `MemoryMonitor` / `ProductionPerformanceMetrics` / `CodeEditorDependencies` now `import CodeEditorDiagnostics`. Extraction becomes near-mechanical. Watch for the `AdaptiveColorSystem.swift` factory call to `CodeEditorDependencies.makePlatformCapabilities()` — same inline-the-init treatment used in §6.2.10's `PerformanceInsights` will apply.
 - **6.2.8 feature engines** — `Folding`, `Symbols`, `SmartEditing`, `Search`, `Annotations`, `Workspace`, `Completion`. One session per engine. Completion last (most call sites). `Features/Debugger*` may be design-only — confirm-or-delete before promoting.
 - **6.2.9 `CodeEditorLSP` + `CodeEditorDebugger`** — own session each. Expose as separate products.
-- **6.2.10 `CodeEditorDiagnostics`** — `Performance/`. Own session. Expose as separate product so consumers can omit it from release builds.
-- **6.2.11 `CodeEditorLayout`** — `Layout/`. Own session. Depends on most of phase 4.
+- **6.2.11 `CodeEditorLayout`** — `Layout/`. Own session. Depends on most of phase 4. Note: `ViewportManager.swift` was relocated into `Layout/` during §6.2.10's cleanup, so it travels with Layout when this extracts.
 - **6.2.12 split `Core/`** — the riskiest single step. Dedicated half-day. Don't combine with anything else. (Note: this dir has grown during phases 0–2 — `Core/Configuration/`, `Core/Documents/`, `Core/Platform/`, `Core/Text/` subdirs were created as F3 catch-alls. Re-evaluate which semantic homes survive into the eventual `CodeEditorView` target vs. spill into other feature targets.)
 - **6.2.13 `CodeEditorSwiftUI`** — `SwiftUI/`. Straightforward after 6.2.12.
 - **6.2.14 umbrella re-export** — strip `CodeEditorPlugin` to a single `CodeEditorPlugin.swift` that `@_exported import`s the everyday public surface.

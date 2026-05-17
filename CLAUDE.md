@@ -64,7 +64,6 @@ Sources/CodeEditorPlugin/
 ├── SwiftUI/                 # SwiftUI wrappers and modifiers
 ├── Platform/                # Cross-platform color/font/view abstractions
 ├── Extensions/              # Catch-all type extensions (+Extensions suffix; see Conventions)
-├── Performance/             # Monitoring, profiling, memory tracking
 ├── LSP/                     # Language Server Protocol support
 ├── Annotations/             # Data-source driven annotation badges
 ├── Search/                  # Search result models and shared search support
@@ -76,10 +75,17 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-21 top-level directories, 480 Swift source files in the main target, and 572 Swift source files under `Sources/`.
+19 top-level directories, 358 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions), and 588 Swift source files under `Sources/`.
 
-Other source roots:
+Other source roots (each is its own SPM target — see `Package.swift`):
+- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors (phase 0).
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
+- `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds; phase 4).
+- `Sources/CodeEditorPlugin/Languages/` — language descriptors + folding/symbol/completion-model interfaces (phase 3; physically inside the umbrella source tree but compiled as its own target via `path:`).
+- `Sources/CodeEditorPlatform/` — cross-platform color/font/view abstractions (phase 0).
+- `Sources/CodeEditorTextModel/` — TextKit2 primitives, range store, location, parsing primitives (phase 1).
+- `Sources/CodeEditorConfiguration/` — settings, presets, validation (phase 1).
+- `Sources/CodeEditorTheming/` — theme system, color tokens, appearance + bundled theme JSON (phase 2).
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
 - `Sources/CodeEditorSample/` — executable demo app target.
 - `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; it is not currently an SPM target.
