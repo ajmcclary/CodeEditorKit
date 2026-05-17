@@ -247,6 +247,36 @@ A row added to its table, parallel to the existing MusicToolkit row:
 
 Suggested ordering minimizes broken-build windows. Each step is a single commit / PR.
 
+### 6.0 Status (as of 2026-05-17)
+
+**Phases 0–2 complete.** Five new SPM targets exist alongside the existing `CodeEditorDesignTokens` / `CodeEditorPlugin` / `CodeEditorUI` / `CodeEditorSample`. `Sources/` now has 10 top-level entries (matching §6.2's vision). 465 tests / 116 suites passing, 0 SwiftLint violations, build green on every commit.
+
+| Target | Commit | What landed | Direct deps |
+|---|---|---|---|
+| `CodeEditorCommon` | `f0c438f1` | `Extensions/`, `Utilities/`, `Models/`, `Errors/` | (none) |
+| `CodeEditorTextModel` | `b6bfdbe9` | 32 of 51 `Text/` files (range storage, geometry, location, parsing primitives) | Common |
+| `CodeEditorPlatform` | `77880e9f` | 20 of 34 `Platform/` files (Colors, Fonts, Constants, ServiceLayer, Capabilities, ViewReuseQueue, DeviceType, etc.) | Common |
+| `CodeEditorConfiguration` | `5838c24a` | `Configuration/` (7 files) | Common, Platform, TextModel |
+| `CodeEditorTheming` | `4c71e49e` | `Theming/` (32 files) + `Resources/Themes/` | Common, DesignTokens |
+
+Phase A access-modifier promotion landed in `8bac96cb` (116 `package` promotions across 40 files; baseline scan that made the per-target extractions near-mechanical for the symbols themselves — file coupling was the remaining work).
+
+**Deviations from the original plan (§6.2.3 / §6.2.4 / §6.2.5):**
+
+- **Step 6.2.2 ↔ 6.2.3 order swapped during execution.** Reality is `Configuration → Platform` (Configuration uses `PlatformConstants` / `PlatformColor`), the opposite of the spec's earlier "flipped graph". Platform was extracted before Configuration so Configuration could depend on it.
+- **Theming has no Platform dep.** Code reality: Theming only needs DesignTokens (tokens) and Common (`Duration.timeInterval` extension). NEXT.md's "Theming depends on Platform" claim wasn't backed by any actual reference.
+- **~30 files needed F3 surgery (relocate to umbrella semantic homes) rather than the planned "near-mechanical move".**
+  - From `Text/` → `Core/Text/`: `ModernTextKitHelper`, `ParagraphStyleCache`, `TextKit2PerformanceHelper`, `TextLayoutFragment`, `BackgroundProcessor`, `RangeStore/`, `TemporaryAttributesStore`, `TextEditEventHub`.
+  - From `Text/` → `Core/`: `TextSystemStyler`, `ThreePhaseTextSystemStyler`, `TokenSystemValidator`.
+  - From `Text/Parsing/` → `SyntaxHighlighting/Parsing/`: `LanguagePatternDetector`, `PatternExtractor`, `SyntaxTreeParser`, `TextParsingUtilities`, `TokenExtractor`, `WordBoundaryFinder`.
+  - From `Documents/` → `Core/Documents/`: `EditorDocument`, `EditorDocuments`.
+  - From `Platform/` → `Core/Platform/`: `ContextMenuAction/Builder/Coordinator`, `CrossPlatformCoordinator` + AppKit/UIKit ext, `InputCoordinator`, `PlatformAdjustments+Extensions`, `PlatformConfigurations`, `TextInputFeatures`, `ToolbarCoordinator`, `UnifiedDrawingCoordinator`.
+- **Type-erasure to break Configuration → umbrella coupling.** `UnifiedPerformanceTracking: AnyObject & Sendable` marker protocol added to Common. `EditorConfiguration.Performance.unifiedPerformanceSystem` now holds `(any UnifiedPerformanceTracking)?` instead of `UnifiedPerformanceSystem?`. The single call site (`AsyncSyntaxHighlighter`) casts back with `as? UnifiedPerformanceSystem`.
+- **Four small "method-only" umbrella extensions** created so leaf targets could stay pure: `DeviceType+RecommendedConfiguration.swift`, `PlatformCapabilities+RecommendedConfiguration.swift`, `EditorConfiguration+CodeFolding.swift`, `Theme+TokenColor.swift`.
+- **`ToolbarItem` re-export.** `ToolbarCoordinator.swift` (umbrella) adds `public typealias ToolbarItem = CodeEditorPlatform.ToolbarItem` so the file can disambiguate against `SwiftUI.ToolbarItem` without rewriting 47 call sites. External consumers continue to see a `ToolbarItem` re-exported through CodeEditorPlugin.
+
+Sample-app theme rendering visually verified by the user on 2026-05-17.
+
 ### 6.1 Pre-work (do before any target split)
 
 1. **Move docs that reference dead symbols out of authority.** `CLAUDE.md` already calls out `PluginManager`, `PluginAPI`, etc. as non-existent. Confirm nothing in `docs/` (non-archive) still describes a plugin system; if it does, archive it. Otherwise the layered diagram will inherit stale prose.
@@ -257,11 +287,11 @@ Suggested ordering minimizes broken-build windows. Each step is a single commit 
 
 Do these in order; each one should leave `swift build && swift test` green.
 
-1. **Extract `CodeEditorCommon`** — move `Extensions/`, `Utilities/`, and `Models/` to a new target. Audit imports; nothing here should import anything else internal.
-2. **Extract `CodeEditorPlatform`** — move `Platform/` to a new target. Cross-platform color/font/view types. No internal deps.
-3. **Extract `CodeEditorTextModel`** — move `Text/` and `Documents/`. Depends on `Common`. This is the largest single extraction and the highest-leverage one.
-4. **Extract `CodeEditorConfiguration`** — move `Configuration/`. Depends on `Common`, `TextModel`.
-5. **Extract `CodeEditorTheming`** — move `Theming/` + the themes JSON resource. Depends on `DesignTokens`, `Platform`.
+1. **[done]** **Extract `CodeEditorCommon`** — move `Extensions/`, `Utilities/`, and `Models/` to a new target. Audit imports; nothing here should import anything else internal. (`f0c438f1`)
+2. **[done — order swapped, see §6.0]** **Extract `CodeEditorPlatform`** — move `Platform/` to a new target. Cross-platform color/font/view types. Depends on `Common` (not "no internal deps" as originally claimed). 14 files relocated to umbrella `Core/Platform/` for F3 reasons. (`77880e9f`)
+3. **[done]** **Extract `CodeEditorTextModel`** — move `Text/` and `Documents/`. Depends on `Common`. 19 files (15 from `Text/`, 2 from `Documents/`, plus subsequent cleanup) relocated to umbrella semantic homes. (`b6bfdbe9` + `3442009b` cleanup)
+4. **[done — order swapped, see §6.0]** **Extract `CodeEditorConfiguration`** — move `Configuration/`. Depends on `Common`, `Platform`, `TextModel`. Required type-erasure of `UnifiedPerformanceSystem` via marker protocol in Common. (`5838c24a`)
+5. **[done]** **Extract `CodeEditorTheming`** — move `Theming/` + the themes JSON resource. Depends on `Common`, `DesignTokens` (NOT `Platform` — reality differs from original plan). `Bundle.module` reached via `@testable import CodeEditorTheming` in tests. (`4c71e49e`)
 6. **Extract `CodeEditorLanguages`** — move `Languages/`. Depends on `TextModel`. Audit: today `Languages/` may reference `SyntaxHighlighting` / `Completion` types — if so, push those types down into a `…/Interfaces.swift` in `CodeEditorLanguages` and have the higher layers conform.
 7. **Extract `CodeEditorSyntaxHighlighting`** — move `SyntaxHighlighting/`. Depends on `Languages`, `TextModel`, `Theming`.
 8. **Extract feature engines individually** — `Completion`, `Folding`, `SmartEditing`, `Search`, `Symbols`, `Annotations`, `Workspace`. Splitting `Features/` is the only awkward step because its contents are heterogeneous. Suggested order: `Folding` → `Symbols` → `SmartEditing` → `Search` → `Annotations` → `Workspace` → `Completion` last (it has the most call sites).
@@ -317,4 +347,22 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 
 ## 10. Suggested next session
 
-A single session can realistically complete steps 6.2.1 → 6.2.5 (Common, Platform, TextModel, Configuration, Theming) — those are the cleanest cuts and unblock everything else. Steps 6.2.6 → 6.2.11 each warrant their own session. The `Core/` split (6.2.12) is the only step that's worth its own dedicated half-day. After 6.2.15 (test support), the move into `~/Workspace/packages/` is a one-PR mechanical change.
+Steps 6.2.1 → 6.2.5 are done (see §6.0). Remaining work:
+
+- **6.2.6 `CodeEditorLanguages`** — 66 files. Moderate session. Watch for back-references into `SyntaxHighlighting/` and `Completion/`; pre-audit before moving.
+- **6.2.7 `CodeEditorSyntaxHighlighting`** — 36 files. Moderate session. Depends on Languages, so do it after 6.2.6.
+- **6.2.8 feature engines** — `Folding`, `Symbols`, `SmartEditing`, `Search`, `Annotations`, `Workspace`, `Completion`. One session per engine. Completion last (most call sites). `Features/Debugger*` may be design-only — confirm-or-delete before promoting.
+- **6.2.9 `CodeEditorLSP` + `CodeEditorDebugger`** — own session each. Expose as separate products.
+- **6.2.10 `CodeEditorDiagnostics`** — `Performance/`. Own session. Expose as separate product so consumers can omit it from release builds.
+- **6.2.11 `CodeEditorLayout`** — `Layout/`. Own session. Depends on most of phase 4.
+- **6.2.12 split `Core/`** — the riskiest single step. Dedicated half-day. Don't combine with anything else. (Note: this dir has grown during phases 0–2 — `Core/Configuration/`, `Core/Documents/`, `Core/Platform/`, `Core/Text/` subdirs were created as F3 catch-alls. Re-evaluate which semantic homes survive into the eventual `CodeEditorView` target vs. spill into other feature targets.)
+- **6.2.13 `CodeEditorSwiftUI`** — `SwiftUI/`. Straightforward after 6.2.12.
+- **6.2.14 umbrella re-export** — strip `CodeEditorPlugin` to a single `CodeEditorPlugin.swift` that `@_exported import`s the everyday public surface.
+- **6.2.15 `CodeEditorTestSupport`** — extract shared fixtures.
+- **Move to `~/Workspace/packages/`** — one-PR mechanical change after 6.2.15.
+
+Phases 0–2 also revealed three architectural realities worth deciding before continuing:
+
+1. **The "Core/" umbrella is now a known F3 dumping ground.** Files like `EditorConfiguration+CodeFolding.swift` (touching Configuration + Features) and `DeviceType+RecommendedConfiguration.swift` (touching Platform + Configuration) live there because they're cross-target glue. When step 6.2.12 splits `Core/`, decide whether these stay glued to the editor-surface target, or get a dedicated "glue" target.
+2. **`Features/` contains `CodeFoldingConfiguration`, which Configuration's `createCodeFoldingConfiguration()` references.** Step 6.2.8's `CodeEditorFolding` extraction will need to either expose `CodeFoldingConfiguration` to Configuration (Folding → Configuration dep), keep the helper in umbrella (current state), or move `CodeFoldingConfiguration` somewhere lower (Common? Configuration's domain?).
+3. **`ToolbarItem` is documented public API but currently routed through a typealias in `Core/Platform/ToolbarCoordinator.swift`.** When step 6.2.11 extracts `CodeEditorLayout`, the typealias should move with it — or `ToolbarItem` should be re-exported by the umbrella explicitly.
