@@ -3,6 +3,7 @@
 //  CodeEditorPluginTests
 //
 
+import CodeEditorConfiguration
 @testable import CodeEditorPlugin
 import SwiftUI
 import XCTest

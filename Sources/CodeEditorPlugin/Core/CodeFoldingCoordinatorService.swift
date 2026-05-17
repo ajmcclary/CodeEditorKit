@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 import Foundation
 #if canImport(AppKit)
 import AppKit

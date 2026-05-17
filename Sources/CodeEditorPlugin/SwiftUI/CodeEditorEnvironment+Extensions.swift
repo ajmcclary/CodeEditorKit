@@ -5,6 +5,7 @@
 //  Consolidated environment configuration for CodeEditor SwiftUI view
 //
 
+import CodeEditorConfiguration
 import SwiftUI
 
 // MARK: - Supporting Types

@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 import Foundation
 
 // MARK: - Responsive Layout Provider

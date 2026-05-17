@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorConfiguration
 import CodeEditorPlatform
 import Foundation
 #if canImport(AppKit)
@@ -303,7 +304,7 @@ public final class AsyncSyntaxHighlighter {
         highlightingTask = task
 
         // Wait for the task to complete, optionally feeding UnifiedPerformanceSystem.
-        if let ups = textView.configuration.performance.unifiedPerformanceSystem {
+        if let ups = textView.configuration.performance.unifiedPerformanceSystem as? UnifiedPerformanceSystem {
             await ups.track(.syntaxHighlighting) {
                 await task.value
             }

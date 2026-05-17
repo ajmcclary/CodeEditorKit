@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 import CodeEditorDesignTokens
 @testable import CodeEditorPlugin
 import Foundation

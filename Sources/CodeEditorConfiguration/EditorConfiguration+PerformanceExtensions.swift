@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import CodeEditorPlatform
 import Foundation
 #if canImport(SwiftUI)
@@ -115,7 +116,7 @@ extension EditorConfiguration {
         /// otherwise-equal `Performance` values compare equal regardless of
         /// what is in this field — the contract asserted by
         /// `equatableIgnoresUnifiedPerformanceSystem`.
-        public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
+        public var unifiedPerformanceSystem: (any UnifiedPerformanceTracking)?
 
         // MARK: - Initialization
 

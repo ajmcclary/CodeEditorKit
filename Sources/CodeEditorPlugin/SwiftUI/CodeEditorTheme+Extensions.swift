@@ -7,6 +7,7 @@
 //  `Sources/CodeEditorPlugin/Theming/`.
 //
 
+import CodeEditorConfiguration
 import CodeEditorPlatform
 import SwiftUI
 

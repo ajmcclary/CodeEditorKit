@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 #if canImport(SwiftUI)
 import SwiftUI
 

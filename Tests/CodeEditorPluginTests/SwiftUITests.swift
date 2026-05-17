@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 import SwiftUI
 import XCTest
 

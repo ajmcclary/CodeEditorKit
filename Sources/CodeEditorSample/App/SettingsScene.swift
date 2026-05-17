@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 #if canImport(AppKit)
 import CodeEditorPlugin
 import SwiftUI

@@ -257,18 +257,6 @@ public struct EditorConfiguration: Codable, Sendable {
 
     /// Create a CodeFoldingConfiguration from this EditorConfiguration.
     ///
-    /// Maps the code folding settings from this EditorConfiguration to a
-    /// CodeFoldingConfiguration that can be used by the CodeFoldingEngine.
-    ///
-    /// - Returns: A configured CodeFoldingConfiguration instance
-    internal func createCodeFoldingConfiguration() -> CodeFoldingConfiguration {
-        var config = CodeFoldingConfiguration()
-        config.enabled = display.isCodeFoldingEnabled
-        config.showGutterControls = display.areFoldingControlsVisible
-        config.minimumLineCount = display.minimumFoldableLines
-        config.animatesFolding = performance.animateCodeFolding
-        return config
-    }
 }
 
 // MARK: - Equatable

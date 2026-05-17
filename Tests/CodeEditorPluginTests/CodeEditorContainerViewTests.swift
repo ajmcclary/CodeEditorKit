@@ -6,6 +6,7 @@
 //
 
 import CodeEditorCommon
+import CodeEditorConfiguration
 @testable import CodeEditorPlugin
 import XCTest
 #if canImport(AppKit)

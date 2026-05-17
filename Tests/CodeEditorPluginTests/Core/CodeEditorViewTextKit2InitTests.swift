@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 import XCTest
 
 #if canImport(AppKit)

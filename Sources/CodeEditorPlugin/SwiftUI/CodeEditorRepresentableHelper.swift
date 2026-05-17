@@ -5,6 +5,7 @@
 //  Shared helper methods for CodeEditorRepresentable implementations
 //
 
+import CodeEditorConfiguration
 import CodeEditorPlatform
 import SwiftUI
 

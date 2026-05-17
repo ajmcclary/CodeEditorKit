@@ -105,9 +105,15 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorConfiguration",
+            dependencies: ["CodeEditorCommon", "CodeEditorPlatform", "CodeEditorTextModel"],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
+                "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel",
@@ -136,6 +142,7 @@ let package = Package(
             name: "CodeEditorSample",
             dependencies: [
                 "CodeEditorCommon",
+                "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
@@ -154,6 +161,7 @@ let package = Package(
             name: "CodeEditorPluginTests",
             dependencies: [
                 "CodeEditorCommon",
+                "CodeEditorConfiguration",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
                 "CodeEditorTextModel",
@@ -182,6 +190,7 @@ let package = Package(
         .testTarget(
             name: "CodeEditorUITests",
             dependencies: [
+                "CodeEditorConfiguration",
                 "CodeEditorUI",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
@@ -195,6 +204,7 @@ let package = Package(
             name: "CodeEditorSampleTests",
             dependencies: [
                 "CodeEditorCommon",
+                "CodeEditorConfiguration",
                 "CodeEditorPlatform",
                 "CodeEditorSample",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
