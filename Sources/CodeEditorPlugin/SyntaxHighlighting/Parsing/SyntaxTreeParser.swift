@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 // MARK: - Syntax Tree Parser

@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// Central coordinator for managing specialized actors across the editor

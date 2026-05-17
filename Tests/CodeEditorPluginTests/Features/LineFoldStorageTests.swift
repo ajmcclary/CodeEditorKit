@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 @testable import CodeEditorPlugin
 import Foundation
 import Testing

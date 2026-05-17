@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import AppKit
+import CodeEditorLanguages
 import CodeEditorTextModel
 #elseif canImport(UIKit)
 import UIKit

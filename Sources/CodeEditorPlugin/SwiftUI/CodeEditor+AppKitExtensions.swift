@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorLanguages
 import CodeEditorPlatform
 import CodeEditorTheming
 #if canImport(AppKit)

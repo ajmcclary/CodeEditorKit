@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// Represents a unique identifier for syntax token types in themes.

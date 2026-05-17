@@ -2,6 +2,7 @@
 // This file uses programmatic color definitions for cross-platform compatibility
 
 import CodeEditorDesignTokens
+import CodeEditorLanguages
 import CodeEditorPlatform
 import CodeEditorTheming
 import Foundation

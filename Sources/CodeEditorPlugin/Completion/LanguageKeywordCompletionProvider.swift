@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// Built-in completion provider that emits language keywords pulled from

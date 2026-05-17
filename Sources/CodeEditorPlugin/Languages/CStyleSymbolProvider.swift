@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// C-style language symbol provider for C, C++, Java, Go, Rust
-struct CStyleSymbolProvider: LineBasedSymbolProvider {
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+package struct CStyleSymbolProvider: LineBasedSymbolProvider {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Function detection (simplified)
         if line.contains("(") && line.contains(")") && !line.hasPrefix("//") && !line.hasPrefix("/*") {
             // Try to extract function name

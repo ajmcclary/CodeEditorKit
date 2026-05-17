@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 // LSP functionality is only available on macOS
 
+import CodeEditorLanguages
 import Foundation
 
 /// Utility for resolving Language Server Protocol (LSP) server executable paths

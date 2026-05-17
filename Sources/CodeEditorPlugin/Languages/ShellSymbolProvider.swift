@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// Shell script symbol provider for detecting functions, variables, and aliases
-struct ShellSymbolProvider: LineBasedSymbolProvider {
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+package struct ShellSymbolProvider: LineBasedSymbolProvider {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and empty lines
         if line.hasPrefix("#") || line.isEmpty {
             return nil

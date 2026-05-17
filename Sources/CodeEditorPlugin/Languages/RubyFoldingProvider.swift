@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// Ruby folding provider for detecting classes, modules, methods, and blocks
-struct RubyFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct RubyFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
         let lines = text.components(separatedBy: .newlines)
         var currentLocation = 0

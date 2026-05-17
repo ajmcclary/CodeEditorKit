@@ -1,8 +1,10 @@
 import Foundation
 
 /// Swift symbol provider for detecting Swift classes, structs, enums, functions, and properties
-struct SwiftSymbolProvider: LineBasedSymbolProvider {
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+package struct SwiftSymbolProvider: LineBasedSymbolProvider {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Class detection (handles 'final class' as well)
         if line.hasPrefix("class ") || line.hasPrefix("final class ") {
             let prefix = line.hasPrefix("final class ") ? "final class " : "class "

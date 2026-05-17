@@ -2,7 +2,7 @@ import CodeEditorTextModel
 import Foundation
 
 /// HTML symbol provider for detecting HTML elements and structure
-struct HTMLSymbolProvider: LineBasedSymbolProvider {
+package struct HTMLSymbolProvider: LineBasedSymbolProvider {
     /// Pre-compiled regex for the only two attributes this provider ever
     /// extracts — `id` and `class`. Previously the pattern was rebuilt and
     /// the regex re-compiled on every call to `extractAttribute(_:from:)`,
@@ -18,7 +18,9 @@ struct HTMLSymbolProvider: LineBasedSymbolProvider {
         options: .caseInsensitive
     )
 
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and doctype
         if line.hasPrefix("<!--") || line.hasPrefix("<!DOCTYPE") || line.hasPrefix("<?") {
             return nil

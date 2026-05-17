@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorLanguages
 import Foundation
 
 // MARK: - Language Definition Factory Methods

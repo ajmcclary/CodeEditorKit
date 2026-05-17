@@ -1,4 +1,5 @@
 #if canImport(SwiftUI)
+import CodeEditorLanguages
 import Foundation
 
 // MARK: - Completion Types

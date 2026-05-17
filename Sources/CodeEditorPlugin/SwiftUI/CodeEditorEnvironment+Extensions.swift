@@ -6,6 +6,7 @@
 //
 
 import CodeEditorConfiguration
+import CodeEditorLanguages
 import CodeEditorTheming
 import SwiftUI
 

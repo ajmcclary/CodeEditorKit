@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// Protocol defining the transport layer for LSP communication

@@ -2,12 +2,14 @@ import CodeEditorTextModel
 import Foundation
 
 /// XML symbol provider for detecting XML elements and structure
-struct XMLSymbolProvider: StatefulLineBasedSymbolProvider {
-    typealias State = [String] // element stack
+package struct XMLSymbolProvider: StatefulLineBasedSymbolProvider {
+    package typealias State = [String] // element stack
 
-    func makeState() -> State { [] }
+    package init() {}
 
-    func detectSymbols(
+    package func makeState() -> State { [] }
+
+    package func detectSymbols(
         in line: String,
         at location: Int,
         lineIndex _: Int,

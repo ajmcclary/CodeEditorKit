@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// Catalog of document-symbol providers keyed by language.

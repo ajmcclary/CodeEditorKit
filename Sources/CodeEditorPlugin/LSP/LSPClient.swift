@@ -2,6 +2,7 @@
 // On platforms without Process API, only remote LSP servers can be used
 
 import CodeEditorCommon
+import CodeEditorLanguages
 import Foundation
 
 /// Language Server Protocol client implementation

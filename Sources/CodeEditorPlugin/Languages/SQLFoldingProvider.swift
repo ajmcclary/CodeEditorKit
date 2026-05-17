@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// SQL folding provider for detecting stored procedures, functions, and complex statements
-struct SQLFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct SQLFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
         let statements = SQLParsingUtility.splitStatements(text, minimumLines: 3)
         var currentLocation = 0

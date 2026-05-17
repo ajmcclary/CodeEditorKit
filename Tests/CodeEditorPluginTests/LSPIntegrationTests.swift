@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 // LSP tests are only available on macOS
 
+import CodeEditorLanguages
 import XCTest
 
 @testable import CodeEditorPlugin

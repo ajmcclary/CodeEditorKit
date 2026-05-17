@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorLanguages
 import CodeEditorTheming
 #if canImport(SwiftUI)
 import SwiftUI

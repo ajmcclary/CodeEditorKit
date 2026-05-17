@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// CSS symbol provider for detecting CSS rules, selectors, and at-rules
-struct CSSSymbolProvider: LineBasedSymbolProvider {
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+package struct CSSSymbolProvider: LineBasedSymbolProvider {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Skip comments and empty lines
         if line.hasPrefix("/*") || line.isEmpty {
             return nil

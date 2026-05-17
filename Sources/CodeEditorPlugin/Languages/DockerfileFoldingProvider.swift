@@ -3,8 +3,10 @@ import Foundation
 
 /// Dockerfile folding: multi-line backslash-continuation instruction bodies
 /// and `<<TOKEN` heredoc bodies.
-struct DockerfileFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct DockerfileFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         let lines = text.components(separatedBy: .newlines)
         let lineLocations = buildLineLocations(for: lines)
 

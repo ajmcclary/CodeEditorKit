@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorConfiguration
+import CodeEditorLanguages
 import Foundation
 
 // MARK: - Adaptive Performance Mode System

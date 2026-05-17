@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorLanguages
 @testable import CodeEditorPlugin
 import XCTest
 

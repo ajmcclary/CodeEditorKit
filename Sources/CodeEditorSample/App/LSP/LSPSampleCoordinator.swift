@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import CodeEditorCommon
+import CodeEditorLanguages
 import CodeEditorPlugin
 import Combine
 import Foundation

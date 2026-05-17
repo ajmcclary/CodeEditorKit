@@ -3,8 +3,10 @@ import Foundation
 // MARK: - XML Folding Provider
 
 /// XML/HTML tag folding provider
-internal struct XMLFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct XMLFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
 
         // Simple XML tag matching

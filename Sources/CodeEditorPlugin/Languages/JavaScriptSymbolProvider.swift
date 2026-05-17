@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// JavaScript/TypeScript symbol provider for detecting functions, classes, and variables
-struct JavaScriptSymbolProvider: LineBasedSymbolProvider {
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+package struct JavaScriptSymbolProvider: LineBasedSymbolProvider {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Function detection
         if line.hasPrefix("function ") || line.contains("= function") || line.contains("=> {") {
             return extractJSFunction(from: line, at: location, fullLine: fullLine)

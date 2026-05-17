@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// One observation of a single completion provider's response to a request.

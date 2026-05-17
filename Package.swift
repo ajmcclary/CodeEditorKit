@@ -118,11 +118,22 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorLanguages",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorPlatform",
+                "CodeEditorTextModel"
+            ],
+            path: "Sources/CodeEditorPlugin/Languages",
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
+                "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
@@ -132,7 +143,8 @@ let package = Package(
                 .product(name: "SwiftParser", package: "swift-syntax")
             ],
             exclude: [
-                "Info.plist"
+                "Info.plist",
+                "Languages"
             ],
             swiftSettings: swiftSettings
         ),
@@ -140,6 +152,7 @@ let package = Package(
             name: "CodeEditorUI",
             dependencies: [
                 "CodeEditorDesignTokens",
+                "CodeEditorLanguages",
                 "CodeEditorPlugin",
                 "CodeEditorTheming"
             ],
@@ -151,6 +164,7 @@ let package = Package(
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
+                "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
                 "CodeEditorTextModel",
@@ -170,6 +184,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
+                "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
                 "CodeEditorTextModel",
@@ -214,6 +229,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
+                "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorSample",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")

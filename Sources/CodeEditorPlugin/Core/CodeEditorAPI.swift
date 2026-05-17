@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorLanguages
 import Foundation
 #if canImport(UIKit)
 import UIKit

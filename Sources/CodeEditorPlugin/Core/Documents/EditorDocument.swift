@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// A single open document in an `EditorDocuments` collection.

@@ -1,4 +1,5 @@
 #if canImport(AppKit) || canImport(UIKit)
+import CodeEditorLanguages
 import Foundation
 
 @available(macOS 13.0, iOS 16.0, *)

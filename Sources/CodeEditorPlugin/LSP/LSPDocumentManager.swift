@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorLanguages
 import Foundation
 
 /// Manages document synchronization with LSP servers

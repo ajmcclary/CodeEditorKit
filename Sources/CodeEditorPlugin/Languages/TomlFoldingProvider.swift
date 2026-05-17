@@ -5,8 +5,10 @@ import Foundation
 /// header closes the previously-open section; trailing `# comments` after a
 /// header are tolerated. Multi-line strings are skipped so headers nested
 /// inside them are not misdetected.
-struct TomlFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct TomlFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         let lines = text.components(separatedBy: .newlines)
         var lineLocations = [Int]()
         lineLocations.reserveCapacity(lines.count)

@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// JSON symbol provider for detecting JSON structure and keys
-struct JSONSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
+package struct JSONSymbolProvider: DocumentSymbolProvider {
+    package init() {}
+
+    package func detectSymbols(in text: String) async -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
 
         // Try to parse JSON structure

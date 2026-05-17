@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// Manages debouncing and throttling for completion requests to optimize performance

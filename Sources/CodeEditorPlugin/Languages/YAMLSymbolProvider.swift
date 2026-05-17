@@ -2,12 +2,14 @@ import CodeEditorTextModel
 import Foundation
 
 /// YAML symbol provider for detecting YAML structure and keys
-struct YAMLSymbolProvider: StatefulLineBasedSymbolProvider {
-    typealias State = [(level: Int, symbol: DocumentSymbol)] // indentation stack
+package struct YAMLSymbolProvider: StatefulLineBasedSymbolProvider {
+    package typealias State = [(level: Int, symbol: DocumentSymbol)] // indentation stack
 
-    func makeState() -> State { [] }
+    package init() {}
 
-    func detectSymbols(
+    package func makeState() -> State { [] }
+
+    package func detectSymbols(
         in line: String,
         at location: Int,
         lineIndex _: Int,

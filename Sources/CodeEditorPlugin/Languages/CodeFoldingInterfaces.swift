@@ -38,5 +38,8 @@ public enum FoldingType: Equatable, Sendable {
 /// Protocol for language-specific folding providers
 @MainActor
 public protocol CodeFoldingProvider {
+    /// Detect foldable regions in the supplied source text.
+    /// - Parameter text: The full source text to scan.
+    /// - Returns: All foldable regions discovered.
     func detectFoldableRegions(in text: String) async -> [FoldableRegion]
 }

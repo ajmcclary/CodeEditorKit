@@ -2,15 +2,17 @@ import CodeEditorTextModel
 import Foundation
 
 /// PHP symbol provider for detecting PHP classes, functions, methods, and variables
-struct PHPSymbolProvider: StatefulLineBasedSymbolProvider {
-    struct State {
+package struct PHPSymbolProvider: StatefulLineBasedSymbolProvider {
+    package struct State {
         var inClass = false
         var inFunction = false
     }
 
-    func makeState() -> State { State() }
+    package init() {}
 
-    func detectSymbols(
+    package func makeState() -> State { State() }
+
+    package func detectSymbols(
         in line: String,
         at location: Int,
         lineIndex _: Int,

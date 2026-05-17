@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// Markdown symbol provider for detecting headers and section structure
-struct MarkdownSymbolProvider: LineBasedSymbolProvider {
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+package struct MarkdownSymbolProvider: LineBasedSymbolProvider {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Header detection
         if line.hasPrefix("#") {
             let level = line.prefix { $0 == "#" }.count

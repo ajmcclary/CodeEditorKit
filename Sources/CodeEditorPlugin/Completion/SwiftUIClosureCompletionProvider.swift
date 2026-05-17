@@ -1,4 +1,5 @@
 #if canImport(SwiftUI)
+import CodeEditorLanguages
 import Foundation
 
 /// Adapter that wraps the closure attached via the `.codeCompletion(provider:)`

@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorLanguages
 #if canImport(AppKit)
 import CodeEditorPlugin
 @testable import CodeEditorSample

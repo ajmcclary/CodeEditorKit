@@ -1,8 +1,10 @@
 import Foundation
 
 /// Python symbol provider for detecting Python classes, functions, and methods
-struct PythonSymbolProvider: LineBasedSymbolProvider {
-    func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
+package struct PythonSymbolProvider: LineBasedSymbolProvider {
+    package init() {}
+
+    package func detectSymbol(in line: String, at location: Int, lineIndex _: Int, fullLine: String) -> DocumentSymbol? {
         // Class detection
         if line.hasPrefix("class ") {
             return extractSymbol(from: line, prefix: "class ", kind: .class, at: location, fullLine: fullLine)

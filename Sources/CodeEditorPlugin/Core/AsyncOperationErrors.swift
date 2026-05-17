@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorLanguages
 import Foundation
 
 // MARK: - Enhanced Error Types with Recovery Strategies

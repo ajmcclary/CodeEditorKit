@@ -6,7 +6,7 @@ import Foundation
 /// `--` line comments, `--[=*[ ... ]=*]` block comments, and `[=*[ ... ]=*]`
 /// long strings are blanked so their contents cannot supply phantom
 /// keywords. Short strings (`"..."`/`'...'`) are blanked on each line too.
-struct LuaFoldingProvider: CodeFoldingProvider {
+package struct LuaFoldingProvider: CodeFoldingProvider {
     private struct Opener {
         let keyword: String
         let lineIndex: Int
@@ -14,7 +14,9 @@ struct LuaFoldingProvider: CodeFoldingProvider {
         let title: String
     }
 
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         let cleaned = clean(text)
         let cleanedLines = cleaned.components(separatedBy: "\n")
         let originalLines = text.components(separatedBy: "\n")

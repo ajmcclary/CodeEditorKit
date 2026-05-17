@@ -4,8 +4,10 @@ import Foundation
 // MARK: - Brace Folding Provider
 
 /// Brace-based folding provider for C-style languages
-internal struct BraceFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct BraceFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
         // Simple brace matching
         var braceStack: [(Character, Int)] = []

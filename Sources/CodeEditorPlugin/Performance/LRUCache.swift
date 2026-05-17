@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// A thread-safe LRU (Least Recently Used) cache implementation

@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import Foundation
 
 /// Shared parsing utilities for completion providers

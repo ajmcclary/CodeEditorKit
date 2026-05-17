@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 // LSP test helpers are only available on macOS
 
+import CodeEditorLanguages
 @testable import CodeEditorPlugin
 import Foundation
 

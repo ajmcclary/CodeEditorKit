@@ -4,8 +4,10 @@ import Foundation
 // MARK: - Indentation Folding Provider
 
 /// Indentation-based folding provider for languages like Python and YAML
-internal struct IndentationFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct IndentationFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
         let lines = text.components(separatedBy: .newlines)
 

@@ -4,8 +4,10 @@ import Foundation
 // MARK: - Markdown Folding Provider
 
 /// Markdown section folding provider
-internal struct MarkdownFoldingProvider: CodeFoldingProvider {
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+package struct MarkdownFoldingProvider: CodeFoldingProvider {
+    package init() {}
+
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
         let lines = text.components(separatedBy: .newlines)
 

@@ -8,13 +8,13 @@ import Foundation
 /// with one `Sendable` struct per language. The `Language` enum's computed properties
 /// (`name`, `fileExtensions`, `lspIdentifier`) delegate here so there is exactly one
 /// place to update when adding a language.
-internal struct LanguageDescriptor: Sendable {
+package struct LanguageDescriptor: Sendable {
     // MARK: - Identity
 
-    let language: Language
-    let displayName: String
-    let fileExtensions: [String]
-    let lspIdentifier: String
+    package let language: Language
+    package let displayName: String
+    package let fileExtensions: [String]
+    package let lspIdentifier: String
 
     // MARK: - Highlighting
 
@@ -25,13 +25,13 @@ internal struct LanguageDescriptor: Sendable {
     /// JSON (FastJSONTokenizer) have their own strategies and may still
     /// have `parserName` set; the regex pipeline ignores them via this
     /// flag.
-    let usesRegexHighlighter: Bool
-    let lineComment: String?
-    let blockCommentStart: String?
-    let blockCommentEnd: String?
-    let identifierPattern: String
-    let stringDelimiters: [Character]
-    let highlightingRules: [DescriptorHighlightRule]
+    package let usesRegexHighlighter: Bool
+    package let lineComment: String?
+    package let blockCommentStart: String?
+    package let blockCommentEnd: String?
+    package let identifierPattern: String
+    package let stringDelimiters: [Character]
+    package let highlightingRules: [DescriptorHighlightRule]
 
     /// When true, the regex highlighter compiles the keyword / type /
     /// function word-patterns with a leading `(?i)` flag so e.g. lowercase
@@ -39,27 +39,27 @@ internal struct LanguageDescriptor: Sendable {
     /// `false` because most language descriptors carry exact-case keywords
     /// and case-folding would let an identifier like `IF` match `if` in
     /// languages where casing is significant.
-    let caseInsensitiveKeywords: Bool
+    package let caseInsensitiveKeywords: Bool
 
     // MARK: - Completion
 
-    let keywords: [String]
-    let types: [String]
-    let functions: [String]
-    let literals: [String]
-    let triggerCharacters: [String]
+    package let keywords: [String]
+    package let types: [String]
+    package let functions: [String]
+    package let literals: [String]
+    package let triggerCharacters: [String]
 
     // MARK: - Extended (snippets / member completions / modules)
 
-    let snippets: [SnippetTemplate]
-    let memberCompletions: (any LanguageMemberCompletions)?
-    let commonModules: [String]
+    package let snippets: [SnippetTemplate]
+    package let memberCompletions: (any LanguageMemberCompletions)?
+    package let commonModules: [String]
 
     // MARK: - Parser / detection
 
-    let parserName: String?
-    let shebangIdentifiers: Set<String>
-    let scriptAliases: Set<String>
+    package let parserName: String?
+    package let shebangIdentifiers: Set<String>
+    package let scriptAliases: Set<String>
 
     init(
         language: Language,
@@ -113,7 +113,7 @@ internal struct LanguageDescriptor: Sendable {
 
     // MARK: - All Descriptors
 
-    static let allDescriptors: [Self] = [
+    package static let allDescriptors: [Self] = [
         swiftDescriptor,
         javascriptDescriptor,
         typescriptDescriptor,
@@ -143,7 +143,7 @@ internal struct LanguageDescriptor: Sendable {
     ]
 
     /// Canonical descriptor for every `Language` case.
-    static let all: [Language: Self] = [
+    package static let all: [Language: Self] = [
         .swift: swiftDescriptor,
         .javascript: javascriptDescriptor,
         .typescript: typescriptDescriptor,
@@ -174,11 +174,11 @@ internal struct LanguageDescriptor: Sendable {
 
     // MARK: - Lookup
 
-    static func descriptor(for language: Language) -> Self? {
+    package static func descriptor(for language: Language) -> Self? {
         all[language]
     }
 
-    static func keywords(for language: Language) -> [String] {
+    package static func keywords(for language: Language) -> [String] {
         all[language]?.keywords ?? []
     }
 }

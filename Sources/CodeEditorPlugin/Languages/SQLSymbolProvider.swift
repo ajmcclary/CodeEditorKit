@@ -2,8 +2,10 @@ import CodeEditorTextModel
 import Foundation
 
 /// SQL symbol provider for detecting SQL objects and statements
-struct SQLSymbolProvider: DocumentSymbolProvider {
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
+package struct SQLSymbolProvider: DocumentSymbolProvider {
+    package init() {}
+
+    package func detectSymbols(in text: String) async -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
         let statements = SQLParsingUtility.splitStatements(text)
         var currentLocation = 0
