@@ -30,14 +30,17 @@
 
 ## Current State (Phases 5-6)
 
-All Tree-sitter types are `internal` and live in:
+After the §6.2.7 carve-out, regex-query types are split across two source roots: `RegexRangeHighlightProvider.swift` stays in the umbrella because it references `CodeEditorView`; the rest moved to `CodeEditorSyntaxHighlighting`. The pure-data Range-Query infrastructure (`RangeQueryParserProtocol`, `RangeQueryParseResult`, `RangeQueryCapture`, `RangeQueryParserError`) was extracted into `RangeQueryParser.swift` so the new target's parser can reach them.
 ```
-Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/
-├── RegexRangeHighlightProvider.swift
-├── QueryCaptureMap.swift
-├── EmbeddedLanguageInjectionLayer.swift
+Sources/CodeEditorPlugin/Core/SyntaxHighlighting/RegexQuery/
+└── RegexRangeHighlightProvider.swift   # umbrella — references CodeEditorView
+
+Sources/CodeEditorSyntaxHighlighting/RegexQuery/
 ├── HeuristicFoldProvider.swift
-└── HeuristicSymbolProviderFacade.swift
+├── HeuristicSymbolProviderFacade.swift
+├── QueryCaptureMap.swift
+├── RangeQueryParser.swift              # added during §6.2.7
+└── RegexIncrementalRangeQueryParser.swift
 ```
 
 The spike uses `RegexBackedRangeQueryParser` — a regex-backed implementation that proves the architecture without requiring C grammar binaries.

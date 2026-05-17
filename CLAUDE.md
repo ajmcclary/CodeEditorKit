@@ -51,41 +51,34 @@ Tree-sitter work is internal scaffolding only. There is no public configuration 
 
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Main APIs, services, event system
-├── Text/                    # TextKit2 handling, layout, parsing, range store, processing
-├── Layout/                  # UI components + co-located ViewModels
-├── Configuration/           # Settings, presets, validation
-├── SyntaxHighlighting/      # Language highlighting engine + tree-sitter adapters
-├── Languages/               # Language-specific providers (25 concrete languages + plain text)
-├── Theming/                 # Theme system, color tokens, appearance
-├── Completion/              # Code completion providers
-├── Documents/               # EditorDocument value type + EditorDocuments observable manager
-├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
-├── SwiftUI/                 # SwiftUI wrappers and modifiers
-├── Platform/                # Cross-platform color/font/view abstractions
-├── Extensions/              # Catch-all type extensions (+Extensions suffix; see Conventions)
-├── LSP/                     # Language Server Protocol support
 ├── Annotations/             # Data-source driven annotation badges
+├── Completion/              # Code completion providers
+├── Core/                    # Main APIs, services, event system (includes F3 sub-buckets: Configuration/, Documents/, Platform/, SyntaxHighlighting/, Text/ — umbrella-coupled glue staged here pending §6.2.12 Core split)
+├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
+├── LSP/                     # Language Server Protocol support
+├── Languages/               # Language descriptors + folding/symbol/completion-model interfaces (compiled as CodeEditorLanguages target via `path:`)
+├── Layout/                  # UI components + co-located ViewModels
 ├── Search/                  # Search result models and shared search support
-├── Workspace/               # Workspace indexing/search types
-├── Models/                  # Shared data models
-├── Utilities/               # Shared helpers
-└── Resources/               # Bundled theme JSON (processed via `resources:`)
+├── SwiftUI/                 # SwiftUI wrappers and modifiers
+└── Workspace/               # Workspace indexing/search types
 ```
+
+Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`) have been carved out into sibling SPM targets — see "Other source roots" below.
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-19 top-level directories, 358 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions), and 588 Swift source files under `Sources/`.
+10 top-level directories in the umbrella target, 319 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7), and 591 Swift source files under `Sources/`.
 
 Other source roots (each is its own SPM target — see `Package.swift`):
-- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors (phase 0).
+- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7).
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
 - `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds; phase 4).
 - `Sources/CodeEditorPlugin/Languages/` — language descriptors + folding/symbol/completion-model interfaces (phase 3; physically inside the umbrella source tree but compiled as its own target via `path:`).
 - `Sources/CodeEditorPlatform/` — cross-platform color/font/view abstractions (phase 0).
-- `Sources/CodeEditorTextModel/` — TextKit2 primitives, range store, location, parsing primitives (phase 1).
+- `Sources/CodeEditorTextModel/` — TextKit2 primitives, `RangeStore`/`RangeStoreElement`/`RangeStoreRun`, geometry, location, parsing primitives (phase 1; RangeStore relocated from umbrella in §6.2.7).
 - `Sources/CodeEditorConfiguration/` — settings, presets, validation (phase 1).
 - `Sources/CodeEditorTheming/` — theme system, color tokens, appearance + bundled theme JSON (phase 2).
+- `Sources/CodeEditorSyntaxHighlighting/` — syntax-highlighting engine: color schemes, tokenizers, regex/SwiftSyntax highlighters, parsing helpers, descriptor execution, performance instrumentation (phase 3.5).
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
 - `Sources/CodeEditorSample/` — executable demo app target.
 - `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; it is not currently an SPM target.
