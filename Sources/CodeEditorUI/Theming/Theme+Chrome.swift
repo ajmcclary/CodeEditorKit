@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorTheming
 import SwiftUI
 
 /// SwiftUI `Color` accessors for `Theme.style.chrome.*` token values.

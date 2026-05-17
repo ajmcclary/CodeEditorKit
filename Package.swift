@@ -110,6 +110,14 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorTheming",
+            dependencies: ["CodeEditorCommon", "CodeEditorDesignTokens"],
+            resources: [
+                .process("Resources/Themes")
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
@@ -117,6 +125,7 @@ let package = Package(
                 "CodeEditorDesignTokens",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel",
+                "CodeEditorTheming",
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
@@ -125,16 +134,14 @@ let package = Package(
             exclude: [
                 "Info.plist"
             ],
-            resources: [
-                .process("Resources/Themes")
-            ],
             swiftSettings: swiftSettings
         ),
         .target(
             name: "CodeEditorUI",
             dependencies: [
                 "CodeEditorDesignTokens",
-                "CodeEditorPlugin"
+                "CodeEditorPlugin",
+                "CodeEditorTheming"
             ],
             swiftSettings: swiftSettings
         ),
@@ -147,6 +154,7 @@ let package = Package(
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
                 "CodeEditorTextModel",
+                "CodeEditorTheming",
                 "CodeEditorUI"
             ],
             exclude: [
@@ -165,6 +173,7 @@ let package = Package(
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
                 "CodeEditorTextModel",
+                "CodeEditorTheming",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],

@@ -1,3 +1,4 @@
+import CodeEditorTheming
 #if canImport(AppKit)
 import AppKit
 import CodeEditorDesignTokens

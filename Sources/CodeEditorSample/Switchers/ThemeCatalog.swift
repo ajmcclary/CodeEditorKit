@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorTheming
 import Foundation
 
 /// Bundled-theme catalog for the sample app's theme picker. Reads the

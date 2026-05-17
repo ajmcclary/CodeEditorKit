@@ -2,6 +2,7 @@ import CodeEditorCommon
 import CodeEditorConfiguration
 import CodeEditorPlatform
 import CodeEditorTextModel
+import CodeEditorTheming
 import Foundation
 import SwiftUI
 #if canImport(AppKit)

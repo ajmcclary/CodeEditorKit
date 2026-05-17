@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import CodeEditorDesignTokens
 import Foundation
 import SwiftUI

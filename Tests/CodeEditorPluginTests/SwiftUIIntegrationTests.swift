@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorTheming
 import SwiftUI
 import XCTest
 

@@ -1,4 +1,5 @@
 @testable import CodeEditorPlugin
+import CodeEditorTheming
 import Foundation
 import Testing
 

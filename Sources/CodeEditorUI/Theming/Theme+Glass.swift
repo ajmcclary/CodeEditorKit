@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorTheming
 import SwiftUI
 
 /// SwiftUI accessors for `Theme.platform.glass` and the popover shadow.

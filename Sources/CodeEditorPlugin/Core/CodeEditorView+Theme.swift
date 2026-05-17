@@ -8,6 +8,7 @@
 // `SyntaxColorScheme.color(forToken:in:)`).
 
 import CodeEditorPlatform
+import CodeEditorTheming
 import Foundation
 #if canImport(AppKit)
 import AppKit

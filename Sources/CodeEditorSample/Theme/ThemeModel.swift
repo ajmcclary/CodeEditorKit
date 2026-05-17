@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorTheming
 import Observation
 
 /// Active editor theme. First wrapper extracted in the AppState

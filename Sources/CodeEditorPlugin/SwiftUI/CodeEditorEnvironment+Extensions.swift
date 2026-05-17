@@ -6,6 +6,7 @@
 //
 
 import CodeEditorConfiguration
+import CodeEditorTheming
 import SwiftUI
 
 // MARK: - Supporting Types

@@ -1,4 +1,5 @@
 import CodeEditorDesignTokens
+import CodeEditorTheming
 import CoreGraphics
 import Foundation
 

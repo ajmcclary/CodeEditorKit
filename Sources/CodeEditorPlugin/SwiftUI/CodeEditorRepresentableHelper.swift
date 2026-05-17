@@ -7,6 +7,7 @@
 
 import CodeEditorConfiguration
 import CodeEditorPlatform
+import CodeEditorTheming
 import SwiftUI
 
 #if canImport(UIKit)
