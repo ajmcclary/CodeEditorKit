@@ -144,33 +144,3 @@ public enum TextInputFeaturesFactory {
         PlatformTextInputFeatures()
     }
 }
-
-// MARK: - CodeEditorView Extensions
-
-#if canImport(AppKit)
-@MainActor extension CodeEditorView: TextInputFeatureTarget {
-    public var nsTextView: NSTextView? { self }
-
-    #if canImport(UIKit)
-    public var uiTextView: UITextView? { nil }
-    #endif
-}
-#elseif canImport(UIKit)
-@MainActor extension CodeEditorView: TextInputFeatureTarget {
-    #if canImport(AppKit)
-    public var nsTextView: NSTextView? { nil }
-    #endif
-
-    public var uiTextView: UITextView? { self }
-}
-#endif
-
-// MARK: - EditorConfiguration Integration
-
-extension EditorConfiguration {
-    /// Apply text input features using the platform abstraction
-    @MainActor public func applyTextInputFeatures(to textView: any TextInputFeatureTarget) {
-        let features = TextInputFeaturesFactory.create()
-        features.apply(to: textView, configuration: behavior)
-    }
-}

@@ -10,9 +10,23 @@
 
 **Spec:** [`docs/superpowers/specs/2026-05-17-phase-0-2-target-extraction-design.md`](../specs/2026-05-17-phase-0-2-target-extraction-design.md)
 
-**Spec-gap notes (discovered during plan writing):**
-1. Four cross-target leaks in `Platform/` that the spec did not catch (`PlatformCapabilities.swift`, `PlatformConfigurations.swift`, `TextInputFeatures.swift` each have `extension CodeEditorView` or `extension EditorConfiguration` blocks; `CodeEditorView+EnclosingScrollView.swift` is entirely a view extension). Task 1 absorbs the surgery to relocate these to the correct target's source root before Platform extraction.
-2. `CodeEditorDependencies.swift` cannot move to `CodeEditorCommon` as the spec §3a proposed: it's an `internal` DI factory that references types from many future targets (`MemoryMonitor` in `Performance/`, `PlatformCapabilities` in `Platform/`, `LanguageMetadataRegistry` in `Languages/`, etc.). The plan keeps it in `Core/` for now; revisit during the Core/ split (NEXT.md phase 8). `CodeEditorError.swift` still moves to `CodeEditorCommon` as planned — it's a pure enum with only Foundation deps and an in-file `ValidationError`.
+**Spec-gap notes (discovered during plan writing and execution):**
+1. Four cross-target *extension* leaks in `Platform/` that the spec did not catch (`PlatformCapabilities.swift`, `PlatformConfigurations.swift`, `TextInputFeatures.swift` each have `extension CodeEditorView` or `extension EditorConfiguration` blocks; `CodeEditorView+EnclosingScrollView.swift` is entirely a view extension). Task 1 absorbs the surgery to relocate these to the correct target's source root.
+2. `CodeEditorDependencies.swift` cannot move to `CodeEditorCommon` as the spec §3a proposed: it's an `internal` DI factory that references types from many future targets (`MemoryMonitor` in `Performance/`, `PlatformCapabilities` in `Platform/`, `LanguageMetadataRegistry` in `Languages/`, etc.). Plan keeps it in `Core/`; revisit during the Core/ split (NEXT.md phase 8).
+3. **(Discovered mid-execution.)** Platform has *deep type coupling* to `EditorConfiguration` — 8 files in `Platform/` use `EditorConfiguration` as a return/parameter type (platform-tuned config factories). This cannot be surgically removed without a major refactor. **Decision: flip the dependency graph so `CodeEditorPlatform` depends on `CodeEditorConfiguration`, not the reverse.** Phase 2 ordering becomes: Common → TextModel → Configuration → Platform → Theming. Theming's spec-claimed dep on Platform was unsubstantiated (no actual references) and is dropped — Theming becomes a true leaf depending only on `CodeEditorDesignTokens`.
+
+### Revised commit order (after spec-gap #3)
+
+| Commit | Target | Depends on |
+|---|---|---|
+| 1 | Pre-flight cleanup (no Package.swift changes) | — |
+| 2 | `CodeEditorCommon` | external pkgs only |
+| 3 | `CodeEditorTextModel` | `CodeEditorCommon` |
+| 4 | `CodeEditorConfiguration` | `CodeEditorCommon`, `CodeEditorTextModel` |
+| 5 | `CodeEditorPlatform` | `CodeEditorConfiguration` |
+| 6 | `CodeEditorTheming` | `CodeEditorDesignTokens` |
+
+Task numbers in the rest of this plan match the original ordering (Task 3 = Platform, Task 4 = TextModel, Task 5 = Configuration). **When executing, swap Task 3 and Task 4 with Task 5: do Task 4 (TextModel), then Task 5 (Configuration), then Task 3 (Platform) — and Task 3's `dependencies:` array changes to `["CodeEditorConfiguration"]`.** Task 6 (Theming) drops its `CodeEditorPlatform` dependency.
 
 ---
 

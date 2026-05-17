@@ -147,7 +147,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         // Configure with performance limits
         var config = EditorConfiguration()
         config.performance.maxSyntaxHighlightingLength = 100_000 // Should disable for this file
-        try? config.apply(to: textView)
+        try? textView.apply(configuration: config)
 
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
 
@@ -198,7 +198,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         // Disable syntax highlighting for scrolling performance test
         var config = EditorConfiguration()
         config.performance.maxSyntaxHighlightingLength = 0 // Disable syntax highlighting
-        try? config.apply(to: textView)
+        try? textView.apply(configuration: config)
 
         textView.text = largeFile
 
@@ -272,7 +272,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         // Enable code folding
         var config = EditorConfiguration()
         config.display.isCodeFoldingEnabled = true
-        try? config.apply(to: textView)
+        try? textView.apply(configuration: config)
 
         textView.text = largeFile
 
@@ -382,7 +382,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         var config = EditorConfiguration()
         config.performance.maxVisibleLines = 100
         config.performance.renderingUpdateStrategy = .batched
-        try? config.apply(to: textView)
+        try? textView.apply(configuration: config)
 
         _ = ViewportManager(textView: textView, memoryMonitor: MemoryMonitor())
 

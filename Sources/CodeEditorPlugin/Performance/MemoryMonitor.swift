@@ -32,7 +32,7 @@ import UIKit
 /// // Inject via configuration
 /// var config = EditorConfiguration()
 /// let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(memoryMonitor: monitor))
-/// config.apply(to: editorView)
+/// try editorView.apply(configuration: config)
 /// ```
 ///
 /// ## Lifecycle Management

@@ -336,7 +336,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         // Apply configuration
         do {
-            try configuration.apply(to: textView)
+            try textView.apply(configuration: configuration)
         } catch {
             CrossPlatformLogger.logger().error("Rejected SwiftUI editor configuration: \(error)")
         }

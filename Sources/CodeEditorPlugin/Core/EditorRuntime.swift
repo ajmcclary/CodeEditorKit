@@ -121,7 +121,7 @@ extension EditorSetup {
     @MainActor
     public func apply(to view: CodeEditorView) throws {
         view.apply(runtimeDependencies: runtimeDependencies)
-        try configuration.apply(to: view)
+        try view.apply(configuration: configuration)
     }
 }
 

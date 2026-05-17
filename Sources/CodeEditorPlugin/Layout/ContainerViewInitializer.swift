@@ -68,7 +68,7 @@ enum ContainerViewInitializer {
 
         // Apply common configuration
         do {
-            try container.configuration.apply(to: components.textView)
+            try components.textView.apply(configuration: container.configuration)
         } catch {
             CrossPlatformLogger.logger().error("Rejected container configuration: \(error)")
         }

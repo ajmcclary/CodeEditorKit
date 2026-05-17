@@ -82,7 +82,7 @@ final class MemoryMonitorDITests: XCTestCase {
         let editor = CodeEditorView()
         let originalMonitor = editor.memoryMonitor
 
-        try? config.apply(to: editor)
+        try? editor.apply(configuration: config)
 
         XCTAssertIdentical(editor.memoryMonitor, originalMonitor, "Editor configuration should not carry runtime dependencies")
     }
@@ -127,7 +127,7 @@ final class MemoryMonitorDITests: XCTestCase {
 
         var valueOnlyConfiguration = editor.configuration
         valueOnlyConfiguration.display.fontSize = 19
-        try valueOnlyConfiguration.apply(to: editor)
+        try editor.apply(configuration: valueOnlyConfiguration)
 
         XCTAssertEqual(editor.configuration.display.fontSize, 19)
         XCTAssertIdentical(editor.runtime.dependencies.eventSystem, eventSystem)

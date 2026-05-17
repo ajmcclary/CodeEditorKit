@@ -20,7 +20,7 @@ import Foundation
 /// config.behavior.isAutoIndentEnabled = true
 /// 
 /// // Apply to an editor
-/// config.apply(to: editor)
+/// try editor.apply(configuration: config)
 /// ```
 ///
 /// ## Preset Configurations
@@ -62,7 +62,7 @@ import Foundation
 /// ```swift
 /// let errors = config.validate()
 /// if errors.isEmpty {
-///     config.apply(to: editor)
+///     try editor.apply(configuration: config)
 /// } else {
 ///     // Surface validation failures via your app's logging or UI.
 /// }
@@ -251,44 +251,6 @@ public struct EditorConfiguration: Codable, Sendable {
         if !errors.isEmpty {
             throw CodeEditorError.configurationValidationFailed(errors)
         }
-    }
-
-    // MARK: - Configuration Application
-
-    /// Apply configuration to a CodeEditorView.
-    ///
-    /// Updates the editor view with all settings from this configuration.
-    /// This method handles platform-specific differences and ensures all
-    /// configuration options are properly applied.
-    ///
-    /// ## What Gets Applied
-    ///
-    /// - Display settings (font size, line numbers, syntax highlighting)
-    /// - Layout settings (tab width, line spacing, gutter width)
-    /// - Behavior settings (editability, auto-indent, completion)
-    /// - Performance settings (hardware acceleration, debouncing)
-    /// - Platform-specific text input features
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let config = EditorConfiguration.minimal
-    /// config.apply(to: editorView)
-    /// 
-    /// // Or apply directly via the property
-    /// editorView.configuration = config
-    /// ```
-    ///
-    /// - Parameter view: The CodeEditorView to configure
-    ///
-    /// - Note: Setting the view's `configuration` property directly also
-    ///         triggers this method internally.
-    ///
-    /// - SeeAlso: ``CodeEditorView/configuration``
-    @MainActor public func apply(to view: CodeEditorView) throws {
-        try validateAndThrow()
-        view.configuration = self
-        applyTextInputFeatures(to: view)
     }
 
     /// Create a CodeFoldingConfiguration from this EditorConfiguration.

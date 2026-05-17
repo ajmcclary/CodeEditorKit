@@ -243,9 +243,3 @@ public enum PlatformConfigurations {
         }
     }
 }
-
-// MARK: - EditorConfiguration Extension
-
-extension EditorConfiguration {
-    // Note: platformOptimized is already defined in EditorConfiguration+Presets.swift
-}

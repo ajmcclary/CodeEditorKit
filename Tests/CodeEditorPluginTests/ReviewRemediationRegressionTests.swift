@@ -117,7 +117,7 @@ final class ReviewRemediationRegressionTests: XCTestCase {
         var invalidConfiguration = originalConfiguration
         invalidConfiguration.layout.tabWidth = 0
 
-        XCTAssertThrowsError(try invalidConfiguration.apply(to: textView))
+        XCTAssertThrowsError(try textView.apply(configuration: invalidConfiguration))
         XCTAssertEqual(textView.configuration, originalConfiguration)
     }
 

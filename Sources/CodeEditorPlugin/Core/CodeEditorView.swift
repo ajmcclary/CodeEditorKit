@@ -57,7 +57,7 @@ import AppKit
 /// config.display.syntaxHighlighting = true
 /// config.layout.tabWidth = 4
 /// config.behavior.isAutoIndentEnabled = true
-/// config.apply(to: editor)
+/// try editor.apply(configuration: config)
 /// ```
 ///
 /// ## SwiftUI Integration

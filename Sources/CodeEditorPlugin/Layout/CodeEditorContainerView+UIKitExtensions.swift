@@ -65,7 +65,7 @@ extension CodeEditorContainerView {
 
         // Apply configuration BEFORE building constraints
         do {
-            try configuration.apply(to: textView)
+            try textView.apply(configuration: configuration)
         } catch {
             CrossPlatformLogger.logger().error("Rejected UIKit container configuration: \(error)")
         }

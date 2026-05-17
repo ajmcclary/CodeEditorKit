@@ -28,7 +28,7 @@ final class SimpleMemoryTest: XCTestCase {
             // Apply configuration
             var config = EditorConfiguration()
             config.display.isLineNumbersEnabled = true
-            try? config.apply(to: editor)
+            try? editor.apply(configuration: config)
 
             // Explicit cleanup to break any configuration-related retain cycles
             editor.removeFromSuperview()
