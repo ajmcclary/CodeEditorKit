@@ -160,12 +160,23 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorFolding",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorLanguages",
+                "CodeEditorSyntaxHighlighting",
+                "CodeEditorTextModel"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
                 "CodeEditorDiagnostics",
+                "CodeEditorFolding",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorSyntaxHighlighting",
@@ -220,6 +231,7 @@ let package = Package(
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
+                "CodeEditorFolding",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
