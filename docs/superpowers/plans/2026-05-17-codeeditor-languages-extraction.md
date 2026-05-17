@@ -31,11 +31,11 @@ If any task fails mid-way, rollback is `git restore .` (uncommitted work) or `gi
 - Modify: `Sources/CodeEditorPlugin/Features/SymbolNavigationTypes.swift` (lines 59, 90 — the two `internal` computed properties on `DocumentSymbolKind`)
 - Test: existing `Tests/CodeEditorPluginTests/Features/`, `Tests/CodeEditorPluginTests/Languages/`
 
-**Context:** `FoldableRegion`, `FoldingType`, and `CodeFoldingProvider` are all `internal` today. When `Languages/` becomes its own target, the Languages-side providers (e.g. `BraceFoldingProvider`) need these declarations cross-target — so they must move to Languages. Promoting to `public` first is the safe pre-flight: the build stays single-target through Task 4. `CodeFoldingConfiguration` does **not** move (its consumers are split between Configuration and the future Folding engine — that's NEXT.md §6.0 question 2, out of scope here). It stays in Features/ but must also become `public` because the file declares it inline with the moving types and the easiest split path is to lift the whole access bar uniformly; we'll separate it in Task 3.
+**Context:** `FoldableRegion`, `FoldingType`, and `CodeFoldingProvider` are all `internal` today. When `Languages/` becomes its own target, the Languages-side providers (e.g. `BraceFoldingProvider`) need these declarations cross-target — so they must move to Languages. Promoting to `public` first is the safe pre-flight: the build stays single-target through Task 4. `CodeFoldingConfiguration` does **not** move and **does not change access** — it's consumed by `FoldingOperationsService`, `CodeFoldingEngine`, and the umbrella extension `Core/Configuration/EditorConfiguration+CodeFolding.swift`, all umbrella-side. Resolving its home is NEXT.md §6.0 question 2 / §6.2.8 territory, out of scope here.
 
 `DocumentSymbolKind.icon` and `.canContainSymbols` have no access modifier (default `internal`). One umbrella consumer (`Features/SymbolNavigator.swift:141`) references `canContainSymbols`; promoting both to `package` is sufficient (same-package cross-target).
 
-- [ ] **Step 1.1: Promote FoldableRegion declarations to public**
+- [ ] **Step 1.1: Promote FoldableRegion, FoldingType, and CodeFoldingProvider to public**
 
 Open `Sources/CodeEditorPlugin/Features/FoldableRegion.swift`. Replace the file with:
 
@@ -79,20 +79,18 @@ public enum FoldingType: Equatable {
 // MARK: - Code Folding Configuration
 
 /// Configuration for code folding behavior
-public struct CodeFoldingConfiguration {
-    public var enabled = true
-    public var showGutterControls = true
-    public var hidesFoldedContent = true
-    public var minimumLineCount = 3
-    public var foldedIndicator = " ⋯ "
+internal struct CodeFoldingConfiguration {
+    internal var enabled = true
+    internal var showGutterControls = true
+    internal var hidesFoldedContent = true
+    internal var minimumLineCount = 3
+    internal var foldedIndicator = " ⋯ "
 
-    public var indicatorColor = PlatformColors.secondaryLabel
+    internal var indicatorColor = PlatformColors.secondaryLabel
 
-    public var animatesFolding = true
-    public var saveFoldState = true
-    public var enableIncrementalUpdates = true
-
-    public init() {}
+    internal var animatesFolding = true
+    internal var saveFoldState = true
+    internal var enableIncrementalUpdates = true
 }
 
 // MARK: - Code Folding Provider Protocol
@@ -104,7 +102,7 @@ public protocol CodeFoldingProvider {
 }
 ```
 
-Note: `public struct CodeFoldingConfiguration` now needs an explicit `public init()` because the synthesized default is `internal`.
+Note: `CodeFoldingConfiguration` remains `internal` (consumed by umbrella-side `FoldingOperationsService`, `CodeFoldingEngine`, and `EditorConfiguration+CodeFolding.swift`). Resolving its eventual home is §6.2.8 territory.
 
 - [ ] **Step 1.2: Promote DocumentSymbolKind members to package**
 
@@ -457,20 +455,18 @@ import Foundation
 // MARK: - Code Folding Configuration
 
 /// Configuration for code folding behavior
-public struct CodeFoldingConfiguration {
-    public var enabled = true
-    public var showGutterControls = true
-    public var hidesFoldedContent = true
-    public var minimumLineCount = 3
-    public var foldedIndicator = " ⋯ "
+internal struct CodeFoldingConfiguration {
+    internal var enabled = true
+    internal var showGutterControls = true
+    internal var hidesFoldedContent = true
+    internal var minimumLineCount = 3
+    internal var foldedIndicator = " ⋯ "
 
-    public var indicatorColor = PlatformColors.secondaryLabel
+    internal var indicatorColor = PlatformColors.secondaryLabel
 
-    public var animatesFolding = true
-    public var saveFoldState = true
-    public var enableIncrementalUpdates = true
-
-    public init() {}
+    internal var animatesFolding = true
+    internal var saveFoldState = true
+    internal var enableIncrementalUpdates = true
 }
 ```
 
