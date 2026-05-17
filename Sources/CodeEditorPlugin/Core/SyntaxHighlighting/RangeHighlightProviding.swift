@@ -1,4 +1,5 @@
 import CodeEditorLanguages
+import CodeEditorSyntaxHighlighting
 import Foundation
 
 /// Protocol for highlight providers that produce ranges of styled tokens.

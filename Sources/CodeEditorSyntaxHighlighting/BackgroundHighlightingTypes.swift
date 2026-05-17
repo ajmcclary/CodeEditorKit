@@ -13,7 +13,7 @@ public enum HighlightingPriority: Int, CaseIterable, Sendable {
     case high = 2
     case critical = 3
 
-    var taskPriority: _Concurrency.TaskPriority? {
+    package var taskPriority: _Concurrency.TaskPriority? {
         switch self {
         case .low:
             return .low
@@ -32,25 +32,25 @@ public enum HighlightingPriority: Int, CaseIterable, Sendable {
 
 /// Highlighting request data
 public struct HighlightingRequest: Sendable {
-    let id: String
-    let text: String
-    let language: Language
-    var priority: HighlightingPriority
-    let visibleRange: NSRange?
-    let completion: BackgroundSyntaxHighlighter.HighlightingCompletion
+    package let id: String
+    package let text: String
+    package let language: Language
+    package var priority: HighlightingPriority
+    package let visibleRange: NSRange?
+    package let completion: BackgroundSyntaxHighlighter.HighlightingCompletion
 
-    var textRange: NSRange? {
+    package var textRange: NSRange? {
         NSRange(location: 0, length: text.count)
     }
 }
 
 /// Cached highlighting result
 public struct CachedHighlightResult: Sendable {
-    let tokens: [HighlightedToken]
-    let timestamp: Date
-    let expirationTime: TimeInterval
+    package let tokens: [HighlightedToken]
+    package let timestamp: Date
+    package let expirationTime: TimeInterval
 
-    var isExpired: Bool {
+    package var isExpired: Bool {
         Date().timeIntervalSince(timestamp) > expirationTime
     }
 }
@@ -87,12 +87,12 @@ public final class BackgroundHighlightingStatistics: ObservableObject {
         return Double(cacheHits) / Double(totalCacheRequests)
     }
 
-    internal func recordRequest() {
+    package func recordRequest() {
         totalRequests += 1
         lastRequestTime = Date()
     }
 
-    internal func recordCompletion(processingTime: TimeInterval, tokenCount: Int) {
+    package func recordCompletion(processingTime: TimeInterval, tokenCount: Int) {
         completedRequests += 1
         lastCompletionTime = Date()
 
@@ -111,15 +111,15 @@ public final class BackgroundHighlightingStatistics: ObservableObject {
         averageTokensPerRequest = Double(tokenCounts.reduce(0, +)) / Double(tokenCounts.count)
     }
 
-    internal func recordCancellation() {
+    package func recordCancellation() {
         cancelledRequests += 1
     }
 
-    internal func recordBulkCancellation(count: Int) {
+    package func recordBulkCancellation(count: Int) {
         cancelledRequests += count
     }
 
-    internal func recordError(processingTime: TimeInterval) {
+    package func recordError(processingTime: TimeInterval) {
         errorRequests += 1
 
         // Still record processing time for errors
@@ -130,15 +130,15 @@ public final class BackgroundHighlightingStatistics: ObservableObject {
         averageProcessingTime = processingTimes.reduce(0, +) / Double(processingTimes.count)
     }
 
-    internal func recordCacheHit() {
+    package func recordCacheHit() {
         cacheHits += 1
     }
 
-    internal func recordCacheMiss() {
+    package func recordCacheMiss() {
         cacheMisses += 1
     }
 
-    internal func recordCacheClear() {
+    package func recordCacheClear() {
         // Reset cache-related stats when cache is cleared
         cacheHits = 0
         cacheMisses = 0

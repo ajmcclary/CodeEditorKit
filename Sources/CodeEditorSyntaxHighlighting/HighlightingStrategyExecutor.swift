@@ -11,7 +11,7 @@ import AppKit
 
 /// Centralized executor for syntax highlighting strategies
 /// Eliminates duplicate switch statements in SyntaxHighlightingCoordinator
-internal struct HighlightingStrategyExecutor {
+package struct HighlightingStrategyExecutor {
     // MARK: - Properties
 
     private let swiftHighlighter: SwiftSyntaxHighlighter
@@ -20,7 +20,7 @@ internal struct HighlightingStrategyExecutor {
 
     // MARK: - Initialization
 
-    init(
+    package init(
         swiftHighlighter: SwiftSyntaxHighlighter,
         regexHighlighter: RegexSyntaxHighlighter,
         fastJSONTokenizer: FastJSONTokenizer
@@ -37,7 +37,7 @@ internal struct HighlightingStrategyExecutor {
     ///   - source: The source code to highlight
     ///   - language: The programming language of the source
     /// - Returns: Array of highlighted tokens
-    func highlight(source: String, language: Language) -> [HighlightedToken] {
+    package func highlight(source: String, language: Language) -> [HighlightedToken] {
         let strategy = determineStrategy(for: language)
         return executeStrategy(strategy, source: source, language: language)
     }

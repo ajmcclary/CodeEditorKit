@@ -1,5 +1,6 @@
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import XCTest
 
 /// Phase 5 spike: benchmark regex range query vs. direct regex highlighting.

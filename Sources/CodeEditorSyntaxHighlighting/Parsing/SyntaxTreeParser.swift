@@ -25,7 +25,7 @@ public enum SyntaxTreeParser {
 
     // MARK: - Internal Parsing
 
-    static func parseNextNode(in text: String, startingAt index: inout Int, language _: Language) -> SyntaxNode? {
+    package static func parseNextNode(in text: String, startingAt index: inout Int, language _: Language) -> SyntaxNode? {
         guard index < text.count else { return nil }
 
         let char = text[text.index(text.startIndex, offsetBy: index)]
@@ -53,7 +53,7 @@ public enum SyntaxTreeParser {
         return nil
     }
 
-    static func parseStringLiteral(in text: String, startingAt index: inout Int, delimiter: Character) -> SyntaxNode? {
+    package static func parseStringLiteral(in text: String, startingAt index: inout Int, delimiter: Character) -> SyntaxNode? {
         let startIndex = index
         index += 1 // Skip opening delimiter
 
@@ -77,7 +77,7 @@ public enum SyntaxTreeParser {
         return nil // Unterminated string
     }
 
-    static func parseLineComment(in text: String, startingAt index: inout Int) -> SyntaxNode? {
+    package static func parseLineComment(in text: String, startingAt index: inout Int) -> SyntaxNode? {
         let startIndex = index
 
         // Find end of line
@@ -96,7 +96,7 @@ public enum SyntaxTreeParser {
         return SyntaxNode(type: .comment(style: .line(prefix: "//")), range: range, content: content, children: [])
     }
 
-    static func parseBlockComment(in text: String, startingAt index: inout Int) -> SyntaxNode? {
+    package static func parseBlockComment(in text: String, startingAt index: inout Int) -> SyntaxNode? {
         let startIndex = index
         index += 2 // Skip /*
 
@@ -123,7 +123,7 @@ public enum SyntaxTreeParser {
         return nil // Unterminated comment
     }
 
-    static func parseBlock(in text: String, startingAt index: inout Int, openChar: Character) -> SyntaxNode? {
+    package static func parseBlock(in text: String, startingAt index: inout Int, openChar: Character) -> SyntaxNode? {
         let closeChar: Character
         switch openChar {
         case "(": closeChar = ")"

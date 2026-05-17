@@ -1,4 +1,5 @@
 import CodeEditorPlatform
+import CodeEditorSyntaxHighlighting
 #if canImport(AppKit)
 import AppKit
 import Foundation

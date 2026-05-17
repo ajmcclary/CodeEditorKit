@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorSyntaxHighlighting
 import Foundation
 import IssueReporting
 

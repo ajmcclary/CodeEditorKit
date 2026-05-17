@@ -4,10 +4,10 @@ import Foundation
 
 /// Shared utilities for Swift syntax highlighting that work across all platforms
 /// including iOS where SwiftSyntax is not available
-internal enum SwiftHighlightingUtilities {
+package enum SwiftHighlightingUtilities {
     // MARK: - Keywords
 
-    static let keywords: Set<String> = [
+    package static let keywords: Set<String> = [
         "let", "var", "func", "class", "struct", "if", "else", "for", "while",
         "return", "import", "public", "private", "internal", "enum", "protocol",
         "extension", "case", "default", "switch", "do", "try", "catch", "throw",
@@ -20,7 +20,7 @@ internal enum SwiftHighlightingUtilities {
 
     // MARK: - Basic Highlighting Methods
 
-    static func performBasicSwiftHighlighting(source: String) -> [HighlightedToken] {
+    package static func performBasicSwiftHighlighting(source: String) -> [HighlightedToken] {
         var tokens: [HighlightedToken] = []
 
         // Add keywords
@@ -38,7 +38,7 @@ internal enum SwiftHighlightingUtilities {
         return tokens.sorted { $0.range.location < $1.range.location }
     }
 
-    static func highlightKeywords(in source: String) -> [HighlightedToken] {
+    package static func highlightKeywords(in source: String) -> [HighlightedToken] {
         var tokens: [HighlightedToken] = []
 
         for keyword in keywords {
@@ -68,7 +68,7 @@ internal enum SwiftHighlightingUtilities {
         return tokens
     }
 
-    static func highlightStrings(in source: String) -> [HighlightedToken] {
+    package static func highlightStrings(in source: String) -> [HighlightedToken] {
         var tokens: [HighlightedToken] = []
         let utf16 = source.utf16
         var index = utf16.startIndex
@@ -120,7 +120,7 @@ internal enum SwiftHighlightingUtilities {
         return tokens
     }
 
-    static func highlightComments(in source: String) -> [HighlightedToken] {
+    package static func highlightComments(in source: String) -> [HighlightedToken] {
         var tokens: [HighlightedToken] = []
         let lines = source.components(separatedBy: .newlines)
         var currentOffset = 0
@@ -165,7 +165,7 @@ internal enum SwiftHighlightingUtilities {
         return tokens
     }
 
-    static func highlightNumbers(in source: String) -> [HighlightedToken] {
+    package static func highlightNumbers(in source: String) -> [HighlightedToken] {
         var tokens: [HighlightedToken] = []
 
         // Simple number pattern matching
@@ -187,7 +187,7 @@ internal enum SwiftHighlightingUtilities {
         return tokens
     }
 
-    static func checkWordBoundary(in string: String, range: NSRange) -> Bool {
+    package static func checkWordBoundary(in string: String, range: NSRange) -> Bool {
         let chars = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
         let utf16 = string.utf16
 

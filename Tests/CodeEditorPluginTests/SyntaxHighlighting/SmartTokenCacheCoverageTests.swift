@@ -1,5 +1,6 @@
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 import Foundation
 import XCTest

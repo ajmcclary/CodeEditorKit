@@ -5,7 +5,7 @@ import Foundation
 
 extension RegexSyntaxHighlighter {
     /// A builder class to reduce boilerplate when creating language definitions
-    internal struct LanguageDefinitionBuilder {
+    package struct LanguageDefinitionBuilder {
         private var rules: [RegexHighlightRule] = []
 
         /// Add comment patterns for the language

@@ -3,6 +3,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
+import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 import Foundation
 import ObjectiveC

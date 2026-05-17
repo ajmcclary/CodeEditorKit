@@ -4,9 +4,9 @@ import Foundation
 // MARK: - Highlighting Actor
 
 /// Actor for managing concurrent highlighting operations
-actor HighlightingActor {
+package actor HighlightingActor {
     /// Perform syntax highlighting for text
-    func highlight(
+    package func highlight(
         text: String,
         language: Language,
         priority _: HighlightingPriority,

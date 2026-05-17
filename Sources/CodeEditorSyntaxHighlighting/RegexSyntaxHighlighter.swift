@@ -14,7 +14,7 @@ public final class RegexSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
 
     /// Optimized token type mapping for O(1) conversion
-    static let tokenTypeMap: [RegexSyntaxTokenType: TokenType] = [
+    package static let tokenTypeMap: [RegexSyntaxTokenType: TokenType] = [
         .keyword: .keyword,
         .identifier: .identifier,
         .string: .string,
@@ -41,7 +41,7 @@ public final class RegexSyntaxHighlighter: Sendable {
     /// when `highlight(source:)` is called without an explicit definition.
     /// This avoids the bug where the convenience init discarded its language
     /// parameter and always produced zero tokens.
-    let defaultLanguage: RegexLanguageDefinition?
+    package let defaultLanguage: RegexLanguageDefinition?
 
     // MARK: - Initialization
 

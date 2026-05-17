@@ -5,17 +5,17 @@ import Foundation
 
 /// Maps parser capture names to our `TokenType` enum. One instance per
 /// language lets the map be tuned for language-specific naming conventions.
-internal struct QueryCaptureMap: Sendable {
+package struct QueryCaptureMap: Sendable {
     private let map: [String: TokenType]
 
-    init(mappings: [String: TokenType]) {
+    package init(mappings: [String: TokenType]) {
         self.map = mappings
     }
 
     /// Resolve a capture name to a `TokenType`. Returns `.unknown` for
     /// unrecognized captures so the token is still tracked but gets
     /// default styling.
-    func tokenType(for captureName: String) -> TokenType {
+    package func tokenType(for captureName: String) -> TokenType {
         // Strip the trailing period + scope suffix that some grammars use
         // e.g. "keyword.return" → "keyword"
         let base = captureName.split(separator: ".").first.map(String.init) ?? captureName
@@ -26,7 +26,7 @@ internal struct QueryCaptureMap: Sendable {
 
     /// Default capture map covering the most common capture names.
     /// Used as the fallback for languages without a dedicated preset.
-    static let `default` = Self(mappings: [
+    package static let `default` = Self(mappings: [
         "keyword": .keyword,
         "conditional": .keyword,
         "repeat": .keyword,
@@ -64,7 +64,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// Standard capture map for the JavaScript grammar.
-    static let javascript = Self(mappings: [
+    package static let javascript = Self(mappings: [
         "keyword": .keyword,
         "constant": .keyword,
         "number": .number,
@@ -85,7 +85,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// Standard capture map for the TypeScript grammar.
-    static let typescript = Self(mappings: [
+    package static let typescript = Self(mappings: [
         "keyword": .keyword,
         "constant": .keyword,
         "number": .number,
@@ -106,7 +106,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// Standard capture map for the Python grammar.
-    static let python = Self(mappings: [
+    package static let python = Self(mappings: [
         "keyword": .keyword,
         "number": .number,
         "string": .string,
@@ -123,7 +123,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// C-family languages (C, C++, Java, C#, Kotlin, Dart, Go, Rust, Swift).
-    static let cFamily = Self(mappings: [
+    package static let cFamily = Self(mappings: [
         "keyword": .keyword,
         "type": .type,
         "type.builtin": .type,
@@ -144,7 +144,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// Ruby grammar preset.
-    static let ruby = Self(mappings: [
+    package static let ruby = Self(mappings: [
         "keyword": .keyword,
         "number": .number,
         "string": .string,
@@ -162,7 +162,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// HTML/XML grammar preset.
-    static let markup = Self(mappings: [
+    package static let markup = Self(mappings: [
         "tag": .keyword,
         "attribute": .property,
         "string": .string,
@@ -174,7 +174,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// CSS grammar preset.
-    static let css = Self(mappings: [
+    package static let css = Self(mappings: [
         "property": .property,
         "keyword": .keyword,
         "string": .string,
@@ -187,7 +187,7 @@ internal struct QueryCaptureMap: Sendable {
     ])
 
     /// JSON grammar preset.
-    static let json = Self(mappings: [
+    package static let json = Self(mappings: [
         "string": .string,
         "number": .number,
         "boolean": .keyword,
@@ -200,7 +200,7 @@ internal struct QueryCaptureMap: Sendable {
     ///
     /// Uses language-specific presets when available; falls back to
     /// ``default`` for languages without a dedicated preset.
-    static func forLanguage(_ language: Language) -> Self {
+    package static func forLanguage(_ language: Language) -> Self {
         switch language {
         case .javascript: return .javascript
         case .typescript: return .typescript

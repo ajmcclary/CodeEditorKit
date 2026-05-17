@@ -8,7 +8,7 @@ import Foundation
 /// keyed by a `ProviderID`. When queried via `mergedRuns(in:)`,
 /// results are coalesced by priority (lower ID = higher priority).
 @MainActor
-internal final class StyledRangeContainer {
+package final class StyledRangeContainer {
     private typealias Entry = (store: RangeStore<StyleElement>, priority: Int)
 
     private struct ProviderCursor {
@@ -52,12 +52,12 @@ internal final class StyledRangeContainer {
     private var nextID = 0
     private var _documentLength: Int
 
-    init(documentLength: Int) {
+    package init(documentLength: Int) {
         self._documentLength = documentLength
     }
 
     /// Register a provider and return its ID.
-    func registerProvider(priority: Int) -> Int {
+    package func registerProvider(priority: Int) -> Int {
         let id = nextID
         nextID += 1
         entries[id] = (store: RangeStore<StyleElement>(documentLength: _documentLength), priority: priority)
@@ -65,14 +65,14 @@ internal final class StyledRangeContainer {
     }
 
     /// Remove a provider.
-    func removeProvider(id: Int) {
+    package func removeProvider(id: Int) {
         entries.removeValue(forKey: id)
     }
 
     // MARK: - Writing
 
     /// Store highlight results for a provider.
-    func applyHighlightResult(providerID: Int, highlights: [HighlightedToken], range: NSRange) {
+    package func applyHighlightResult(providerID: Int, highlights: [HighlightedToken], range: NSRange) {
         guard var entry = entries[providerID] else { return }
 
         // Clear the query range first, then insert each token's range individually.
@@ -89,7 +89,7 @@ internal final class StyledRangeContainer {
     }
 
     /// Notify all stores of a document edit.
-    func storageUpdated(editedRange: NSRange, changeInLength: Int) {
+    package func storageUpdated(editedRange: NSRange, changeInLength: Int) {
         _documentLength += changeInLength
         for key in entries.keys {
             entries[key]?.store.storageUpdated(
@@ -102,7 +102,7 @@ internal final class StyledRangeContainer {
     // MARK: - Reading
 
     /// Returns merged style runs for a character range, coalesced by provider priority.
-    func mergedRuns(in range: NSRange) -> [RangeStoreRun<StyleElement>] {
+    package func mergedRuns(in range: NSRange) -> [RangeStoreRun<StyleElement>] {
         guard !range.isEmpty else { return [] }
         guard !entries.isEmpty else { return [] }
         let queryRange = range.lowerBound..<range.upperBound

@@ -3,14 +3,14 @@ import CodeEditorTextModel
 import Foundation
 
 /// Smart cache for syntax highlighting tokens with intelligent eviction strategies
-actor SmartTokenCache {
-    struct CacheKey: Hashable {
-        let textLength: Int
-        let textFingerprint: UInt64
-        let language: Language
-        let version: Int
+package actor SmartTokenCache {
+    package struct CacheKey: Hashable {
+        package let textLength: Int
+        package let textFingerprint: UInt64
+        package let language: Language
+        package let version: Int
 
-        init(text: String, language: Language, version: Int) {
+        package init(text: String, language: Language, version: Int) {
             self.textLength = TextRangeUtilities.utf16Length(of: text)
             self.textFingerprint = Self.fingerprint(text)
             self.language = language
@@ -19,7 +19,7 @@ actor SmartTokenCache {
 
         /// Internal initializer used by the `CacheProtocol` bridge in
         /// `ActorCoordinator`, which round-trips keys through a string.
-        init(textLength: Int, textFingerprint: UInt64, language: Language, version: Int) {
+        package init(textLength: Int, textFingerprint: UInt64, language: Language, version: Int) {
             self.textLength = textLength
             self.textFingerprint = textFingerprint
             self.language = language
@@ -36,13 +36,13 @@ actor SmartTokenCache {
         }
     }
 
-    struct CacheEntry {
+    package struct CacheEntry {
         /// What portion of the cached text the stored tokens actually
         /// cover. Reads are rejected when the request's coverage
         /// requirement isn't satisfied — without this, partial viewport
         /// results would be returned to full-document callers and
         /// non-overlapping viewport callers as if they were complete.
-        enum Coverage: Equatable {
+        package enum Coverage: Equatable {
             /// Tokens span the entire document for this cache key.
             case fullDocument
             /// Tokens cover only the given UTF-16 range; reads asking
@@ -104,16 +104,16 @@ actor SmartTokenCache {
     // MARK: - Configuration
 
     /// Maximum number of cache entries
-    var maxCacheSize: Int = 50
+    package var maxCacheSize: Int = 50
 
     /// Maximum memory usage in MB (approximate)
-    var maxMemoryUsageMB: Double = 100.0
+    package var maxMemoryUsageMB: Double = 100.0
 
     /// Time threshold for considering entries stale (in seconds)
-    var staleThreshold: Duration = .seconds(3_600) // 1 hour
+    package var staleThreshold: Duration = .seconds(3_600) // 1 hour
 
     /// Minimum computation time to cache (avoid caching trivial computations)
-    var minComputationTimeToCache: Duration = .milliseconds(0) // Cache all results for testing
+    package var minComputationTimeToCache: Duration = .milliseconds(0) // Cache all results for testing
 
     // MARK: - State
 
@@ -125,7 +125,9 @@ actor SmartTokenCache {
 
     // MARK: - Public Methods
 
-    func getCachedTokens(for key: CacheKey, viewportRange: NSRange? = nil) -> [HighlightedToken] {
+    package init() {}
+
+    package func getCachedTokens(for key: CacheKey, viewportRange: NSRange? = nil) -> [HighlightedToken] {
         if let entry = cache[key] {
             // Check if entry is stale
             let age = Duration.seconds(Date.now.timeIntervalSince(entry.timestamp))
@@ -174,7 +176,7 @@ actor SmartTokenCache {
         return []
     }
 
-    func setCachedTokens(
+    package func setCachedTokens(
         _ tokens: [HighlightedToken],
         for key: CacheKey,
         computationTime: Duration,
@@ -200,7 +202,7 @@ actor SmartTokenCache {
         evictIfNeeded()
     }
 
-    func clearCache() {
+    package func clearCache() {
         cache.removeAll()
         accessOrder.removeAll()
         hitCount = 0
@@ -209,7 +211,7 @@ actor SmartTokenCache {
     }
 
     /// Optimize cache memory by retaining only viewport-relevant tokens
-    func optimizeForMemory(currentViewport: NSRange?) {
+    package func optimizeForMemory(currentViewport: NSRange?) {
         guard let viewport = currentViewport else { return }
 
         // Update all cache entries to retain only viewport-relevant tokens
@@ -236,7 +238,7 @@ actor SmartTokenCache {
     }
 
     /// Predictively prefetch tokens for anticipated viewport movement
-    func prefetchTokens(
+    package func prefetchTokens(
         for predictedRange: NSRange,
         text: String,
         language: Language,
@@ -271,7 +273,7 @@ actor SmartTokenCache {
     }
 
     /// Analyze scroll patterns to predict future viewport positions
-    func predictNextViewport(
+    package func predictNextViewport(
         currentViewport: NSRange,
         scrollVelocity: Double,
         documentLength: Int
@@ -288,7 +290,7 @@ actor SmartTokenCache {
         return NSRange(location: predictedLocation, length: currentViewport.length)
     }
 
-    func getStatistics() -> TokenCacheStatistics {
+    package func getStatistics() -> TokenCacheStatistics {
         let totalRequests = hitCount + missCount
         let hitRate = totalRequests > 0 ? Double(hitCount) / Double(totalRequests) : 0.0
         let estimatedMemoryMB = estimateMemoryUsage()
@@ -304,7 +306,7 @@ actor SmartTokenCache {
         )
     }
 
-    func optimizeCache() {
+    package func optimizeCache() {
         // Remove stale entries
         let now = Date.now
         let staleKeys = cache.compactMap { key, entry in
@@ -324,7 +326,7 @@ actor SmartTokenCache {
         evictIfNeeded()
     }
 
-    func configureCacheSettings(
+    package func configureCacheSettings(
         maxCacheSize: Int? = nil,
         maxMemoryUsageMB: Double? = nil,
         staleThreshold: Duration? = nil

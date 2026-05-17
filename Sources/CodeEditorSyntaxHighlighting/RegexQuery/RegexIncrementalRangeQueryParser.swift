@@ -10,7 +10,7 @@ import Foundation
 ///
 /// Parser state is isolated behind an actor so queries and edits can
 /// proceed concurrently without data races.
-internal final class RegexIncrementalRangeQueryParser: RangeQueryParserProtocol, @unchecked Sendable {
+package final class RegexIncrementalRangeQueryParser: RangeQueryParserProtocol, @unchecked Sendable {
     // MARK: - Actor-isolated state
 
     private actor State {
@@ -67,11 +67,13 @@ internal final class RegexIncrementalRangeQueryParser: RangeQueryParserProtocol,
 
     // MARK: - RangeQueryParserProtocol
 
-    func setLanguage(_ language: Language) async throws {
+    package init() {}
+
+    package func setLanguage(_ language: Language) async throws {
         await state.setLanguage(language)
     }
 
-    func parse(source: String) async throws -> RangeQueryParseResult {
+    package func parse(source: String) async throws -> RangeQueryParseResult {
         let parseStart = Date()
 
         guard let language = await state.language else {
@@ -117,7 +119,7 @@ internal final class RegexIncrementalRangeQueryParser: RangeQueryParserProtocol,
         )
     }
 
-    func applyEdit(
+    package func applyEdit(
         startByte: Int,
         oldEndByte _: Int,
         newEndByte: Int

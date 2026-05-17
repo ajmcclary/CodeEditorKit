@@ -1,4 +1,5 @@
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import Foundation
 import SwiftParser
 import SwiftSyntax

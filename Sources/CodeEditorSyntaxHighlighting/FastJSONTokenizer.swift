@@ -5,13 +5,13 @@ import Foundation
 
 // swiftlint:disable:next no_extension_access_modifier
 private extension String {
-    func unicharAt(_ index: Int) -> unichar {
+    package func unicharAt(_ index: Int) -> unichar {
         // swiftlint:disable:next legacy_objc_type
         let nsString = self as NSString
         return nsString.character(at: index)
     }
 
-    func nsStringSubstring(with range: NSRange) -> String {
+    package func nsStringSubstring(with range: NSRange) -> String {
         // swiftlint:disable:next legacy_objc_type
         let nsString = self as NSString
         return nsString.substring(with: range)
@@ -20,10 +20,10 @@ private extension String {
 
 /// High-performance JSON tokenizer optimized for large files
 /// Uses streaming parser approach to reduce memory usage and improve consistency
-final class FastJSONTokenizer {
+package final class FastJSONTokenizer {
     // MARK: - Types
 
-    enum TokenType {
+    package enum TokenType {
         case openBrace      // {
         case closeBrace     // }
         case openBracket    // [
@@ -39,7 +39,7 @@ final class FastJSONTokenizer {
         case invalid        // parsing errors
     }
 
-    struct Token {
+    package struct Token {
         let type: TokenType
         let range: NSRange
         let value: String?
@@ -79,7 +79,7 @@ final class FastJSONTokenizer {
     // MARK: - Public Methods
 
     /// Tokenize JSON content with stable performance
-    func tokenize(_ text: String, in range: NSRange? = nil) -> [Token] {
+    package func tokenize(_ text: String, in range: NSRange? = nil) -> [Token] {
         let targetRange = range ?? NSRange(location: 0, length: text.count)
 
         // Check cache first
@@ -113,7 +113,7 @@ final class FastJSONTokenizer {
     }
 
     /// Get syntax highlighting attributes for tokens
-    func highlightingAttributes(for tokens: [Token], colorScheme: SyntaxColorScheme) -> [(NSRange, [NSAttributedString.Key: Any])] {
+    package func highlightingAttributes(for tokens: [Token], colorScheme: SyntaxColorScheme) -> [(NSRange, [NSAttributedString.Key: Any])] {
         var attributes: [(NSRange, [NSAttributedString.Key: Any])] = []
 
         for token in tokens {
@@ -152,7 +152,7 @@ final class FastJSONTokenizer {
     }
 
     /// Clear token cache
-    func clearCache() {
+    package func clearCache() {
         tokenCache.removeAll()
     }
 

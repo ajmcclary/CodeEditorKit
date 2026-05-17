@@ -28,9 +28,9 @@ public protocol LanguageProvider: Sendable {
 
 // Default implementations
 extension LanguageProvider {
-    nonisolated func completionKeywords() -> [String] { [] }
+    package nonisolated func completionKeywords() -> [String] { [] }
 
-    nonisolated var documentationURL: URL? { nil }
+    package nonisolated var documentationURL: URL? { nil }
 }
 
 // MARK: - SyntaxHighlighter Protocol
@@ -154,22 +154,22 @@ public final class LanguageRegistry {
 
 /// Descriptor-backed provider for the canonical built-in language catalog.
 struct DescriptorLanguageProvider: LanguageProvider {
-    let descriptor: LanguageDescriptor
+    package let descriptor: LanguageDescriptor
 
-    var identifier: String {
+    package var identifier: String {
         descriptor.language.identifier
     }
 
-    var displayName: String {
+    package var displayName: String {
         descriptor.displayName
     }
 
-    var fileExtensions: [String] {
+    package var fileExtensions: [String] {
         descriptor.fileExtensions
     }
 
     @MainActor
-    func createHighlighter() -> any SyntaxHighlighter {
+    package func createHighlighter() -> any SyntaxHighlighter {
         switch descriptor.language {
         case .swift:
             return SwiftSyntaxHighlighter()
@@ -186,7 +186,7 @@ struct DescriptorLanguageProvider: LanguageProvider {
         }
     }
 
-    nonisolated func completionKeywords() -> [String] {
+    package nonisolated func completionKeywords() -> [String] {
         descriptor.keywords
     }
 }
@@ -194,8 +194,10 @@ struct DescriptorLanguageProvider: LanguageProvider {
 // MARK: - Plain Text Highlighter
 
 /// No-op highlighter used by `DescriptorLanguageProvider` for plain text.
-struct PlainTextHighlighter: SyntaxHighlighter {
-    func highlight(source _: String) -> [HighlightedToken] {
+package struct PlainTextHighlighter: SyntaxHighlighter {
+    package init() {}
+
+    package func highlight(source _: String) -> [HighlightedToken] {
         []
     }
 }

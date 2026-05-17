@@ -29,7 +29,7 @@ private final class HighlightingTaskManager: @unchecked Sendable {
     /// Atomically replace the active task, cancelling whatever was there.
     /// Returns the previous task (so callers may, e.g., test ordering).
     @discardableResult
-    func setCurrentTask(_ task: Task<[HighlightedToken], Never>?) -> Task<[HighlightedToken], Never>? {
+    package func setCurrentTask(_ task: Task<[HighlightedToken], Never>?) -> Task<[HighlightedToken], Never>? {
         lock.lock()
         let previous = currentTask
         currentTask = task
@@ -40,7 +40,7 @@ private final class HighlightingTaskManager: @unchecked Sendable {
 
     /// Synchronously cancel the active task, if any. Safe to call from any
     /// isolation domain.
-    func cancelCurrent() {
+    package func cancelCurrent() {
         lock.lock()
         let previous = currentTask
         currentTask = nil
@@ -317,7 +317,7 @@ public enum TokenType: String, CaseIterable, Sendable {
     }
 
     /// Convert from SwiftSyntax token type
-    init(fromSwiftType swiftType: SwiftTokenType) {
+    package init(fromSwiftType swiftType: SwiftTokenType) {
         switch swiftType {
         case .keyword: self = .keyword
         case .identifier: self = .identifier
@@ -335,7 +335,7 @@ public enum TokenType: String, CaseIterable, Sendable {
     }
 
     /// Convert from regex highlighter token type
-    init(fromRegexType regexType: RegexSyntaxHighlighter.RegexTokenType) {
+    package init(fromRegexType regexType: RegexSyntaxHighlighter.RegexTokenType) {
         switch regexType {
         case .keyword: self = .keyword
         case .identifier: self = .identifier

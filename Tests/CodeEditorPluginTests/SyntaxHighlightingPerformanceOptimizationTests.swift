@@ -1,6 +1,7 @@
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import XCTest
 
 /// Tests for syntax highlighting performance optimizations

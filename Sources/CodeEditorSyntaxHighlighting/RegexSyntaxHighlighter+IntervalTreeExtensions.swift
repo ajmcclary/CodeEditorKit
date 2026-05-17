@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Interval Tree for O(log n) overlap checking
 
 /// A balanced interval tree for efficient range overlap queries
-internal struct IntervalTree {
+package struct IntervalTree {
     private var root: Node?
 
     private class Node {
@@ -25,7 +25,7 @@ internal struct IntervalTree {
     }
 
     /// Check if any range in the tree overlaps with the given range
-    func hasOverlap(with range: NSRange) -> Bool {
+    package func hasOverlap(with range: NSRange) -> Bool {
         checkOverlap(root, range)
     }
 

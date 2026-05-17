@@ -1,4 +1,5 @@
 import CodeEditorPlatform
+import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 import CodeEditorTheming
 import Foundation

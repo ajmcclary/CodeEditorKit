@@ -320,7 +320,7 @@ public final class ViewportStatistics: ObservableObject {
         totalHighlights > 0 ? Double(cacheHits) / Double(totalHighlights) : 0
     }
 
-    internal func recordHighlighting(range _: NSRange, tokenCount: Int, processingTime: TimeInterval) {
+    package func recordHighlighting(range _: NSRange, tokenCount: Int, processingTime: TimeInterval) {
         totalHighlights += 1
         lastHighlightTime = Date()
 
@@ -339,7 +339,7 @@ public final class ViewportStatistics: ObservableObject {
         averageProcessingTime = processingTimes.reduce(0, +) / Double(processingTimes.count)
     }
 
-    internal func recordCacheHit(processingTime: TimeInterval) {
+    package func recordCacheHit(processingTime: TimeInterval) {
         totalHighlights += 1
         cacheHits += 1
         lastHighlightTime = Date()

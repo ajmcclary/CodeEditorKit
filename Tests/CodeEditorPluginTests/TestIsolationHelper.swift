@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import XCTest
 
 /// Helper to isolate tests that may have shared state issues

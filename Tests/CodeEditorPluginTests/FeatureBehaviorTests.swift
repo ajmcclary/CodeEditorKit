@@ -2,6 +2,7 @@ import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 import XCTest
 

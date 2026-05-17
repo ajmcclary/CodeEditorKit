@@ -5,14 +5,14 @@ import Foundation
 
 /// Delegating code folding provider for languages without a dedicated provider.
 @MainActor
-internal final class HeuristicFoldProvider: CodeFoldingProvider {
+package final class HeuristicFoldProvider: CodeFoldingProvider {
     private let language: Language
 
-    init(language: Language) {
+    package init(language: Language) {
         self.language = language
     }
 
-    func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+    package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         switch language {
         case .swift, .javascript, .typescript, .c, .cpp, .java, .go, .rust,
              .csharp, .kotlin, .dart, .css, .json, .php:

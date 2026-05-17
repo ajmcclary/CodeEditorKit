@@ -41,13 +41,13 @@ public final class SwiftSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
 
     /// Optimized keyword lookup set for O(1) performance (shared with fallback implementation)
-    static let keywords = SwiftHighlightingUtilities.keywords
+    package static let keywords = SwiftHighlightingUtilities.keywords
 
     /// Optimized operator character set
-    static let operators: Set<Character> = ["+", "-", "*", "/", "=", "<", ">", "!", "&", "|", "^", "~", "?", ":"]
+    package static let operators: Set<Character> = ["+", "-", "*", "/", "=", "<", ">", "!", "&", "|", "^", "~", "?", ":"]
 
     /// Optimized punctuation character set
-    static let punctuation: Set<Character> = ["(", ")", "{", "}", "[", "]", ",", ".", ";", ":"]
+    package static let punctuation: Set<Character> = ["(", ")", "{", "}", "[", "]", ",", ".", ";", ":"]
 
     // Note: Using shared SwiftTokenType instead of nested TokenType
     public typealias TokenType = SwiftTokenType
@@ -102,14 +102,14 @@ public final class SwiftSyntaxHighlighter: Sendable {
 // MARK: - SyntaxHighlightVisitor
 
 private final class SyntaxHighlightVisitor: SyntaxVisitor {
-    let source: String
+    package let source: String
     private(set) var tokens: [HighlightedToken] = []
     private var processedRanges: Set<NSRange> = []
 
     /// Precomputed UTF-8 to UTF-16 offset mapping for token-boundary lookups.
     private let utf8ToUTF16Offsets: [Int: Int]
 
-    init(source: String) {
+    package init(source: String) {
         self.source = source
         self.utf8ToUTF16Offsets = Self.computeUTF8ToUTF16Offsets(for: source)
         super.init(viewMode: .sourceAccurate)

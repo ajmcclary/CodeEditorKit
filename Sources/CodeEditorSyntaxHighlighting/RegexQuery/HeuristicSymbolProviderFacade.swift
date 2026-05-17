@@ -6,14 +6,14 @@ import Foundation
 /// Document symbol provider that delegates to the current language-specific
 /// heuristic providers. This intentionally does not claim grammar-backed
 /// parsing.
-internal struct HeuristicSymbolProviderFacade: DocumentSymbolProvider {
+package struct HeuristicSymbolProviderFacade: DocumentSymbolProvider {
     private let language: Language
 
-    init(language: Language) {
+    package init(language: Language) {
         self.language = language
     }
 
-    func detectSymbols(in text: String) async -> [DocumentSymbol] {
+    package func detectSymbols(in text: String) async -> [DocumentSymbol] {
         switch language {
         case .swift:
             return await SwiftSymbolProvider().detectSymbols(in: text)

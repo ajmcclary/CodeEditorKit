@@ -1,4 +1,6 @@
+import CodeEditorCommon
 import CodeEditorLanguages
+import CodeEditorSyntaxHighlighting
 import Foundation
 
 /// Central coordinator for managing specialized actors across the editor

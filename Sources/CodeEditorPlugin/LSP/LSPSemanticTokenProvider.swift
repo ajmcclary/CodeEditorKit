@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorLanguages
 import CodeEditorPlatform
+import CodeEditorSyntaxHighlighting
 import Foundation
 
 // MARK: - LSP Semantic Token Provider

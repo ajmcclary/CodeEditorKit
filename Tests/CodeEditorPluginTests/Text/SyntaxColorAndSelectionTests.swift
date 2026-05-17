@@ -1,6 +1,7 @@
 import CodeEditorDesignTokens
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import CodeEditorTheming
 import Foundation
 import Testing

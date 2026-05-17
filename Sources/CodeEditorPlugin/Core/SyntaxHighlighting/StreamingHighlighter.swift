@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorLanguages
+import CodeEditorSyntaxHighlighting
 import Foundation
 
 /// A streaming highlighter that processes large files in chunks using AsyncSequence

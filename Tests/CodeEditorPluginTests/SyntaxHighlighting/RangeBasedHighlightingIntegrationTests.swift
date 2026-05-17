@@ -1,6 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 import Foundation
 import IssueReporting

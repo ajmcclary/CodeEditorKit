@@ -9,7 +9,7 @@ extension RegexSyntaxHighlighter {
     /// pattern fails to compile. In debug builds an `assertionFailure` surfaces
     /// the broken pattern so it gets fixed before shipping; in release the
     /// rule is dropped and highlighting continues with the remaining rules.
-    internal static func rule(
+    package static func rule(
         _ pattern: String,
         _ tokenType: RegexSyntaxTokenType,
         _ priority: Int = 0,
@@ -31,7 +31,7 @@ extension RegexSyntaxHighlighter {
         }
     }
 
-    internal static func createLanguageDefinitions() -> [String: RegexLanguageDefinition] {
+    package static func createLanguageDefinitions() -> [String: RegexLanguageDefinition] {
         var languages: [String: RegexLanguageDefinition] = [:]
 
         for descriptor in LanguageDescriptor.allDescriptors where descriptor.usesRegexHighlighter {
@@ -42,7 +42,7 @@ extension RegexSyntaxHighlighter {
     }
 
     /// Create efficient Language enum to LanguageDefinition mapping.
-    internal static func createLanguageMap(from definitions: [String: RegexLanguageDefinition]) -> [Language: RegexLanguageDefinition] {
+    package static func createLanguageMap(from definitions: [String: RegexLanguageDefinition]) -> [Language: RegexLanguageDefinition] {
         var languageMap: [Language: RegexLanguageDefinition] = [:]
 
         for descriptor in LanguageDescriptor.allDescriptors where descriptor.usesRegexHighlighter {

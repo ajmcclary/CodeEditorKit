@@ -144,6 +144,22 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorSyntaxHighlighting",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorDesignTokens",
+                "CodeEditorDiagnostics",
+                "CodeEditorLanguages",
+                "CodeEditorPlatform",
+                "CodeEditorTextModel",
+                "CodeEditorTheming",
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax")
+            ],
+            path: "Sources/CodeEditorSyntaxHighlighting",
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
@@ -152,17 +168,17 @@ let package = Package(
                 "CodeEditorDiagnostics",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
+                "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax")
+                .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
             ],
             exclude: [
                 "Info.plist",
                 "Languages",
-                "Performance"
+                "Performance",
+                "SyntaxHighlighting"
             ],
             swiftSettings: swiftSettings
         ),
@@ -207,6 +223,7 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
+                "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
                 .product(name: "CustomDump", package: "swift-custom-dump"),

@@ -4,8 +4,8 @@ import Foundation
 
 /// Simple performance monitoring for syntax highlighting
 @MainActor
-final class SyntaxHighlightingPerformanceMonitor {
-    enum Category: String {
+package final class SyntaxHighlightingPerformanceMonitor {
+    package enum Category: String {
         case syntaxHighlighting = "SyntaxHighlighting"
         case tokenApplication = "TokenApplication"
         case cacheOperation = "CacheOperation"
@@ -14,7 +14,9 @@ final class SyntaxHighlightingPerformanceMonitor {
     private var metrics: [Category: [Duration]] = [:]
     private let metricsLimit = 100
 
-    func measure<T>(
+    package init() {}
+
+    package func measure<T>(
         category: Category,
         operation: () async throws -> T
     ) async rethrows -> T {
@@ -43,7 +45,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         }
     }
 
-    func getAverageTime(for category: Category) -> Duration? {
+    package func getAverageTime(for category: Category) -> Duration? {
         guard let categoryMetrics = metrics[category], !categoryMetrics.isEmpty else {
             return nil
         }
@@ -54,7 +56,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         return Duration.seconds(totalSeconds / Double(categoryMetrics.count))
     }
 
-    func reset() {
+    package func reset() {
         metrics.removeAll()
     }
 }

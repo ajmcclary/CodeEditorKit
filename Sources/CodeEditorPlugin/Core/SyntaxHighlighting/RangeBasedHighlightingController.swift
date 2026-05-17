@@ -1,5 +1,6 @@
 import CodeEditorLanguages
 import CodeEditorPlatform
+import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 import Foundation
 

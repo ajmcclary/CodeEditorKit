@@ -1,46 +1,8 @@
 import CodeEditorCommon
 import CodeEditorLanguages
+import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 import Foundation
-
-// MARK: - Range Query Parser Protocol
-
-/// Pluggable parser interface for range-scoped syntax highlighting.
-internal protocol RangeQueryParserProtocol: AnyObject, Sendable {
-    /// Set the language for this parser.
-    func setLanguage(_ language: Language) async throws
-
-    /// Parse source text and return a parse result.
-    func parse(source: String) async throws -> RangeQueryParseResult
-
-    /// Apply an edit to the existing parser state.
-    /// Returns the invalidated byte ranges.
-    func applyEdit(
-        startByte: Int,
-        oldEndByte: Int,
-        newEndByte: Int
-    ) async -> IndexSet
-}
-
-// MARK: - Parse Result
-
-/// Result of parsing a document for range-scoped highlighting.
-internal struct RangeQueryParseResult: Sendable {
-    /// All capture ranges produced by the parser.
-    let captures: [RangeQueryCapture]
-
-    /// Total parse time in seconds (for benchmarking).
-    let parseDuration: TimeInterval
-
-    /// Total query time in seconds.
-    let queryDuration: TimeInterval
-}
-
-/// A single query capture: a byte range + capture name.
-internal struct RangeQueryCapture: Sendable {
-    let byteRange: Range<Int>
-    let captureName: String
-}
 
 // MARK: - Range Highlight Provider
 
@@ -246,12 +208,4 @@ extension RegexRangeHighlightProvider {
         let parser = RegexIncrementalRangeQueryParser()
         return RegexRangeHighlightProvider(parser: parser, captureMap: captureMap)
     }
-}
-
-// MARK: - Errors
-
-internal enum RangeQueryParserError: Error {
-    case languageNotSupported(Language)
-    case noLanguageSet
-    case parseFailed(String)
 }
