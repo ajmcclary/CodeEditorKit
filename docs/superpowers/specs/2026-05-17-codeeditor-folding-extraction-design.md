@@ -1,31 +1,38 @@
 # CodeEditorFolding Extraction (§6.2.8a) — Design
 
-Carve-out extraction of the pure code-folding engine from the
-`CodeEditorPlugin` umbrella target into a new `CodeEditorFolding`
-SPM target. The umbrella-coupled glue (`CodeFoldingCoordinatorService`,
-`EditorRuntime` lifecycle, `CodeEditorView+*Extensions` slices that
-touch the engine, and the `EditorConfiguration+CodeFolding` bridge)
-stays where it is. Mirrors how §6.2.7 SH handled its nine
-`CodeEditorView`-coupled files: leave the surface coupling in
-umbrella, lift the leaf engine.
+Carve-out extraction of the fold-storage primitives and provider
+registry from the `CodeEditorPlugin` umbrella target into a new
+`CodeEditorFolding` SPM target. Four files move into the new target;
+four files that directly reference `CodeEditorView` stay in the
+umbrella, relocated to a new `Core/Folding/` sub-bucket. Mirrors
+§6.2.7's exact pattern (36 SH files moved, 9 stayed in
+`Core/SyntaxHighlighting/`).
 
 ## Goals
 
-1. Lift the pure folding engine (engine, providers registry, region/store
-   adapters, storage primitives, presentation strategy, operations
-   service, configuration struct) into its own SPM target so changes
-   to fold-region detection or storage stop rebuilding the umbrella.
-2. Compile-time enforce the internal layering. The umbrella-coupled
-   service facade (`CodeFoldingCoordinatorService`, the `EditorRuntime`
-   registration, the `CodeEditorView+SetupExtensions.setupCodeFoldingEngine`
-   call site, and the related `+Extensions` slices) stays in the
-   umbrella as editor-surface glue.
-3. Resolve NEXT.md §10 question 2 (`CodeFoldingConfiguration` home) by
-   keeping the type with the engine. The umbrella bridge file
-   `Core/Configuration/EditorConfiguration+CodeFolding.swift` continues
-   to translate `EditorConfiguration` → `CodeFoldingConfiguration` and
-   gains `import CodeEditorFolding`. Configuration does **not** gain a
-   Folding dep.
+1. Lift the pure fold-storage primitives (`FoldStoreElement`,
+   `LineFoldStorage`, `FoldInfo`), the provider-driven storage builder
+   (`FoldRegionAdapter`), and the language-provider registry
+   (`FoldingProviderRegistry`) into their own SPM target. Storage and
+   registry changes stop rebuilding the umbrella.
+2. Compile-time enforce the internal layering. The four files that
+   reference `CodeEditorView` directly (`CodeFoldingEngine`,
+   `FoldPresentationStrategy`, `FoldingOperationsService`,
+   `CodeFoldingConfiguration`) relocate from `Features/` to
+   `Core/Folding/` as an explicit "umbrella-coupled fold glue" home —
+   the §6.2.7 `Core/SyntaxHighlighting/` precedent.
+3. Resolve NEXT.md §10 question 2 (`CodeFoldingConfiguration` home)
+   by **keeping the type in the umbrella alongside its three
+   consumers** (`CodeFoldingEngine`, `FoldingOperationsService`,
+   `EditorConfiguration+CodeFolding`). Earlier brainstorming chose
+   the new target; that choice was based on the assumption the engine
+   would move with it. With the engine staying in umbrella, moving
+   the 19-line config struct down would force every consumer to add
+   an import for zero benefit. Rename the misnamed
+   `Features/FoldableRegion.swift` (which only holds
+   `CodeFoldingConfiguration`) to
+   `Core/Folding/CodeFoldingConfiguration.swift` as part of the
+   relocation.
 
 ## Non-goals
 
@@ -37,19 +44,19 @@ umbrella, lift the leaf engine.
   `CodeFoldingEngine`, `FoldingProviderRegistry`, `FoldRegionAdapter`,
   `FoldPresentationStrategy`, `FoldingOperationsService`, or
   `LineFoldStorage`.
-- Not abstracting `CodeEditorView` out of `CodeFoldingCoordinatorService`.
-  The service's `isFoldable(at:in:)` / `toggleFold(at:in:)` signatures
-  accept `CodeEditorView` directly; introducing a protocol to lift the
-  service into the new target is §6.2.12 Core-split territory, not
+- Not abstracting `CodeEditorView` out of the four umbrella-coupled
+  files. The engine, operations service, and presentation strategy
+  take `CodeEditorView` directly; introducing a protocol to lift
+  them into the new target is §6.2.12 Core-split territory, not
   this session.
 - Not pulling `FoldStoreElement` / `LineFoldStorage` / `FoldInfo` into
   `CodeEditorTextModel`. They conform to `RangeStoreElement` (a
   TextModel protocol post-§6.2.7) but they are fold-specific data
-  shapes that travel with the engine. TextModel stays free of
+  shapes that travel with the folding target. TextModel stays free of
   feature-specific storage types.
 - Not splitting `Features/` directory yet. `SearchReplaceEngine.swift`,
-  `SymbolNavigator.swift`, `SmartEditing/`, etc. stay put; their
-  extractions follow in §6.2.8b–g.
+  `SymbolNavigator.swift`, `SmartEditing/`, `Debugger*.swift`, etc.
+  stay put; their extractions follow in §6.2.8b–g.
 - Not splitting test targets. `CodeEditorPluginTests` gains
   `CodeEditorFolding` as a direct dependency. Per-target test split
   is deferred to §6.2.15 (`CodeEditorTestSupport`).
@@ -59,16 +66,14 @@ umbrella, lift the leaf engine.
 ## Target shape & dependency edges
 
 New target at `Sources/CodeEditorFolding/`. Direct dependencies
-derived from the import survey across the 8 moving files:
+derived from the import survey across the 4 moving files:
 
 ```swift
 .target(
     name: "CodeEditorFolding",
     dependencies: [
         "CodeEditorCommon",
-        "CodeEditorDiagnostics",
         "CodeEditorLanguages",
-        "CodeEditorPlatform",
         "CodeEditorSyntaxHighlighting",
         "CodeEditorTextModel"
     ],
@@ -80,73 +85,85 @@ Phase 4. Sits alongside the other phase-4 engine targets that will land
 in §6.2.8b–g (Symbols, SmartEditing, Search, Annotations, Workspace,
 Completion).
 
-Notably **not** included (no folding file imports them):
-`CodeEditorConfiguration` (intentionally — the bridge stays in
-umbrella), `CodeEditorTheming`, `CodeEditorDesignTokens`, `SwiftSyntax`/
-`SwiftParser`.
+Notably **not** included (no moving file imports them):
+`CodeEditorDiagnostics` (only `CodeFoldingEngine` used it; engine
+stays in umbrella), `CodeEditorPlatform` (only
+`CodeFoldingConfiguration` used `PlatformColors`; stays in umbrella),
+`CodeEditorConfiguration`, `CodeEditorTheming`,
+`CodeEditorDesignTokens`, `SwiftSyntax`/`SwiftParser`.
 
 Umbrella target `Package.swift` changes:
 
 - Add `"CodeEditorFolding"` to `CodeEditorPlugin`'s `dependencies:`.
 - Add `"CodeEditorFolding"` to `CodeEditorPluginTests`'s `dependencies:`.
-- No new `exclude:` entries needed. After `git mv` removes the 8 files
-  from `Sources/CodeEditorPlugin/Features/`, the directory still
-  contains the Smart/Search/Symbols/Annotations/Workspace/Completion
-  files (those move in subsequent §6.2.8 sub-steps). The new target's
-  `path:` defaults to `Sources/CodeEditorFolding/` — a sibling source
-  root.
-- `CodeEditorUI` and `CodeEditorSample`: dependency to be added only if
-  Step 0 pre-flight finds direct Folding-type references. Initial
-  expectation is no — both consume `display.isCodeFoldingEnabled` from
-  the Configuration target, not the engine.
+- No new `exclude:` entries needed. After `git mv` removes the 4 pure
+  files from `Sources/CodeEditorPlugin/Features/` and relocates the 4
+  umbrella-coupled files into `Sources/CodeEditorPlugin/Core/Folding/`,
+  `Features/` shrinks; both directories remain inside the umbrella
+  source root. The new target's `path:` defaults to
+  `Sources/CodeEditorFolding/` — a sibling source root.
+- `CodeEditorUI` and `CodeEditorSample`: dependency added only if
+  Step 0 pre-flight finds direct references to one of the four
+  moving types. Initial expectation is no.
 
 ## File map
 
-### Moves into new `Sources/CodeEditorFolding/` (8 files)
+### Moves into new `Sources/CodeEditorFolding/` (4 files)
 
 All from `Sources/CodeEditorPlugin/Features/`:
 
-| File | Owns |
-|---|---|
-| `CodeFoldingEngine.swift` | `@MainActor` engine, `ObservableObject`, `TextEditEventObserving` |
-| `FoldableRegion.swift` | `FoldableRegion` struct + `CodeFoldingConfiguration` struct |
-| `FoldStoreElement.swift` | `FoldStoreElement` (`RangeStoreElement` conformer) + `FoldingType` enum |
-| `LineFoldStorage.swift` | `LineFoldStorage` (wraps `RangeStore<FoldStoreElement>`) + `FoldInfo` |
-| `FoldRegionAdapter.swift` | `FoldRegionAdapter` (region → store) |
-| `FoldPresentationStrategy.swift` | `FoldPresentationStrategy` protocol + `AttributeFoldPresentationStrategy` |
-| `FoldingOperationsService.swift` | `FoldingOperationsService` + `extension NSAttributedString.Key` |
-| `FoldingProviderRegistry.swift` | `FoldingProviderRegistry` (seeds 14 default providers) |
+| File | Owns | Imports |
+|---|---|---|
+| `FoldStoreElement.swift` | `FoldStoreElement` struct (`RangeStoreElement` conformer) | Languages, TextModel |
+| `LineFoldStorage.swift` | `LineFoldStorage` struct + `FoldInfo` struct | Languages, TextModel |
+| `FoldRegionAdapter.swift` | `FoldRegionAdapter` class (uses `CodeFoldingProvider`) | Languages, TextModel |
+| `FoldingProviderRegistry.swift` | `FoldingProviderRegistry` class (seeds 14 default providers) | Common, Languages, SH |
 
-### Stays in umbrella (`CodeEditorView`-coupled, parallel to §6.2.7's nine SH carve-outs)
+### Relocates inside umbrella from `Features/` → `Core/Folding/` (4 files)
 
-| File | Why it stays |
+`CodeEditorView`-coupled glue, parallel to §6.2.7's nine SH carve-outs
+landing in `Core/SyntaxHighlighting/`:
+
+| Old path | New path | Why it stays |
+|---|---|---|
+| `Features/CodeFoldingEngine.swift` | `Core/Folding/CodeFoldingEngine.swift` | `attach(to: CodeEditorView)`; holds reference to umbrella view |
+| `Features/FoldingOperationsService.swift` | `Core/Folding/FoldingOperationsService.swift` | ~12 `CodeEditorView` references (textKitBridge, configuration, etc.) |
+| `Features/FoldPresentationStrategy.swift` | `Core/Folding/FoldPresentationStrategy.swift` | Protocol methods take `CodeEditorView`; same for `AttributeFoldPresentationStrategy` |
+| `Features/FoldableRegion.swift` (renamed) | `Core/Folding/CodeFoldingConfiguration.swift` | Holds only `CodeFoldingConfiguration`; consumed only by umbrella files; rename corrects misnomer (`FoldableRegion` itself lives in Languages target since §6.2.6) |
+
+### Stays in umbrella (unchanged path)
+
+| File | Role |
 |---|---|
-| `Core/CodeFoldingCoordinatorService.swift` | `public` API; methods take `CodeEditorView`; exposes nested `FoldControlLayout` / `FoldControlType` consumed by `Layout/GutterViewModel.swift` |
-| `Core/EditorRuntime.swift` | Owns `codeFoldingEngine` / `codeFoldingCoordinatorService` lifecycle; throws `CodeEditorError.serviceUnavailable("CodeFoldingEngine")` |
+| `Core/CodeFoldingCoordinatorService.swift` | `public` service facade for Layout |
+| `Core/EditorRuntime.swift` | Owns engine/coordinator lifecycle |
+| `Core/CodeEditorView.swift` (`codeFoldingEngine` property) | Holds the engine instance |
 | `Core/CodeEditorView+SetupExtensions.swift` (`setupCodeFoldingEngine` slice) | Extends umbrella `CodeEditorView` |
 | `Core/CodeEditorView+CodeFoldingExtensions.swift` | Extends umbrella `CodeEditorView` |
 | `Core/CodeEditorView+ConfigurationExtensions.swift` (`updateCodeFoldingConfiguration` slice) | Extends umbrella `CodeEditorView`; calls the bridge |
-| `Core/CodeEditorView+CoreExtensions.swift` | References `codeFoldingEngine` on `CodeEditorView` |
+| `Core/CodeEditorView+CoreExtensions.swift` | References fold state on `CodeEditorView` |
 | `Core/CodeEditorView+SyntaxHighlightingExtensions.swift` | References fold state on `CodeEditorView` |
-| `Core/Configuration/EditorConfiguration+CodeFolding.swift` | Bridge between `CodeEditorConfiguration` and `CodeEditorFolding`; only umbrella can depend on both without a cycle |
+| `Core/Configuration/EditorConfiguration+CodeFolding.swift` | Bridge between `EditorConfiguration` and `CodeFoldingConfiguration`; both types umbrella-side |
 
 ### Stays in Layout (umbrella for now; moves with §6.2.11)
 
 `Layout/FoldChevronAnimation.swift`, `Layout/GutterInteractionHandler.swift`,
 `Layout/GutterViewModel.swift`, `Layout/GutterViewRenderer.swift`,
 `Layout/CodeEditorContainerView+AppKitExtensions.swift`. Each gains
-`import CodeEditorFolding`.
+`import CodeEditorFolding` only if it references a moving type
+(`FoldStoreElement`, `LineFoldStorage`, `FoldInfo`, `FoldRegionAdapter`,
+`FoldingProviderRegistry`). Pre-flight in Step 0 confirms exact list.
 
 ### Stays in SwiftUI (umbrella for now; moves with §6.2.13)
 
-`SwiftUI/CodeEditor+ModifiersExtensions.swift`. Gains `import CodeEditorFolding`.
+`SwiftUI/CodeEditor+ModifiersExtensions.swift`. Gains
+`import CodeEditorFolding` only if it references a moving type.
 
 ### Stays in Languages target (already there since §6.2.6)
 
-`Languages/CodeFoldingInterfaces.swift` (the `CodeFoldingProvider`
-protocol) and the 11 per-language `*FoldingProvider.swift` files. No
-change. Their `package` access modifiers from §6.2.6 already let
-`FoldingProviderRegistry` reach them from the new target.
+`Languages/CodeFoldingInterfaces.swift` — `FoldableRegion` struct,
+`FoldingType` enum, `CodeFoldingProvider` protocol (all `public`).
+The 11 per-language `*FoldingProvider.swift` files. No change.
 
 ### Stays in SyntaxHighlighting target (since §6.2.7)
 
@@ -158,45 +175,44 @@ change. Their `package` access modifiers from §6.2.6 already let
 
 Pattern from §6.2.6 / §6.2.7: `internal` → `package` for types and
 members reached across the new boundary; private helpers stay
-`private`. Initial promotion surface (build errors drive the precise
-list):
+`private`. Initial promotion surface across the 4 moving files
+(build errors drive the precise list):
 
 | Symbol | Touched from | To |
 |---|---|---|
-| `CodeFoldingEngine` (class + init + every member called by umbrella/tests) | umbrella, tests | `package` |
-| `CodeFoldingEngine.lineSpan(of:in:)` (static) | `CodeFoldingEngineLineSpanTests` | `package` |
-| `CodeFoldingConfiguration` (struct + all fields) | umbrella bridge | `package` |
-| `FoldableRegion` (struct + fields) | umbrella, tests | verify (already `public` from §6.2.6) |
-| `FoldingType` (enum) | umbrella, tests | `package` (verify `Sendable` carries) |
-| `FoldStoreElement` (struct + init + fields) | umbrella, tests | `package` |
-| `LineFoldStorage` (struct + methods + init) | umbrella, tests | `package` |
-| `FoldInfo` (struct + fields) | umbrella, tests | `package` |
-| `FoldRegionAdapter` (class + init + methods) | umbrella | `package` |
-| `FoldPresentationStrategy` (protocol) | umbrella | `package` |
-| `AttributeFoldPresentationStrategy` (class + init + methods) | umbrella | `package` |
-| `FoldingOperationsService` (class + init + methods) | umbrella | `package` |
-| `FoldingProviderRegistry` (class + init + methods) | umbrella, tests | `package` |
-| `extension NSAttributedString.Key` static (in `FoldingOperationsService.swift`) | umbrella | `package` if read across boundary, else stays `internal` |
+| `FoldStoreElement` (struct + init + fields + `empty` static) | umbrella (relocated `CodeFoldingEngine`, `FoldingOperationsService`), Layout, tests | `package` |
+| `LineFoldStorage` (struct + methods + init + `documentLength`) | umbrella, Layout, tests | `package` |
+| `FoldInfo` (struct + fields) | umbrella, Layout, tests | `package` |
+| `FoldRegionAdapter` (class + init + methods) | umbrella (relocated `CodeFoldingEngine`) | `package` |
+| `FoldingProviderRegistry` (class + init + methods + `registeredLanguages` var) | umbrella (relocated `CodeFoldingEngine`), tests | `package` |
 
-`@Published` properties on `CodeFoldingEngine` may need special
-handling if `package`-level `@Published` misbehaves under Swift 6.3 —
-fall back to `public` for those specific properties as the escape
-hatch. Mitigation deferred until a real compiler error appears.
+Private helpers in `LineFoldStorage` (`rebuildStoreFromIndex`,
+`transform`, `intersects`) stay `private`. The nested
+`LineFoldStorage.StoredFold` stays `private`.
+
+`FoldableRegion` and `FoldingType` are already `public` (Languages
+target). `CodeFoldingProvider` is already `public` (Languages target).
+No new promotions needed on the Languages side.
 
 ## Consumer impact (imports to add)
 
-Discovered via grep before move:
+Discovered via grep before the move; finalized after Step 0 pre-flight:
 
-- **Umbrella (`Sources/CodeEditorPlugin/`):**
-  - `Core/CodeFoldingCoordinatorService.swift`
-  - `Core/EditorRuntime.swift`
-  - `Core/CodeEditorView.swift`
-  - `Core/CodeEditorView+SetupExtensions.swift`
+- **Umbrella (`Sources/CodeEditorPlugin/`), files that reference one of
+  the 4 moving types after relocation:**
+  - `Core/Folding/CodeFoldingEngine.swift` (relocated; uses
+    `FoldRegionAdapter`, `FoldingProviderRegistry`, `LineFoldStorage`)
+  - `Core/Folding/FoldPresentationStrategy.swift` (relocated; uses
+    `FoldInfo`)
+  - `Core/Folding/FoldingOperationsService.swift` (relocated; verify;
+    may not need the import if it only uses `FoldableRegion` /
+    `CodeFoldingConfiguration`)
+  - `Core/CodeFoldingCoordinatorService.swift` (uses
+    `LineFoldStorage` / `FoldInfo` per existing umbrella grep)
   - `Core/CodeEditorView+CodeFoldingExtensions.swift`
-  - `Core/CodeEditorView+ConfigurationExtensions.swift`
   - `Core/CodeEditorView+CoreExtensions.swift`
   - `Core/CodeEditorView+SyntaxHighlightingExtensions.swift`
-  - `Core/Configuration/EditorConfiguration+CodeFolding.swift`
+  - `Core/CodeEditorView+ConfigurationExtensions.swift`
   - `Layout/GutterViewModel.swift`
   - `Layout/GutterViewRenderer.swift`
   - `Layout/GutterInteractionHandler.swift`
@@ -204,84 +220,96 @@ Discovered via grep before move:
   - `Layout/CodeEditorContainerView+AppKitExtensions.swift`
   - `SwiftUI/CodeEditor+ModifiersExtensions.swift`
 
+  Exact list confirmed in Step 0 with
+  `grep -l "FoldStoreElement\|LineFoldStorage\|FoldInfo\|FoldRegionAdapter\|FoldingProviderRegistry"`.
+
 - **Tests (`Tests/CodeEditorPluginTests/`):**
-  - `FeatureBehaviorTests.swift`
-  - `ComprehensivePerformanceTests.swift`
-  - `Features/CodeFoldingEngineLineSpanTests.swift`
-  - `Features/CodeFoldingEngineCacheEvictionTests.swift`
-  - `Features/LineFoldStorageTests.swift`
-  - `Features/FoldingProviderOutputTests.swift`
+  - `FeatureBehaviorTests.swift` (uses `FoldingProviderRegistry`)
+  - `Features/LineFoldStorageTests.swift` (uses `LineFoldStorage`)
+  - `Features/FoldingProviderOutputTests.swift` (uses
+    `FoldingProviderRegistry`)
+  - `ComprehensivePerformanceTests.swift`,
+    `Features/CodeFoldingEngineLineSpanTests.swift`,
+    `Features/CodeFoldingEngineCacheEvictionTests.swift` — verify
+    in Step 0; if they only touch `CodeFoldingEngine` (umbrella),
+    no new import needed.
 
 - **Sample / UI:** confirmed by Step 0 pre-flight. Expected none.
 
 ## Execution plan
 
-Each step leaves `swift build` green except Step 2 (`git mv`) → Step 5
-(promotion loop), which is the expected red window.
+Each step leaves `swift build` green except the window between Step 3
+(`git mv` pure files) and Step 6 (promotion loop complete). Two
+commits expected: one pre-relocation (Step 2) to keep the relocate-
+versus-extract diffs separable, mirroring §6.2.7's `818df5f6` →
+`f2798287` sequence.
 
-**Step 0 — Pre-flight audit (~10 min).**
+**Step 0 — Pre-flight audit (~10 min, read-only).**
 
-- Grep `CodeEditorSample` and `CodeEditorUI` for Folding-type references
-  (`CodeFoldingEngine`, `FoldableRegion`, `FoldStoreElement`,
-  `LineFoldStorage`, `FoldInfo`, `FoldingType`, `FoldRegionAdapter`,
-  `FoldPresentationStrategy`, `AttributeFoldPresentationStrategy`,
-  `FoldingOperationsService`, `FoldingProviderRegistry`,
-  `CodeFoldingConfiguration`). If any hit, plan import additions.
-  Most likely only `CodeFoldingCoordinatorService` (umbrella public
-  API) is touched, which doesn't require a new dep.
-- Confirm the carry-set is exactly the 8 files in §"Moves into new
-  `Sources/CodeEditorFolding/`". Check no late references like a
-  tenth file in `Extensions/` or `Models/` referencing fold types.
+- Grep `CodeEditorSample` and `CodeEditorUI` for the 5 moving type
+  names. If any hit, plan import additions.
+- Verify the carry-set is exactly the 4 pure files and the relocation
+  set is exactly the 4 coupled files.
 - Verify `CodeEditorError.serviceUnavailable("CodeFoldingEngine")`
-  identifier string stays stable (asserted by
-  `ReviewRemediationRegressionTests`).
+  identifier string stays stable.
+- Capture baseline test pass count for delta comparison.
 
-**Step 1 — Scaffold target (no source moves yet).**
+**Step 1 — Scaffold target stanza (no source moves yet).**
 
-- Create empty `Sources/CodeEditorFolding/` directory (placeholder file
-  or `.gitkeep` so SPM accepts the target).
+- Create `Sources/CodeEditorFolding/` with a placeholder file so SPM
+  accepts the target.
 - Add the target stanza to `Package.swift` (see §"Target shape").
 - Add `"CodeEditorFolding"` to umbrella + test target `dependencies:`.
-- `swift build` — should be green; the new target has no sources yet,
-  the umbrella keeps all 8 files.
+- `swift build` — should be green; the new target has only the
+  placeholder, the umbrella keeps all 8 files.
 
-**Step 2 — `git mv` the 8 files.**
+**Step 2 — Pre-relocation commit: move 4 coupled files into `Core/Folding/`.**
 
-```
-git mv Sources/CodeEditorPlugin/Features/CodeFoldingEngine.swift            Sources/CodeEditorFolding/
-git mv Sources/CodeEditorPlugin/Features/FoldableRegion.swift               Sources/CodeEditorFolding/
-git mv Sources/CodeEditorPlugin/Features/FoldStoreElement.swift             Sources/CodeEditorFolding/
-git mv Sources/CodeEditorPlugin/Features/LineFoldStorage.swift              Sources/CodeEditorFolding/
-git mv Sources/CodeEditorPlugin/Features/FoldRegionAdapter.swift            Sources/CodeEditorFolding/
-git mv Sources/CodeEditorPlugin/Features/FoldPresentationStrategy.swift     Sources/CodeEditorFolding/
-git mv Sources/CodeEditorPlugin/Features/FoldingOperationsService.swift     Sources/CodeEditorFolding/
-git mv Sources/CodeEditorPlugin/Features/FoldingProviderRegistry.swift      Sources/CodeEditorFolding/
-```
+- `mkdir -p Sources/CodeEditorPlugin/Core/Folding`
+- `git mv Features/CodeFoldingEngine.swift            Core/Folding/`
+- `git mv Features/FoldingOperationsService.swift     Core/Folding/`
+- `git mv Features/FoldPresentationStrategy.swift     Core/Folding/`
+- `git mv Features/FoldableRegion.swift               Core/Folding/CodeFoldingConfiguration.swift`
+  (rename to match contents — only holds `CodeFoldingConfiguration`)
+- `swift build` — should be green; all files still in the umbrella
+  target, no imports change.
+- Commit: `Relocate umbrella-coupled fold glue to Core/Folding/`.
+  Mirrors §6.2.7's `818df5f6`.
 
-Delete the placeholder file from Step 1. Build is now red on missing
-imports + visibility.
+**Step 3 — Move the 4 pure files into the new target.**
 
-**Step 3 — Add `import CodeEditorFolding` to umbrella + test callers.**
+- Delete the placeholder from Step 1.
+- `git mv Sources/CodeEditorPlugin/Features/FoldStoreElement.swift         Sources/CodeEditorFolding/`
+- `git mv Sources/CodeEditorPlugin/Features/LineFoldStorage.swift          Sources/CodeEditorFolding/`
+- `git mv Sources/CodeEditorPlugin/Features/FoldRegionAdapter.swift        Sources/CodeEditorFolding/`
+- `git mv Sources/CodeEditorPlugin/Features/FoldingProviderRegistry.swift  Sources/CodeEditorFolding/`
+- `swift build` — now red on missing imports + visibility.
 
-Insert the import alphabetically. List from §"Consumer impact".
+**Step 4 — Add `import CodeEditorFolding` to umbrella + test callers.**
 
-**Step 4 — Access-modifier promotions (`internal` → `package`).**
+Insert the import alphabetically. List from §"Consumer impact",
+finalized from Step 0 grep.
+
+**Step 5 — Access-modifier promotions (`internal` → `package`).**
 
 Bulk-promote per §"Access-modifier promotions". Apply in
 `Sources/CodeEditorFolding/`, not the call sites.
 
-**Step 5 — Compile loop until green.**
+**Step 6 — Compile loop until green.**
 
-`swift build 2>&1 | tail -60` → fix → repeat. Expect 2–4 rounds for
-straggler access modifiers and `@Published` cross-target visibility.
+`swift build 2>&1 | tail -60` → fix → repeat. Expect 1–3 rounds for
+straggler access modifiers. Fewer rounds than §6.2.7 because no
+`@Published` cross-target access, no Combine surface, no
+SwiftSyntax product migration.
 
-**Step 6 — Test + lint.**
+**Step 7 — Test + lint.**
 
 ```
-swift test --filter Folding
+swift test --filter LineFoldStorage
+swift test --filter FoldingProviderOutput
+swift test --filter CodeFoldingEngine
 swift test --filter FeatureBehavior
 swift test --filter ComprehensivePerformance
-swift test --filter LineFoldStorage
 swift build --target CodeEditorSample
 swiftlint --fix && swiftlint
 ```
@@ -290,36 +318,42 @@ Targeted filters honor the memory rule about not over-running the
 suite after additive-only steps. Full `swift test --parallel` is not
 required to declare success.
 
-**Step 7 — Docs.**
+**Step 8 — Sample app smoke (manual).**
+
+Launch via `swift run CodeEditorSample`, open a Swift source file,
+fold/unfold a function via the gutter chevron, save, reopen. No
+regression vs. pre-change.
+
+**Step 9 — Docs.**
 
 - `CLAUDE.md`:
   - Add `Sources/CodeEditorFolding/` row under "Other source roots".
-  - Update umbrella file count (`Features/` shrinks by 8).
+  - Add note that `Core/Folding/` is a new umbrella sub-bucket
+    holding `CodeEditorView`-coupled fold glue.
+  - Update umbrella file count (`Features/` shrinks by 8 — 4 moved
+    out, 4 relocated to `Core/Folding/`).
   - Update the `Features/` directory description (drop the folding
     bullet).
 - `NEXT.md` §6.0:
   - Add row for `CodeEditorFolding` with commit SHA, what landed,
-    direct deps.
-  - Add a "Deviations during §6.2.8a `CodeEditorFolding`" block (any
-    surprises uncovered during execution).
-- `NEXT.md` §6.2.8: mark Folding sub-step as `[done]`.
+    direct deps, "extracted 4 pure files; relocated 4
+    `CodeEditorView`-coupled files to `Core/Folding/`".
+  - Add a "Deviations during §6.2.8a `CodeEditorFolding`" block:
+    surprise that half the files were umbrella-coupled, mid-flight
+    revision of `CodeFoldingConfiguration` placement, rename of
+    misnamed `FoldableRegion.swift` to `CodeFoldingConfiguration.swift`.
+- `NEXT.md` §6.2.8: mark Folding sub-step as `[done — carve-out]`.
 - `NEXT.md` §10: mark question 2 resolved
-  (`CodeFoldingConfiguration` stays in `CodeEditorFolding`; umbrella
-  bridge file unchanged in shape, gains an import).
+  (`CodeFoldingConfiguration` stays in umbrella).
 
-**Step 8 — Single commit.** Subject mirrors the §6.2.7 commit style:
-`Extract CodeEditorFolding target (§6.2.8a)`. Body lists carry-set,
-deps, and major deviations.
+**Step 10 — Main extraction commit.** Subject mirrors §6.2.7 style:
+`Extract CodeEditorFolding target (§6.2.8a)`. Body lists the 4 moved
+files, the 4 relocated files, deps, deviations, and a one-line
+pointer to the pre-relocation commit from Step 2.
 
 ## Risks & open-but-acceptable items
 
-1. **`CodeFoldingEngine` is `@MainActor ObservableObject` with
-   `@Published` properties.** Cross-target `@Published` access has
-   historically been fine in Swift 6.3, but verify no Combine-related
-   visibility errors after promotion. Mitigation: fall back to
-   `public` for the specific properties if `package` misbehaves.
-
-2. **`FoldingProviderRegistry.init()` seeds 14 concrete providers.**
+1. **`FoldingProviderRegistry.init()` seeds 14 concrete providers.**
    `BraceFoldingProvider()`, `IndentationFoldingProvider()`,
    `MarkdownFoldingProvider()`, `XMLFoldingProvider()`,
    `ShellFoldingProvider()`, `SQLFoldingProvider()`,
@@ -330,47 +364,53 @@ deps, and major deviations.
    just work; if not, the failing call shows the specific missing
    modifier.
 
-3. **`EditorConfiguration+CodeFolding.swift` import shape.** This
-   bridge file currently `import CodeEditorConfiguration` only. After
-   the move it needs `import CodeEditorFolding` to see
-   `CodeFoldingConfiguration`. Function stays in umbrella because
-   only the umbrella can depend on both Configuration and Folding
-   without creating a cycle.
+2. **`Core/Folding/` adds another umbrella sub-bucket.** CLAUDE.md
+   already flags `Core/Configuration/`, `Core/Documents/`,
+   `Core/Platform/`, `Core/Text/`, `Core/SyntaxHighlighting/` as F3
+   dumping grounds awaiting §6.2.12 Core split. `Core/Folding/`
+   joins that list. Documented as expected — re-evaluated during
+   §6.2.12.
 
-4. **`Core/Configuration/` umbrella sub-bucket grows by one import,
-   not by files.** CLAUDE.md flags this as an F3 dumping ground; this
-   extraction does not make it worse, just adds one more import to
-   the existing bridge file. Will be re-evaluated during §6.2.12 Core
-   split.
+3. **Rename of `FoldableRegion.swift` → `CodeFoldingConfiguration.swift`.**
+   Git tracks renames automatically when content is unchanged. The
+   file's contents and access modifiers remain the same; only the
+   path and filename change. No test or import edits needed beyond
+   the relocation itself.
 
-5. **No CodeFoldingCoordinatorService refactor.** The service still
-   takes `CodeEditorView` directly. Lifting the service into the new
-   target would require either an `EditorViewProtocol` or
-   `@_implementationOnly` import gymnastics — both out of scope.
-   Coordinator stays in umbrella.
+4. **`LineFoldStorage.documentLength` is computed-`var` without
+   modifier.** In the existing source: `var documentLength: Int { … }`
+   — i.e., `internal`. After promotion to `package`, verify
+   callers (Layout, CodeFoldingCoordinatorService) compile cleanly.
 
-6. **`FoldStoreElement` / `LineFoldStorage` / `FoldInfo` placement.**
-   Chosen to stay with the engine. These types depend on TextModel's
-   `RangeStoreElement` but TextModel does not depend on them. The
-   inverse direction (pulling them down to TextModel) would let
-   Layout reach them without a Folding import once Layout extracts,
-   but it would make TextModel know about fold-specific data shapes
-   — a worse trade.
+5. **No `CodeFoldingCoordinatorService` refactor.** Service still
+   takes `CodeEditorView` directly. Same constraint as §6.2.7's
+   `RangeHighlightProviding` protocol — out of scope until §6.2.12.
+
+6. **Reduced extraction value.** Original scope was 8 files; reality
+   is 4. The fold engine itself, with all its caching and provider
+   orchestration, stays in umbrella. Storage primitives + provider
+   registry move. This is a smaller win than §6.2.6 / §6.2.7, but
+   honest given the coupling. The full Folding extraction completes
+   when §6.2.12 lands.
 
 ## Verification
 
 Definition of done:
 
 - `swift build` green for all targets.
-- `swift test --filter Folding`, `--filter FeatureBehavior`,
-  `--filter ComprehensivePerformance`, `--filter LineFoldStorage`
-  all pass.
+- `swift test --filter LineFoldStorage`,
+  `--filter FoldingProviderOutput`,
+  `--filter CodeFoldingEngine`,
+  `--filter FeatureBehavior`,
+  `--filter ComprehensivePerformance` all pass.
 - `swift build --target CodeEditorSample` green.
 - `swiftlint` reports zero violations (strict mode is on).
-- 8 files appear under `Sources/CodeEditorFolding/`; `Features/` no
-  longer contains any `*Fold*` files.
+- 4 files appear under `Sources/CodeEditorFolding/`.
+- 4 files appear under `Sources/CodeEditorPlugin/Core/Folding/`.
+- `Features/` no longer contains any `*Fold*` files.
 - `CodeEditorPlugin` and `CodeEditorPluginTests` list
   `CodeEditorFolding` in their `dependencies:`.
-- `CLAUDE.md` and `NEXT.md` updated per Step 7.
+- `CLAUDE.md` and `NEXT.md` updated per Step 9.
 - Sample-app smoke (manual): launch, open a Swift file, fold/unfold a
-  region with the gutter chevron — no regression vs. pre-change.
+  region with the gutter chevron, save and reopen — no regression vs.
+  pre-change.
