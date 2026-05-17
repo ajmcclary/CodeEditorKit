@@ -26,7 +26,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive background color for text editing areas
     public static var textBackgroundColor: PlatformColor {
-        textBackgroundColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
+        textBackgroundColor(capabilities: PlatformCapabilities())
     }
 
     /// Adaptive background color for text editing areas with injectable capabilities
@@ -41,7 +41,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive selection color
     public static var selectionColor: PlatformColor {
-        selectionColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
+        selectionColor(capabilities: PlatformCapabilities())
     }
 
     /// Adaptive selection color with injectable capabilities
@@ -56,7 +56,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive line number color
     public static var lineNumberColor: PlatformColor {
-        lineNumberColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
+        lineNumberColor(capabilities: PlatformCapabilities())
     }
 
     /// Adaptive line number color with injectable capabilities
@@ -71,7 +71,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive gutter background color
     public static var gutterBackgroundColor: PlatformColor {
-        gutterBackgroundColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
+        gutterBackgroundColor(capabilities: PlatformCapabilities())
     }
 
     /// Adaptive gutter background color with injectable capabilities
@@ -94,7 +94,7 @@ public enum AdaptiveColorSystem {
         for severity: AnnotationSeverity,
         capabilities: PlatformCapabilities? = nil
     ) -> PlatformColor {
-        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
+        let capabilities = capabilities ?? PlatformCapabilities()
         if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             switch severity {
             case .info:
