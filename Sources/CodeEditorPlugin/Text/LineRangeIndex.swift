@@ -9,7 +9,7 @@ internal enum LineRangeIndex {
     // MARK: - Line Ranges
 
     /// Returns the line range containing a UTF-16 offset.
-    static func lineRange(containingUTF16Offset offset: Int, in text: String) -> NSRange {
+    package static func lineRange(containingUTF16Offset offset: Int, in text: String) -> NSRange {
         // swiftlint:disable:next legacy_objc_type
         let nsText = text as NSString
         guard nsText.length > 0 else {
@@ -21,7 +21,7 @@ internal enum LineRangeIndex {
     }
 
     /// Returns the line text containing a UTF-16 offset without trailing newline characters.
-    static func lineText(containingUTF16Offset offset: Int, in text: String) -> String {
+    package static func lineText(containingUTF16Offset offset: Int, in text: String) -> String {
         // swiftlint:disable:next legacy_objc_type
         let nsText = text as NSString
         let range = lineRange(containingUTF16Offset: offset, in: text)
@@ -30,7 +30,7 @@ internal enum LineRangeIndex {
     }
 
     /// All UTF-16 line ranges in the string, including line terminators.
-    static func lineRanges(in string: String) -> [NSRange] {
+    package static func lineRanges(in string: String) -> [NSRange] {
         // swiftlint:disable:next legacy_objc_type
         let nsText = string as NSString
         guard nsText.length > 0 else { return [] }
@@ -48,7 +48,7 @@ internal enum LineRangeIndex {
     }
 
     /// Zero-based line number for a UTF-16 offset.
-    static func lineNumber(for offset: Int, in string: String) -> Int {
+    package static func lineNumber(for offset: Int, in string: String) -> Int {
         let clampedOffset = max(0, min(offset, UTF16RangeConverter.utf16Length(of: string)))
         guard clampedOffset > 0 else { return 0 }
 
@@ -68,7 +68,7 @@ internal enum LineRangeIndex {
     }
 
     /// Character offset of a line in a pre-split `[String]` of lines.
-    static func locationForLine(_ lineIndex: Int, in lines: [String]) -> Int {
+    package static func locationForLine(_ lineIndex: Int, in lines: [String]) -> Int {
         var location = 0
         for index in 0..<lineIndex {
             location += UTF16RangeConverter.utf16Length(of: lines[index]) + 1 // +1 for newline
@@ -79,7 +79,7 @@ internal enum LineRangeIndex {
     // MARK: - Word / Identifier Ranges
 
     /// Identifier-like word range at a UTF-16 offset.
-    static func wordRange(at offset: Int, in string: String) -> NSRange? {
+    package static func wordRange(at offset: Int, in string: String) -> NSRange? {
         let clampedOffset = max(0, min(offset, UTF16RangeConverter.utf16Length(of: string)))
         guard let insertionRange = Range(NSRange(location: clampedOffset, length: 0), in: string) else {
             return nil
@@ -102,7 +102,7 @@ internal enum LineRangeIndex {
     }
 
     /// Current identifier prefix ending at a UTF-16 offset.
-    static func identifierPrefix(endingAtUTF16Offset offset: Int, in text: String) -> String {
+    package static func identifierPrefix(endingAtUTF16Offset offset: Int, in text: String) -> String {
         let prefix = UTF16RangeConverter.substring(upToUTF16Offset: offset, in: text)
         var characters: [Character] = []
 
@@ -115,7 +115,7 @@ internal enum LineRangeIndex {
     }
 
     /// UTF-16 range for the current identifier ending at an offset.
-    static func identifierRange(endingAtUTF16Offset offset: Int, in text: String) -> NSRange? {
+    package static func identifierRange(endingAtUTF16Offset offset: Int, in text: String) -> NSRange? {
         let clampedOffset = max(0, min(offset, UTF16RangeConverter.utf16Length(of: text)))
         let prefix = identifierPrefix(endingAtUTF16Offset: clampedOffset, in: text)
         guard !prefix.isEmpty else { return nil }
@@ -125,7 +125,7 @@ internal enum LineRangeIndex {
     }
 
     /// Whether a character is an identifier constituent for editor features.
-    static func isIdentifierCharacter(_ character: Character) -> Bool {
+    package static func isIdentifierCharacter(_ character: Character) -> Bool {
         let identifierCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
         return character.unicodeScalars.allSatisfy { identifierCharacters.contains($0) }
     }

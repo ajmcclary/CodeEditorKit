@@ -7,7 +7,7 @@ import UIKit
 
 /// Shared context menu structure for cross-platform consistency
 struct ContextMenuDescriptor {
-    let items: [ContextMenuItem]
+    package let items: [ContextMenuItem]
 }
 
 enum ContextMenuItem {

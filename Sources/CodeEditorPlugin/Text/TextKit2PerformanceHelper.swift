@@ -35,7 +35,7 @@ enum TextKit2PerformanceHelper {
 
     // MARK: - Performance Configuration
 
-    struct PerformanceConfiguration {
+    package struct PerformanceConfiguration {
         var enableViewportOptimization: Bool
         var enableFragmentRecycling: Bool
         var enableAsyncLayout: Bool
@@ -111,7 +111,7 @@ enum TextKit2PerformanceHelper {
     /// - Parameters:
     ///   - config: Performance configuration to apply
     ///   - textView: Target text view
-    static func applyConfiguration(
+    package static func applyConfiguration(
         _ config: PerformanceConfiguration,
         to textView: PlatformTextView
     ) {

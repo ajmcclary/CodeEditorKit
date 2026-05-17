@@ -28,7 +28,7 @@ public struct SearchColors: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["search.match_background"] = matchBackground
         for (key, value) in extras { dict[key] = value }
     }

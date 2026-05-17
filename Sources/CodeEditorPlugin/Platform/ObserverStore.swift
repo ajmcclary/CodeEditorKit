@@ -11,7 +11,7 @@ internal final class ObserverStore {
 
     /// Add an observer to the store
     /// - Parameter observer: The notification observer to track
-    func addObserver(_ observer: NSObjectProtocol) {
+    package func addObserver(_ observer: NSObjectProtocol) {
         observers.append(observer)
     }
 

@@ -45,13 +45,13 @@ enum ThemeFallbackPalette {
         textPlaceholder(appearance)
     }
 
-    static func background(_ appearance: Theme.Appearance) -> Tokens.Color {
+    package static func background(_ appearance: Theme.Appearance) -> Tokens.Color {
         appearance == .dark ? Tokens.Color(hex: 0x02_02_04) : Tokens.Color(hex: 0xFF_FF_FF)
     }
-    static func surface(_ appearance: Theme.Appearance) -> Tokens.Color {
+    package static func surface(_ appearance: Theme.Appearance) -> Tokens.Color {
         appearance == .dark ? Tokens.Color(hex: 0x07_09_0F) : Tokens.Color(hex: 0xF2_F2_F7)
     }
-    static func border(_ appearance: Theme.Appearance) -> Tokens.Color {
+    package static func border(_ appearance: Theme.Appearance) -> Tokens.Color {
         appearance == .dark ? Tokens.Color(hex: 0x1A_22_32) : Tokens.Color(hex: 0xD1_D1_D6)
     }
     static func dropTarget(_ appearance: Theme.Appearance) -> Tokens.Color {
@@ -59,11 +59,11 @@ enum ThemeFallbackPalette {
             ? Tokens.Color(red: 0x7E, green: 0xC8, blue: 0xDE, alpha: 0.15)
             : Tokens.Color(red: 0x00, green: 0x7A, blue: 0xFF, alpha: 0.15)
     }
-    static func clear() -> Tokens.Color { Tokens.Color(hex: 0x00_00_00, alpha: 0) }
+    package static func clear() -> Tokens.Color { Tokens.Color(hex: 0x00_00_00, alpha: 0) }
 
     enum StatusKind { case info, success, warning, error, conflict }
 
-    static func status(_ kind: StatusKind, appearance: Theme.Appearance) -> Tokens.Color {
+    package static func status(_ kind: StatusKind, appearance: Theme.Appearance) -> Tokens.Color {
         switch (kind, appearance) {
         case (.info, .dark):     return Tokens.Palette.Status.infoDark
         case (.info, .light):    return Tokens.Palette.Status.infoLight

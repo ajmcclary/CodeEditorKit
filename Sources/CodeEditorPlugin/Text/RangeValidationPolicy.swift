@@ -59,7 +59,7 @@ internal enum RangeValidationPolicy {
     }
 
     /// Whether the range is within UTF-16 string bounds.
-    static func isValid(_ range: NSRange, in string: String) -> Bool {
+    package static func isValid(_ range: NSRange, in string: String) -> Bool {
         guard range.location >= 0, range.length >= 0 else { return false }
         return NSMaxRange(range) <= UTF16RangeConverter.utf16Length(of: string)
     }
@@ -67,7 +67,7 @@ internal enum RangeValidationPolicy {
     // MARK: - Clamping & Normalization
 
     /// Clamps a range to fit within specified bounds.
-    static func clampRange(_ range: NSRange, to bounds: NSRange) -> NSRange {
+    package static func clampRange(_ range: NSRange, to bounds: NSRange) -> NSRange {
         let clampedLocation = max(bounds.location, min(range.location, NSMaxRange(bounds)))
         let maxLength = NSMaxRange(bounds) - clampedLocation
         let clampedLength = max(0, min(range.length, maxLength))
@@ -76,12 +76,12 @@ internal enum RangeValidationPolicy {
     }
 
     /// Clamps a range to a text length.
-    static func clamp(_ range: NSRange, toTextLength textLength: Int) -> NSRange {
+    package static func clamp(_ range: NSRange, toTextLength textLength: Int) -> NSRange {
         clampRange(range, to: NSRange(location: 0, length: textLength))
     }
 
     /// Clamps a UTF-16 range to the bounds of a string.
-    static func clamp(_ range: NSRange, to string: String) -> NSRange {
+    package static func clamp(_ range: NSRange, to string: String) -> NSRange {
         clamp(range, toTextLength: UTF16RangeConverter.utf16Length(of: string))
     }
 

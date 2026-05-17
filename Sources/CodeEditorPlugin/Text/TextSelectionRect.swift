@@ -54,7 +54,7 @@ final class TextSelectionRect: UITextSelectionRect {
 #else
 /// macOS equivalent - UITextSelectionRect doesn't exist on macOS
 final class TextSelectionRect {
-    var rect: CGRect {
+    package var rect: CGRect {
         _rect
     }
 

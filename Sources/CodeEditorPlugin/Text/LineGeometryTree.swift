@@ -57,7 +57,7 @@ internal final class LineGeometryTree {
     private(set) var lineCount: Int = 0
 
     var totalUtf16Length: Int { root?.subtreeUtf16Length ?? 0 }
-    var totalHeight: CGFloat { root?.subtreeHeight ?? 0 }
+    package var totalHeight: CGFloat { root?.subtreeHeight ?? 0 }
 
     private var lastLookupNode: Node?
     private var lastLookupLineIndex: Int = 0
@@ -68,7 +68,7 @@ internal final class LineGeometryTree {
     /// the given sorted geometries (line index order). When `geometries` is
     /// empty the tree contains a single empty line, matching the empty
     /// `NSTextStorage` build path.
-    func replaceAll(_ geometries: [LineGeometry], defaultEstimatedHeight: CGFloat) {
+    package func replaceAll(_ geometries: [LineGeometry], defaultEstimatedHeight: CGFloat) {
         reset()
 
         guard !geometries.isEmpty else {
@@ -252,7 +252,7 @@ internal final class LineGeometryTree {
 
     // MARK: - Lookup: Offset → Line Index
 
-    func lineIndex(forUtf16Offset offset: Int) -> Int {
+    package func lineIndex(forUtf16Offset offset: Int) -> Int {
         guard let root else { return 0 }
         var current = root
         var lineIndex = 0
@@ -289,7 +289,7 @@ internal final class LineGeometryTree {
 
     // MARK: - Lookup: Line Index → Offset
 
-    func utf16Offset(forLineIndex lineIndex: Int) -> Int {
+    package func utf16Offset(forLineIndex lineIndex: Int) -> Int {
         guard let root else { return 0 }
         let clampedIndex = max(0, min(lineIndex, lineCount - 1))
         var current = root
@@ -324,7 +324,7 @@ internal final class LineGeometryTree {
 
     // MARK: - Lookup: Line Index → Geometry
 
-    func lineGeometry(at lineIndex: Int) -> LineGeometry? {
+    package func lineGeometry(at lineIndex: Int) -> LineGeometry? {
         guard lineIndex >= 0, lineIndex < lineCount, let root else { return nil }
         var current = root
         var remaining = lineIndex
@@ -350,14 +350,14 @@ internal final class LineGeometryTree {
         }
     }
 
-    func lineGeometry(atUtf16Offset offset: Int) -> LineGeometry? {
+    package func lineGeometry(atUtf16Offset offset: Int) -> LineGeometry? {
         let idx = lineIndex(forUtf16Offset: offset)
         return lineGeometry(at: idx)
     }
 
     // MARK: - Lookup: Y-Position ↔ Line Index
 
-    func lineIndex(forYPosition y: CGFloat) -> Int {
+    package func lineIndex(forYPosition y: CGFloat) -> Int {
         guard let root else { return 0 }
         if y <= 0 { return 0 }
         var current = root
@@ -391,7 +391,7 @@ internal final class LineGeometryTree {
         return max(0, lineCount - 1)
     }
 
-    func yPosition(forLineIndex lineIndex: Int) -> CGFloat {
+    package func yPosition(forLineIndex lineIndex: Int) -> CGFloat {
         guard let root else { return 0 }
         let clamped = max(0, min(lineIndex, lineCount - 1))
         var current = root
@@ -664,7 +664,7 @@ internal final class LineGeometryTree {
 
     // MARK: - Reset / Validation
 
-    func reset() {
+    package func reset() {
         root = nil
         lineCount = 0
         lastLookupNode = nil
@@ -672,7 +672,7 @@ internal final class LineGeometryTree {
 
     /// Validate red-black tree invariants. Returns `true` if valid. For use
     /// in debug builds and tests.
-    func validateTree() -> Bool {
+    package func validateTree() -> Bool {
         guard let root else { return lineCount == 0 }
         if root.isRed { return false }
         let result = validateNode(root)

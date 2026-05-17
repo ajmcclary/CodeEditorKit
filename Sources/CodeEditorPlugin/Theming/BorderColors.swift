@@ -73,7 +73,7 @@ public struct BorderColors: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["border"] = base
         dict["border.disabled"] = disabled
         dict["border.focused"] = focused

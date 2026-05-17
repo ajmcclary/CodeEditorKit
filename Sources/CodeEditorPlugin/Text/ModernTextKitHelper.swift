@@ -9,12 +9,12 @@ import os
 @MainActor
 enum ModernTextKitHelper {
     /// Check if the required TextKit2 surface is available.
-    static var supportsRequiredTextKit2Surface: Bool {
+    package static var supportsRequiredTextKit2Surface: Bool {
         supportsRequiredTextKit2Surface(capabilities: CodeEditorDependencies.makePlatformCapabilities())
     }
 
     /// Check if the required TextKit2 surface is available with injectable capabilities.
-    static func supportsRequiredTextKit2Surface(capabilities: PlatformCapabilities) -> Bool {
+    package static func supportsRequiredTextKit2Surface(capabilities: PlatformCapabilities) -> Bool {
         capabilities.supportsRequiredTextKit2Surface
     }
 
@@ -150,7 +150,7 @@ enum ModernTextKitHelper {
     // MARK: - Performance Optimizations
 
     /// Apply performance optimizations based on system capabilities
-    static func applyPerformanceOptimizations(to textView: NSTextView) {
+    package static func applyPerformanceOptimizations(to textView: NSTextView) {
         // Disable expensive features during editing
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.isGrammarCheckingEnabled = false
@@ -194,7 +194,7 @@ enum ModernTextKitHelper {
 
 /// iOS stub for ModernTextKitHelper
 enum ModernTextKitHelper {
-    static var supportsRequiredTextKit2Surface: Bool { true }
+    package static var supportsRequiredTextKit2Surface: Bool { true }
 
     static func validatesRequiredTextKit2Surface(for _: Any) -> Bool { true }
 

@@ -284,7 +284,7 @@ extension EditorConfiguration: Equatable {
 // MARK: - Codable
 
 extension EditorConfiguration {
-    enum CodingKeys: String, CodingKey {
+    package enum CodingKeys: String, CodingKey {
         case layout
         case display
         case behavior

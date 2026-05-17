@@ -7,7 +7,7 @@ import AppKit
 #if canImport(UIKit)
 @MainActor
 class TextLocationRange: UITextRange {
-    let textRange: NSTextRange
+    package let textRange: NSTextRange
 
     init(textRange: NSTextRange) {
         self.textRange = textRange
@@ -44,25 +44,25 @@ extension UITextRange {
 /// macOS equivalent - UITextRange doesn't exist on macOS
 @MainActor
 class TextLocationRange {
-    let textRange: NSTextRange
+    package let textRange: NSTextRange
 
     init(textRange: NSTextRange) {
         self.textRange = textRange
     }
 
-    var debugDescription: String {
+    package var debugDescription: String {
         textRange.description
     }
 
-    var start: TextLocation {
+    package var start: TextLocation {
         textRange.location.uiTextPosition
     }
 
-    var end: TextLocation {
+    package var end: TextLocation {
         textRange.endLocation.uiTextPosition
     }
 
-    var isEmpty: Bool {
+    package var isEmpty: Bool {
         textRange.isEmpty
     }
 

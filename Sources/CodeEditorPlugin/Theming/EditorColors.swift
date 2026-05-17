@@ -151,7 +151,7 @@ public struct EditorColors: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["editor.background"] = background
         dict["editor.foreground"] = foreground
         dict["editor.gutter.background"] = gutterBackground

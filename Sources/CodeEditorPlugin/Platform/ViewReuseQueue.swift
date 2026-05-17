@@ -144,7 +144,7 @@ final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
 
     /// Removes all views (pooled and tracked). Call during deinit or
     /// when the owning view is removed from the hierarchy.
-    func reset() {
+    package func reset() {
         available.removeAll()
         checkedOut.removeAll()
         viewToKey.removeAll()

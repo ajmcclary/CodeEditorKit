@@ -136,7 +136,7 @@ public struct ChromeColors: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["title_bar.background"] = titleBarBackground
         dict["title_bar.inactive_background"] = titleBarInactiveBackground
         dict["tab_bar.background"] = tabBarBackground
@@ -158,7 +158,7 @@ public struct ChromeColors: Hashable, Sendable, Codable {
 
     /// Returns true if a flat key falls inside one of the prefixes this
     /// sub-struct owns.
-    static func consumes(_ key: String) -> Bool {
+    package static func consumes(_ key: String) -> Bool {
         key.hasPrefix("title_bar.") || key.hasPrefix("tab_bar.")
             || key.hasPrefix("tab.") || key.hasPrefix("status_bar.")
             || key.hasPrefix("toolbar.") || key.hasPrefix("surface.")

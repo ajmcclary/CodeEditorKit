@@ -7,7 +7,7 @@ import AppKit
 #if canImport(UIKit)
 @MainActor
 class TextLocation: UITextPosition {
-    let location: NSTextLocation
+    package let location: NSTextLocation
 
     override var debugDescription: String {
         "TextLocation"
@@ -25,9 +25,9 @@ class TextLocation: UITextPosition {
 #else
 /// macOS equivalent - UITextPosition doesn't exist on macOS
 class TextLocation {
-    let location: NSTextLocation
+    package let location: NSTextLocation
 
-    var debugDescription: String {
+    package var debugDescription: String {
         location.description
     }
 

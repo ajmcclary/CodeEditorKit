@@ -52,7 +52,7 @@ public struct HintColors: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["hint"] = base
         dict["hint.background"] = background
         dict["hint.border"] = border

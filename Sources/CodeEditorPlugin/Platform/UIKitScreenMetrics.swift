@@ -13,11 +13,11 @@ enum UIKitScreenMetrics {
             .screen
     }
 
-    static var scale: CGFloat {
+    package static var scale: CGFloat {
         currentSceneScreen?.scale ?? UITraitCollection.current.displayScale
     }
 
-    static var bounds: CGRect {
+    package static var bounds: CGRect {
         currentSceneScreen?.bounds ?? CGRect(origin: .zero, size: CGSize(width: 390.0, height: 844.0))
     }
 
@@ -25,11 +25,11 @@ enum UIKitScreenMetrics {
         currentSceneScreen?.maximumFramesPerSecond ?? 60
     }
 
-    static func scale(for view: UIView) -> CGFloat {
+    package static func scale(for view: UIView) -> CGFloat {
         view.window?.windowScene?.screen.scale ?? view.traitCollection.displayScale
     }
 
-    static func bounds(for view: UIView) -> CGRect {
+    package static func bounds(for view: UIView) -> CGRect {
         view.window?.windowScene?.screen.bounds ?? bounds
     }
 }

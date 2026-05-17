@@ -21,14 +21,14 @@ final class TemporaryAttributesStore {
     }
 
     weak var contentStorage: NSTextContentStorage?
-    var textStorage: NSTextStorage? { contentStorage?.textStorage }
+    package var textStorage: NSTextStorage? { contentStorage?.textStorage }
     private var applied: [Applied] = []
 
     init(contentStorage: NSTextContentStorage) {
         self.contentStorage = contentStorage
     }
 
-    func apply(_ attributes: [NSAttributedString.Key: Any], to range: NSRange) {
+    package func apply(_ attributes: [NSAttributedString.Key: Any], to range: NSRange) {
         guard let contentStorage,
               let storage = contentStorage.textStorage,
               let clamped = clamp(range, to: storage.length) else { return }
@@ -40,7 +40,7 @@ final class TemporaryAttributesStore {
         applied.append(Applied(range: clamped, keys: Set(attributes.keys)))
     }
 
-    func clear(in range: NSRange) {
+    package func clear(in range: NSRange) {
         guard let contentStorage, let storage = contentStorage.textStorage else { return }
         contentStorage.performEditingTransaction {
             storage.beginEditing()
@@ -60,7 +60,7 @@ final class TemporaryAttributesStore {
         }
     }
 
-    func clearAll() {
+    package func clearAll() {
         guard let contentStorage, let storage = contentStorage.textStorage else {
             applied.removeAll()
             return

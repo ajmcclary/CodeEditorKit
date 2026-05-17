@@ -40,7 +40,7 @@ final class AwaitableQueue<Element>: @unchecked Sendable where Element: Sendable
         }
     }
 
-    func enqueue(_ element: Element) {
+    package func enqueue(_ element: Element) {
         pendingEvents.append(.element(element))
     }
 
@@ -67,7 +67,7 @@ final class AwaitableQueue<Element>: @unchecked Sendable where Element: Sendable
         }
     }
 
-    func next() -> Element? {
+    package func next() -> Element? {
         handlePendingWaiters()
 
         guard case let .element(first) = pendingEvents.first else {

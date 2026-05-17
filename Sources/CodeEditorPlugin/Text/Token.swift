@@ -52,7 +52,7 @@ public typealias TokenProvider = HybridSyncAsyncValueProvider<NSRange, TokenAppl
 
 extension TokenProvider {
     /// A TokenProvider that returns an empty set of tokens for all requests.
-    static var empty: TokenProvider {
+    package static var empty: TokenProvider {
         .init(
             syncValue: { _ in
                 .noChange

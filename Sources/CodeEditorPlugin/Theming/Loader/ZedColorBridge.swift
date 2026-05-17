@@ -10,7 +10,7 @@ enum ZedColorBridge {
     /// Parse a Zed-format hex string. Records a `.malformedColor` warning and
     /// returns nil on failure; the caller decides whether to substitute a
     /// fallback (and emit a corresponding `.missingKey`).
-    static func parse(_ hex: String, path: String, warnings: WarningCollector) -> Tokens.Color? {
+    package static func parse(_ hex: String, path: String, warnings: WarningCollector) -> Tokens.Color? {
         if let color = Tokens.Color(hexString: hex) { return color }
         warnings.record(.init(kind: .malformedColor, keyPath: path, detail: hex))
         return nil
@@ -18,7 +18,7 @@ enum ZedColorBridge {
 
     /// Encode a Tokens.Color as Zed-format hex. `#RRGGBB` when alpha == 1,
     /// `#RRGGBBAA` otherwise.
-    static func encode(_ color: Tokens.Color) -> String {
+    package static func encode(_ color: Tokens.Color) -> String {
         color.hexString
     }
 }

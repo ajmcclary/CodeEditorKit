@@ -53,7 +53,7 @@ class UIKitLayoutService: PlatformLayoutService {
         view.sizeThatFits(size)
     }
 
-    func layoutSubviews(in container: PlatformServiceView) {
+    package func layoutSubviews(in container: PlatformServiceView) {
         container.layoutIfNeeded()
     }
 
@@ -149,7 +149,7 @@ class AppKitLayoutService: PlatformLayoutService {
         view.fittingSize
     }
 
-    func layoutSubviews(in container: PlatformServiceView) {
+    package func layoutSubviews(in container: PlatformServiceView) {
         container.needsLayout = true
         container.layoutSubtreeIfNeeded()
     }
@@ -201,7 +201,7 @@ class MockLayoutService: PlatformLayoutService {
         size
     }
 
-    func layoutSubviews(in _: PlatformServiceView) {
+    package func layoutSubviews(in _: PlatformServiceView) {
         // No-op for unsupported platforms
     }
 

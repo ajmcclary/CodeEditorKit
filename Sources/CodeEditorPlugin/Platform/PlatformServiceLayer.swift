@@ -286,7 +286,7 @@ public protocol PlatformLayoutService {
 // MARK: - Supporting Types
 
 public struct MenuDescriptor: Sendable {
-    let items: [MenuItem]
+    package let items: [MenuItem]
 
     public init(items: [MenuItem]) {
         self.items = items
@@ -294,10 +294,10 @@ public struct MenuDescriptor: Sendable {
 }
 
 public struct MenuItem: Sendable {
-    let title: String
-    let action: @Sendable () -> Void
+    package let title: String
+    package let action: @Sendable () -> Void
     let shortcut: PlatformKeyboardShortcut?
-    let isEnabled: Bool
+    package let isEnabled: Bool
 
     public init(title: String, action: @escaping @Sendable () -> Void, shortcut: PlatformKeyboardShortcut? = nil, isEnabled: Bool = true) {
         self.title = title
@@ -308,8 +308,8 @@ public struct MenuItem: Sendable {
 }
 
 public struct PlatformKeyboardShortcut: Sendable {
-    let key: String
-    let modifiers: ModifierFlags
+    package let key: String
+    package let modifiers: ModifierFlags
 
     public init(key: String, modifiers: ModifierFlags) {
         self.key = key

@@ -96,7 +96,7 @@ public struct ElementStates: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["element.background"] = element.background
         dict["element.hover"] = element.hover
         dict["element.active"] = element.active

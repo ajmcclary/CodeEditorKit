@@ -27,7 +27,7 @@ internal enum RangeSetOperations {
     // MARK: - Overlap & Intersection
 
     /// Detailed overlap relationship between two ranges.
-    static func overlap(_ range1: NSRange, _ range2: NSRange) -> OverlapInfo {
+    package static func overlap(_ range1: NSRange, _ range2: NSRange) -> OverlapInfo {
         let start1 = range1.location
         let end1 = NSMaxRange(range1)
         let start2 = range2.location
@@ -57,17 +57,17 @@ internal enum RangeSetOperations {
         )
     }
 
-    static func contains(_ container: NSRange, _ contained: NSRange) -> Bool {
+    package static func contains(_ container: NSRange, _ contained: NSRange) -> Bool {
         container.location <= contained.location &&
             NSMaxRange(container) >= NSMaxRange(contained)
     }
 
-    static func overlaps(_ range1: NSRange, _ range2: NSRange) -> Bool {
+    package static func overlaps(_ range1: NSRange, _ range2: NSRange) -> Bool {
         overlap(range1, range2).hasOverlap
     }
 
     /// Non-empty intersection of two UTF-16 ranges.
-    static func intersect(_ range1: NSRange, _ range2: NSRange) -> NSRange? {
+    package static func intersect(_ range1: NSRange, _ range2: NSRange) -> NSRange? {
         let intersection = NSIntersectionRange(range1, range2)
         return intersection.length > 0 ? intersection : nil
     }
@@ -75,7 +75,7 @@ internal enum RangeSetOperations {
     // MARK: - Merge / Gaps
 
     /// Merge overlapping or adjacent ranges into consolidated ranges.
-    static func merge(_ ranges: [NSRange]) -> [NSRange] {
+    package static func merge(_ ranges: [NSRange]) -> [NSRange] {
         guard !ranges.isEmpty else { return [] }
 
         let sortedRanges = ranges.sorted { $0.location < $1.location }
@@ -97,7 +97,7 @@ internal enum RangeSetOperations {
     }
 
     /// Find gaps between ranges in a text of given length.
-    static func gaps(in ranges: [NSRange], totalLength: Int) -> [NSRange] {
+    package static func gaps(in ranges: [NSRange], totalLength: Int) -> [NSRange] {
         guard !ranges.isEmpty else {
             return [NSRange(location: 0, length: totalLength)]
         }
@@ -129,7 +129,7 @@ internal enum RangeSetOperations {
     }
 
     /// Subtract one UTF-16 range from another, returning surviving segments.
-    static func subtract(_ rangeToRemove: NSRange, from sourceRange: NSRange) -> [NSRange] {
+    package static func subtract(_ rangeToRemove: NSRange, from sourceRange: NSRange) -> [NSRange] {
         guard let intersection = intersect(sourceRange, rangeToRemove) else {
             return [sourceRange]
         }
@@ -157,7 +157,7 @@ internal enum RangeSetOperations {
 
     // MARK: - Distance / Expand / Contract
 
-    static func distance(between range1: NSRange, and range2: NSRange) -> Int {
+    package static func distance(between range1: NSRange, and range2: NSRange) -> Int {
         if overlaps(range1, range2) {
             return 0
         }
@@ -174,13 +174,13 @@ internal enum RangeSetOperations {
         }
     }
 
-    static func expand(_ range: NSRange, by amount: Int, maxLength: Int) -> NSRange {
+    package static func expand(_ range: NSRange, by amount: Int, maxLength: Int) -> NSRange {
         let newLocation = max(0, range.location - amount)
         let newEnd = min(maxLength, NSMaxRange(range) + amount)
         return NSRange(location: newLocation, length: newEnd - newLocation)
     }
 
-    static func contract(_ range: NSRange, by amount: Int) -> NSRange {
+    package static func contract(_ range: NSRange, by amount: Int) -> NSRange {
         let newLocation = range.location + amount
         let newLength = max(0, range.length - (amount * 2))
         return NSRange(location: newLocation, length: newLength)

@@ -53,7 +53,7 @@ public struct PredictiveColors: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["predictive"] = base
         dict["predictive.background"] = background
         dict["predictive.border"] = border

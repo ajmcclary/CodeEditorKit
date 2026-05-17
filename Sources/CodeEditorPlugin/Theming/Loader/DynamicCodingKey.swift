@@ -4,8 +4,8 @@ import Foundation
 /// to read Zed JSON's flat dotted keys (e.g., `editor.gutter.background`,
 /// `text.muted`).
 struct DynamicCodingKey: CodingKey, Hashable {
-    let stringValue: String
-    var intValue: Int? { nil }
+    package let stringValue: String
+    package var intValue: Int? { nil }
 
     init(stringValue: String) { self.stringValue = stringValue }
 

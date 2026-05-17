@@ -74,7 +74,7 @@ public struct StatusPalette: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         for (kind, status) in [
             ("info", info), ("success", success), ("warning", warning),
             ("error", error), ("conflict", conflict)

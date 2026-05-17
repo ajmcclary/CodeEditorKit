@@ -5,7 +5,7 @@
 
 final class TextLayoutFragment: NSTextLayoutFragment {
     private let defaultParagraphStyle: NSParagraphStyle
-    var isInvisibleCharactersEnabled: Bool = false
+    package var isInvisibleCharactersEnabled: Bool = false
 
     init(textElement: NSTextElement, range rangeInElement: NSTextRange?, paragraphStyle: NSParagraphStyle) {
         defaultParagraphStyle = paragraphStyle

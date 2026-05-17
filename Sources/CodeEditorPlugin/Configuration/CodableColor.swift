@@ -7,10 +7,10 @@ import UIKit
 
 /// A cross-platform color wrapper that supports Codable
 struct CodableColor: Codable, Equatable {
-    let red: CGFloat
-    let green: CGFloat
-    let blue: CGFloat
-    let alpha: CGFloat
+    package let red: CGFloat
+    package let green: CGFloat
+    package let blue: CGFloat
+    package let alpha: CGFloat
 
     init(color: PlatformColor) {
         #if canImport(AppKit)

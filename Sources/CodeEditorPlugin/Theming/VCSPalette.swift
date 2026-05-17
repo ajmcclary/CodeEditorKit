@@ -88,7 +88,7 @@ public struct VCSPalette: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         for (kind, vcs) in [
             ("created", created), ("modified", modified), ("deleted", deleted),
             ("renamed", renamed), ("ignored", ignored), ("hidden", hidden),

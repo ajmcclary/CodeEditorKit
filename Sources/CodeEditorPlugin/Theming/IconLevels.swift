@@ -76,7 +76,7 @@ public struct IconLevels: Hashable, Sendable, Codable {
     }
 
     /// Emit own keys back into a flat dictionary.
-    func flatten(into dict: inout [String: Tokens.Color]) {
+    package func flatten(into dict: inout [String: Tokens.Color]) {
         dict["icon"] = base
         dict["icon.muted"] = muted
         dict["icon.placeholder"] = placeholder
