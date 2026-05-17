@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// SQL folding provider for detecting stored procedures, functions, and complex statements

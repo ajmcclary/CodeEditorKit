@@ -2,8 +2,8 @@ import Foundation
 
 /// A thread-safe processor for background operations with proper actor isolation
 /// Uses Swift 6 concurrency patterns for safe access to values
-actor BackgroundProcessor<Value: Sendable> {
-    enum AccessMode {
+package actor BackgroundProcessor<Value: Sendable> {
+    package enum AccessMode {
         case synchronous
         case synchronousPreferred
         case asynchronous
@@ -13,11 +13,11 @@ actor BackgroundProcessor<Value: Sendable> {
     private var pendingCount = 0
     private var currentTask: Task<Void, Never>?
 
-    init(value: Value) {
+    package init(value: Value) {
         self.value = value
     }
 
-    var hasPendingWork: Bool {
+    package var hasPendingWork: Bool {
         pendingCount > 0
     }
 
@@ -33,7 +33,7 @@ actor BackgroundProcessor<Value: Sendable> {
 
     /// Access value if no pending work exists
     /// Returns nil if work is pending to avoid blocking
-    func accessValueIfAvailable<T>(
+    package func accessValueIfAvailable<T>(
         operation: (Value) throws -> T
     ) async throws -> T? {
         guard !hasPendingWork else {
@@ -44,7 +44,7 @@ actor BackgroundProcessor<Value: Sendable> {
     }
 
     /// Access value with proper async handling
-    func accessValue<T>(
+    package func accessValue<T>(
         operation: @escaping @Sendable (Value) async throws -> T
     ) async throws -> T {
         beginBackgroundWork()
@@ -54,7 +54,7 @@ actor BackgroundProcessor<Value: Sendable> {
     }
 
     /// Process value with cancellation support
-    func processValue<T: Sendable>(
+    package func processValue<T: Sendable>(
         operation: @escaping @Sendable (Value) async throws -> T
     ) async throws -> T {
         beginBackgroundWork()
@@ -82,7 +82,7 @@ actor BackgroundProcessor<Value: Sendable> {
     }
 
     /// Cancel any pending operations
-    func cancelPendingOperations() {
+    package func cancelPendingOperations() {
         // Cancel the current task if any
         currentTask?.cancel()
         currentTask = nil

@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// TOML folding: `[section]` and `[[array-of-tables]]` header bodies. A new

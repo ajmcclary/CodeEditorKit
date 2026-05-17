@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Adapts existing `CodeFoldingProvider` results into fold storage.

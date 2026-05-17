@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Lua folding: stack-based `function`/`do`/`if`/`for`/`while`/`repeat`

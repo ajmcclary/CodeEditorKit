@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Smart cache for syntax highlighting tokens with intelligent eviction strategies

@@ -95,10 +95,16 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorTextModel",
+            dependencies: ["CodeEditorCommon"],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorDesignTokens",
+                "CodeEditorTextModel",
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
@@ -126,6 +132,7 @@ let package = Package(
                 "CodeEditorCommon",
                 "CodeEditorDesignTokens",
                 "CodeEditorPlugin",
+                "CodeEditorTextModel",
                 "CodeEditorUI"
             ],
             exclude: [
@@ -141,6 +148,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorPlugin",
+                "CodeEditorTextModel",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],

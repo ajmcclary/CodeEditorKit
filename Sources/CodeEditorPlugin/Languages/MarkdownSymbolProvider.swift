@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Markdown symbol provider for detecting headers and section structure

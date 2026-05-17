@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// CSS symbol provider for detecting CSS rules, selectors, and at-rules

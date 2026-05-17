@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// A text system styler that performs styling operations in three phases for optimal performance.

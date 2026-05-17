@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Owns the range-store-backed highlighting pipeline for a single editor view.

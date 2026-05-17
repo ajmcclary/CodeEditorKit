@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Shell script folding provider for detecting functions and control structures

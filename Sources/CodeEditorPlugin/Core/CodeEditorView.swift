@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorTextModel
 import Foundation
 import ObjectiveC
 

@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorTextModel
 import Foundation
 
 /// LSP-based completion provider that integrates with the CodeEditorView completion system

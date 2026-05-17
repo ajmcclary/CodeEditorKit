@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// JSON symbol provider for detecting JSON structure and keys

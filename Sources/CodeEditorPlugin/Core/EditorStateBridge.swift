@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Internal helper for converting editor primitives (`NSRange`, raw

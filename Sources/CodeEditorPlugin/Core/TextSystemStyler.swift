@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// A text system styler that provides single-phase styling operations for text interfaces.

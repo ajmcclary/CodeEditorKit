@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// C-style language symbol provider for C, C++, Java, Go, Rust

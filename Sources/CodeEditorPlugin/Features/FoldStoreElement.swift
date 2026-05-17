@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Fold metadata stored in a `RangeStore`.

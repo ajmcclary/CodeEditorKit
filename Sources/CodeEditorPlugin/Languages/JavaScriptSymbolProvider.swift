@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// JavaScript/TypeScript symbol provider for detecting functions, classes, and variables

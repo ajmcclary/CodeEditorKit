@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 // MARK: - Completion Provider Utilities

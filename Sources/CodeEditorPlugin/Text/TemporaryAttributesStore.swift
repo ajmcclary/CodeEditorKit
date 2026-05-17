@@ -14,17 +14,17 @@ import AppKit
 /// is concurrent — find/replace flows reproduce this readily.
 ///
 /// macOS-only: relies on AppKit's `NSTextStorage` attribute APIs.
-final class TemporaryAttributesStore {
+package final class TemporaryAttributesStore {
     private struct Applied {
         let range: NSRange
         let keys: Set<NSAttributedString.Key>
     }
 
-    weak var contentStorage: NSTextContentStorage?
+    package weak var contentStorage: NSTextContentStorage?
     package var textStorage: NSTextStorage? { contentStorage?.textStorage }
     private var applied: [Applied] = []
 
-    init(contentStorage: NSTextContentStorage) {
+    package init(contentStorage: NSTextContentStorage) {
         self.contentStorage = contentStorage
     }
 

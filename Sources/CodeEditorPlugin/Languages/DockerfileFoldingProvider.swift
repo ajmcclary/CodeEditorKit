@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Dockerfile folding: multi-line backslash-continuation instruction bodies

@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 // MARK: - Text Parsing Utilities (Facade)

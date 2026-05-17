@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// HTML symbol provider for detecting HTML elements and structure

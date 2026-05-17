@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// A value stored in a `RangeStore` for syntax highlighting.

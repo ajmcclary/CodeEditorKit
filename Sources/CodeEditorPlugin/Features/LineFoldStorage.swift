@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Range-store-backed fold storage that separates fold metadata from

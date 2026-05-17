@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Ruby folding provider for detecting classes, modules, methods, and blocks

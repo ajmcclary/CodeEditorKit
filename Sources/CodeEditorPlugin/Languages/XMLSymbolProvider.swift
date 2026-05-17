@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// XML symbol provider for detecting XML elements and structure

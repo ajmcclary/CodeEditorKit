@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import AppKit
 @testable import CodeEditorPlugin
+import CodeEditorTextModel
 import XCTest
 
 final class TemporaryAttributesStoreTests: XCTestCase {

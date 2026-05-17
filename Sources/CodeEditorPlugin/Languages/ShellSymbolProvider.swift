@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Shell script symbol provider for detecting functions, variables, and aliases

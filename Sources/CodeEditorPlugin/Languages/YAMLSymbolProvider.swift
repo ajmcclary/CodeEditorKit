@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// YAML symbol provider for detecting YAML structure and keys

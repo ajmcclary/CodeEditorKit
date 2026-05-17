@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorTextModel
 import Foundation
 #if canImport(AppKit)
 import AppKit

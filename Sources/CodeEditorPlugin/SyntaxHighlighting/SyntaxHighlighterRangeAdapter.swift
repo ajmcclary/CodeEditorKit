@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorTextModel
 import Foundation
 
 /// Adapts existing `SyntaxHighlighter` instances to the `RangeHighlightProviding`

@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// Ruby symbol provider for detecting Ruby classes, modules, methods, and constants

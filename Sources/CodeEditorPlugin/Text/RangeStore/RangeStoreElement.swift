@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Conformers provide an `isEmpty` flag so the store can coalesce
 /// adjacent empty runs (gaps) automatically.
-internal protocol RangeStoreElement: Sendable, Equatable {
+package protocol RangeStoreElement: Sendable, Equatable {
     /// `true` when this element represents "no data".
     var isEmpty: Bool { get }
 }

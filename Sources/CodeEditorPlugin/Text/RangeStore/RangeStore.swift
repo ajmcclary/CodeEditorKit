@@ -9,7 +9,7 @@ import Foundation
 /// Backend: sorted array (see `RangeStoreDecision.md` Gate A for rationale).
 /// O(n) edits are acceptable because the number of runs is bounded by the
 /// visible viewport producing them.
-internal struct RangeStore<Element: RangeStoreElement>: Sendable {
+package struct RangeStore<Element: RangeStoreElement>: Sendable {
     // MARK: - Stored representation
 
     private struct StoredRun: Sendable {
@@ -22,7 +22,7 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
 
     // MARK: - Lifecycle
 
-    internal init(documentLength: Int) {
+    package init(documentLength: Int) {
         self._documentLength = documentLength
         if documentLength > 0 {
             self._runs = [StoredRun(offset: 0, run: .empty(length: documentLength))]
@@ -31,12 +31,12 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
         }
     }
 
-    internal var documentLength: Int { _documentLength }
+    package var documentLength: Int { _documentLength }
 
     // MARK: - Query
 
     /// Returns all runs that intersect the given character range.
-    internal func runs(in range: Range<Int>) -> [RangeStoreRun<Element>] {
+    package func runs(in range: Range<Int>) -> [RangeStoreRun<Element>] {
         guard !range.isEmpty else { return [] }
         let clampedLower = max(0, min(range.lowerBound, _documentLength))
         let clampedUpper = max(clampedLower, min(_documentLength, range.upperBound))
@@ -65,7 +65,7 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
     // MARK: - Mutation
 
     /// Set a single value over a character range.
-    internal mutating func set(value: Element?, for range: Range<Int>) {
+    package mutating func set(value: Element?, for range: Range<Int>) {
         let clamped = clamped(range)
         guard !clamped.isEmpty else { return }
         let run = RangeStoreRun<Element>(length: clamped.count, value: value)
@@ -73,7 +73,7 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
     }
 
     /// Replace a character range with a sequence of runs.
-    internal mutating func set(runs newRuns: [RangeStoreRun<Element>], for range: Range<Int>) {
+    package mutating func set(runs newRuns: [RangeStoreRun<Element>], for range: Range<Int>) {
         let clampedLower = max(0, min(range.lowerBound, _documentLength))
         let clampedUpper = max(clampedLower, min(_documentLength, range.upperBound))
         guard clampedLower < clampedUpper else { return }
@@ -88,7 +88,7 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
     ///
     /// - Parameter range: The character range that was replaced.
     /// - Parameter newLength: The length of the replacement text (0 for deletions).
-    internal mutating func storageUpdated(replacedCharactersIn range: Range<Int>, withCount newLength: Int) {
+    package mutating func storageUpdated(replacedCharactersIn range: Range<Int>, withCount newLength: Int) {
         let clampedLower = max(0, min(range.lowerBound, _documentLength))
         let clampedUpper = max(clampedLower, min(_documentLength, range.upperBound))
         let oldLength = clampedUpper - clampedLower

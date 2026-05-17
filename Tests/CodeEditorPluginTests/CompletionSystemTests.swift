@@ -1,4 +1,5 @@
 @testable import CodeEditorPlugin
+import CodeEditorTextModel
 import XCTest
 
 final class CompletionSystemTests: XCTestCase {

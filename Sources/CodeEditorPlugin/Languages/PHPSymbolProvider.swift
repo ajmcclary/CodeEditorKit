@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// PHP symbol provider for detecting PHP classes, functions, methods, and variables

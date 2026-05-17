@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 
 /// SQL symbol provider for detecting SQL objects and statements

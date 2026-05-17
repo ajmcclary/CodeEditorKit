@@ -1,3 +1,4 @@
+import CodeEditorTextModel
 import Foundation
 import XCTest
 
