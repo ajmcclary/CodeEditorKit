@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 //
 //  CrossPlatformCoordinatorTests.swift
 //  CodeEditorPluginTests

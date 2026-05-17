@@ -4,6 +4,7 @@
 //
 
 import CodeEditorConfiguration
+import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
 import SwiftUI
 import XCTest

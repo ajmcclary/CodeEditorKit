@@ -14,9 +14,9 @@ import UIKit
 /// on AppKit, `true` on UIKit). Callers use the return value to record what
 /// was actually applied (see `EditorState.hardwareAccelerationActive`).
 @MainActor
-enum HardwareAcceleration {
+package enum HardwareAcceleration {
     @discardableResult
-    static func apply(_ enabled: Bool, to view: PlatformView) -> Bool {
+    package static func apply(_ enabled: Bool, to view: PlatformView) -> Bool {
         #if canImport(AppKit)
         view.wantsLayer = enabled
         return enabled

@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorDiagnostics
 import Foundation
 
 /// Simple performance monitoring for syntax highlighting

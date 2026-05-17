@@ -58,6 +58,10 @@ let package = Package(
             targets: ["CodeEditorDesignTokens"]
         ),
         .library(
+            name: "CodeEditorDiagnostics",
+            targets: ["CodeEditorDiagnostics"]
+        ),
+        .library(
             name: "CodeEditorPlugin",
             targets: ["CodeEditorPlugin"]
         ),
@@ -128,11 +132,24 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorDiagnostics",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorConfiguration",
+                "CodeEditorLanguages",
+                "CodeEditorPlatform",
+                .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
+            ],
+            path: "Sources/CodeEditorDiagnostics",
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
+                "CodeEditorDiagnostics",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel",
@@ -144,7 +161,8 @@ let package = Package(
             ],
             exclude: [
                 "Info.plist",
-                "Languages"
+                "Languages",
+                "Performance"
             ],
             swiftSettings: swiftSettings
         ),
@@ -164,6 +182,7 @@ let package = Package(
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
+                "CodeEditorDiagnostics",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
@@ -184,6 +203,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
+                "CodeEditorDiagnostics",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
@@ -229,6 +249,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
+                "CodeEditorDiagnostics",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorSample",

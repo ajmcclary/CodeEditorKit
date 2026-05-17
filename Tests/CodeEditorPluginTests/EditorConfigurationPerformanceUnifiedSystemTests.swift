@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
 import Foundation
 import Testing

@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 import CodeEditorPlatform
 #if canImport(AppKit)
 import AppKit

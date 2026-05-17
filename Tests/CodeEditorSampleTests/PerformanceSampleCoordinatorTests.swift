@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 import CodeEditorPlugin
 @testable import CodeEditorSample
 import Testing

@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 import CodeEditorPlugin
 import Combine
 import Foundation

@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 //
 //  ModifierChainCompositionTests.swift
 //  CodeEditorPluginTests

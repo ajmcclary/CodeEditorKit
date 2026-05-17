@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 //
 //  PlatformCapabilitiesTests.swift
 //  CodeEditorPluginTests

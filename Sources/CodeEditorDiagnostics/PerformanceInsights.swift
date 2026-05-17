@@ -66,7 +66,7 @@ public final class PerformanceInsights: ObservableObject {
         self.memoryMonitor = memoryMonitor
         self.frameRateMonitor = frameRateMonitor
         self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
-        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
+        self.capabilities = capabilities ?? PlatformCapabilities()
         startMonitoring()
     }
 

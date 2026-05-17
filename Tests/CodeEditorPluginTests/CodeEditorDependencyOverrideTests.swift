@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
 import Dependencies
 import Testing

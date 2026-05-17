@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 //
 //  PerformanceObservationTests.swift
 //  CodeEditorPluginTests

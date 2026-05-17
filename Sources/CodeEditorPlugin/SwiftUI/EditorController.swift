@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
 #if canImport(SwiftUI)

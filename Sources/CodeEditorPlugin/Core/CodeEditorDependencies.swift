@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
 import Dependencies

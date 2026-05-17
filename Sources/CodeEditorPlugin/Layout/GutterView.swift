@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 // MARK: - GutterView Cross-Platform Implementation
 //
 // This file provides a unified GutterView implementation that works across

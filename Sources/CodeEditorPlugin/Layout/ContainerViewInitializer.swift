@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorConfiguration
+import CodeEditorDiagnostics
 import CodeEditorPlatform
 import Foundation
 #if canImport(AppKit)

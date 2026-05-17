@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 import CodeEditorPlugin
 import SwiftUI
 

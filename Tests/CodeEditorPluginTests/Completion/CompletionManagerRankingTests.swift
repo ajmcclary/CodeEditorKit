@@ -1,3 +1,4 @@
+import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorTextModel
 import Foundation

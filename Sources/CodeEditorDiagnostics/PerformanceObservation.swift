@@ -54,12 +54,12 @@ public final class PerformanceObservation {
 
     /// Test/debug probe: counts every successful `refresh()` invocation
     /// (whether driven by the internal loop or called externally).
-    internal private(set) var refreshCount: Int = 0
+    package private(set) var refreshCount: Int = 0
 
     /// Test/debug probe: counts how many refresh `Task`s have been
     /// spawned by `start()`. Idempotent `start()` calls must not bump
     /// this — used by `startIsIdempotent` to avoid timing flakiness.
-    internal private(set) var refreshTaskSpawnCount: Int = 0
+    package private(set) var refreshTaskSpawnCount: Int = 0
 
     /// `@ObservationIgnored` takes the property out of the `@Observable`
     /// macro's tracking expansion (internal task state shouldn't drive
