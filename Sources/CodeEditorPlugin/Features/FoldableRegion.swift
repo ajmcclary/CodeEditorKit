@@ -4,16 +4,16 @@ import Foundation
 // MARK: - Foldable Region
 
 /// Represents a foldable region in the text
-internal struct FoldableRegion: Identifiable {
-    internal let id = UUID()
-    internal var range: NSRange
-    internal var title: String
-    internal var type: FoldingType
-    internal var level: Int = 0
-    internal var parentId: UUID?
-    internal var foldedText: String?
+public struct FoldableRegion: Identifiable {
+    public let id = UUID()
+    public var range: NSRange
+    public var title: String
+    public var type: FoldingType
+    public var level: Int = 0
+    public var parentId: UUID?
+    public var foldedText: String?
 
-    init(range: NSRange, title: String, type: FoldingType) {
+    public init(range: NSRange, title: String, type: FoldingType) {
         self.range = range
         self.title = title
         self.type = type
@@ -23,7 +23,7 @@ internal struct FoldableRegion: Identifiable {
 // MARK: - Folding Type
 
 /// Types of foldable regions
-internal enum FoldingType: Equatable {
+public enum FoldingType: Equatable, Sendable {
     case function
     case `class`
     case method
@@ -55,6 +55,6 @@ internal struct CodeFoldingConfiguration {
 
 /// Protocol for language-specific folding providers
 @MainActor
-internal protocol CodeFoldingProvider {
+public protocol CodeFoldingProvider {
     func detectFoldableRegions(in text: String) async -> [FoldableRegion]
 }

@@ -56,7 +56,7 @@ public enum DocumentSymbolKind: String, CaseIterable, Sendable {
     case `operator`
     case typeParameter
 
-    var icon: String {
+    package var icon: String {
         switch self {
         case .file: return "📄"
         case .module: return "📦"
@@ -87,7 +87,7 @@ public enum DocumentSymbolKind: String, CaseIterable, Sendable {
         }
     }
 
-    var canContainSymbols: Bool {
+    package var canContainSymbols: Bool {
         switch self {
         case .file, .module, .namespace, .package, .class,
              .interface, .struct, .object, .enum:
