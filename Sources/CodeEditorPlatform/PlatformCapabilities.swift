@@ -148,38 +148,6 @@ public final class PlatformCapabilities {
 
     // hasNotch moved to PlatformCapabilities+UI.swift
 
-    // MARK: - Feature Recommendations
-
-    /// Returns a runtime-optimized configuration based on current device capabilities.
-    ///
-    /// This method analyzes the current device's actual capabilities (CPU cores, memory,
-    /// display characteristics) to provide an optimized configuration. It differs from
-    /// `EditorConfiguration.platformOptimized` which is a compile-time preset.
-    ///
-    /// ## Differences from platformOptimized
-    ///
-    /// - **platformOptimized**: Returns a compile-time preset based on the build target
-    ///   (iOS or macOS). Static configuration that doesn't adapt to device.
-    /// - **recommendedConfiguration()**: Returns a runtime-optimized configuration based
-    ///   on actual device capabilities. Adapts to different hardware within same platform.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// // Compile-time preset (same for all iOS devices)
-    /// let preset = EditorConfiguration.platformOptimized
-    /// 
-    /// // Runtime-optimized (adapts to iPhone SE vs iPad Pro)
-    /// let optimized = PlatformCapabilities().recommendedConfiguration()
-    /// ```
-    ///
-    /// - Returns: An EditorConfiguration optimized for the current device's capabilities
-    /// - Note: Must be called on the main actor as it accesses UI-related capabilities
-    public func recommendedConfiguration() -> EditorConfiguration {
-        // Delegate to the new PlatformConfigurations system
-        PlatformConfigurations.recommended()
-    }
-
     // MARK: - Debug Information
 
     /// Comprehensive debug information about platform capabilities

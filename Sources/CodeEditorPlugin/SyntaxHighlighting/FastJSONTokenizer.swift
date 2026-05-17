@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 import Foundation
 
 // MARK: - String Extension for Character Access

@@ -7,6 +7,7 @@
 //  `Sources/CodeEditorPlugin/Theming/`.
 //
 
+import CodeEditorPlatform
 import SwiftUI
 
 @available(macOS 12.0, iOS 16.0, *)

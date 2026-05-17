@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorPlatform
 import Foundation
 // swiftlint:disable missing_docs
 

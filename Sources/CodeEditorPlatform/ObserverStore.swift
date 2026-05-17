@@ -6,8 +6,10 @@ import Foundation
 /// and prevent retain cycles. This actor ensures thread-safe access to the
 /// observer collection.
 @MainActor
-internal final class ObserverStore {
+package final class ObserverStore {
     private var observers: [NSObjectProtocol] = []
+
+    package init() {}
 
     /// Add an observer to the store
     /// - Parameter observer: The notification observer to track
@@ -16,7 +18,7 @@ internal final class ObserverStore {
     }
 
     /// Remove all observers from notification center and clear the store
-    func removeAllObservers() {
+    package func removeAllObservers() {
         observers.forEach { NotificationCenter.default.removeObserver($0) }
         observers.removeAll()
     }

@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 import CoreGraphics
 import Foundation
 #if canImport(UIKit)

@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 @testable import CodeEditorPlugin
 import Foundation
 #if canImport(SwiftUI)

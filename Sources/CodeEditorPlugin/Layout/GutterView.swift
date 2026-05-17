@@ -3,6 +3,7 @@
 // This file provides a unified GutterView implementation that works across
 // both iOS and macOS platforms, eliminating code duplication.
 
+import CodeEditorPlatform
 import CoreGraphics
 import Foundation
 #if canImport(AppKit)

@@ -1,5 +1,6 @@
 // LSP types are available on all platforms to support remote LSP connections
 
+import CodeEditorPlatform
 import Foundation
 #if canImport(Combine)
 import Combine

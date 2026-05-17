@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorPlatform
 import Foundation
 import SwiftUI
 #if canImport(UIKit)
@@ -6,6 +7,10 @@ import UIKit
 #elseif canImport(AppKit)
 import AppKit
 #endif
+
+/// Re-export of `CodeEditorPlatform.ToolbarItem` for local-name use in this file
+/// after the Platform extraction. Disambiguates against SwiftUI's `ToolbarItem`.
+public typealias ToolbarItem = CodeEditorPlatform.ToolbarItem
 
 /// Coordinator responsible for creating and managing platform-specific toolbar items
 ///

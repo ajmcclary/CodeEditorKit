@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorPlatform
 import Foundation
 import SwiftUI
 #if canImport(UIKit)
@@ -129,7 +130,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
     /// Delegates to the specialized ``ToolbarCoordinator`` for consistent toolbar management.
     ///
     /// - Returns: Array of toolbar items appropriate for the current platform
-    public func createToolbarItems() -> [ToolbarItem] {
+    public func createToolbarItems() -> [CodeEditorPlatform.ToolbarItem] {
         toolbarCoordinator.createToolbarItems()
     }
 

@@ -5,6 +5,7 @@
 //  Created on 2025-06-27.
 //
 
+import CodeEditorPlatform
 import Foundation
 #if canImport(AppKit)
 import AppKit

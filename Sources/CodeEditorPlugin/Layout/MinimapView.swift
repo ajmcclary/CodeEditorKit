@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 import CodeEditorTextModel
 import CoreGraphics
 import Foundation

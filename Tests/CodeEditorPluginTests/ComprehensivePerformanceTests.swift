@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorPlatform
 @testable import CodeEditorPlugin
 import CodeEditorTextModel
 import XCTest

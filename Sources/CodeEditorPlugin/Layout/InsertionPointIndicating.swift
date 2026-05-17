@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 #if canImport(AppKit)
 @preconcurrency import AppKit
 
@@ -10,6 +11,7 @@ public protocol InsertionPointIndicating: NSView {
 }
 
 #elseif canImport(UIKit)
+import CodeEditorPlatform
 import UIKit
 
 /// Custom insertion point indicator view. Optional.

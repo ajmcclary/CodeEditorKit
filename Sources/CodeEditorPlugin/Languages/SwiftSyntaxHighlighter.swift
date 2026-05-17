@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 import Foundation
 
 // SwiftSyntax is not compatible with iOS

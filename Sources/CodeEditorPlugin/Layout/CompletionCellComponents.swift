@@ -1,4 +1,5 @@
 import CodeEditorDesignTokens
+import CodeEditorPlatform
 import Foundation
 #if canImport(AppKit)
 import AppKit

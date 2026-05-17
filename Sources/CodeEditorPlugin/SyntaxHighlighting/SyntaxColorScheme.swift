@@ -2,6 +2,7 @@
 // This file uses programmatic color definitions for cross-platform compatibility
 
 import CodeEditorDesignTokens
+import CodeEditorPlatform
 import Foundation
 
 #if canImport(UIKit)

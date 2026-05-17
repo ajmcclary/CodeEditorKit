@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 import Dependencies
 import Foundation
 

@@ -7,6 +7,7 @@
 // and stores the applied theme for downstream consumers (per-run color via
 // `SyntaxColorScheme.color(forToken:in:)`).
 
+import CodeEditorPlatform
 import Foundation
 #if canImport(AppKit)
 import AppKit

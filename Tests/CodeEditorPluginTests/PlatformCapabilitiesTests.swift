@@ -5,6 +5,7 @@
 //  Tests for PlatformCapabilities functionality
 //
 
+import CodeEditorPlatform
 @testable import CodeEditorPlugin
 import XCTest
 

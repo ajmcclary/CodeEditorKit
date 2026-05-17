@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 #if canImport(AppKit) || canImport(UIKit)
 import Foundation
 import XCTest

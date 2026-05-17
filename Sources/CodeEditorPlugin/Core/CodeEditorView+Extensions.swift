@@ -1,4 +1,5 @@
 // Sources/CodeEditorPlugin/Extensions/CodeEditorView+Extensions.swift
+import CodeEditorPlatform
 import Foundation
 
 #if canImport(AppKit)

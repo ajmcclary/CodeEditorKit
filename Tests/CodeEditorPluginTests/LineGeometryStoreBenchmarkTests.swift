@@ -1,3 +1,4 @@
+@testable import CodeEditorPlatform
 @testable import CodeEditorPlugin
 import CodeEditorTextModel
 import Foundation

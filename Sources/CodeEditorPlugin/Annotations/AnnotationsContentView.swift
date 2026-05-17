@@ -3,6 +3,7 @@
 // This file provides a unified AnnotationsContentView implementation that works across
 // both iOS and macOS platforms, eliminating code duplication.
 
+import CodeEditorPlatform
 import Foundation
 #if canImport(AppKit)
 import AppKit

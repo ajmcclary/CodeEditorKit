@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 import SwiftUI
 
 #if canImport(AppKit)

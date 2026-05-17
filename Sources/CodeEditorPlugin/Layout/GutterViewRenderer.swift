@@ -3,6 +3,7 @@
 // This file provides a platform-agnostic renderer for the GutterView,
 // consolidating all common drawing and calculation logic.
 
+import CodeEditorPlatform
 import CoreGraphics
 import Foundation
 #if canImport(AppKit)

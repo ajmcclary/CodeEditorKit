@@ -143,48 +143,6 @@ public enum DeviceType: String, CaseIterable, Sendable {
             return false
         }
     }
-
-    /// Recommended editor configuration based on device type
-    public func recommendedConfiguration() -> EditorConfiguration {
-        switch self {
-        case .iPhone, .appleWatch:
-            // Limited screen space - use minimal configuration
-            return .minimal
-
-        case .iPad:
-            // Medium screen space with touch
-            var config = EditorConfiguration.default
-            config.display.isLineNumbersEnabled = true
-            config.display.isMinimapVisible = false // Save horizontal space
-            config.display.fontSize = 14
-            return config
-
-        case .mac:
-            // Full desktop experience
-            return .default
-
-        case .appleTV:
-            // TV interface - larger fonts, simplified UI
-            var config = EditorConfiguration.presentation
-            config.display.fontSize = 24
-            config.display.isLineNumbersEnabled = false
-            return config
-
-        case .carPlay:
-            // Very limited, mostly read-only
-            return .readOnly
-
-        case .visionPro:
-            // Spatial computing - optimize for comfort
-            var config = EditorConfiguration.default
-            config.display.fontSize = 16
-            config.layout.lineHeightMultiple = 1.3
-            return config
-
-        default:
-            return .default
-        }
-    }
 }
 
 // MARK: - Comparable

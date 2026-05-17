@@ -1,3 +1,4 @@
+import CodeEditorPlatform
 #if canImport(SwiftUI)
 import CodeEditorTextModel
 @preconcurrency import Combine

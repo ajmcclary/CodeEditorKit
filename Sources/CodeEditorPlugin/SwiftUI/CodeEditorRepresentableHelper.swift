@@ -5,6 +5,7 @@
 //  Shared helper methods for CodeEditorRepresentable implementations
 //
 
+import CodeEditorPlatform
 import SwiftUI
 
 #if canImport(UIKit)
