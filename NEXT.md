@@ -9,7 +9,7 @@ Analysis and recommendations for splitting the current monolithic `CodeEditorPlu
 1. **Match the rest of the workspace.** Peer packages in `~/Workspace/packages/` are small, focused, single-purpose modules. The only multi-target package — `MusicToolkit` — uses a strictly layered architecture with phased bootstrap and a single umbrella re-export. CodeEditorPlugin should join that pattern, not start a third.
 2. **Make the layers buildable in isolation.** Today, touching the gutter forces a rebuild of TextKit2 helpers, languages, LSP, and the SwiftUI surface. Slicing the 480-file target into ~10 targets gives faster incremental builds and clearer ownership.
 3. **Enforce direction of dependencies through SPM, not convention.** Today nothing prevents `Theming` from depending on `Layout`, or `Languages` from reaching into `Core`. Splitting targets makes illegal edges fail at compile time.
-4. **Make optional subsystems actually optional.** LSP, Debugger, SwiftUI chrome, and Performance instrumentation should be opt-in libraries, not unconditional payload in the umbrella product.
+4. **Make optional subsystems actually optional.** LSP, SwiftUI chrome, and Performance instrumentation should be opt-in libraries, not unconditional payload in the umbrella product.
 5. **Preserve the existing public API surface** — consumers that `import CodeEditorPlugin` keep working via the umbrella target.
 
 ---
@@ -44,7 +44,7 @@ Workspace convention for **single-purpose kits** is different (kebab-case dir, s
 | Platform/ | 32 | Cross-platform color/font/view shims (`#if canImport(AppKit)/(UIKit)`) |
 | Theming/ | 31 | Theme model, token bridge, appearance |
 | LSP/ | 24 | Language Server Protocol client |
-| Features/ | 23 | Folding, smart editing, search/replace, symbol nav, debugger integration |
+| Features/ | 23 | Folding, smart editing, search/replace, symbol nav |
 | Extensions/ | 22 | Catch-all type extensions |
 | Completion/ | 22 | Code-completion engines and providers |
 | SwiftUI/ | 19 | SwiftUI wrappers and modifiers |
@@ -86,7 +86,6 @@ Each target is named `CodeEditor<Concept>`, mirroring `MusicToolkit<Concept>`. B
 | 4 | `CodeEditorAnnotations` | `Annotations/` (7 of 8 files; `AnnotationsDataSource.swift` stays in umbrella per §6.2.8e — `CodeEditorView`-coupled, awaiting §6.2.12) | Common, Platform, Theming |
 | 4 | `CodeEditorWorkspace` | `Workspace/` | TextModel |
 | **5 — External services** | `CodeEditorLSP` | `LSP/` | TextModel, Completion, Languages, Symbols |
-| 5 | `CodeEditorDebugger` | `Features/Debugger*`, `Features/DebugAdapter*` | TextModel, Annotations |
 | **6 — Diagnostics** | `CodeEditorDiagnostics` | `Performance/` | Common |
 | **7 — Presentation** | `CodeEditorLayout` | `Layout/` | TextModel, Theming, Completion, Annotations, Folding, Platform |
 | **8 — Editor surface** | `CodeEditorView` (or keep name `CodeEditorCore`) | `Core/`, `CodeEditorPlugin.swift` | Everything in phases 1–7 (concrete engines wired in) |
@@ -132,7 +131,6 @@ flowchart TD
 
     subgraph P5[Phase 5 — External services]
         LSP[CodeEditorLSP]
-        Debugger[CodeEditorDebugger]
     end
 
     subgraph P6[Phase 6]
@@ -177,8 +175,6 @@ flowchart TD
     Completion --> LSP
     Languages --> LSP
     Symbols --> LSP
-    TextModel --> Debugger
-    Annotations --> Debugger
     Common --> Diag
     TextModel --> Layout
     Theming --> Layout
@@ -207,7 +203,7 @@ flowchart TD
 
 - **`CodeEditorLanguages` independent of `Core`.** Adding a 26th language stops triggering a TextKit2 / Layout rebuild.
 - **`CodeEditorTheming` independent of `Layout`.** Theme JSON / token changes don't churn the gutter and minimap.
-- **`CodeEditorLSP` and `CodeEditorDebugger` are opt-in libraries.** A consumer that doesn't want LSP simply doesn't link it; the umbrella can `@_exported import` them only when the consumer also links them, or expose them as separate products. (See §6.3.)
+- **`CodeEditorLSP` is an opt-in library.** A consumer that doesn't want LSP simply doesn't link it; the umbrella can `@_exported import` it only when the consumer also links it, or expose it as a separate product. (See §6.3.)
 - **`CodeEditorDiagnostics` becomes detachable.** Today `MemoryMonitor` is reachable from anything in the monolith. As its own target with no upward callers, it can be excluded from release builds via a separate product.
 - **`CodeEditorTextModel` becomes the testable core.** The `Text/` + `Documents/` boundary already exists in your head — making it a real SPM boundary is mostly a matter of declaring it.
 
@@ -363,7 +359,7 @@ Sample-app theme rendering visually verified by the user on 2026-05-17.
 
 - **Carve-out shape with three moves.** 1 file into new target (`ProjectSearchProvider.swift` → `Sources/CodeEditorSearch/`); 1 file relocated inside umbrella (`SearchReplaceEngine.swift` → `Core/Search/`); 1 file migrated out of umbrella to sample (`EditorController+SelectMatch.swift` → `Sources/CodeEditorSample/EditorActions/`). Adds a third move type — the umbrella-out migration — to the §6.2.8a/§6.2.8b carve-out vocabulary.
 - **NEXT.md §4.1's `Search = Features/SearchReplaceEngine.swift + Search/` claim was wrong.** `SearchReplaceEngine.swift` is heavily `CodeEditorView`-coupled (same blocker as SmartEditing): every public entry takes/uses `CodeEditorView`. It stays in umbrella and travels with §6.2.12. New target ships only the project-wide piece.
-- **First cross-restructure public-API removal.** `EditorController.selectMatch(_ result: ProjectSearchResult)` is gone from the umbrella's public API. External consumers reimplement via the still-public `EditorController.nsLocation(forLSPLine:character:)` + `EditorController.selectRange(_:scroll:)` primitives. Sets precedent for §6.2.9 LSP / Debugger extractions where the umbrella's public surface may also thin.
+- **First cross-restructure public-API removal.** `EditorController.selectMatch(_ result: ProjectSearchResult)` is gone from the umbrella's public API. External consumers reimplement via the still-public `EditorController.nsLocation(forLSPLine:character:)` + `EditorController.selectRange(_:scroll:)` primitives. Sets precedent for §6.2.9 LSP extraction where the umbrella's public surface may also thin.
 - **Productized opt-in** as `.library(name: "CodeEditorSearch", ...)`. Matches Workspace/Diagnostics precedent. NEXT.md §6.3's "Optional / opt-in" list expands.
 - **Umbrella does NOT depend on `CodeEditorSearch`.** Preserved by migrating `EditorController+SelectMatch.swift` to the sample.
 - **Zero access-modifier promotions.** Ties with §6.2.8f Workspace as the smallest promotion surface in the restructure series.
@@ -399,8 +395,18 @@ Sample-app theme rendering visually verified by the user on 2026-05-17.
 - **No productization.** Umbrella consumes Completion types from 17 files; opt-in pattern (Workspace/Search/Diagnostics) is structurally impossible — `Core/CodeEditorView+CompletionExtensions.swift` is a partial-file extension of `CodeEditorView` and cannot migrate out. Matches Folding/Symbols/SH/Annotations precedent.
 - **`CompletionStatistics.init()` exposed publicly.** Side effect of the cross-target accessibility fix: `EditorController+Completion.swift` (umbrella) constructs `CompletionStatistics()` as a fallback for unattached state. The init was synthesized-internal; now it's an explicit `public init()`. Minor surface-area addition for external consumers but not in scope to remove.
 - **Section letter `8g`, not `8c`.** §6.2.8c is reserved for deferred SmartEditing.
-- **Closes §6.2.8 feature engines.** With Completion landed, remaining §6.2.8 work is `SmartEditing` (deferred §6.2.12) and `Debugger` (pending confirm-or-delete decision — not yet a feature-engine carve-out).
+- **Closes §6.2.8 feature engines.** With Completion landed, remaining §6.2.8 work is `SmartEditing` (deferred §6.2.12). `Debugger` was deleted in §6.2.9a (see deviations block below) — never extracted.
 - **Phase 4 semantic label vs build-graph reality.** Completion is labelled phase 4 (feature engine). With deps on `Common, Diagnostics, Languages, Platform, TextModel`, its build-graph slot is between phase 3 (Languages, SH) and phase 4 (Diagnostics). Label kept because it's a feature, not foundational infra.
+
+**Deviations during §6.2.9a `CodeEditorDebugger` confirm-or-delete (commit `<TBD>`):**
+
+- **Outcome: delete.** Audit (zero `public`, zero in-tree consumers, zero tests, zero Configuration wiring, zero LSP wiring, 10-month dormancy, self-admitted design-only diagram) plus user confirmation (no roadmap in 6–12 months) made deletion the right call. Spec at `docs/superpowers/specs/2026-05-18-codeeditor-debugger-deletion-design.md` (commit `91967bbe`).
+- **Files deleted (7, 1,410 LOC):** `DebuggerIntegration.swift`, `DebuggerIntegrationCore.swift`, `DebuggerIntegration+Breakpoints.swift`, `DebuggerIntegration+Evaluation.swift`, `DebuggerIntegration+Execution.swift`, `DebuggerModels.swift`, `DebugAdapter.swift` — all under `Sources/CodeEditorPlugin/Features/`.
+- **Diagrams reconciled.** `docs/Diagrams/20-debugging-integration.md` moved to `docs/archive/Diagrams/` (siblings the pre-existing `20-debugging-integration-architecture.md` extended design). Debugger sub-sections removed from `docs/Diagrams/11-advanced-features-integration.md` (class block, 2 cross-component edges, 3 LSP-integration edges + comment rewrite, classDef + class-assignment, prose subsection) and `docs/Diagrams/01-high-level-architecture.md` (node + class assignment). `docs/Diagrams/README.md` index entry §20 removed; entry §11 description trimmed.
+- **Zero functional code change outside the deletions.** No file outside `Features/Debugger*` was edited for code reasons. No tests added or removed. No `EditorConfiguration` changes. No `Package.swift` changes (Debugger never had its own target). Public API surface of `CodeEditorPlugin` unchanged because every deleted symbol was `internal`.
+- **NEXT.md edits.** 14 row-level edits across §1.4 / §3 / §4.1 / §4.2 (3 mermaid items) / §4.3 / §6.0 (2 deviations updates) / §6.2 / §6.3 / §8.2 / §9 / §10 (2 lines), plus this new deviations block. Removes the Debugger target row, the two Mermaid edges, the opt-in list mention, the deviations references, and the confirm-or-delete pending status.
+- **No precedent for "delete a target before extraction".** First restructure step that *removes* a candidate target rather than carving one out. Sets a precedent for future audits: if a carve-out target's symbols are all `internal` and have zero in-tree consumers, deletion is the answer, not extraction.
+- **Closes the §6.2.9 prerequisite.** §6.2.9b LSP extraction can now proceed as a single-target session without an accompanying Debugger target.
 
 ### 6.1 Pre-work (do before any target split)
 
@@ -427,7 +433,7 @@ Do these in order; each one should leave `swift build && swift test` green.
    - **[done — carve-out, see §6.0]** **`CodeEditorAnnotations`** (§6.2.8e) — 7 of 8 files moved from `Sources/CodeEditorPlugin/Annotations/` to `Sources/CodeEditorAnnotations/` (`Annotation`, `AnnotationKind`, `AnnotationView`, `AnnotationsContentView`, `CodeEditorViewAnnotation`, `LineAnnotation`, `MessageLineAnnotation`). 1 `CodeEditorView`-coupled file (`AnnotationsDataSource`) relocated to umbrella `Core/Annotations/`. Not productized — umbrella consumes Annotation types via 6 files; routes through umbrella per Folding/Symbols/SH/Languages precedent. Final deps: `Common`, `Platform`, `Theming`. (`9ce2934a` + pre-relocation `28fa10e5`)
    - **[deferred — blocked on §6.2.12]** **`CodeEditorSmartEditing`** (§6.2.8c) — audit during §6.2.8f brainstorming found all 5 SmartEditing files (`SmartEditingEngine.swift`, `SmartEditing/AutoBracketingEngine.swift`, `SmartEditing/MultiCursorEditor.swift`, `SmartEditing/SmartIndentationEngine.swift`, `SmartEditing/SmartSelectionExpander.swift`) take `CodeEditorView` as a parameter on every public entry point. A carve-out yields an empty target. Re-spec after §6.2.12 Core split removes the coupling.
    - **[done — clean extraction, see §6.0]** **`CodeEditorCompletion`** (§6.2.8g) — 19 files moved cleanly from `Sources/CodeEditorPlugin/Completion/` to `Sources/CodeEditorCompletion/`. Zero `CodeEditorView` structural coupling in moving set; no `Core/Completion/` bucket. Plus 1 SwiftUI bridge file (`SwiftUI/CodeEditor+CompletionExtensions.swift` → `SwiftUICompletionTypes.swift`) and `SendableError` relocated to `CodeEditorCommon`. Routes through umbrella (umbrella depends; not productized) per Folding/Symbols/SH/Annotations precedent. (`28b78b4f`)
-9. **Extract `CodeEditorLSP` and `CodeEditorDebugger`** — both depend on engines from step 8. Make them separate **products**, not just targets, so consumers can opt out. (Debugger may already be design-only per `CLAUDE.md`'s note about archived design — confirm whether to keep, gate behind a product, or delete.)
+9. **Extract `CodeEditorLSP`** — depends on engines from step 8. Make it a separate **product**, not just a target, so consumers can opt out. (Debugger deleted in §6.2.9a — no sibling target; see deviations block.)
 10. **Extract `CodeEditorDiagnostics`** — move `Performance/`. Make it a separate product so consumers can omit it from release builds.
 11. **Extract `CodeEditorLayout`** — move `Layout/`. This depends on most of phase 4.
 12. **Split `Core/`** — the `Actors/` subdirectory, `ActorCoordinator`, `CodeEditorAPI`, `CodeEditorDependencies`, `CodeEditorError`, `CodeEditorViewProtocol`, and the orchestration services move into the new editor-surface target (`CodeEditorView` or `CodeEditorCore`). The `CodeEditorView+*Extensions.swift` slices stay with their owning type. `Info.plist` stays as the target's resource exclude.
@@ -442,7 +448,7 @@ To match MusicToolkit's "one product per concern" model, expose products for eve
 
 - Always: `CodeEditorPlugin` (umbrella), `CodeEditorDesignTokens`, `CodeEditorUI`
 - Probably: `CodeEditorTextModel`, `CodeEditorLanguages`, `CodeEditorTheming`, `CodeEditorSyntaxHighlighting`, `CodeEditorSwiftUI`
-- Optional / opt-in: `CodeEditorLSP`, `CodeEditorDebugger`, `CodeEditorDiagnostics`, `CodeEditorSearch`, `CodeEditorWorkspace`
+- Optional / opt-in: `CodeEditorLSP`, `CodeEditorDiagnostics`, `CodeEditorSearch`, `CodeEditorWorkspace`
 
 That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rendering`, `RenderingCG`, `RenderingSVG`, `MIDI`, `Export`, `LilyPondExport`, `MEI`, `ABC`, `PAE`, `MusicXML` are all separate products.
 
@@ -460,7 +466,7 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 ## 8. Risks & open questions
 
 1. **`Core/` is genuinely tangled.** 59 files in one directory, including the public API surface (`CodeEditorAPI.swift`), the AppKit/UIKit view bridge (`CodeEditorView.swift` + 17 `+Extensions` slices), the actor model (`Actors/`, `ActorCoordinator`), error types, and dirty tracking. The split in step 6.2.12 is the riskiest single move. Plan a dedicated session for it; don't combine with another extraction.
-2. **`Features/` mixes shipped and not-yet-shipped subsystems.** `DebuggerIntegration*` may be design-only — confirm before promoting it to its own target. If it's not shipping, delete it instead of splitting it (matches `CLAUDE.md`'s "don't ship half-finished" stance).
+2. **`Features/` mixes shipped and not-yet-shipped subsystems.** `DebuggerIntegration*` was design-only — deleted in §6.2.9a (2026-05-18). Future debugger work, if any, starts green-field; the archived diagram in `docs/archive/Diagrams/` is the design starting point. The only remaining `Features/` resident is `SmartEditing`, deferred to §6.2.12 (Core split unblocks it).
 3. **Naming churn vs. one-time rename.** If you're going to rename `CodeEditorPlugin` → `CodeEditorToolkit`, do it as part of the move, not before or after. Doing it before doubles the disruption; doing it after means another sweep of consumers.
 4. **Cross-package consumers exist.** Per `~/Workspace/packages/CLAUDE.md`, MusicToolkit is consumed by Sonography and notation-engine. Once CodeEditorPlugin moves into `packages/`, identify its consumers (if any in `~/Workspace/products/`) and migrate their `Package.swift` paths in the same PR as the move.
 5. **The snapshot-testing fork pin.** Both MusicToolkit and CodeEditorPlugin already pin `ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable` — same comment, same justification. After the move, this becomes a workspace-wide constraint; the next time you're tempted to revert to upstream, do it in both packages together.
@@ -470,7 +476,7 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 
 ## 9. Non-goals
 
-- **Not rewriting any code paths.** This restructure is import-graph surgery, not feature work. Don't combine it with debugger completion, tree-sitter expansion, or LSP changes.
+- **Not rewriting any code paths.** This restructure is import-graph surgery, not feature work. Don't combine it with tree-sitter expansion or LSP changes.
 - **Not building a plugin system.** The current name notwithstanding, no `PluginManager`/`PluginAPI` exists, and none should be introduced as part of this restructure.
 - **Not changing supported platforms.** Mac Catalyst and TextKit1 stay retired (per CLAUDE.md). The platform floor stays at macOS 26.3 / iOS 26.3.
 - **Not reintroducing DocC.** Long-form prose stays in `docs/*.md`; the layered ARCHITECTURE diagram is a Mermaid file, not a DocC catalog.
@@ -481,8 +487,8 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 
 Steps 6.2.1 → 6.2.7, 6.2.8a, 6.2.8b, 6.2.8d, 6.2.8e, 6.2.8f, 6.2.8g, and 6.2.10 are done (see §6.0). Remaining work:
 
-- **6.2.8 feature engines complete (modulo deferrals).** `Folding` (§6.2.8a), `Symbols` (§6.2.8b), `Search` (§6.2.8d), `Annotations` (§6.2.8e), `Workspace` (§6.2.8f), `Completion` (§6.2.8g) all extracted. `SmartEditing` is **deferred** (§6.2.8c — blocked on §6.2.12 Core split because all 5 SmartEditing files take `CodeEditorView` as a parameter on every public entry point). `Features/Debugger*` confirm-or-delete decision still pending — gate for §6.2.9 LSP/Debugger extraction.
-- **6.2.9 `CodeEditorLSP` + `CodeEditorDebugger`** — own session each. Expose as separate products.
+- **6.2.8 feature engines complete (modulo deferrals).** `Folding` (§6.2.8a), `Symbols` (§6.2.8b), `Search` (§6.2.8d), `Annotations` (§6.2.8e), `Workspace` (§6.2.8f), `Completion` (§6.2.8g) all extracted. `SmartEditing` is **deferred** (§6.2.8c — blocked on §6.2.12 Core split because all 5 SmartEditing files take `CodeEditorView` as a parameter on every public entry point). `Features/Debugger*` was deleted in §6.2.9a (2026-05-18) — never extracted; see deviations block.
+- **6.2.9 `CodeEditorLSP`** — own session. Expose as a separate product. (Debugger deleted in §6.2.9a — no sibling extraction.)
 - **6.2.11 `CodeEditorLayout`** — `Layout/`. Own session. Depends on most of phase 4. Note: `ViewportManager.swift` was relocated into `Layout/` during §6.2.10's cleanup, so it travels with Layout when this extracts.
 - **6.2.12 split `Core/`** — the riskiest single step. Dedicated half-day. Don't combine with anything else. (Note: this dir has grown during phases 0–2 — `Core/Configuration/`, `Core/Documents/`, `Core/Platform/`, `Core/Text/` subdirs were created as F3 catch-alls. Re-evaluate which semantic homes survive into the eventual `CodeEditorView` target vs. spill into other feature targets.)
 - **6.2.13 `CodeEditorSwiftUI`** — `SwiftUI/`. Straightforward after 6.2.12.

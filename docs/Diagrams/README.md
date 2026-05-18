@@ -38,7 +38,7 @@ Text processing flow from input to rendering, including TextKit2 integration, li
 Visual component hierarchy showing CodeEditorContainerView and all child components including gutter, minimap, overlays, and status bar. Includes layout structure diagram.
 
 ### 11. [Advanced Features Integration Architecture](11-advanced-features-integration.md)
-Comprehensive architecture for advanced features including debugging integration, search functionality, smart editing, and code folding. Shows feature coordination, state management, and UI integration.
+Comprehensive architecture for advanced features including search functionality, smart editing, and code folding. Shows feature coordination, state management, and UI integration.
 
 ### 12. [LSP System Complete Architecture](12-lsp-system-architecture.md)
 Complete Language Server Protocol implementation with transport layers, protocol integration, and multi-language support. Includes message routing, capability negotiation, error handling, and retry configuration with exponential backoff and jitter support.
@@ -63,9 +63,6 @@ Comprehensive data models and type system forming the foundation of CodeEditorPl
 
 ### 19. [SwiftUI Integration Complete Ecosystem](19-swiftui-integration-ecosystem.md)
 Complete SwiftUI integration ecosystem providing seamless integration between CodeEditorPlugin and SwiftUI applications. Includes platform-specific representables, environment management, and animation coordination.
-
-### 20. [Debugging Integration](20-debugging-integration.md)
-Currently implemented debugging integration. The earlier extended design document is preserved in [`../archive/Diagrams/20-debugging-integration-architecture.md`](../archive/Diagrams/20-debugging-integration-architecture.md).
 
 ### 21. [Utility Systems & Extensions Network](21-utility-systems-extensions.md)
 Utility systems and extensions network providing shared utilities, cross-platform helpers, and extensibility infrastructure. Includes async operation management, logging, caching, and extension management.

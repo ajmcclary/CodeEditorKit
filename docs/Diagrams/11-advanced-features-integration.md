@@ -224,25 +224,6 @@ classDiagram
         +generateReport()
     }
 
-    %% Sixth Row - Enhanced Debugger Integration with LSP
-    class DebuggerIntegrationCore {
-        <<debugger core>>
-        +debugSessions [String: DebugSession]
-        +activeSession DebugSession
-        +breakpoints [Breakpoint]
-        +currentFrame StackFrame
-        +variables [Variable]
-        +isDebugging Bool
-        +debugAdapters [String: DebugAdapter]
-        +configuration Configuration
-        +startSession(configuration, textView)
-        +stopSession(sessionId)
-        +registerAdapter(adapter, language)
-        +syncBreakpoints()
-        +getStackTrace()
-        +selectFrame(frame)
-    }
-
     class LSPManager {
         <<lsp manager>>
         +clientRegistry LSPClientRegistry
@@ -366,14 +347,12 @@ classDiagram
     PerformanceInsights --> SmartEditingEngine : monitors
     PerformanceInsights --> SearchReplaceEngine : monitors
     PerformanceInsights --> CodeFoldingEngine : monitors
-    PerformanceInsights --> DebuggerIntegrationCore : monitors
     PerformanceInsights --> LSPManager : monitors
 
     %% Advanced Feature Integration with AsyncOperationManager
     AsyncOperationManager --> SymbolNavigator : schedules symbol operations
     AsyncOperationManager --> SearchReplaceEngine : manages search operations
     AsyncOperationManager --> CodeFoldingEngine : schedules folding operations
-    AsyncOperationManager --> DebuggerIntegrationCore : manages debug operations
 
     %% Cache and Processing Integration
     SymbolNavigator --> CacheCoordinatorActor : uses interval tree cache
@@ -394,11 +373,7 @@ classDiagram
     CodeFoldingEngine --> TextProcessingActor : requests folding analysis
     CodeFoldingEngine --> PerformanceMetricsActor : reports folding metrics
 
-    %% Debugger and LSP Integration
-    DebuggerIntegrationCore --> LSPManager : collaborates for debug info
-    DebuggerIntegrationCore --> DocumentStateActor : manages debug documents
-    DebuggerIntegrationCore --> FileSystemActor : accesses debug files
-
+    %% LSP Integration
     LSPManager --> DocumentStateActor : synchronizes documents
     LSPManager --> FileSystemActor : manages workspace files
     LSPManager --> PerformanceMetricsActor : reports LSP metrics
@@ -419,7 +394,6 @@ classDiagram
     classDef smart fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef folding fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef actor fill:#00C7BE20,stroke:#00C7BE,stroke-width:2px,color:#1D1D1F
-    classDef debugger fill:#FF375F20,stroke:#FF375F,stroke-width:2px,color:#1D1D1F
     classDef platform fill:#5856D620,stroke:#5856D6,stroke-width:2px,color:#1D1D1F
     classDef lsp fill:#FF2D9220,stroke:#FF2D92,stroke-width:2px,color:#1D1D1F
     classDef input fill:#32D74B20,stroke:#32D74B,stroke-width:2px,color:#1D1D1F
@@ -441,7 +415,6 @@ classDiagram
     class PerformanceMetricsActor actor
     class DocumentStateActor actor
     class FileSystemActor actor
-    class DebuggerIntegrationCore debugger
     class LSPManager lsp
     class InputCoordinator input
     class AppKitTextInputFeatures input
@@ -484,11 +457,10 @@ classDiagram
 - **FoldingOperationsService**: Dedicated operation handling with batch processing and state preservation
 - **Performance-Optimized Folding**: Cache-based region detection with hierarchy building
 
-### 6. Production-Ready Debugger & LSP Integration
-- **DebuggerIntegrationCore**: Multi-session debugging with adapter management and event handling
+### 6. Production-Ready LSP Integration
 - **LSPManager**: Full Language Server Protocol support with document synchronization and workspace management
-- **Cross-Component Collaboration**: Debugger and LSP integration with document and file system actors
-- **Memory-Aware Operations**: All debugging and LSP operations integrated with memory monitoring
+- **Cross-Component Collaboration**: LSP integration with document and file system actors
+- **Memory-Aware Operations**: All LSP operations integrated with memory monitoring
 
 ### 7. Enhanced Memory Management
 - **MemoryManagementCoordinator**: Creates and manages all memory-monitored components

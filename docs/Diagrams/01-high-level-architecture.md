@@ -40,7 +40,6 @@ graph TD
         direction TB
         SRE["Search & Replace<br/>Engine"]
         SEE["Smart Editing<br/>Engine"]
-        DIC["Debugger<br/>Integration"]
         OSN["Symbol<br/>Navigator"]
         CFE["Code Folding<br/>Engine"]
     end
@@ -223,7 +222,6 @@ graph TD
     class SCHEDULE async
     class SRE advanced
     class SEE advanced
-    class DIC advanced
     class OSN advanced
     class CFE advanced
     class UPS performance
