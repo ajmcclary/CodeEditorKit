@@ -356,6 +356,7 @@ let package = Package(
         .testTarget(
             name: "CodeEditorUITests",
             dependencies: [
+                "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorLanguages",
                 "CodeEditorSymbols",
