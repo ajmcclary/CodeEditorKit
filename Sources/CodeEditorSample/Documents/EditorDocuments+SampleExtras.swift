@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import CodeEditorLanguages
 import CodeEditorPlugin
 import Foundation

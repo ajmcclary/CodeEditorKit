@@ -6,6 +6,7 @@
 //  docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md.
 //
 
+import CodeEditorCommon
 @testable import CodeEditorPlugin
 import SwiftUI
 import XCTest

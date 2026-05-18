@@ -12,6 +12,7 @@
 //
 
 #if canImport(SwiftUI)
+import CodeEditorCommon
 import CodeEditorCompletion
 import SwiftUI
 
