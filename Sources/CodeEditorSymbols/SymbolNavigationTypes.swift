@@ -8,6 +8,11 @@ public struct BreadcrumbItem: Identifiable, Sendable {
     public let id = UUID()
     public let symbol: DocumentSymbol
     public let level: Int
+
+    public init(symbol: DocumentSymbol, level: Int) {
+        self.symbol = symbol
+        self.level = level
+    }
 }
 
 // MARK: - Symbol Navigation Configuration
@@ -26,4 +31,6 @@ public struct SymbolNavigationConfiguration: Sendable {
     public var updateDelay: TimeInterval = 0.3
     /// Whether to include anonymous symbols in navigation
     public var includeAnonymousSymbols = false
+
+    public init() {}
 }

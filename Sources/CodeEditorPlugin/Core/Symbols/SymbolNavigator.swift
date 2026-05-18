@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorLanguages
 import CodeEditorPlatform
+import CodeEditorSymbols
 import CodeEditorTextModel
 import Foundation
 
