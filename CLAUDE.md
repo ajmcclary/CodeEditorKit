@@ -62,15 +62,15 @@ Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configu
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-5 top-level directories in the umbrella target, 223 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f / §6.2.8g / §6.2.9 / §6.2.11 / §6.2.12a), and 589 Swift source files under `Sources/`.
+5 top-level directories in the umbrella target, 222 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f / §6.2.8g / §6.2.9 / §6.2.11 / §6.2.12a / §6.2.12b), and 589 Swift source files under `Sources/`.
 
 Other source roots (each is its own SPM target — see `Package.swift`):
-- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7).
+- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7); `SendablePerformanceMetric` + `FileChangeNotification` (added §6.2.12b).
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
 - `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds; phase 4).
 - `Sources/CodeEditorFolding/` — fold-storage primitives (`FoldStoreElement`, `LineFoldStorage`, `FoldInfo`), `FoldRegionAdapter`, and `FoldingProviderRegistry` (phase 4; new in §6.2.8a). The umbrella-coupled fold engine, operations service, and presentation strategy live in `Sources/CodeEditorPlugin/Core/Folding/`.
 - `Sources/CodeEditorSymbols/` — symbol-navigation surface: `BreadcrumbItem`, `SymbolNavigationConfiguration`, `SymbolProviderCatalog`, and generic `SymbolRangeIndex` storage (phase 4; new in §6.2.8b). The umbrella-coupled `SymbolNavigator` lives in `Sources/CodeEditorPlugin/Core/Symbols/`.
-- `Sources/CodeEditorPlugin/Languages/` — language descriptors + folding/symbol/completion-model interfaces (phase 3; physically inside the umbrella source tree but compiled as its own target via `path:`).
+- `Sources/CodeEditorPlugin/Languages/` — language descriptors + folding/symbol/completion-model interfaces; `TabModel` + `LanguageDetectionService` (added §6.2.12b) (phase 3; physically inside the umbrella source tree but compiled as its own target via `path:`).
 - `Sources/CodeEditorPlatform/` — cross-platform color/font/view abstractions (phase 0).
 - `Sources/CodeEditorTextModel/` — TextKit2 primitives, `RangeStore`/`RangeStoreElement`/`RangeStoreRun`, geometry, location, parsing primitives (phase 1; RangeStore relocated from umbrella in §6.2.7).
 - `Sources/CodeEditorConfiguration/` — settings, presets, validation (phase 1).
