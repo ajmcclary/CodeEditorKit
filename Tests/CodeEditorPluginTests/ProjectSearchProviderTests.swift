@@ -1,4 +1,4 @@
-@testable import CodeEditorPlugin
+import CodeEditorSearch
 import Foundation
 import Testing
 

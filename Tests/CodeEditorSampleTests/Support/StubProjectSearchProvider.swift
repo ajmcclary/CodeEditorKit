@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorSearch
 import Foundation
 import os
 

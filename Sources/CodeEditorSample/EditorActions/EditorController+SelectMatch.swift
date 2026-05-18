@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import CodeEditorPlugin
+import CodeEditorSearch
 import Foundation
 
 extension EditorController {

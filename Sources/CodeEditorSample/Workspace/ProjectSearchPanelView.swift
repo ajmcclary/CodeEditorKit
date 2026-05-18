@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorSearch
 import SwiftUI
 
 struct ProjectSearchPanelView: View {

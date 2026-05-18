@@ -66,6 +66,10 @@ let package = Package(
             targets: ["CodeEditorPlugin"]
         ),
         .library(
+            name: "CodeEditorSearch",
+            targets: ["CodeEditorSearch"]
+        ),
+        .library(
             name: "CodeEditorUI",
             targets: ["CodeEditorUI"]
         ),
@@ -174,6 +178,10 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorSearch",
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorSymbols",
             dependencies: [
                 "CodeEditorLanguages",
@@ -228,6 +236,7 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
+                "CodeEditorSearch",
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
                 "CodeEditorUI",
@@ -251,6 +260,7 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
+                "CodeEditorSearch",
                 "CodeEditorSymbols",
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
@@ -299,6 +309,7 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorSample",
+                "CodeEditorSearch",
                 "CodeEditorWorkspace",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],

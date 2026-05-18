@@ -2,6 +2,7 @@
 import AppKit
 import CodeEditorPlugin
 @testable import CodeEditorSample
+import CodeEditorSearch
 import CodeEditorWorkspace
 import Foundation
 import SnapshotTesting

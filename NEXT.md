@@ -81,7 +81,7 @@ Each target is named `CodeEditor<Concept>`, mirroring `MusicToolkit<Concept>`. B
 | **4 — Feature engines** | `CodeEditorCompletion` | `Completion/` | Languages, TextModel |
 | 4 | `CodeEditorFolding` | `Features/CodeFolding*`, `Features/Fold*`, `Features/LineFoldStorage*` | TextModel, Languages |
 | 4 | `CodeEditorSmartEditing` | `Features/SmartEditing*` | TextModel, Configuration |
-| 4 | `CodeEditorSearch` | `Features/SearchReplaceEngine.swift`, `Search/` | TextModel |
+| 4 | `CodeEditorSearch` | `Search/` (only; `Features/SearchReplaceEngine.swift` stays in umbrella per §6.2.8d — `CodeEditorView`-coupled, awaiting §6.2.12) | (none — Foundation only) |
 | 4 | `CodeEditorSymbols` | `Features/SymbolNavigation*`, `Features/SymbolProviderCatalog*`, `Features/SymbolNavigator*` | Languages, TextModel |
 | 4 | `CodeEditorAnnotations` | `Annotations/` | TextModel |
 | 4 | `CodeEditorWorkspace` | `Workspace/` | TextModel |
@@ -247,9 +247,9 @@ A row added to its table, parallel to the existing MusicToolkit row:
 
 Suggested ordering minimizes broken-build windows. Each step is a single commit / PR.
 
-### 6.0 Status (as of 2026-05-17)
+### 6.0 Status (as of 2026-05-18)
 
-**Phases 0–4 done; phase 3.5 (SH) carved out.** `CodeEditorDiagnostics` (§6.2.10) landed ahead of §6.2.7 in `e60f7857` to unblock SyntaxHighlighting. `CodeEditorSyntaxHighlighting` (§6.2.7) followed as a carve-out — 36 of 45 SH files moved to the new target; 9 `CodeEditorView`-coupled files stayed in umbrella under `Core/SyntaxHighlighting/`. Eight new SPM targets now exist alongside the existing `CodeEditorDesignTokens` / `CodeEditorPlugin` / `CodeEditorUI` / `CodeEditorSample`. 465 tests / 116 suites passing, 0 SwiftLint violations, build green on every commit.
+**Phases 0–4 done; phase 3.5 (SH) carved out.** `CodeEditorDiagnostics` (§6.2.10) landed ahead of §6.2.7 in `e60f7857` to unblock SyntaxHighlighting. `CodeEditorSyntaxHighlighting` (§6.2.7) followed as a carve-out — 36 of 45 SH files moved to the new target; 9 `CodeEditorView`-coupled files stayed in umbrella under `Core/SyntaxHighlighting/`. `CodeEditorSearch` (§6.2.8d) followed as another carve-out — 1 file moved to the new target; `SearchReplaceEngine.swift` stayed in umbrella (relocated to `Core/Search/`) and `EditorController+SelectMatch.swift` migrated to the sample (first cross-restructure public-API removal from the umbrella). Nine new SPM targets now exist alongside the existing `CodeEditorDesignTokens` / `CodeEditorPlugin` / `CodeEditorUI` / `CodeEditorSample`. Build green on every commit.
 
 | Target | Commit | What landed | Direct deps |
 |---|---|---|---|
@@ -264,6 +264,7 @@ Suggested ordering minimizes broken-build windows. Each step is a single commit 
 | `CodeEditorFolding` | `76abf928` | 4 pure fold-storage / provider-registry files from `Features/` (`FoldStoreElement`, `LineFoldStorage` + `FoldInfo`, `FoldRegionAdapter`, `FoldingProviderRegistry`). 4 `CodeEditorView`-coupled files (`CodeFoldingEngine`, `FoldingOperationsService`, `FoldPresentationStrategy`, `CodeFoldingConfiguration` — renamed from misnamed `FoldableRegion.swift`) relocated to umbrella `Core/Folding/` in pre-commit `9704e80b`. | Common, Languages, SyntaxHighlighting, TextModel |
 | `CodeEditorSymbols` | `fefe8f93` | 3 files in new target (2 from `Features/` — `SymbolNavigationTypes`, `SymbolProviderCatalog` — + 1 split-out `SymbolRangeIndex.swift` extracted from `SymbolProviderCatalog`). 1 `CodeEditorView`-coupled file (`SymbolNavigator`) relocated to umbrella `Core/Symbols/` in pre-commit `5d670076`. | Languages, SyntaxHighlighting |
 | `CodeEditorWorkspace` | `c1739137` | 2 files moved from umbrella `Workspace/` to new target (`WorkspaceFileProtocols.swift`, `MacOSWorkspaceFileManager.swift`). Zero `CodeEditorView` coupling, zero internal SPM deps. Productized as opt-in `.library` per §6.3. Umbrella does NOT depend on it. | (none) |
+| `CodeEditorSearch` | `(pending commit SHA)` | 1 file moved from umbrella `Search/` to new target (`ProjectSearchProvider.swift`). Pre-commit `0cdf53f9` relocated umbrella-coupled `SearchReplaceEngine.swift` to `Core/Search/` and migrated `EditorController+SelectMatch.swift` to `CodeEditorSample/EditorActions/` (removing `EditorController.selectMatch(_ result: ProjectSearchResult)` from the umbrella's public API). Productized as opt-in `.library` per §6.3. Umbrella does NOT depend on it. | (none) |
 
 Phase A access-modifier promotion landed in `8bac96cb` (116 `package` promotions across 40 files; baseline scan that made the per-target extractions near-mechanical for the symbols themselves — file coupling was the remaining work).
 
@@ -356,6 +357,20 @@ Sample-app theme rendering visually verified by the user on 2026-05-17.
 - **Phase 4 semantic label vs build-graph reality.** Spec labels Workspace as phase 4 (feature engine). With no internal deps, the build graph treats it as parallel to phase 0. Label kept because it's a feature, not foundational infra.
 - **iOS coverage asymmetry preserved.** `MacOSWorkspaceFileManager` is AppKit-only (`#if canImport(AppKit)` end-to-end). On iOS, `CodeEditorWorkspace` exposes only the protocols. A future `UIWorkspaceFileManager.swift` adapter is a separate session.
 
+**Deviations during §6.2.8d `CodeEditorSearch` (commit `(pending)`):**
+
+- **Carve-out shape with three moves.** 1 file into new target (`ProjectSearchProvider.swift` → `Sources/CodeEditorSearch/`); 1 file relocated inside umbrella (`SearchReplaceEngine.swift` → `Core/Search/`); 1 file migrated out of umbrella to sample (`EditorController+SelectMatch.swift` → `Sources/CodeEditorSample/EditorActions/`). Adds a third move type — the umbrella-out migration — to the §6.2.8a/§6.2.8b carve-out vocabulary.
+- **NEXT.md §4.1's `Search = Features/SearchReplaceEngine.swift + Search/` claim was wrong.** `SearchReplaceEngine.swift` is heavily `CodeEditorView`-coupled (same blocker as SmartEditing): every public entry takes/uses `CodeEditorView`. It stays in umbrella and travels with §6.2.12. New target ships only the project-wide piece.
+- **First cross-restructure public-API removal.** `EditorController.selectMatch(_ result: ProjectSearchResult)` is gone from the umbrella's public API. External consumers reimplement via the still-public `EditorController.nsLocation(forLSPLine:character:)` + `EditorController.selectRange(_:scroll:)` primitives. Sets precedent for §6.2.9 LSP / Debugger extractions where the umbrella's public surface may also thin.
+- **Productized opt-in** as `.library(name: "CodeEditorSearch", ...)`. Matches Workspace/Diagnostics precedent. NEXT.md §6.3's "Optional / opt-in" list expands.
+- **Umbrella does NOT depend on `CodeEditorSearch`.** Preserved by migrating `EditorController+SelectMatch.swift` to the sample.
+- **Zero access-modifier promotions.** Ties with §6.2.8f Workspace as the smallest promotion surface in the restructure series.
+- **Pure-Foundation target with no `#if canImport`.** Cleaner than §6.2.8f Workspace (which has `MacOSWorkspaceFileManager` wrapped end-to-end in AppKit-conditional code).
+- **Spec over-counted sample imports.** Spec listed ~4 sample-source imports. Reality: 3 — `App/AppState.swift` only references `PortableProjectSearchAdapter` in a doc comment, so the import is unnecessary. Mirrors §6.2.8f Workspace's analogous finding for `AppState.swift`'s `WorkspaceFileWatching` doc-comment reference.
+- **Plan-execution deviation: `@testable import CodeEditorPlugin` was load-bearing on `EditorControllerSelectMatchTests`.** The plan's Task 2 Step 5 dropped it on the (wrong) assumption that every called symbol was `public`. Reality: `EditorController.attach(to:)` is `internal` (intentionally — "Internal wiring hook — not for host use"), so the test required `@testable`. Restored mid-execution; plan update for next author: do not blanket-drop `@testable` qualifiers without verifying every called symbol's access level.
+- **Phase 4 semantic label vs build-graph reality.** Spec labels Search as phase 4 (feature engine). With no internal deps, the build graph treats it as parallel to phase 0. Label kept because it's a feature, not foundational infra.
+- **Test placement** follows the §6.2.7/§6.2.8a/§6.2.8b/§6.2.8f precedent — no new `CodeEditorSearchTests` target. `ProjectSearchProviderTests.swift` stays in `CodeEditorPluginTests/` with `import CodeEditorSearch` replacing `@testable import CodeEditorPlugin`. Per-target test split deferred to §6.2.15.
+
 ### 6.1 Pre-work (do before any target split)
 
 1. **Move docs that reference dead symbols out of authority.** `CLAUDE.md` already calls out `PluginManager`, `PluginAPI`, etc. as non-existent. Confirm nothing in `docs/` (non-archive) still describes a plugin system; if it does, archive it. Otherwise the layered diagram will inherit stale prose.
@@ -377,6 +392,7 @@ Do these in order; each one should leave `swift build && swift test` green.
    - **[done — carve-out, see §6.0]** **`CodeEditorFolding`** (§6.2.8a) — 4 pure files moved to `Sources/CodeEditorFolding/` (`FoldStoreElement`, `LineFoldStorage` + `FoldInfo`, `FoldRegionAdapter`, `FoldingProviderRegistry`). 4 `CodeEditorView`-coupled files (`CodeFoldingEngine`, `FoldingOperationsService`, `FoldPresentationStrategy`, `CodeFoldingConfiguration`) relocated to `Core/Folding/`. Final deps: `Common`, `Languages`, `SyntaxHighlighting`, `TextModel`. (`76abf928` + pre-relocation `9704e80b`)
    - **[done — carve-out, see §6.0]** **`CodeEditorSymbols`** (§6.2.8b) — 3 files in `Sources/CodeEditorSymbols/` (2 from `Features/`: `SymbolNavigationTypes`, `SymbolProviderCatalog`; plus split-out `SymbolRangeIndex.swift` extracted from `SymbolProviderCatalog`). 1 `CodeEditorView`-coupled file (`SymbolNavigator`) relocated to `Core/Symbols/`. Final deps: `Languages`, `SyntaxHighlighting`. (`fefe8f93` + pre-relocation `5d670076`)
    - **[done — clean extraction, see §6.0]** **`CodeEditorWorkspace`** (§6.2.8f) — 2 files moved cleanly from `Sources/CodeEditorPlugin/Workspace/` to `Sources/CodeEditorWorkspace/`: `WorkspaceFileProtocols.swift`, `MacOSWorkspaceFileManager.swift`. Zero `CodeEditorView` coupling, zero internal SPM deps. Productized as opt-in `.library` per §6.3; umbrella does NOT depend on it. (`c1739137`)
+   - **[done — carve-out, see §6.0]** **`CodeEditorSearch`** (§6.2.8d) — 1 file moved from `Sources/CodeEditorPlugin/Search/` to `Sources/CodeEditorSearch/`: `ProjectSearchProvider.swift`. `SearchReplaceEngine.swift` relocated to umbrella `Core/Search/`; `EditorController+SelectMatch.swift` migrated out of umbrella to `Sources/CodeEditorSample/EditorActions/` (first cross-restructure public-API removal). Productized as opt-in `.library` per §6.3; umbrella does NOT depend on it. (`(pending)` + pre-relocation `0cdf53f9`)
    - **[deferred — blocked on §6.2.12]** **`CodeEditorSmartEditing`** (§6.2.8c) — audit during §6.2.8f brainstorming found all 5 SmartEditing files (`SmartEditingEngine.swift`, `SmartEditing/AutoBracketingEngine.swift`, `SmartEditing/MultiCursorEditor.swift`, `SmartEditing/SmartIndentationEngine.swift`, `SmartEditing/SmartSelectionExpander.swift`) take `CodeEditorView` as a parameter on every public entry point. A carve-out yields an empty target. Re-spec after §6.2.12 Core split removes the coupling.
 9. **Extract `CodeEditorLSP` and `CodeEditorDebugger`** — both depend on engines from step 8. Make them separate **products**, not just targets, so consumers can opt out. (Debugger may already be design-only per `CLAUDE.md`'s note about archived design — confirm whether to keep, gate behind a product, or delete.)
 10. **Extract `CodeEditorDiagnostics`** — move `Performance/`. Make it a separate product so consumers can omit it from release builds.
@@ -393,7 +409,7 @@ To match MusicToolkit's "one product per concern" model, expose products for eve
 
 - Always: `CodeEditorPlugin` (umbrella), `CodeEditorDesignTokens`, `CodeEditorUI`
 - Probably: `CodeEditorTextModel`, `CodeEditorLanguages`, `CodeEditorTheming`, `CodeEditorSyntaxHighlighting`, `CodeEditorSwiftUI`
-- Optional / opt-in: `CodeEditorLSP`, `CodeEditorDebugger`, `CodeEditorDiagnostics`, `CodeEditorWorkspace`
+- Optional / opt-in: `CodeEditorLSP`, `CodeEditorDebugger`, `CodeEditorDiagnostics`, `CodeEditorSearch`, `CodeEditorWorkspace`
 
 That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rendering`, `RenderingCG`, `RenderingSVG`, `MIDI`, `Export`, `LilyPondExport`, `MEI`, `ABC`, `PAE`, `MusicXML` are all separate products.
 
@@ -430,9 +446,9 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 
 ## 10. Suggested next session
 
-Steps 6.2.1 → 6.2.7, 6.2.8a, 6.2.8b, 6.2.8f, and 6.2.10 are done (see §6.0). Remaining work:
+Steps 6.2.1 → 6.2.7, 6.2.8a, 6.2.8b, 6.2.8d, 6.2.8f, and 6.2.10 are done (see §6.0). Remaining work:
 
-- **6.2.8 feature engines** — `Search`, `Annotations`, `Completion`. `Folding` is done (§6.2.8a, carve-out — see §6.0); `Symbols` is done (§6.2.8b, carve-out — see §6.0); `Workspace` is done (§6.2.8f, clean extraction — see §6.0); `SmartEditing` is **deferred** (§6.2.8c — blocked on §6.2.12 Core split because all 5 SmartEditing files take `CodeEditorView` as a parameter on every public entry point). One session per remaining engine. Completion last (most call sites). `Features/Debugger*` may be design-only — confirm-or-delete before promoting.
+- **6.2.8 feature engines** — `Annotations`, `Completion`. `Folding` is done (§6.2.8a, carve-out — see §6.0); `Symbols` is done (§6.2.8b, carve-out — see §6.0); `Search` is done (§6.2.8d, carve-out — see §6.0); `Workspace` is done (§6.2.8f, clean extraction — see §6.0); `SmartEditing` is **deferred** (§6.2.8c — blocked on §6.2.12 Core split because all 5 SmartEditing files take `CodeEditorView` as a parameter on every public entry point). One session per remaining engine. Completion last (most call sites). `Features/Debugger*` may be design-only — confirm-or-delete before promoting.
 - **6.2.9 `CodeEditorLSP` + `CodeEditorDebugger`** — own session each. Expose as separate products.
 - **6.2.11 `CodeEditorLayout`** — `Layout/`. Own session. Depends on most of phase 4. Note: `ViewportManager.swift` was relocated into `Layout/` during §6.2.10's cleanup, so it travels with Layout when this extracts.
 - **6.2.12 split `Core/`** — the riskiest single step. Dedicated half-day. Don't combine with anything else. (Note: this dir has grown during phases 0–2 — `Core/Configuration/`, `Core/Documents/`, `Core/Platform/`, `Core/Text/` subdirs were created as F3 catch-alls. Re-evaluate which semantic homes survive into the eventual `CodeEditorView` target vs. spill into other feature targets.)
