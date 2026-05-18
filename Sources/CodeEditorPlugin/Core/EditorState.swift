@@ -1,5 +1,6 @@
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+import CodeEditorSymbols
 import Foundation
 import Observation
 

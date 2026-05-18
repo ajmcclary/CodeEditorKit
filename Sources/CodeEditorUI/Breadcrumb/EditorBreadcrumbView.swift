@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorSymbols
 import SwiftUI
 
 /// Renders a breadcrumb trail (workspace › folder › file › symbol).

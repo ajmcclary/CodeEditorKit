@@ -280,6 +280,7 @@ let package = Package(
                 "CodeEditorDesignTokens",
                 "CodeEditorLanguages",
                 "CodeEditorPlugin",
+                "CodeEditorSymbols",
                 "CodeEditorTheming"
             ],
             swiftSettings: swiftSettings
@@ -356,6 +357,7 @@ let package = Package(
             name: "CodeEditorUITests",
             dependencies: [
                 "CodeEditorConfiguration",
+                "CodeEditorSymbols",
                 "CodeEditorUI",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
