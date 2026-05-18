@@ -266,6 +266,7 @@ Suggested ordering minimizes broken-build windows. Each step is a single commit 
 | `CodeEditorCompletion` | `28b78b4f` | 19 files moved from umbrella `Completion/` to new target. Clean full extraction — no carve-out, no `Core/Completion/` bucket. 1 SwiftUI bridge file moved with them (`SwiftUI/CodeEditor+CompletionExtensions.swift` → `SwiftUICompletionTypes.swift`, 3 types: `SwiftUICompletionContext`, `SwiftUICompletionItem`, `CompletionKind`) — required because `SwiftUIClosureCompletionProvider` consumes them. `SendableError` relocated from umbrella `Core/EditorEvent.swift` to `CodeEditorCommon/SendableError.swift` for cross-target accessibility. Routes through umbrella (umbrella depends; not productized) per Folding/Symbols/SH/Annotations precedent. 3 access-modifier promotions (`CompletionItemAdapter`, `SwiftUIClosureCompletionProvider`, `CompletionStatistics.init`) + 6 `@testable import CodeEditorCompletion` test-file adoptions. Sample app + Sample tests gained the new dep; 4 sample sources + 3 sample tests gained the import (spec said zero). | Common, Diagnostics, Languages, Platform, TextModel |
 | `CodeEditorLSP` | `d50fc04` | 22 of 24 files moved from umbrella `LSP/` to new target (18 top-level + 4 `Transport/`). 2 `CodeEditorView`-coupled files (`LSPSemanticTokenProvider`, `LSPContentCoordinator`) relocated to umbrella `Core/LSP/` in pre-commit `8f73b99`. Productized as opt-in `.library` per §6.3; umbrella DOES depend on it (matches §6.2.10 Diagnostics precedent — productized + umbrella-coupled, not §6.2.8d Search-style umbrella-decoupled opt-out). 1 confirmed access-modifier promotion (`LSPSemanticTokenStorage` class + 5 members + nested `DecodedToken` struct's `let` props) + 6 `@testable import CodeEditorLSP` test-file adoptions (reaching internal `LSPClientRegistry`, `LSPConnectionManager`, `LSPProcessManager`, `LSPMessageHandler`, `convertLSPRangeToNSRange`, `makeServerConfiguration`, etc.). See §6.2.9 deviation block for full ripple. | Common, Completion, Diagnostics, Languages, Platform, TextModel |
 | `CodeEditorLayout` | `3a2aba83` | 22 files in new target (20 originals from umbrella `Layout/` + 1 split-out `ThemeableUIComponent+LayoutConformances.swift` + 1 extracted `EditorLayoutTypes.swift` holding 4 types lifted from umbrella `EditorLayoutService`). 19 originals + 1 split-out `ThemeableUIComponent+UmbrellaConformances.swift` + `ComponentFrameCalculator` (re-classified to stay-set during execution because it consumes `GutterSizingService` → `LineNumberCalculationService` → `CodeEditorView`) relocated to umbrella `Core/Layout/`. The 19-original stay-set relocation landed in pre-commit `1f1e9322`. Cross-target relocations: `SourcePosition` → `CodeEditorCommon`, `EditorConfiguration: Hashable` conformance → `CodeEditorConfiguration`. Productized as `.library` per §6.3; umbrella DOES depend on it (matches §6.2.9 LSP / §6.2.10 Diagnostics precedent). 10 access-modifier promotions (`EditorEventBus` class + init + 4 members; `StyledMinimapStyleDataSource` class + init + `styleRuns`; `EnvironmentValues.editorEventBus`). 13 umbrella imports + 1 `import CodeEditorCommon` (Core/Layout/EditorEventBusInstaller); 8 plugin-test `@testable import CodeEditorLayout` adoptions + 1 plugin-test `import CodeEditorCommon` (SourcePositionTests). Sample / UI / SampleTests unchanged. See §6.2.11 deviation block. | Annotations, Common, Configuration, DesignTokens, Platform, SyntaxHighlighting, Theming |
+| `§6.2.12a Core/ prep` | `d129070`, `7f498a8`, `f3b89fc`, `280b82e` | 9 files relocated from umbrella `Core/` to existing sibling SPM targets — 3 from `Core/Platform/` to CodeEditorConfiguration (`DeviceType+RecommendedConfiguration`, `PlatformAdjustments+Extensions`, `TextInputFeatures`); 4 from `Core/Text/` to CodeEditorTextModel (`BackgroundProcessor`, `ParagraphStyleCache`, `TemporaryAttributesStore`, `TextLayoutFragment`); 1 root file to CodeEditorConfiguration (`EditorConfiguration+ApplyTextInputFeatures`); 1 root file to CodeEditorSymbols (`BreadcrumbComponent`). Zero new SPM targets. 4 `internal → package` promotions (`TextLayoutFragment` class + init + `required init?(coder:)` + `override draw(at:in:)`). 2 Package.swift edits (`CodeEditorUI` + `CodeEditorUITests` targets gain `CodeEditorSymbols` dep). Core/ shrinks 138 → 129 (-9, -6.5%). Umbrella shrinks 232 → 223 (-3.9%). See §6.2.12a deviation block. | (no new target) |
 
 Phase A access-modifier promotion landed in `8bac96cb` (116 `package` promotions across 40 files; baseline scan that made the per-target extractions near-mechanical for the symbols themselves — file coupling was the remaining work).
 
@@ -442,6 +443,109 @@ Sample-app theme rendering visually verified by the user on 2026-05-17.
 - **No public-API removals from umbrella.** All previously-public umbrella surface compiles unchanged.
 - **Build-graph slot.** With 7 deps spanning phase 0 (Common, Platform, DesignTokens) through phase 3.5 (SyntaxHighlighting), Layout sits at build-graph phase 4. Semantic label phase 7 (presentation) kept per §4.1.
 
+**Deviations during §6.2.12a `Core/` prep (commits `d129070`, `7f498a8`, `f3b89fc`, `280b82e`):**
+
+- **Spec / plan / execution count drift: 16 → 10 → 9.** Spec at `docs/superpowers/specs/2026-05-18-codeeditor-core-prep-design.md` estimated 16 Move-eligible files. Plan-time deeper screening cut to 10 by reclassifying 6 as Keep (both Documents files load-bearing `Language` from CodeEditorLanguages; 3 Text files importing downstream Diagnostics/SyntaxHighlighting; PlatformConfigurations cycling with Configuration via Diagnostics). Execution-time deeper audit cut to 9 by reclassifying `PlatformCapabilities+RecommendedConfiguration.swift` as Keep — it calls `PlatformConfigurations.recommended()`, so moving it to Configuration would force an umbrella import. Joins the spec / §4.1 dep-claim correction pattern: each layer of audit catches blockers the previous layer missed.
+- **All Platform Move candidates targeted Configuration, not Platform.** Spec hedged "Platform or Configuration"; reality is 3 of 3 → Configuration. Each imports CodeEditorConfiguration, and Platform is upstream of Configuration, so the files cannot live in Platform without inverting dep direction.
+- **`Core/Configuration/EditorConfiguration+CodeFolding.swift` stayed in umbrella (pre-execution Keep).** Self-review during spec authoring reclassified it Keep — its single function returns `CodeFoldingConfiguration` which §6.2.8a kept in umbrella; moving the bridge would invert Configuration → umbrella dep direction. Recorded as the §6.2.8a "consumers stay where the type stays" pattern.
+- **`TextLayoutFragment` required `internal → package` promotion (4 lines).** The class + designated init + `required init?(coder:)` + `override draw(at:in:)` were all default-internal. Smallest promotion surface in the carve-out series after §6.2.8b Symbols (~7) and §6.2.11 Layout (10). Other 3 Text moves needed zero promotions (ParagraphStyleCache was public; TemporaryAttributesStore + BackgroundProcessor were package).
+- **Productization unchanged.** No new `.library` products. Existing products keep their visibility through the umbrella as before. Consumers doing `import CodeEditorPlugin` see no API removal.
+- **Consumer ripple counts** (per commit `git log -1 --stat`):
+  - **Task 2 Platform→Configuration (`d129070`):** 1 umbrella file (`Core/CodeEditorView+TextInputFeatureTarget.swift`) gained `import CodeEditorConfiguration`. Zero test ripples.
+  - **Task 3 Text→TextModel (`7f498a8`):** 2 umbrella files gained `import CodeEditorTextModel` (`Core/CodeEditorDependencies.swift`, `Core/EditorRuntime.swift`). 2 test files gained `import CodeEditorTextModel` (`CodeEditorDependencyOverrideTests`, `ParagraphStyleCacheTests`). 1 test file path-string updated (`ReviewRemediationRegressionTests` — pre-existing stale-path collateral repair per §6.2.8e precedent).
+  - **Task 5 EditorConfiguration+ApplyTextInputFeatures (`f3b89fc`):** zero new imports — the single umbrella consumer (`Core/CodeEditorView+Configuration.swift`) already imported CodeEditorConfiguration.
+  - **Task 6 BreadcrumbComponent (`280b82e`):** 5 files gained `import CodeEditorSymbols` (`Core/EditorState.swift`, `Sources/CodeEditorUI/Breadcrumb/EditorBreadcrumbView.swift`, `EditorStateConformanceTests`, `EditorStateTests`, `EditorBreadcrumbSnapshots`). `CodeEditorUI` target + `CodeEditorUITests` target both gained `CodeEditorSymbols` as direct deps in Package.swift.
+- **No public-API removals from umbrella.** All previously-public umbrella surface compiles unchanged.
+- **No new test targets.** Per-target test split remains deferred to §6.2.15. All test consumers continue to live in `CodeEditorPluginTests` / `CodeEditorUITests` with new imports added alongside their existing `@testable import CodeEditorPlugin` (kept defensively per the §6.2.8d "don't blanket-drop @testable" lesson).
+- **Net Core/ file count drop:** 138 → 129 (-9, -6.5%). Umbrella total: 232 → 223 (-3.9%).
+
+**§6.2.12a F3 sub-bucket audit table.**
+
+| File | Current location | Disposition | Target (if Move) | Rationale |
+|---|---|---|---|---|
+| `AnnotationsDataSource.swift` | `Core/Annotations/` | Keep | — | Protocol requirement takes `CodeEditorView` (§6.2.8e) |
+| `EditorConfiguration+CodeFolding.swift` | `Core/Configuration/` | Keep | — | Returns `CodeFoldingConfiguration` (umbrella-resident §6.2.8a) — move would invert dep direction |
+| `EditorDocument.swift` | `Core/Documents/` | Keep | — | Stores `Language?` (CodeEditorLanguages — downstream of TextModel) |
+| `EditorDocuments.swift` | `Core/Documents/` | Keep | — | Accepts `Language` parameter (CodeEditorLanguages — downstream of TextModel) |
+| `CodeFoldingConfiguration.swift` | `Core/Folding/` | Keep | — | Three consumers all umbrella-resident (§6.2.8a) |
+| `CodeFoldingEngine.swift` | `Core/Folding/` | Keep | — | `CodeEditorView`-coupled (§6.2.8a) |
+| `FoldingOperationsService.swift` | `Core/Folding/` | Keep | — | `CodeEditorView`-coupled (§6.2.8a) |
+| `FoldPresentationStrategy.swift` | `Core/Folding/` | Keep | — | `CodeEditorView`-coupled (§6.2.8a) |
+| `LSPContentCoordinator.swift` | `Core/LSP/` | Keep | — | Stores `CodeEditorView?` (§6.2.9) |
+| `LSPSemanticTokenProvider.swift` | `Core/LSP/` | Keep | — | Stores `CodeEditorView?` (§6.2.9) |
+| `ContextMenuAction.swift` | `Core/Platform/` | Keep | — | 1 `CodeEditorView` ref |
+| `ContextMenuBuilder.swift` | `Core/Platform/` | Keep | — | 1 `CodeEditorView` ref |
+| `ContextMenuCoordinator.swift` | `Core/Platform/` | Keep | — | 31 `CodeEditorView` refs |
+| `CrossPlatformCoordinator.swift` | `Core/Platform/` | Keep | — | 9 `CodeEditorView` refs |
+| `CrossPlatformCoordinator+AppKitExtensions.swift` | `Core/Platform/` | Keep | — | 9 `CodeEditorView` refs |
+| `CrossPlatformCoordinator+UIKitExtensions.swift` | `Core/Platform/` | Keep | — | 11 `CodeEditorView` refs |
+| `DeviceType+RecommendedConfiguration.swift` | `Core/Platform/` → `CodeEditorConfiguration/` | Move (zero-touch) | `CodeEditorConfiguration` | Moved in `d129070` |
+| `InputCoordinator.swift` | `Core/Platform/` | Keep | — | 20 `CodeEditorView` refs |
+| `PlatformAdjustments+Extensions.swift` | `Core/Platform/` → `CodeEditorConfiguration/` | Move (zero-touch) | `CodeEditorConfiguration` | Moved in `d129070` |
+| `PlatformCapabilities+RecommendedConfiguration.swift` | `Core/Platform/` | Keep | — | Calls `PlatformConfigurations.recommended()` (umbrella-resident); §6.2.8a "consumers stay where the type stays" |
+| `PlatformConfigurations.swift` | `Core/Platform/` | Keep | — | Imports CodeEditorDiagnostics → cycles with Configuration if moved |
+| `TextInputFeatures.swift` | `Core/Platform/` → `CodeEditorConfiguration/` | Move (zero-touch) | `CodeEditorConfiguration` | Moved in `d129070` |
+| `ToolbarCoordinator.swift` | `Core/Platform/` | Keep | — | 2 `CodeEditorView` refs (`ToolbarItem` typealias bridge, §6.2.6) |
+| `UnifiedDrawingCoordinator.swift` | `Core/Platform/` | Keep | — | 1 `CodeEditorView` ref |
+| `SearchReplaceEngine.swift` | `Core/Search/` | Keep | — | Heavy `CodeEditorView` coupling (§6.2.8d) |
+| `SymbolNavigator.swift` | `Core/Symbols/` | Keep | — | 5 `CodeEditorView` member accesses (§6.2.8b) |
+| `AsyncSyntaxHighlighter.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `HighlightProviderState.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `RangeAttributeApplier.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `RangeBasedHighlightingController.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `RangeHighlightProviding.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `RegexQuery/RegexRangeHighlightProvider.swift` | `Core/SyntaxHighlighting/RegexQuery/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `StreamingHighlighter.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `SyntaxHighlighterRangeAdapter.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `VisibleRangeProvider.swift` | `Core/SyntaxHighlighting/` | Keep | — | `CodeEditorView`-coupled (§6.2.7) |
+| `BackgroundProcessor.swift` | `Core/Text/` → `CodeEditorTextModel/` | Move (zero-touch) | `CodeEditorTextModel` | Moved in `7f498a8` |
+| `LineGeometryEditHandler.swift` | `Core/Text/` | Keep | — | 2 `CodeEditorView` refs |
+| `ModernTextKitHelper.swift` | `Core/Text/` | Keep | — | Imports CodeEditorSyntaxHighlighting (downstream of TextModel) |
+| `ParagraphStyleCache.swift` | `Core/Text/` → `CodeEditorTextModel/` | Move (zero-touch) | `CodeEditorTextModel` | Moved in `7f498a8` |
+| `TemporaryAttributesStore.swift` | `Core/Text/` → `CodeEditorTextModel/` | Move (zero-touch) | `CodeEditorTextModel` | Moved in `7f498a8` |
+| `TextEditEventHub.swift` | `Core/Text/` | Keep | — | 1 `CodeEditorView` ref |
+| `TextKit2PerformanceHelper.swift` | `Core/Text/` | Keep | — | Imports CodeEditorDiagnostics (downstream of TextModel) |
+| `TextKit2RenderingOptimizer.swift` | `Core/Text/` | Keep | — | Imports CodeEditorDiagnostics + CodeEditorSyntaxHighlighting (both downstream of TextModel) |
+| `TextKitBridge.swift` | `Core/Text/` | Keep | — | 1 `CodeEditorView` ref |
+| `TextKitLineNumberHelper.swift` | `Core/Text/` | Keep | — | 3 `CodeEditorView` refs |
+| `TextLayoutFragment.swift` | `Core/Text/` → `CodeEditorTextModel/` | Move (cheap-break — package-promotion of class + 3 members) | `CodeEditorTextModel` | Moved in `7f498a8` |
+
+**Summary:** 46 F3 sub-bucket files; 7 Move; 39 Keep.
+
+**§6.2.12a root-file triage table.**
+
+| File | Disposition | Target (if Move) / §6.2.12 home (if Defer) | Rationale |
+|---|---|---|---|
+| `CodeEditorView.swift` | Bucket 1 (Stay) | editor-surface | The umbrella class |
+| `CodeEditorView+AccessibilityExtensions.swift` ... `CodeEditorView+TrackPerformance.swift` (24 slices) | Bucket 1 (Stay) | editor-surface | Partial-file extensions of CodeEditorView |
+| `CodeEditorViewDelegate.swift`, `CodeEditorViewDelegateProxy.swift`, `CodeEditorViewProtocol.swift` | Bucket 1 (Stay) | editor-surface | CodeEditorView companions |
+| `UnifiedTextView+Extensions.swift` | Bucket 1 (Stay) | editor-surface | Extends UnifiedTextView (umbrella) |
+| `EditorConfiguration+ApplyTextInputFeatures.swift` | Bucket 2: Move (zero-touch) | `CodeEditorConfiguration/` | Moved in `f3b89fc` |
+| `BreadcrumbComponent.swift` | Bucket 2: Move (zero-touch) | `CodeEditorSymbols/` | Moved in `280b82e` |
+| `ActorCoordinator.swift` | Bucket 3 (Defer) | editor-surface (Actors cluster) | §6.2.12 disposition |
+| `AsyncOperationErrors.swift` | Bucket 3 (Defer) | editor-surface | Residual after §6.2.7 SH split |
+| `CodeEditorAPI.swift` | Bucket 3 (Defer) | editor-surface | Public façade |
+| `CodeEditorDependencies.swift` | Bucket 3 (Defer) | editor-surface | Dependency keys |
+| `CodeEditorRenderingDiagnostics.swift` | Bucket 3 (Defer) | editor-surface | Rendering instrumentation |
+| `CodeFoldingCoordinatorService.swift` | Bucket 3 (Defer) | editor-surface | Orchestrates Core/Folding/ |
+| `DirtyTracker.swift` | Bucket 3 (Defer) | editor-surface | Consumed during typing |
+| `EditorEvent.swift`, `EditorEventHandler.swift`, `EditorEventPublisher.swift`, `EditorEventTypes.swift` | Bucket 3 (Defer) | editor-surface (event-system cluster) | Possible sub-target candidate |
+| `EditorInteractionState.swift`, `EditorState.swift`, `EditorStateBridge.swift`, `SelectionState.swift` | Bucket 3 (Defer) | editor-surface (state cluster) | §6.2.12 disposition |
+| `EditorLayoutService.swift` | Bucket 3 (Defer) | editor-surface | §6.2.11 reclassification anchor |
+| `EditorRuntime.swift` | Bucket 3 (Defer) | editor-surface | Top-level orchestrator |
+| `GutterSizingService.swift`, `LineNumberCalculationService.swift` | Bucket 3 (Defer) | editor-surface | §6.2.11 reclassification anchor |
+| `IOSLargeFileOptimizer.swift` | Bucket 3 (Defer) | editor-surface | 3 `CodeEditorView` casts (§6.2.10) |
+| `LanguageDetectionService.swift` | Bucket 3 (Defer) | editor-surface — flag for §6.2.12 re-audit (possible move to CodeEditorLanguages) | |
+| `MemoryManagementCoordinator.swift` | Bucket 3 (Defer) | editor-surface | Creates LSPManager, public API |
+| `SendableTypes.swift` | Bucket 3 (Defer) | editor-surface — flag for §6.2.12 re-audit (possible move to Common) | |
+| `SyntaxHighlightingService.swift` | Bucket 3 (Defer) | editor-surface | Orchestrates Core/SyntaxHighlighting/ |
+| `TabModel.swift` | Bucket 3 (Defer) | editor-surface — flag for §6.2.12 re-audit (possible application-layer move) | |
+| `TextEditingService.swift`, `TextKitSetupHelper.swift`, `TextSystem.swift`, `TextSystemStyler.swift`, `ThreePhaseTextSystemStyler.swift`, `TokenSystemValidator.swift` | Bucket 3 (Defer) | editor-surface (TextKit2 orchestration) | F3'd from Core/Text/ per §6.2.3 |
+| `TextViewDelegateMultiplexer.swift`, `TextViewDelegateParticipant.swift` | Bucket 3 (Defer) | editor-surface | CodeEditorView delegate companions |
+| `UnifiedEventSystem.swift` | Bucket 3 (Defer) | editor-surface (event-system cluster) | §6.2.12 disposition |
+
+**Summary:** 65 root files audited at §6.2.12a start (plan-time inventory under-counted by 1; the actual root count is 65, not the spec's 64); 2 moved (`EditorConfiguration+ApplyTextInputFeatures`, `BreadcrumbComponent`); 63 remain. Of the 63: 29 Bucket 1 Stay; 34 Bucket 3 Defer to §6.2.12.
+
 ### 6.1 Pre-work (do before any target split)
 
 1. **Move docs that reference dead symbols out of authority.** `CLAUDE.md` already calls out `PluginManager`, `PluginAPI`, etc. as non-existent. Confirm nothing in `docs/` (non-archive) still describes a plugin system; if it does, archive it. Otherwise the layered diagram will inherit stale prose.
@@ -470,7 +574,7 @@ Do these in order; each one should leave `swift build && swift test` green.
 9. **[done — carve-out, see §6.0]** **Extract `CodeEditorLSP`** (§6.2.9) — 22 of 24 LSP files moved to `Sources/CodeEditorLSP/` (18 top-level + 4 `Transport/`). 2 `CodeEditorView`-coupled files (`LSPSemanticTokenProvider`, `LSPContentCoordinator`) relocated to umbrella `Core/LSP/`. Productized as opt-in `.library`; umbrella DOES depend on it (matches §6.2.10 Diagnostics precedent). Final deps: `Common, Completion, Diagnostics, Languages, Platform, TextModel`. (`d50fc04` + pre-commit `8f73b99`)
 10. **Extract `CodeEditorDiagnostics`** — move `Performance/`. Make it a separate product so consumers can omit it from release builds.
 11. **[done — carve-out, see §6.0]** **Extract `CodeEditorLayout`** (§6.2.11) — moved 22 files to `Sources/CodeEditorLayout/` (20 originals from `Layout/` + 1 split-out `ThemeableUIComponent+LayoutConformances.swift` + 1 extracted `EditorLayoutTypes.swift`). 21 files stayed in umbrella `Core/Layout/` (19 originals from pre-commit + 1 split-out umbrella half + `ComponentFrameCalculator` re-classified mid-execution). Productized as `.library`; umbrella DOES depend on it. Cross-target relocations: `SourcePosition` → `CodeEditorCommon`, `EditorConfiguration: Hashable` → `CodeEditorConfiguration`. Final deps: `Annotations, Common, Configuration, DesignTokens, Platform, SyntaxHighlighting, Theming`. (`3a2aba83` + pre-relocation `1f1e9322`)
-12. **Split `Core/`** — the `Actors/` subdirectory, `ActorCoordinator`, `CodeEditorAPI`, `CodeEditorDependencies`, `CodeEditorError`, `CodeEditorViewProtocol`, and the orchestration services move into the new editor-surface target (`CodeEditorView` or `CodeEditorCore`). The `CodeEditorView+*Extensions.swift` slices stay with their owning type. `Info.plist` stays as the target's resource exclude.
+12. **Split `Core/`** — (preceded by §6.2.12a prep: 9 files moved out, audit tables recorded; Core/ shrunk 138 → 129.) The `Actors/` subdirectory, `ActorCoordinator`, `CodeEditorAPI`, `CodeEditorDependencies`, `CodeEditorError`, `CodeEditorViewProtocol`, and the orchestration services move into the new editor-surface target (`CodeEditorView` or `CodeEditorCore`). The `CodeEditorView+*Extensions.swift` slices stay with their owning type. `Info.plist` stays as the target's resource exclude.
 13. **Extract `CodeEditorSwiftUI`** — move `SwiftUI/`. Depends on the editor-surface target.
 14. **Re-define the umbrella `CodeEditorPlugin` target** — strip its sources to a single `CodeEditorPlugin.swift` that `@_exported import`s the everyday public surface. All `.product(name: "CodeEditorPlugin", …)` references in `CodeEditorUI`, `CodeEditorSample`, and external consumers keep working.
 15. **Add `CodeEditorTestSupport`** — extract `Tests/CodeEditorPluginTests/Support/*` (or equivalent shared fixtures) into a library target. Update test targets to depend on it. Mirrors MusicToolkit's pattern.
@@ -519,10 +623,10 @@ That mirrors MusicToolkit's surface where `Playback`, `PlaybackAVFAudio`, `Rende
 
 ## 10. Suggested next session
 
-Steps 6.2.1 → 6.2.7, 6.2.8a, 6.2.8b, 6.2.8d, 6.2.8e, 6.2.8f, 6.2.8g, 6.2.9, 6.2.10, and 6.2.11 are done (see §6.0). Remaining work:
+Steps 6.2.1 → 6.2.7, 6.2.8a, 6.2.8b, 6.2.8d, 6.2.8e, 6.2.8f, 6.2.8g, 6.2.9, 6.2.10, 6.2.11, and §6.2.12a (prep) are done (see §6.0). Remaining work:
 
 - **6.2.8 feature engines complete (modulo deferrals).** `Folding` (§6.2.8a), `Symbols` (§6.2.8b), `Search` (§6.2.8d), `Annotations` (§6.2.8e), `Workspace` (§6.2.8f), `Completion` (§6.2.8g) all extracted. `SmartEditing` is **deferred** (§6.2.8c — blocked on §6.2.12 Core split because all 5 SmartEditing files take `CodeEditorView` as a parameter on every public entry point). `Features/Debugger*` was deleted in §6.2.9a (2026-05-18) — never extracted; see deviations block.
-- **6.2.12 split `Core/`** — the riskiest single step. Dedicated half-day. Don't combine with anything else. The `Core/` dir has grown during phases 0–4 — `Core/Annotations/`, `Core/Configuration/`, `Core/Documents/`, `Core/Folding/`, `Core/Layout/`, `Core/LSP/`, `Core/Platform/`, `Core/Search/`, `Core/Symbols/`, `Core/SyntaxHighlighting/`, `Core/Text/` subdirs were created as F3 catch-alls. Re-evaluate which semantic homes survive into the eventual `CodeEditorView` target vs. spill into other feature targets.
+- **6.2.12 split `Core/`** — the riskiest single step. Dedicated half-day. Don't combine with anything else. The `Core/` dir is 129 files post-§6.2.12a (down from 138). The §6.2.12a audit table records bucket-1 / bucket-2 / bucket-3 classifications for the 63 top-level Core/ root files: 29 stay (CodeEditorView + 24 +Extensions + 3 delegate/protocol + UnifiedTextView+Extensions), 0 root-bucket-2 candidates remaining (both shipped in §6.2.12a), 34 standalone-service files awaiting §6.2.12 disposition. F3 sub-buckets still present: `Core/Annotations/` (1 — AnnotationsDataSource Keep), `Core/Configuration/` (1 — EditorConfiguration+CodeFolding Keep), `Core/Documents/` (2 — Keep), `Core/Folding/` (4 — Keep), `Core/LSP/` (2 — Keep), `Core/Platform/` (11 — 9 View-coupled Keep + PlatformConfigurations + PlatformCapabilities+RecommendedConfiguration Keep), `Core/Search/` (1 — Keep), `Core/Symbols/` (1 — Keep), `Core/SyntaxHighlighting/` (9 — Keep), `Core/Text/` (7 — 4 View-coupled + 3 downstream-dep Keep). `Core/Layout/` (21) and `Core/Actors/` (6) are §6.2.11/§6.2.12 stay-sets. Re-evaluate which semantic homes survive into the eventual `CodeEditorView` target vs. spill into other feature targets. The §6.2.12a audit-table bucket-3 list (`LanguageDetectionService`, `SendableTypes`, `TabModel` flagged for re-audit) is the priority worklist for the main split.
 - **6.2.13 `CodeEditorSwiftUI`** — `SwiftUI/`. Straightforward after 6.2.12.
 - **6.2.14 umbrella re-export** — strip `CodeEditorPlugin` to a single `CodeEditorPlugin.swift` that `@_exported import`s the everyday public surface.
 - **6.2.15 `CodeEditorTestSupport`** — extract shared fixtures.
