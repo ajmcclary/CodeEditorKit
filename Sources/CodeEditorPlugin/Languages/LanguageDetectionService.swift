@@ -1,5 +1,4 @@
 import CodeEditorCommon
-import CodeEditorLanguages
 import Foundation
 
 // MARK: - LanguageDetectionService
