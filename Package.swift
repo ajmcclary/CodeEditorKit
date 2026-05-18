@@ -82,6 +82,10 @@ let package = Package(
             targets: ["CodeEditorUI"]
         ),
         .library(
+            name: "CodeEditorView",
+            targets: ["CodeEditorView"]
+        ),
+        .library(
             name: "CodeEditorWorkspace",
             targets: ["CodeEditorWorkspace"]
         ),
@@ -99,7 +103,7 @@ let package = Package(
         // lands in a tagged release.
         .package(url: "https://github.com/ajmcclary/swift-snapshot-testing", branch: "fix-swift-6.3-attachable"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.0"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0")
     ],
     targets: [
         .target(
@@ -243,6 +247,29 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorView",
+            dependencies: [
+                "CodeEditorAnnotations",
+                "CodeEditorCommon",
+                "CodeEditorCompletion",
+                "CodeEditorConfiguration",
+                "CodeEditorDesignTokens",
+                "CodeEditorDiagnostics",
+                "CodeEditorFolding",
+                "CodeEditorLSP",
+                "CodeEditorLanguages",
+                "CodeEditorLayout",
+                "CodeEditorPlatform",
+                "CodeEditorSymbols",
+                "CodeEditorSyntaxHighlighting",
+                "CodeEditorTextModel",
+                "CodeEditorTheming",
+                .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorWorkspace",
             swiftSettings: swiftSettings
         ),
@@ -264,6 +291,7 @@ let package = Package(
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
+                "CodeEditorView",
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
             ],
