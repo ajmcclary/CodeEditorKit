@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorLSP
 import CodeEditorTextModel
 import Foundation
 

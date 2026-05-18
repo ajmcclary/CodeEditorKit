@@ -62,6 +62,10 @@ let package = Package(
             targets: ["CodeEditorDiagnostics"]
         ),
         .library(
+            name: "CodeEditorLSP",
+            targets: ["CodeEditorLSP"]
+        ),
+        .library(
             name: "CodeEditorPlugin",
             targets: ["CodeEditorPlugin"]
         ),
@@ -198,6 +202,18 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorLSP",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorCompletion",
+                "CodeEditorDiagnostics",
+                "CodeEditorLanguages",
+                "CodeEditorPlatform",
+                "CodeEditorTextModel"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorSearch",
             swiftSettings: swiftSettings
         ),
@@ -223,6 +239,7 @@ let package = Package(
                 "CodeEditorDesignTokens",
                 "CodeEditorDiagnostics",
                 "CodeEditorFolding",
+                "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorSymbols",
@@ -257,6 +274,7 @@ let package = Package(
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
                 "CodeEditorDiagnostics",
+                "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
@@ -283,6 +301,7 @@ let package = Package(
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
                 "CodeEditorFolding",
+                "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
@@ -334,6 +353,7 @@ let package = Package(
                 "CodeEditorCompletion",
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
+                "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorSample",

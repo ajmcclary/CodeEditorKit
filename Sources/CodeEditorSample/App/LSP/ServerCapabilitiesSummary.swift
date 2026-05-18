@@ -1,3 +1,4 @@
+import CodeEditorLSP
 import CodeEditorPlugin
 
 /// Human-readable digest of the LSP server's advertised capabilities.

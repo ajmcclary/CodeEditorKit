@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import AppKit
 import CodeEditorAnnotations
+import CodeEditorLSP
 import CodeEditorPlugin
 import Combine
 

@@ -3,6 +3,7 @@ import CodeEditorCompletion
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+import CodeEditorLSP
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
 import CodeEditorTextModel

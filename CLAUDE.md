@@ -51,19 +51,18 @@ Tree-sitter work is internal scaffolding only. There is no public configuration 
 
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Main APIs, services, event system (includes F3 sub-buckets: Annotations/, Configuration/, Documents/, Folding/, Platform/, Search/, Symbols/, SyntaxHighlighting/, Text/ — umbrella-coupled glue staged here pending §6.2.12 Core split)
+├── Core/                    # Main APIs, services, event system (includes F3 sub-buckets: Annotations/, Configuration/, Documents/, Folding/, LSP/, Platform/, Search/, Symbols/, SyntaxHighlighting/, Text/ — umbrella-coupled glue staged here pending §6.2.12 Core split)
 ├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
-├── LSP/                     # Language Server Protocol support
 ├── Languages/               # Language descriptors + folding/symbol/completion-model interfaces (compiled as CodeEditorLanguages target via `path:`)
 ├── Layout/                  # UI components + co-located ViewModels
 └── SwiftUI/                 # SwiftUI wrappers and modifiers
 ```
 
-Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`, `Workspace/`, `Search/`, `Annotations/`, `Completion/`) have been carved out into sibling SPM targets — see "Other source roots" below.
+Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`, `Workspace/`, `Search/`, `Annotations/`, `Completion/`, `LSP/`) have been carved out into sibling SPM targets — see "Other source roots" below.
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-6 top-level directories in the umbrella target, 282 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f / §6.2.8g), and 593 Swift source files under `Sources/`.
+5 top-level directories in the umbrella target, 253 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f / §6.2.8g / §6.2.9), and 586 Swift source files under `Sources/`.
 
 Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7).
@@ -82,6 +81,7 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
 - `Sources/CodeEditorWorkspace/` — workspace file-tree protocols + macOS `MacOSWorkspaceFileManager` adapter (phase 4; new in §6.2.8f). Productized as an opt-in `.library` per NEXT.md §6.3; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; AppKit-conditional manager. iOS adapter is a future session.
 - `Sources/CodeEditorCompletion/` — completion subsystem: `CompletionManager`, ranking model, fuzzy matcher, built-in providers, view controllers + adapter, event broadcaster, SwiftUI bridge types (phase 4; new in §6.2.8g). 20 files. Not productized — umbrella consumes Completion types from ~17 files (Core/CodeEditorView extensions + delegates + EditorEvent + UnifiedEventSystem, LSP, SwiftUI slice, Core/Symbols/SymbolNavigator), so the new target routes through the umbrella per Folding/Symbols/SH/Annotations precedent.
+- `Sources/CodeEditorLSP/` — Language Server Protocol subsystem: `LSPClient`, `LSPManager`, transport (process + WebSocket with cert pinning), document/path/process/connection managers, message handler, wire types, completion + semantic-token storage, retry config (phase 5; new in §6.2.9). 22 files (18 top-level + 4 in `Transport/`). Productized as opt-in `.library` per NEXT.md §6.3; the umbrella `CodeEditorPlugin` depends on it (matches §6.2.10 Diagnostics precedent — productized + umbrella-coupled, not §6.2.8d Search-style umbrella-decoupled opt-out). The two `CodeEditorView`-coupled files (`LSPSemanticTokenProvider`, `LSPContentCoordinator`) stay in umbrella at `Sources/CodeEditorPlugin/Core/LSP/`.
 - `Sources/CodeEditorSample/` — executable demo app target.
 - `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; it is not currently an SPM target.
 

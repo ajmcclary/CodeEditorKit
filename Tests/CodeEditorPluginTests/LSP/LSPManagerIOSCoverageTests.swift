@@ -1,4 +1,5 @@
 import CodeEditorDiagnostics
+import CodeEditorLSP
 #if !canImport(AppKit)
 @testable import CodeEditorPlugin
 import Foundation

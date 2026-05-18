@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorCompletion
 import CodeEditorDiagnostics
+import CodeEditorLSP
 import CodeEditorPlatform
 import Foundation
 #if canImport(UIKit)

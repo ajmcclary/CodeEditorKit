@@ -1,4 +1,5 @@
 import CodeEditorDiagnostics
+import CodeEditorLSP
 import CodeEditorPlatform
 import Foundation
 

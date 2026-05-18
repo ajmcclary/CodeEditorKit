@@ -19,30 +19,32 @@ import Foundation
 /// reads from `RangeHighlightProviding.queryHighlights` are also on
 /// `@MainActor` so no lock is needed.
 @MainActor
-final class LSPSemanticTokenStorage {
+package final class LSPSemanticTokenStorage {
     // MARK: - Decoded token
 
-    struct DecodedToken: Sendable {
-        let line: Int          // 0-based absolute line
-        let startChar: Int     // 0-based UTF-16 character on that line
-        let length: Int        // UTF-16 code units
-        let tokenType: Int     // index into legend
-        let tokenModifiers: Int // bitmask
+    package struct DecodedToken: Sendable {
+        package let line: Int          // 0-based absolute line
+        package let startChar: Int     // 0-based UTF-16 character on that line
+        package let length: Int        // UTF-16 code units
+        package let tokenType: Int     // index into legend
+        package let tokenModifiers: Int // bitmask
     }
 
     // MARK: - Stored state
 
     private var data: [UInt32] = []
-    private(set) var legend: SemanticTokensLegend?
-    private(set) var resultId: String?
+    package private(set) var legend: SemanticTokensLegend?
+    package private(set) var resultId: String?
 
     // MARK: - Initial state
 
-    var isEmpty: Bool { data.isEmpty }
+    package init() {}
+
+    package var isEmpty: Bool { data.isEmpty }
 
     // MARK: - Full update
 
-    func applyFull(_ tokens: SemanticTokens) {
+    package func applyFull(_ tokens: SemanticTokens) {
         data = tokens.data
         resultId = tokens.resultId
     }
@@ -51,7 +53,7 @@ final class LSPSemanticTokenStorage {
 
     /// Applies a `SemanticTokensDelta`, processing edits in reverse order
     /// so that earlier edits remain at their correct indices.
-    func applyDelta(_ delta: SemanticTokensDelta) {
+    package func applyDelta(_ delta: SemanticTokensDelta) {
         resultId = delta.resultId
 
         for edit in delta.edits.reversed() {
@@ -73,7 +75,7 @@ final class LSPSemanticTokenStorage {
 
     /// Decodes tokens intersecting the given line range into absolute
     /// `DecodedToken` values.
-    func tokens(in lineRange: ClosedRange<Int>) -> [DecodedToken] {
+    package func tokens(in lineRange: ClosedRange<Int>) -> [DecodedToken] {
         guard !data.isEmpty else { return [] }
 
         var result: [DecodedToken] = []
@@ -118,7 +120,7 @@ final class LSPSemanticTokenStorage {
 
     /// Returns an `IndexSet` of character indices invalidated after
     /// applying a delta, based on the edit boundaries.
-    func invalidatedIndices(for delta: SemanticTokensDelta, documentLength: Int) -> IndexSet {
+    package func invalidatedIndices(for delta: SemanticTokensDelta, documentLength: Int) -> IndexSet {
         var indices = IndexSet()
         for edit in delta.edits {
             let start = Int(edit.start)
@@ -132,7 +134,7 @@ final class LSPSemanticTokenStorage {
 
     // MARK: - Reset
 
-    func reset() {
+    package func reset() {
         data.removeAll()
         resultId = nil
     }

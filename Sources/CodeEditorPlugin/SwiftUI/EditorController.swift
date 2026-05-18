@@ -1,6 +1,7 @@
 import CodeEditorAnnotations
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+import CodeEditorLSP
 import CodeEditorPlatform
 #if canImport(SwiftUI)
 import CodeEditorTextModel

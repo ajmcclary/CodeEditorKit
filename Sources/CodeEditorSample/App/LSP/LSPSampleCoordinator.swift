@@ -2,6 +2,7 @@
 import CodeEditorCommon
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+import CodeEditorLSP
 import CodeEditorPlugin
 import Combine
 import Foundation

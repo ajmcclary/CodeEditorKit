@@ -1,4 +1,5 @@
 import CodeEditorDiagnostics
+import CodeEditorLSP
 #if canImport(AppKit)
 // LSP tests are only available on macOS
 

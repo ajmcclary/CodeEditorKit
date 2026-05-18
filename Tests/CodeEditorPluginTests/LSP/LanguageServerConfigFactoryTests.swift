@@ -1,3 +1,4 @@
+@testable import CodeEditorLSP
 @testable import CodeEditorPlugin
 import Foundation
 import Testing
