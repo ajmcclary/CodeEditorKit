@@ -1,4 +1,5 @@
 import CodeEditorPlatform
+import CodeEditorView
 import SwiftUI
 
 #if canImport(AppKit)

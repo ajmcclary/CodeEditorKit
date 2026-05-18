@@ -1,4 +1,5 @@
 import CodeEditorPlatform
+import CodeEditorView
 import Foundation
 
 // MARK: - Auto Bracketing Engine

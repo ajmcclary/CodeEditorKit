@@ -1,6 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import XCTest
 
 @MainActor

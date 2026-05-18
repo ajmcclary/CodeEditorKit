@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+@testable import CodeEditorView
 import Foundation
 
 /// Test stand-in for the `xcrun --find sourcekit-lsp` lookup that

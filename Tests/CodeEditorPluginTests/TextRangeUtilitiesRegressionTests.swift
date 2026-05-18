@@ -3,6 +3,7 @@ import AppKit
 import CodeEditorCommon
 import CodeEditorTextModel
 #else
+@testable import CodeEditorView
 import Foundation
 #endif
 @testable import CodeEditorPlugin

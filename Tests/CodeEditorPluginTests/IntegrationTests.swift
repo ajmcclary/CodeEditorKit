@@ -2,6 +2,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 #if canImport(UIKit)
 import UIKit

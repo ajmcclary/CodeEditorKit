@@ -3,6 +3,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
+@testable import CodeEditorView
 import XCTest
 
 /// Fixed performance benchmark tests that avoid hanging issues

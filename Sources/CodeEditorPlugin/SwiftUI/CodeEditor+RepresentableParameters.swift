@@ -1,3 +1,4 @@
+import CodeEditorView
 import SwiftUI
 
 #if canImport(AppKit)

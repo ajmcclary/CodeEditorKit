@@ -7,6 +7,7 @@ import CodeEditorTextModel
 import UIKit
 #endif
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 // MARK: - CodeEditorViewTests

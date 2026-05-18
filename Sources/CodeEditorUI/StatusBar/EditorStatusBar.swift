@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorView
 import SwiftUI
 
 /// Bottom status bar — language indicator on the left, selection +

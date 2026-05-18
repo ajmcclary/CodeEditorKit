@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import SwiftUI
 import XCTest
 

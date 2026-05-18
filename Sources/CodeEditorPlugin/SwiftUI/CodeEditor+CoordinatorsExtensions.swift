@@ -6,6 +6,7 @@ import CodeEditorLanguages
 import CodeEditorPlatform
 import CodeEditorTextModel
 import CodeEditorTheming
+import CodeEditorView
 import Foundation
 import SwiftUI
 #if canImport(AppKit)
@@ -18,7 +19,7 @@ import SwiftUI
 
 /// Base coordinator with shared logic for SwiftUI CodeEditor wrappers
 @MainActor
-open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
+open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoordinating {
     // MARK: - Shared Properties
 
     /// The current text content
@@ -160,7 +161,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
     /// Reset the dirty baseline to the view's current content. Called by
     /// `EditorController.markClean()` via `CodeEditorView.applyMarkClean()`.
-    func markClean(view: CodeEditorView) {
+    package func markClean(view: CodeEditorView) {
         let currentText = platformAdapter.text(from: view)
         dirtyTracker.markClean(currentText: currentText)
         if let hostEditorState, hostEditorState.isDirty != false {

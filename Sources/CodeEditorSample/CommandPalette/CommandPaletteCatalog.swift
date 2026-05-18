@@ -2,6 +2,7 @@ import CodeEditorAnnotations
 import CodeEditorLanguages
 import CodeEditorPlugin
 import CodeEditorUI
+import CodeEditorView
 import Foundation
 import SwiftUI
 

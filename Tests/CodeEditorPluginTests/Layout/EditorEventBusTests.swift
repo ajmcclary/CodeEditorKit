@@ -2,6 +2,7 @@
 import CodeEditorCommon
 @testable import CodeEditorLayout
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Combine
 import Testing
 

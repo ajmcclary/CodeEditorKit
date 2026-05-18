@@ -1,4 +1,5 @@
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Testing
 
 @Suite("GutterViewRenderer active line color")

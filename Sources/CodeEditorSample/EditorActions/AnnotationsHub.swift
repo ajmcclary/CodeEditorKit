@@ -2,6 +2,7 @@ import CodeEditorAnnotations
 import CodeEditorPlatform
 import CodeEditorPlugin
 import CodeEditorTextModel
+import CodeEditorView
 import Foundation
 #if canImport(AppKit)
 import AppKit

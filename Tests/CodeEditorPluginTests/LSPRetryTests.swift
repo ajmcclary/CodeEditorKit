@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 @testable import CodeEditorLSP
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 final class LSPRetryTests: XCTestCase {

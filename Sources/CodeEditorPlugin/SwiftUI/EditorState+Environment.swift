@@ -1,4 +1,5 @@
 #if canImport(SwiftUI)
+import CodeEditorView
 import SwiftUI
 
 /// SwiftUI environment key carrying a live `EditorState`.

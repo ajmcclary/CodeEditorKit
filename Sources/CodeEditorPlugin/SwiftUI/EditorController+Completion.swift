@@ -1,6 +1,7 @@
 #if canImport(AppKit) || canImport(UIKit)
 import CodeEditorCompletion
 import CodeEditorLanguages
+import CodeEditorView
 import Foundation
 
 @available(macOS 13.0, iOS 16.0, *)

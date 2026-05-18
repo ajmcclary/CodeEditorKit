@@ -6,6 +6,7 @@ import CodeEditorPlatform
 import CodeEditorSymbols
 @testable import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
+@testable import CodeEditorView
 import XCTest
 
 @MainActor

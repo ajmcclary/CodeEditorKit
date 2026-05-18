@@ -1,5 +1,6 @@
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 /// Isolated test to verify performance issue

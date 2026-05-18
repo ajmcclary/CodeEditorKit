@@ -1,3 +1,4 @@
+@testable import CodeEditorView
 import XCTest
 
 /// Extension to add timeout support for tests

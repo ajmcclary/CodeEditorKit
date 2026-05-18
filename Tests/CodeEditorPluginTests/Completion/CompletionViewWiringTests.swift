@@ -2,6 +2,7 @@ import CodeEditorCompletion
 import CodeEditorLanguages
 import CodeEditorPlatform
 #if canImport(AppKit) || canImport(UIKit)
+@testable import CodeEditorView
 import Foundation
 import XCTest
 

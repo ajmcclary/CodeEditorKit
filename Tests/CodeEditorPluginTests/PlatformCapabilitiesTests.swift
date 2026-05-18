@@ -8,6 +8,7 @@ import CodeEditorDiagnostics
 
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 final class PlatformCapabilitiesTests: XCTestCase {

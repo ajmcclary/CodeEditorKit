@@ -2,6 +2,7 @@
 import CodeEditorLSP
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import Foundation
 import Testing
 

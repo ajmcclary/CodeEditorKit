@@ -3,6 +3,7 @@ import CodeEditorCommon
 import CodeEditorDiagnostics
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import Testing
 
 @MainActor

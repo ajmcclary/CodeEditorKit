@@ -8,6 +8,7 @@ import CodeEditorCommon
 import UIKit
 #endif
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 final class ConfigurationIntegrationTests: XCTestCase {

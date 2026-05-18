@@ -4,6 +4,7 @@ import CodeEditorLSP
 // LSP tests are only available on macOS
 
 import CodeEditorLanguages
+@testable import CodeEditorView
 import XCTest
 
 @testable import CodeEditorPlugin

@@ -124,7 +124,7 @@ import AppKit
 /// }
 /// ```
 @objc @MainActor
-open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEditorAPI, CompletionViewControllerDelegate {
+open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEditorAPI, CompletionViewControllerDelegate, @unchecked Sendable {
     // MARK: - Static Properties
 
     /// Logger instance for CodeEditorView
@@ -171,7 +171,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     ///     `CodeEditorViewDelegateProxy`); `.behavior` for smart-editing
     ///     interception, scroll forwarding, and SwiftUI coordinator
     ///     state mirroring. Defaults to `.behavior`.
-    internal func addDelegateParticipant(
+    package func addDelegateParticipant(
         _ participant: any TextViewDelegateParticipant,
         phase: TextViewDelegatePhase = .behavior
     ) {
@@ -180,7 +180,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     /// Remove a participant from the delegate multiplexer. Idempotent —
     /// removing an unregistered participant is a no-op.
-    internal func removeDelegateParticipant(
+    package func removeDelegateParticipant(
         _ participant: any TextViewDelegateParticipant
     ) {
         delegateMultiplexer.removeParticipant(participant)
@@ -322,7 +322,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }()
 
     /// Adaptive performance mode manager
-    internal lazy var adaptivePerformanceMode = AdaptivePerformanceMode(memoryMonitor: memoryMonitor)
+    package lazy var adaptivePerformanceMode = AdaptivePerformanceMode(memoryMonitor: memoryMonitor)
 
     /// Incremental line geometry store — red-black tree of per-line UTF-16
     /// lengths, heights, and cumulative subtree metadata. Supports O(log n)
@@ -340,7 +340,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     ///
     /// See `Tests/CodeEditorPluginTests/Core/CodeEditorViewTextKit2InitTests.swift`
     /// for the load-bearing invariant.
-    internal lazy var textKitBridge = TextKitBridge(textView: self)
+    package lazy var textKitBridge = TextKitBridge(textView: self)
 
     /// Handler that keeps `lineGeometryStore` in sync with `NSTextStorage`
     /// after text edits. Registered with `textEditEventHub` during setup.
@@ -428,7 +428,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// during `CodeEditorBaseCoordinator.setupContainer` so host-facing
     /// controller methods (`EditorController.markClean()`) can route
     /// through the coordinator that owns the dirty tracker.
-    internal weak var coordinator: CodeEditorBaseCoordinator?
+    ///
+    /// Typed as `CodeEditorCoordinating` so this target doesn't depend on
+    /// the umbrella's SwiftUI slice (which would invert the build-graph
+    /// dep direction). The concrete `CodeEditorBaseCoordinator` conforms.
+    package weak var coordinator: CodeEditorCoordinating?
 
     /// Line highlight view
     internal var lineHighlightView: PlatformView?
@@ -471,7 +475,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Completion System
 
     /// Completion manager for handling multiple completion providers
-    internal lazy var completionManager = memoryCoordinator.createCompletionManager()
+    package lazy var completionManager = memoryCoordinator.createCompletionManager()
 
     /// Current completion view controller
     internal var completionViewController: (any CompletionViewControllerRepresentable)?

@@ -2,6 +2,7 @@
 import CodeEditorCommon
 import CodeEditorCompletion
 import CodeEditorLanguages
+import CodeEditorView
 import SwiftUI
 import UIKit
 

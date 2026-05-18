@@ -1,4 +1,5 @@
 import CodeEditorDiagnostics
+@testable import CodeEditorView
 import SwiftUI
 import XCTest
 

@@ -9,6 +9,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorTheming
+import CodeEditorView
 import SwiftUI
 
 // MARK: - Supporting Types

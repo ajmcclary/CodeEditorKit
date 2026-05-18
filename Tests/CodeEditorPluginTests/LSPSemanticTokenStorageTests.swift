@@ -1,5 +1,6 @@
 import CodeEditorLSP
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Testing
 
 @Suite("LSP semantic token storage")

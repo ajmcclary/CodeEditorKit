@@ -13,7 +13,7 @@ import UIKit
 #endif
 
 @MainActor
-enum CodeEditorRenderingDiagnostics {
+package enum CodeEditorRenderingDiagnostics {
     private static let logger = CrossPlatformLogger.logger(
         subsystem: "com.codeeditor.plugin",
         category: "RenderingDiagnostics"
@@ -23,7 +23,7 @@ enum CodeEditorRenderingDiagnostics {
         category: "DispatchDiagnostics"
     )
 
-    static func log(
+    package static func log(
         _ event: String,
         textView: CodeEditorView,
         theme: Theme? = nil,
@@ -109,7 +109,7 @@ enum CodeEditorRenderingDiagnostics {
         #endif
     }
 
-    static func logContainer(
+    package static func logContainer(
         _ event: String,
         container: CodeEditorContainerView,
         theme: Theme? = nil,
@@ -134,7 +134,7 @@ enum CodeEditorRenderingDiagnostics {
         #endif
     }
 
-    static func logHighlighting(
+    package static func logHighlighting(
         _ event: String,
         textView: CodeEditorView,
         language: Language,
@@ -152,7 +152,7 @@ enum CodeEditorRenderingDiagnostics {
         #endif
     }
 
-    static func logBodyResolution(
+    package static func logBodyResolution(
         _ event: String,
         manager: EditorDocuments?,
         storedTextLength: Int,
@@ -186,7 +186,7 @@ enum CodeEditorRenderingDiagnostics {
         #endif
     }
 
-    static func logConfigurationDispatch(_ event: String, textView: CodeEditorView) {
+    package static func logConfigurationDispatch(_ event: String, textView: CodeEditorView) {
         #if DEBUG
         dispatchLogger.info([
             "CE_DISPATCH event=\(event)",
@@ -206,7 +206,7 @@ enum CodeEditorRenderingDiagnostics {
         #endif
     }
 
-    static func logContainerConfigurationDispatch(_ event: String, container: CodeEditorContainerView) {
+    package static func logContainerConfigurationDispatch(_ event: String, container: CodeEditorContainerView) {
         #if DEBUG
         var parts = [
             "CE_DISPATCH event=\(event)",

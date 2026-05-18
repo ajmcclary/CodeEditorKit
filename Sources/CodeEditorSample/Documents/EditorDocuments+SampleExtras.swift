@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorView
 import Foundation
 
 /// Sample-only conveniences on `EditorDocuments`: file I/O (open/save),

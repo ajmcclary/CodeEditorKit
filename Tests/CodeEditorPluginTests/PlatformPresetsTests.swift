@@ -1,6 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 final class PlatformPresetsTests: XCTestCase {

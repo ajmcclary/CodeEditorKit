@@ -6,6 +6,7 @@ import AppKit
 import UIKit
 #endif
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 /// Fixed performance configuration tests that avoid hanging issues

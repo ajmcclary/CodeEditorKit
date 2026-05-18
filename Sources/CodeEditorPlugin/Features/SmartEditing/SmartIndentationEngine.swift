@@ -1,4 +1,5 @@
 import CodeEditorTextModel
+import CodeEditorView
 import Foundation
 
 // MARK: - Smart Indentation Engine

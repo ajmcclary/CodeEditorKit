@@ -17,7 +17,7 @@ import UIKit
 
 /// Unified TextKit2-only convenience surface for editor operations.
 @MainActor
-final class TextKitBridge {
+package final class TextKitBridge {
     // MARK: - Properties
 
     private static let logger = CrossPlatformLogger.logger(
@@ -109,18 +109,18 @@ final class TextKitBridge {
     }
 
     /// UTF-16 length of the document. Returns 0 when the TK2 stack is not yet ready.
-    var documentLength: Int {
+    package var documentLength: Int {
         safeTextStorage?.length ?? 0
     }
 
     /// Full document string. Returns "" when the TK2 stack is not yet ready.
-    var documentString: String {
+    package var documentString: String {
         safeTextStorage?.string ?? ""
     }
 
     /// Substring for a UTF-16 range. Returns nil for empty ranges or when
     /// the TK2 stack is not yet ready. Clamps `range` to document bounds.
-    func substring(in range: NSRange) -> String? {
+    package func substring(in range: NSRange) -> String? {
         guard let storage = safeTextStorage else { return nil }
         let length = storage.length
         let lower = max(0, min(range.location, length))
@@ -154,7 +154,7 @@ final class TextKitBridge {
     /// `replaceCharacters` / attribute mutations in their own outer
     /// `performEditingTransaction` to batch them atomically — the inner
     /// transaction here is reference-counted and nests safely.
-    func replaceCharacters(in range: NSRange, with string: String) {
+    package func replaceCharacters(in range: NSRange, with string: String) {
         guard let storage = safeTextStorage else {
             Self.logger.error("replaceCharacters: TextKit 2 stack not ready; mutation dropped")
             return
@@ -167,7 +167,7 @@ final class TextKitBridge {
     /// Replace characters in the given range with an attributed string.
     /// Wrapped in `performEditingTransaction` for the same reason as the
     /// plain-string overload.
-    func replaceCharacters(in range: NSRange, with attributedString: NSAttributedString) {
+    package func replaceCharacters(in range: NSRange, with attributedString: NSAttributedString) {
         guard let storage = safeTextStorage else {
             Self.logger.error("replaceCharacters: TextKit 2 stack not ready; mutation dropped")
             return

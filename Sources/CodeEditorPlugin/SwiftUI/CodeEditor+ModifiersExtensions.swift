@@ -5,6 +5,7 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorTheming
 #if canImport(SwiftUI)
+import CodeEditorView
 import SwiftUI
 
 // MARK: - View Modifiers

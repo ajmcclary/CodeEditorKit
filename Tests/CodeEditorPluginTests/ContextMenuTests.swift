@@ -4,6 +4,7 @@ import AppKit
 import UIKit
 #endif
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 final class ContextMenuTests: XCTestCase {

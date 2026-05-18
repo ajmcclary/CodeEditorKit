@@ -1,6 +1,7 @@
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
 import CodeEditorTextModel
+@testable import CodeEditorView
 import Dependencies
 import Testing
 

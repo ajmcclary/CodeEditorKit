@@ -2,6 +2,7 @@
 import CodeEditorAnnotations
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import XCTest
 
 final class AnnotationsHubDiagnosticsTests: XCTestCase {

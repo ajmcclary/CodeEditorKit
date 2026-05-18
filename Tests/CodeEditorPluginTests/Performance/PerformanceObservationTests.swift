@@ -5,6 +5,7 @@ import CodeEditorDiagnostics
 //
 
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Testing
 
 @Suite("PerformanceObservation")

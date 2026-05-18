@@ -103,7 +103,7 @@ extension CodeEditorView {
     /// can overwrite existing colours on theme changes because all previously
     /// themed token colours are stale; same-theme calls seed only gaps so
     /// token-specific colours survive content/configuration churn.
-    internal func stampThemeForeground(overwritingExistingForeground: Bool = false) {
+    package func stampThemeForeground(overwritingExistingForeground: Bool = false) {
         guard let theme = appliedTheme else { return }
         let length = textKitBridge.documentLength
         guard length > 0 else { return }

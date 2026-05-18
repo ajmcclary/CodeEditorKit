@@ -3,6 +3,7 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
 import CodeEditorTextModel
+@testable import CodeEditorView
 import XCTest
 
 final class CompletionSystemTests: XCTestCase {

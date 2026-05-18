@@ -4,6 +4,7 @@ import AppKit
 import UIKit
 #endif
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Foundation
 
 // MARK: - Mock TextLocation for Testing

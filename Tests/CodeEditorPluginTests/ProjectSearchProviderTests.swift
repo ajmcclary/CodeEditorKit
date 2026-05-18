@@ -1,4 +1,5 @@
 import CodeEditorSearch
+@testable import CodeEditorView
 import Foundation
 import Testing
 

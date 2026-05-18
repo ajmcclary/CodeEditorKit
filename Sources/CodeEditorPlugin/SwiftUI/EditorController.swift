@@ -6,6 +6,7 @@ import CodeEditorLSP
 import CodeEditorPlatform
 #if canImport(SwiftUI)
 import CodeEditorTextModel
+import CodeEditorView
 @preconcurrency import Combine
 import Foundation
 

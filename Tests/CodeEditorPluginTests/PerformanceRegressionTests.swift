@@ -4,6 +4,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 /// Performance regression tests to ensure optimizations don't degrade over time

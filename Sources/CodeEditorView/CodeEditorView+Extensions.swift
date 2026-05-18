@@ -103,7 +103,7 @@ extension CodeEditorView {
     // MARK: - NSTextView Method for macOS
 
     /// Sets the selected range without triggering automatic scrolling on macOS
-    func setSelectedRangeWithoutScrolling(_ range: NSRange) {
+    package func setSelectedRangeWithoutScrolling(_ range: NSRange) {
         // Only prevent scrolling if autoScrollToCursor is false
         guard !configuration.behavior.autoScrollToCursor else {
             // If auto-scroll is enabled, use default behavior with explicit scrolling
@@ -254,7 +254,7 @@ extension CodeEditorView {
     }
 
     /// Sets the selected range (NSRange) without triggering automatic scrolling
-    func setSelectedRangeWithoutScrolling(_ range: NSRange) {
+    package func setSelectedRangeWithoutScrolling(_ range: NSRange) {
         // Only prevent scrolling if autoScrollToCursor is false
         guard !configuration.behavior.autoScrollToCursor else {
             // If auto-scroll is enabled, use default behavior

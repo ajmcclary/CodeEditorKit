@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 @testable import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import Combine
 import XCTest
 

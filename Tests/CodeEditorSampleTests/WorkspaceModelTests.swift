@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import CodeEditorWorkspace
 import Foundation
 import Testing

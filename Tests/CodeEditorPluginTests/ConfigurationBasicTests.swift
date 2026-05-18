@@ -7,6 +7,7 @@ import UIKit
 #endif
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
+@testable import CodeEditorView
 import XCTest
 
 /// Basic configuration tests separated from ConfigurationTests due to test discovery issues

@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import XCTest
 
 final class DocumentMirrorTests: XCTestCase {

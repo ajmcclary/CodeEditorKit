@@ -1,5 +1,6 @@
 import CodeEditorPlatform
 import CodeEditorTextModel
+import CodeEditorView
 import Foundation
 
 // MARK: - Smart Selection Expander

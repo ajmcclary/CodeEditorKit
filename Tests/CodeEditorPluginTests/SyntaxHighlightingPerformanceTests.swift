@@ -1,6 +1,7 @@
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
+@testable import CodeEditorView
 import XCTest
 
 #if canImport(AppKit)

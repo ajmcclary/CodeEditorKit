@@ -6,6 +6,7 @@ import CodeEditorPlatform
 import CodeEditorTheming
 #if canImport(AppKit)
 import AppKit
+import CodeEditorView
 import SwiftUI
 
 // MARK: - MacOS NSViewRepresentable

@@ -11,7 +11,7 @@ import CodeEditorLayout
 /// `handleMouseDown` and `handleMouseMoved` directly to verify behavior
 /// without going through the full AppKit event pipeline.
 @MainActor
-final class EditorEventBusInstaller: NSObject {
+package final class EditorEventBusInstaller: NSObject {
     private weak var bus: EditorEventBus?
     private weak var textView: NSTextView?
     private var trackingArea: NSTrackingArea?
@@ -19,7 +19,7 @@ final class EditorEventBusInstaller: NSObject {
     private var eventMonitor: Any?
     private var idleDelay: TimeInterval = 0.5
 
-    init(bus: EditorEventBus, textView: NSTextView) {
+    package init(bus: EditorEventBus, textView: NSTextView) {
         self.bus = bus
         self.textView = textView
         super.init()
@@ -27,7 +27,7 @@ final class EditorEventBusInstaller: NSObject {
 
     /// Install the NSTrackingArea on the text view and add an NSEvent local
     /// monitor for ⌘-click. Safe to call once per installer.
-    func install() {
+    package func install() {
         guard let textView else { return }
         let area = NSTrackingArea(
             rect: textView.bounds,
@@ -50,7 +50,7 @@ final class EditorEventBusInstaller: NSObject {
         }
     }
 
-    func uninstall() {
+    package func uninstall() {
         if let trackingArea, let textView {
             textView.removeTrackingArea(trackingArea)
         }

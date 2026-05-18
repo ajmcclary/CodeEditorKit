@@ -3,6 +3,7 @@ import CodeEditorPlatform
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
 import CodeEditorTheming
+@testable import CodeEditorView
 import Foundation
 import Testing
 

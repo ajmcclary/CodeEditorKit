@@ -6,6 +6,7 @@
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import SwiftUI
 import XCTest
 

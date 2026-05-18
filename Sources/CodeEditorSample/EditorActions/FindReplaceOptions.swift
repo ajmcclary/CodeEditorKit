@@ -1,5 +1,6 @@
 import CodeEditorPlatform
 import CodeEditorPlugin
+import CodeEditorView
 import Foundation
 
 /// Hashable bag of the three search toggles the sample overlay exposes.

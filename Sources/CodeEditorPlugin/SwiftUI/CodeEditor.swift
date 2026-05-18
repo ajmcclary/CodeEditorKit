@@ -6,6 +6,7 @@ import CodeEditorLanguages
 import CodeEditorLayout
 import CodeEditorTheming
 #if canImport(SwiftUI)
+import CodeEditorView
 import SwiftUI
 
 /// Modern, idiomatic SwiftUI code editor with declarative configuration.

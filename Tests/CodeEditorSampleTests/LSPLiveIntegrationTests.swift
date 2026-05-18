@@ -2,6 +2,7 @@
 import AppKit
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import XCTest
 
 /// End-to-end smoke test that requires real sourcekit-lsp on PATH. Gated

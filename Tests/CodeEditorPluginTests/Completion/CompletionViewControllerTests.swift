@@ -3,6 +3,7 @@ import AppKit
 import CodeEditorCompletion
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Testing
 
 @Suite("CompletionViewController")

@@ -2,6 +2,7 @@
 import AppKit
 @testable import CodeEditorPlugin
 import CodeEditorTextModel
+@testable import CodeEditorView
 import XCTest
 
 final class TemporaryAttributesStoreTests: XCTestCase {

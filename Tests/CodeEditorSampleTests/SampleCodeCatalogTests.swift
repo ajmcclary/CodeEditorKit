@@ -1,6 +1,7 @@
 import CodeEditorLanguages
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import XCTest
 
 final class SampleCodeCatalogTests: XCTestCase {

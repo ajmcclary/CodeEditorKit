@@ -22,7 +22,7 @@ import UIKit
 /// (fan-out, first-non-nil-wins, first-handler-wins, all-must-agree)
 /// are identical across phases.
 @MainActor
-internal enum TextViewDelegatePhase {
+package enum TextViewDelegatePhase {
     /// Host gating, `isEditable` checks, read-only regions.
     case gating
     /// Smart-editing interception, scroll forwarding, SwiftUI coordinator
@@ -42,7 +42,7 @@ internal enum TextViewDelegatePhase {
 /// AppKit/UIKit "allow / no-op / nil / false" default, so participants
 /// only implement the methods they care about.
 @MainActor
-internal protocol TextViewDelegateParticipant: AnyObject {
+package protocol TextViewDelegateParticipant: AnyObject {
     // Veto chain — default true (allow).
     func textView(
         _ textView: CodeEditorView,
@@ -95,49 +95,49 @@ internal protocol TextViewDelegateParticipant: AnyObject {
 // MARK: - Default Implementations
 
 extension TextViewDelegateParticipant {
-    func textView(
+    package func textView(
         _: CodeEditorView,
         shouldChangeTextIn _: NSRange,
         replacementString _: String?
     ) -> Bool { true }
 
-    func textViewWillChangeText(_: CodeEditorView) {}
-    func textViewDidChangeText(_: CodeEditorView) {}
-    func textViewDidChangeSelection(_: CodeEditorView) {}
+    package func textViewWillChangeText(_: CodeEditorView) {}
+    package func textViewDidChangeText(_: CodeEditorView) {}
+    package func textViewDidChangeSelection(_: CodeEditorView) {}
 
-    func undoManager(for _: CodeEditorView) -> UndoManager? { nil }
+    package func undoManager(for _: CodeEditorView) -> UndoManager? { nil }
 
-    func completionViewController(
+    package func completionViewController(
         for _: CodeEditorView
     ) -> (any CompletionViewControllerRepresentable)? { nil }
 
-    func insertionPointView(
+    package func insertionPointView(
         for _: CodeEditorView,
         frame _: CGRect
     ) -> (any InsertionPointIndicating)? { nil }
 
-    func textView(
+    package func textView(
         _: CodeEditorView,
         clickedOnLink _: Any,
         at _: any NSTextLocation
     ) -> Bool { false }
 
-    func textView(
+    package func textView(
         _: CodeEditorView,
         clickedOnAttachment _: NSTextAttachment,
         at _: any NSTextLocation
     ) -> Bool { false }
 
-    func textView(
+    package func textView(
         _: CodeEditorView,
         shouldAllowInteractionWith _: NSTextAttachment,
         at _: any NSTextLocation
     ) -> Bool { true }
 
     #if canImport(UIKit)
-    func scrollViewDidScroll(_: UIScrollView) {}
-    func scrollViewWillBeginDragging(_: UIScrollView) {}
-    func scrollViewDidEndDragging(_: UIScrollView, willDecelerate _: Bool) {}
-    func scrollViewDidEndDecelerating(_: UIScrollView) {}
+    package func scrollViewDidScroll(_: UIScrollView) {}
+    package func scrollViewWillBeginDragging(_: UIScrollView) {}
+    package func scrollViewDidEndDragging(_: UIScrollView, willDecelerate _: Bool) {}
+    package func scrollViewDidEndDecelerating(_: UIScrollView) {}
     #endif
 }

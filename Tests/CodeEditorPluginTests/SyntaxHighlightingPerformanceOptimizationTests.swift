@@ -2,6 +2,7 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
+@testable import CodeEditorView
 import XCTest
 
 /// Tests for syntax highlighting performance optimizations

@@ -2,6 +2,7 @@ import CodeEditorDiagnostics
 import CodeEditorLSP
 #if !canImport(AppKit)
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Foundation
 import Testing
 

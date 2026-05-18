@@ -14,6 +14,7 @@
 #if canImport(SwiftUI)
 import CodeEditorCommon
 import CodeEditorCompletion
+import CodeEditorView
 import SwiftUI
 
 @available(macOS 13.0, iOS 16.0, *)

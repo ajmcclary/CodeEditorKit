@@ -2,6 +2,7 @@ import CodeEditorCommon
 import CodeEditorConfiguration
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import XCTest
 
 final class ConfigurationCodeFormatterTests: XCTestCase {

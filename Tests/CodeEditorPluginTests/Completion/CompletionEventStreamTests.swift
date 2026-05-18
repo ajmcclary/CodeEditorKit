@@ -1,6 +1,7 @@
 @testable import CodeEditorCompletion
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+@testable import CodeEditorView
 import Foundation
 import XCTest
 

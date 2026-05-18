@@ -1,6 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 /// Extension to provide better cleanup support for tests

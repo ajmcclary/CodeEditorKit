@@ -1,4 +1,5 @@
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import Testing
 
 #if canImport(AppKit)

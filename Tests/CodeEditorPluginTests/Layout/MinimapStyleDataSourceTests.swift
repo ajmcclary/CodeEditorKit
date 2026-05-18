@@ -3,6 +3,7 @@ import CodeEditorConfiguration
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
+@testable import CodeEditorView
 import Foundation
 #if canImport(SwiftUI)
 import SwiftUI

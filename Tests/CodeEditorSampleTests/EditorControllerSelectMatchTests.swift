@@ -3,6 +3,7 @@ import AppKit
 @testable import CodeEditorPlugin
 @testable import CodeEditorSample
 import CodeEditorSearch
+@testable import CodeEditorView
 import Foundation
 import Testing
 

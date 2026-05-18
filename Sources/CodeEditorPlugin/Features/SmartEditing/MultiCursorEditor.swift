@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorPlatform
+import CodeEditorView
 import Foundation
 
 // MARK: - Multi Cursor Editor

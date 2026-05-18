@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 /// Extension to add performance budget support to tests

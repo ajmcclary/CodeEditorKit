@@ -3,6 +3,7 @@ import AppKit
 import CodeEditorCommon
 @testable import CodeEditorLayout
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 final class EditorEventBusInstallerTests: XCTestCase {

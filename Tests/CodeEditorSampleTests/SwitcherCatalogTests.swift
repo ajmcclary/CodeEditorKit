@@ -3,6 +3,7 @@ import CodeEditorLanguages
 #if canImport(AppKit)
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorView
 import Testing
 
 /// Smoke tests for the sample's switcher catalogs. These guard against the

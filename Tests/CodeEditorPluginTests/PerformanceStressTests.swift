@@ -3,6 +3,7 @@ import CodeEditorLanguages
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
+@testable import CodeEditorView
 import XCTest
 
 #if canImport(AppKit)

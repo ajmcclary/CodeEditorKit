@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+@testable import CodeEditorView
 import XCTest
 
 #if canImport(AppKit)

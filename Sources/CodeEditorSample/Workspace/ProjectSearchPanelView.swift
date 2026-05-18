@@ -2,6 +2,7 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
 import CodeEditorSearch
+import CodeEditorView
 import SwiftUI
 
 struct ProjectSearchPanelView: View {

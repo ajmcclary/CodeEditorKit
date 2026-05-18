@@ -2,6 +2,7 @@ import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorTheming
 #if canImport(SwiftUI)
+import CodeEditorView
 import SwiftUI
 
 // MARK: - Convenience Factory Methods

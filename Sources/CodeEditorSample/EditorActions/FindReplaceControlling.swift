@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorView
 import Foundation
 
 /// Sample-local protocol over `EditorController`'s find / replace

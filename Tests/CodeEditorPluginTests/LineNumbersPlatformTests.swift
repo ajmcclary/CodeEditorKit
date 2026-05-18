@@ -8,6 +8,7 @@
 
 import CodeEditorCommon
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 #if canImport(AppKit)
 import AppKit

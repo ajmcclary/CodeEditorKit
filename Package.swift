@@ -309,7 +309,8 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorPlugin",
                 "CodeEditorSymbols",
-                "CodeEditorTheming"
+                "CodeEditorTheming",
+                "CodeEditorView"
             ],
             swiftSettings: swiftSettings
         ),
@@ -330,6 +331,7 @@ let package = Package(
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
                 "CodeEditorUI",
+                "CodeEditorView",
                 "CodeEditorWorkspace"
             ],
             exclude: [
@@ -359,6 +361,7 @@ let package = Package(
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
+                "CodeEditorView",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
@@ -389,6 +392,7 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorSymbols",
                 "CodeEditorUI",
+                "CodeEditorView",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
@@ -410,6 +414,7 @@ let package = Package(
                 "CodeEditorPlatform",
                 "CodeEditorSample",
                 "CodeEditorSearch",
+                "CodeEditorView",
                 "CodeEditorWorkspace",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],

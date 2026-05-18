@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Foundation
 import SwiftUI
 import Testing

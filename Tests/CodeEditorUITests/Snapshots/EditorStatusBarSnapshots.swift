@@ -3,6 +3,7 @@ import CodeEditorCommon
 import CodeEditorConfiguration
 @testable import CodeEditorPlugin
 import CodeEditorUI
+@testable import CodeEditorView
 import SnapshotTesting
 import SwiftUI
 import XCTest

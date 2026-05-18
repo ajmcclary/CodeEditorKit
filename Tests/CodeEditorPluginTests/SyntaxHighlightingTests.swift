@@ -8,6 +8,7 @@ import UIKit
 #endif
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting
+@testable import CodeEditorView
 import XCTest
 
 final class SyntaxHighlightingTests: XCTestCase {

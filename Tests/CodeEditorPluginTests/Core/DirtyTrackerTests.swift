@@ -1,5 +1,6 @@
 import CodeEditorCommon
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Testing
 
 @Suite("DirtyTracker")

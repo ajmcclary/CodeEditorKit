@@ -280,7 +280,7 @@ custom_rules:
 
   forbidden_text_view_delegate_assignment:
     included: 'Sources/.*\.swift'
-    excluded: 'Sources/CodeEditorPlugin/Core/TextKitSetupHelper\.swift'
+    excluded: 'Sources/CodeEditorView/TextKitSetupHelper\.swift'
     name: "Forbidden textView.delegate Assignment"
     # Match any `textView.delegate = …` assignment. TextViewDelegateMultiplexer
     # is the sole owner; participation flows through

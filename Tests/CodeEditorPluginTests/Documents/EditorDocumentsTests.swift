@@ -1,4 +1,5 @@
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 @MainActor

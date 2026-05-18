@@ -2,6 +2,7 @@ import CodeEditorCommon
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
 import CodeEditorSymbols
+@testable import CodeEditorView
 import Foundation
 import Observation
 import Testing

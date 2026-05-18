@@ -1,6 +1,7 @@
 import CodeEditorFolding
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Foundation
 import Testing
 

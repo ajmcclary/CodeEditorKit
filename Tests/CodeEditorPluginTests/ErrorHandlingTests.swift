@@ -4,6 +4,7 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 /// Comprehensive tests for error handling and edge cases in production scenarios

@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorPlugin
+import CodeEditorView
 import Combine
 import Foundation
 import Observation

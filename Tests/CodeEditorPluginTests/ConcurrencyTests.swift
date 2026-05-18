@@ -2,6 +2,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import XCTest
 
 /// Comprehensive tests for Swift 6 concurrency compliance and actor isolation

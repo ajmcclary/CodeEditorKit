@@ -9,6 +9,7 @@
 
 import CodeEditorConfiguration
 import CodeEditorPlatform
+import CodeEditorView
 import SwiftUI
 
 @available(macOS 12.0, iOS 16.0, *)

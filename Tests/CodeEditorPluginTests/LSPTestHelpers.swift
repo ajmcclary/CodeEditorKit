@@ -5,6 +5,7 @@ import CodeEditorCompletion
 import CodeEditorLanguages
 import CodeEditorLSP
 @testable import CodeEditorPlugin
+@testable import CodeEditorView
 import Foundation
 
 // MARK: - LSP Test Helpers

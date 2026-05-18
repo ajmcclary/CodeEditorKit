@@ -1,5 +1,6 @@
 @testable import CodeEditorPlugin
 import CodeEditorTheming
+@testable import CodeEditorView
 import CustomDump
 import Foundation
 import SnapshotTesting

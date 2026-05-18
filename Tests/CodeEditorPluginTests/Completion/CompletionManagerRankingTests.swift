@@ -2,6 +2,7 @@
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorTextModel
+@testable import CodeEditorView
 import Foundation
 import XCTest
 

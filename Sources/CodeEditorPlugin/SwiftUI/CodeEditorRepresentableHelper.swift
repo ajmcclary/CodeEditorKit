@@ -11,6 +11,7 @@ import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorPlatform
 import CodeEditorTheming
+import CodeEditorView
 import SwiftUI
 
 #if canImport(UIKit)

@@ -1,3 +1,4 @@
+@testable import CodeEditorView
 import XCTest
 
 /// A Sendable wrapper for weak references

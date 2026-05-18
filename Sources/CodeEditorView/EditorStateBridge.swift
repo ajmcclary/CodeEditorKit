@@ -6,7 +6,7 @@ import Foundation
 /// text) into the value types `EditorState` expects. Lives in the
 /// editor target so the SwiftUI bridge's call sites can use it without
 /// importing `CodeEditorUI`.
-enum EditorStateBridge {
+package enum EditorStateBridge {
     /// Maps an `NSRange` over `text` to a `SelectionState` with 1-based
     /// line and column. Walks `text` from the start to the range's
     /// `location` counting newlines. O(n) — fine for typical selection
@@ -15,7 +15,7 @@ enum EditorStateBridge {
     /// For very large documents, use `deriveSelection(from:in:lineGeometryStore:)`
     /// which accepts a pre-built line geometry store to avoid repeated O(n)
     /// newline walks.
-    static func deriveSelection(from range: NSRange, in text: String) -> SelectionState {
+    package static func deriveSelection(from range: NSRange, in text: String) -> SelectionState {
         deriveSelection(from: range, utf16View: text.utf16)
     }
 
@@ -24,7 +24,7 @@ enum EditorStateBridge {
     /// `deriveSelection(from:in:)` when a line geometry store is available
     /// (e.g., from `CodeEditorView.lineGeometryStore`).
     @MainActor
-    static func deriveSelection(from range: NSRange, in text: String, lineGeometryStore: LineGeometryStore) -> SelectionState {
+    package static func deriveSelection(from range: NSRange, in text: String, lineGeometryStore: LineGeometryStore) -> SelectionState {
         let utf16Length = text.utf16.count
         let safeLocation = max(0, min(range.location, utf16Length))
         let lineIdx = lineGeometryStore.lineIndex(forUtf16Offset: safeLocation)
@@ -40,7 +40,7 @@ enum EditorStateBridge {
     }
 
     /// Counts lines in `text` (number of `\n` + 1, or 0 for empty).
-    static func lineCount(of text: String) -> Int {
+    package static func lineCount(of text: String) -> Int {
         if text.isEmpty { return 0 }
         return text.components(separatedBy: "\n").count
     }
