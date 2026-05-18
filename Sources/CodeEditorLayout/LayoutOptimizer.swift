@@ -27,11 +27,11 @@ public enum LayoutOptimizer {
     public static func recommendOptimizations(
         for configuration: EditorConfiguration,
         availableSpace: CGSize
-    ) -> EditorLayoutService.LayoutOptimizations {
+    ) -> LayoutOptimizations {
         let hasLimitedWidth = availableSpace.width < limitedWidthThreshold
         let hasLimitedHeight = availableSpace.height < limitedHeightThreshold
 
-        return EditorLayoutService.LayoutOptimizations(
+        return LayoutOptimizations(
             useMinimapOptimization: configuration.display.isMinimapVisible && !hasLimitedWidth,
             useGutterOptimization: configuration.display.isLineNumbersEnabled,
             useScrollOptimization: !hasLimitedHeight,

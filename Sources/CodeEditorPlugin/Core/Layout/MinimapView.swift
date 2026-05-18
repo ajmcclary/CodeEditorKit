@@ -1,4 +1,5 @@
 import CodeEditorDiagnostics
+import CodeEditorLayout
 import CodeEditorPlatform
 import CodeEditorTextModel
 import CodeEditorTheming

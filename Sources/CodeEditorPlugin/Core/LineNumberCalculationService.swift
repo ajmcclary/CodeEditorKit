@@ -416,14 +416,6 @@ extension LineNumberCalculationService {
     }
 }
 
-// MARK: - Configuration Extensions
-
-extension EditorConfiguration: Hashable {
-    /// Helper to generate a stable hash for caching purposes
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(display.fontSize)
-        // hasher.combine(layout.lineHeight) // Property doesn't exist
-        hasher.combine(display.isLineNumbersEnabled)
-        hasher.combine(display.areInvisibleCharactersVisible)
-    }
-}
+// `EditorConfiguration: Hashable` was relocated to
+// Sources/CodeEditorConfiguration/EditorConfiguration+Hashable.swift
+// during §6.2.11 so `CodeEditorLayout`'s LayoutCache could see it.

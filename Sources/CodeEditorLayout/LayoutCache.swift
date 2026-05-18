@@ -12,7 +12,7 @@ public final class LayoutCache {
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "LayoutCache")
 
     /// The cached layout frames
-    private var cache: [String: EditorLayoutService.ComponentFrames] = [:]
+    private var cache: [String: ComponentFrames] = [:]
     private var accessOrder: [String] = []
 
     /// Maximum number of entries to keep in cache
@@ -31,7 +31,7 @@ public final class LayoutCache {
     /// Retrieves cached frames for the given key
     /// - Parameter key: The cache key
     /// - Returns: Cached frames if available, nil otherwise
-    public func get(_ key: String) -> EditorLayoutService.ComponentFrames? {
+    public func get(_ key: String) -> ComponentFrames? {
         guard let frames = cache[key] else { return nil }
         markAccessed(key)
         return frames
@@ -41,7 +41,7 @@ public final class LayoutCache {
     /// - Parameters:
     ///   - frames: The frames to cache
     ///   - key: The cache key
-    public func store(_ frames: EditorLayoutService.ComponentFrames, forKey key: String) {
+    public func store(_ frames: ComponentFrames, forKey key: String) {
         cache[key] = frames
         markAccessed(key)
         while cache.count > maxCacheSize, let oldestKey = accessOrder.first {
@@ -89,7 +89,7 @@ public final class LayoutCache {
     public static func generateKey(
         bounds: CGRect,
         configuration: EditorConfiguration,
-        constraints: EditorLayoutService.LayoutConstraints,
+        constraints: LayoutConstraints,
         lineCount: Int
     ) -> String {
         let boundsKey = "\(Int(bounds.width))x\(Int(bounds.height))"

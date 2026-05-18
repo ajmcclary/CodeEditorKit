@@ -1,5 +1,7 @@
 #if canImport(AppKit)
 @preconcurrency import AppKit
+import CodeEditorCommon
+import CodeEditorLayout
 
 /// Bridges AppKit mouse events on a wrapped `NSTextView` into an
 /// `EditorEventBus`. The bus carries hover positions (after an idle

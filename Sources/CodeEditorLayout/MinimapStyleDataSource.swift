@@ -43,11 +43,11 @@ internal final class NoOpMinimapStyleDataSource: MinimapStyleDataSource {
 /// Converts `StyledRangeContainer` merged runs into minimap style runs,
 /// mapping capture names to platform colors via the theme's token lookup.
 @MainActor
-internal final class StyledMinimapStyleDataSource: MinimapStyleDataSource {
+package final class StyledMinimapStyleDataSource: MinimapStyleDataSource {
     private weak var container: StyledRangeContainer?
     private let colorLookup: (String) -> PlatformColor
 
-    init(
+    package init(
         container: StyledRangeContainer,
         colorLookup: @escaping (String) -> PlatformColor = { _ in PlatformColors.label }
     ) {
@@ -55,7 +55,7 @@ internal final class StyledMinimapStyleDataSource: MinimapStyleDataSource {
         self.colorLookup = colorLookup
     }
 
-    func styleRuns(in range: NSRange) -> [MinimapStyleRun] {
+    package func styleRuns(in range: NSRange) -> [MinimapStyleRun] {
         guard let container else { return [] }
         let merged = container.mergedRuns(in: range)
 

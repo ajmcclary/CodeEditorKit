@@ -1,4 +1,6 @@
 #if canImport(SwiftUI)
+import CodeEditorCommon
+@testable import CodeEditorLayout
 @testable import CodeEditorPlugin
 import Combine
 import Testing

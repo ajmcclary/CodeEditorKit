@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+@testable import CodeEditorLayout
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting

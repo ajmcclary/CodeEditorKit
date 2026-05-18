@@ -1,4 +1,5 @@
 import CodeEditorCompletion
+import CodeEditorLayout
 import CodeEditorPlatform
 #if canImport(AppKit)
 @preconcurrency import AppKit

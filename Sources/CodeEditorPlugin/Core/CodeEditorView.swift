@@ -4,6 +4,7 @@ import CodeEditorCompletion
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+import CodeEditorLayout
 import CodeEditorPlatform
 import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel

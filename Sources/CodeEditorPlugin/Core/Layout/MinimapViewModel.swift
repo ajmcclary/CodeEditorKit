@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorConfiguration
+import CodeEditorLayout
 import CodeEditorPlatform
 import Foundation
 import SwiftUI

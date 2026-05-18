@@ -1,4 +1,5 @@
 #if canImport(SwiftUI)
+import CodeEditorCommon
 import Combine
 import SwiftUI
 
@@ -10,23 +11,25 @@ import SwiftUI
 /// downstream via the `\.editorEventBus` environment key.
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-final class EditorEventBus {
+package final class EditorEventBus {
     private let hoverSubject = PassthroughSubject<SourcePosition?, Never>()
     private let commandClickSubject = PassthroughSubject<SourcePosition, Never>()
 
-    var hoverPublisher: AnyPublisher<SourcePosition?, Never> {
+    package init() {}
+
+    package var hoverPublisher: AnyPublisher<SourcePosition?, Never> {
         hoverSubject.eraseToAnyPublisher()
     }
 
-    var commandClickPublisher: AnyPublisher<SourcePosition, Never> {
+    package var commandClickPublisher: AnyPublisher<SourcePosition, Never> {
         commandClickSubject.eraseToAnyPublisher()
     }
 
-    func emitHover(at position: SourcePosition?) {
+    package func emitHover(at position: SourcePosition?) {
         hoverSubject.send(position)
     }
 
-    func emitCommandClick(at position: SourcePosition) {
+    package func emitCommandClick(at position: SourcePosition) {
         commandClickSubject.send(position)
     }
 }
@@ -40,7 +43,7 @@ private struct EditorEventBusKey: @preconcurrency EnvironmentKey {
 
 @available(macOS 13.0, iOS 16.0, *)
 extension EnvironmentValues {
-    var editorEventBus: EditorEventBus? {
+    package var editorEventBus: EditorEventBus? {
         get { self[EditorEventBusKey.self] }
         set { self[EditorEventBusKey.self] = newValue }
     }

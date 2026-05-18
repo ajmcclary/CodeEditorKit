@@ -1,4 +1,5 @@
 import CodeEditorDesignTokens
+@testable import CodeEditorLayout
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
 import CodeEditorTheming

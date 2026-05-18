@@ -13,10 +13,10 @@ public enum ResponsiveLayoutProvider {
     /// - Returns: Layout constraints optimized for the screen size
     public static func createConstraints(
         for screenSize: ScreenSize
-    ) -> EditorLayoutService.LayoutConstraints {
+    ) -> LayoutConstraints {
         switch screenSize {
         case .compact:
-            return EditorLayoutService.LayoutConstraints(
+            return LayoutConstraints(
                 minimumGutterWidth: 30,
                 maximumGutterWidth: 60,
                 minimumTextWidth: 150,
@@ -25,7 +25,7 @@ public enum ResponsiveLayoutProvider {
             )
 
         case .regular:
-            return EditorLayoutService.LayoutConstraints(
+            return LayoutConstraints(
                 minimumGutterWidth: 40,
                 maximumGutterWidth: 100,
                 minimumTextWidth: 200,
@@ -35,7 +35,7 @@ public enum ResponsiveLayoutProvider {
 
         case .large:
             // Use defaults for large screens
-            return EditorLayoutService.LayoutConstraints()
+            return LayoutConstraints()
         }
     }
 

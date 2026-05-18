@@ -1,4 +1,5 @@
 #if canImport(AppKit) && canImport(SwiftUI)
+import CodeEditorCommon
 import Combine
 import SwiftUI
 

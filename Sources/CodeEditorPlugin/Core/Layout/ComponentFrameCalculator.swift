@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorLayout
 import CodeEditorPlatform
 import Foundation
 #if canImport(AppKit)
@@ -36,7 +37,7 @@ public enum ComponentFrameCalculator {
     public static func calculateGutterFrame(
         containerBounds: CGRect,
         configuration: EditorConfiguration,
-        constraints: EditorLayoutService.LayoutConstraints,
+        constraints: LayoutConstraints,
         lineCount: Int,
         gutterSizingService: GutterSizingService
     ) -> CGRect {
@@ -74,7 +75,7 @@ public enum ComponentFrameCalculator {
     public static func calculateMinimapFrame(
         containerBounds: CGRect,
         configuration: EditorConfiguration,
-        constraints: EditorLayoutService.LayoutConstraints,
+        constraints: LayoutConstraints,
         gutterFrame: CGRect
     ) -> CGRect {
         guard configuration.display.isMinimapVisible else {
@@ -135,13 +136,13 @@ public enum ComponentFrameCalculator {
     /// - Returns: Edge insets for text padding
     public static func calculateTextPadding(
         configuration: EditorConfiguration
-    ) -> EditorLayoutService.EdgeInsets {
+    ) -> EdgeInsets {
         let basePadding: CGFloat = 8.0
         let scaleFactor = configuration.display.fontSize / 14.0 // Scale with font size
 
         let adjustedPadding = basePadding * scaleFactor
 
-        return EditorLayoutService.EdgeInsets(
+        return EdgeInsets(
             top: adjustedPadding,
             left: adjustedPadding,
             bottom: adjustedPadding,
@@ -156,7 +157,7 @@ public enum ComponentFrameCalculator {
     /// - Returns: Adjusted bounds with safe area applied
     public static func applyConstraints(
         _ bounds: CGRect,
-        constraints: EditorLayoutService.LayoutConstraints
+        constraints: LayoutConstraints
     ) -> CGRect {
         CGRect(
             x: bounds.minX + constraints.safeAreaInsets.left,

@@ -2,6 +2,7 @@ import CodeEditorCompletion
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+import CodeEditorLayout
 import CodeEditorTheming
 #if canImport(SwiftUI)
 import SwiftUI

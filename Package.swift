@@ -66,6 +66,10 @@ let package = Package(
             targets: ["CodeEditorLSP"]
         ),
         .library(
+            name: "CodeEditorLayout",
+            targets: ["CodeEditorLayout"]
+        ),
+        .library(
             name: "CodeEditorPlugin",
             targets: ["CodeEditorPlugin"]
         ),
@@ -214,6 +218,19 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorLayout",
+            dependencies: [
+                "CodeEditorAnnotations",
+                "CodeEditorCommon",
+                "CodeEditorConfiguration",
+                "CodeEditorDesignTokens",
+                "CodeEditorPlatform",
+                "CodeEditorSyntaxHighlighting",
+                "CodeEditorTheming"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorSearch",
             swiftSettings: swiftSettings
         ),
@@ -241,6 +258,7 @@ let package = Package(
                 "CodeEditorFolding",
                 "CodeEditorLSP",
                 "CodeEditorLanguages",
+                "CodeEditorLayout",
                 "CodeEditorPlatform",
                 "CodeEditorSymbols",
                 "CodeEditorSyntaxHighlighting",
@@ -251,7 +269,8 @@ let package = Package(
             ],
             exclude: [
                 "Info.plist",
-                "Languages"
+                "Languages",
+                "Layout"
             ],
             swiftSettings: swiftSettings
         ),
@@ -303,6 +322,7 @@ let package = Package(
                 "CodeEditorFolding",
                 "CodeEditorLSP",
                 "CodeEditorLanguages",
+                "CodeEditorLayout",
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
                 "CodeEditorSearch",

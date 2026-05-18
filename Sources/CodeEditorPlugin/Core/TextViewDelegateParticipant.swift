@@ -1,4 +1,5 @@
 import CodeEditorCompletion
+import CodeEditorLayout
 import Foundation
 #if canImport(AppKit)
 import AppKit
