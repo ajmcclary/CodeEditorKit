@@ -204,10 +204,7 @@ let package = Package(
             ],
             exclude: [
                 "Info.plist",
-                "Languages",
-                "Performance",
-                "SyntaxHighlighting",
-                "Workspace"
+                "Languages"
             ],
             swiftSettings: swiftSettings
         ),

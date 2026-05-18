@@ -5,13 +5,13 @@ import Foundation
 
 // swiftlint:disable:next no_extension_access_modifier
 private extension String {
-    package func unicharAt(_ index: Int) -> unichar {
+    func unicharAt(_ index: Int) -> unichar {
         // swiftlint:disable:next legacy_objc_type
         let nsString = self as NSString
         return nsString.character(at: index)
     }
 
-    package func nsStringSubstring(with range: NSRange) -> String {
+    func nsStringSubstring(with range: NSRange) -> String {
         // swiftlint:disable:next legacy_objc_type
         let nsString = self as NSString
         return nsString.substring(with: range)
