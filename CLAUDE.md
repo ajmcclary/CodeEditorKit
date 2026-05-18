@@ -62,10 +62,10 @@ Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configu
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-5 top-level directories in the umbrella target, 222 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f / §6.2.8g / §6.2.9 / §6.2.11 / §6.2.12a / §6.2.12b), and 589 Swift source files under `Sources/`.
+5 top-level directories in the umbrella target, 214 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f / §6.2.8g / §6.2.9 / §6.2.11 / §6.2.12a / §6.2.12b / §6.2.12c), and 585 Swift source files under `Sources/`.
 
 Other source roots (each is its own SPM target — see `Package.swift`):
-- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7); `SendablePerformanceMetric` + `FileChangeNotification` (added §6.2.12b).
+- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7); `SendablePerformanceMetric` + `FileChangeNotification` (added §6.2.12b); `SelectionState`, `EditorInteractionState` + `EditorCursorPosition`, `DirtyTracker`, `ErrorRecoveryCoordinator` (added §6.2.12c — `ErrorRecoveryCoordinator` is a rename of umbrella `Core/AsyncOperationErrors.swift`; the now-deleted `CompletionAsyncError` was dead code).
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
 - `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds; phase 4).
 - `Sources/CodeEditorFolding/` — fold-storage primitives (`FoldStoreElement`, `LineFoldStorage`, `FoldInfo`), `FoldRegionAdapter`, and `FoldingProviderRegistry` (phase 4; new in §6.2.8a). The umbrella-coupled fold engine, operations service, and presentation strategy live in `Sources/CodeEditorPlugin/Core/Folding/`.
@@ -170,3 +170,13 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 - **Scripts are intentionally narrow**: `Scripts/generate-dependency-diagrams.sh` uses `swift package describe`, and `Scripts/run-parallel-tests.sh` delegates to SwiftPM. Do not reintroduce stale plugin, Pandoc, or sample-directory assumptions.
 
 - **`docs/superpowers/` is archived working notes**: don't link it as authoritative project documentation.
+
+- **`TextSystem` protocol and its styler classes were deleted in §6.2.12c.** `TextSystem`, `TextSystemStyler<Interface>`, `ThreePhaseTextSystemStyler<Interface>`, and `TokenSystemValidator<Interface>` were earlier TextKit2 styling-experiment scaffolding with zero in-tree consumers — deleted, not extracted. External consumers depending on these need to remove the dependency.
+
+- **`CompletionAsyncError` was deleted in §6.2.12c.** Public enum with zero in-tree callers. External consumers pattern-matching on `CompletionAsyncError.providerNotAvailable(_:)` (etc.) need to switch to whatever they ultimately mapped it to.
+
+- **`ErrorRecoveryCoordinator` moved to `CodeEditorCommon` in §6.2.12c.** Previously umbrella-public (in `Core/AsyncOperationErrors.swift`), now lives in `Sources/CodeEditorCommon/ErrorRecoveryCoordinator.swift`. External consumers doing `import CodeEditorPlugin` continue to see it via the umbrella's transitive dep on `CodeEditorCommon`; consumers that need direct access should `import CodeEditorCommon`. The line-258 fallback error type changed from `SyntaxHighlightingError.cancelled` to `CancellationError()` (the path is practically-unreachable; callers should not depend on the specific error type).
+
+- **`SelectionState`, `EditorInteractionState`, `EditorCursorPosition`, `DirtyTracker` moved to `CodeEditorCommon` in §6.2.12c.** Same soft-relocation pattern as `ErrorRecoveryCoordinator`. Test targets that previously reached these via `@testable import CodeEditorPlugin` need to add `import CodeEditorCommon`.
+
+- **SwiftLint `missing_docs` is asymmetric between public struct and public actor inits.** As of §6.2.12c, an undocumented `public init()` on a `public struct` passes lint; the same `public init()` on a `public actor` fails with a `missing_docs` violation. Both `DirtyTracker.init` (struct) and `ErrorRecoveryCoordinator.init` (actor) were added by §6.2.12c; only the actor's needed a one-line `///` to compile. Empirical, not configured anywhere obvious — keep this in mind when adding explicit synth-init-replacement inits to cross-target moves.
