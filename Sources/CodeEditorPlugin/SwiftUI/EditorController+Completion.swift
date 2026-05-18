@@ -1,4 +1,5 @@
 #if canImport(AppKit) || canImport(UIKit)
+import CodeEditorCompletion
 import CodeEditorLanguages
 import Foundation
 

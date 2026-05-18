@@ -23,18 +23,20 @@ import Foundation
 ///   trigger-driven firing register a full `CompletionProvider` via
 ///   `EditorController.registerCompletionProvider(_:)`.
 @MainActor
-internal final class SwiftUIClosureCompletionProvider: CompletionProvider {
-    let id: String = "swiftui-modifier"
-    let supportedLanguages: [Language] = []
-    let triggerCharacters: [String] = []
-    let supportsSnippets: Bool = true
+package final class SwiftUIClosureCompletionProvider: CompletionProvider {
+    package let id: String = "swiftui-modifier"
+    package let supportedLanguages: [Language] = []
+    package let triggerCharacters: [String] = []
+    package let supportsSnippets: Bool = true
 
     /// Mutable slot the coordinator swaps on every representable update.
     /// `nil` indicates "no modifier attached this update" — `completions`
     /// returns an empty result rather than throwing or crashing.
-    var closure: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
+    package var closure: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
 
-    func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    package init() {}
+
+    package func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         guard let closure else {
             return CompletionResult(
                 items: [],

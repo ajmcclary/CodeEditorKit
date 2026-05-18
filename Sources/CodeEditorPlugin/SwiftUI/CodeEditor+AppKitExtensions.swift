@@ -1,3 +1,4 @@
+import CodeEditorCompletion
 import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorPlatform

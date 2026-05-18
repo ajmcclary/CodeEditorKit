@@ -5,6 +5,7 @@
 //  Shared helper methods for CodeEditorRepresentable implementations
 //
 
+import CodeEditorCompletion
 import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorPlatform

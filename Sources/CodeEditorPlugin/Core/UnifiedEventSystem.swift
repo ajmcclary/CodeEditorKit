@@ -1,3 +1,5 @@
+import CodeEditorCommon
+import CodeEditorCompletion
 import CodeEditorPlatform
 import Foundation
 #if canImport(Combine)

@@ -620,6 +620,9 @@ public final class CompletionStatistics {
     private var processingTimes: [TimeInterval] = []
     private let maxProcessingTimeSamples = 100
 
+    /// Creates a fresh statistics tracker with all counters zeroed.
+    public init() {}
+
     /// Percentage of requests served from cache (0.0 to 1.0)
     public var cacheHitRate: Double {
         let totalCacheRequests = totalCacheHits + totalCacheMisses

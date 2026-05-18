@@ -1,4 +1,5 @@
 #if canImport(UIKit)
+import CodeEditorCompletion
 import CodeEditorLanguages
 import SwiftUI
 import UIKit

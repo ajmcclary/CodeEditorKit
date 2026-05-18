@@ -1,4 +1,5 @@
 #if canImport(SwiftUI)
+import CodeEditorCompletion
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
 import XCTest

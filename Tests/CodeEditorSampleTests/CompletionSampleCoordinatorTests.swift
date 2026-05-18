@@ -1,3 +1,4 @@
+import CodeEditorCompletion
 @testable import CodeEditorPlugin
 @testable import CodeEditorSample
 import Foundation

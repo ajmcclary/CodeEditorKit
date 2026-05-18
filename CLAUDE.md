@@ -51,7 +51,6 @@ Tree-sitter work is internal scaffolding only. There is no public configuration 
 
 ```
 Sources/CodeEditorPlugin/
-├── Completion/              # Code completion providers
 ├── Core/                    # Main APIs, services, event system (includes F3 sub-buckets: Annotations/, Configuration/, Documents/, Folding/, Platform/, Search/, Symbols/, SyntaxHighlighting/, Text/ — umbrella-coupled glue staged here pending §6.2.12 Core split)
 ├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
 ├── LSP/                     # Language Server Protocol support
@@ -60,11 +59,11 @@ Sources/CodeEditorPlugin/
 └── SwiftUI/                 # SwiftUI wrappers and modifiers
 ```
 
-Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`, `Workspace/`, `Search/`, `Annotations/`) have been carved out into sibling SPM targets — see "Other source roots" below.
+Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`, `Workspace/`, `Search/`, `Annotations/`, `Completion/`) have been carved out into sibling SPM targets — see "Other source roots" below.
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-7 top-level directories in the umbrella target, 302 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f), and 592 Swift source files under `Sources/`.
+6 top-level directories in the umbrella target, 282 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8d / §6.2.8e / §6.2.8f / §6.2.8g), and 593 Swift source files under `Sources/`.
 
 Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7).
@@ -82,6 +81,7 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorSyntaxHighlighting/` — syntax-highlighting engine: color schemes, tokenizers, regex/SwiftSyntax highlighters, parsing helpers, descriptor execution, performance instrumentation (phase 3.5).
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
 - `Sources/CodeEditorWorkspace/` — workspace file-tree protocols + macOS `MacOSWorkspaceFileManager` adapter (phase 4; new in §6.2.8f). Productized as an opt-in `.library` per NEXT.md §6.3; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; AppKit-conditional manager. iOS adapter is a future session.
+- `Sources/CodeEditorCompletion/` — completion subsystem: `CompletionManager`, ranking model, fuzzy matcher, built-in providers, view controllers + adapter, event broadcaster, SwiftUI bridge types (phase 4; new in §6.2.8g). 20 files. Not productized — umbrella consumes Completion types from ~17 files (Core/CodeEditorView extensions + delegates + EditorEvent + UnifiedEventSystem, LSP, SwiftUI slice, Core/Symbols/SymbolNavigator), so the new target routes through the umbrella per Folding/Symbols/SH/Annotations precedent.
 - `Sources/CodeEditorSample/` — executable demo app target.
 - `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; it is not currently an SPM target.
 

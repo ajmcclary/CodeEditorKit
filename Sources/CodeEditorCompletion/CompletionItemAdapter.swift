@@ -9,18 +9,18 @@ import UIKit
 
 // MARK: - Completion Item Adapter
 
-/// Internal adapter for bridging CompletionItemModel to CompletionItem protocol
+/// Cross-target adapter for bridging CompletionItemModel to CompletionItem protocol.
 @MainActor
-internal struct CompletionItemAdapter: CompletionItemView {
-    let id: String
-    let model: CompletionItemModel
+package struct CompletionItemAdapter: CompletionItemView {
+    package let id: String
+    package let model: CompletionItemModel
 
-    init(_ model: CompletionItemModel) {
+    package init(_ model: CompletionItemModel) {
         self.id = model.id
         self.model = model
     }
 
-    var view: PlatformView {
+    package var view: PlatformView {
         #if canImport(AppKit)
         let view = NSView()
         view.wantsLayer = true

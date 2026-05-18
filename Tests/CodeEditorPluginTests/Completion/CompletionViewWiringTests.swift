@@ -1,3 +1,4 @@
+import CodeEditorCompletion
 import CodeEditorLanguages
 import CodeEditorPlatform
 #if canImport(AppKit) || canImport(UIKit)

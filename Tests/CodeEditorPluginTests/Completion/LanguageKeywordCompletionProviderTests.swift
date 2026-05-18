@@ -1,3 +1,4 @@
+@testable import CodeEditorCompletion
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
 import XCTest

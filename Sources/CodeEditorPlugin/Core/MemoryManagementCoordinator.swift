@@ -1,4 +1,5 @@
 import CodeEditorCommon
+import CodeEditorCompletion
 import CodeEditorDiagnostics
 import CodeEditorPlatform
 import Foundation
