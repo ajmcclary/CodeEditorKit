@@ -1,5 +1,6 @@
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+import CodeEditorTextModel
 import XCTest
 #if canImport(UIKit)
 import UIKit

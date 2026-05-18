@@ -4,16 +4,16 @@ import CodeEditorPlatform
 
 // MARK: - TextLayoutFragment
 
-final class TextLayoutFragment: NSTextLayoutFragment {
+package final class TextLayoutFragment: NSTextLayoutFragment {
     private let defaultParagraphStyle: NSParagraphStyle
     package var isInvisibleCharactersEnabled: Bool = false
 
-    init(textElement: NSTextElement, range rangeInElement: NSTextRange?, paragraphStyle: NSParagraphStyle) {
+    package init(textElement: NSTextElement, range rangeInElement: NSTextRange?, paragraphStyle: NSParagraphStyle) {
         defaultParagraphStyle = paragraphStyle
         super.init(textElement: textElement, range: rangeInElement)
     }
 
-    required init?(coder: NSCoder) {
+    package required init?(coder: NSCoder) {
         defaultParagraphStyle = NSParagraphStyle.default
         isInvisibleCharactersEnabled = false
         super.init(coder: coder)
@@ -25,7 +25,7 @@ final class TextLayoutFragment: NSTextLayoutFragment {
     //    super.layoutFragmentFrame
     // }
 
-    override func draw(at point: CGPoint, in context: CGContext) {
+    override package func draw(at point: CGPoint, in context: CGContext) {
         // Layout fragment draw text at the bottom (after apply baselineOffset) but ignore the paragraph line height
         // This is a workaround/patch to position text nicely in the line
         //

@@ -3,6 +3,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
+import CodeEditorTextModel
 import Foundation
 // swiftlint:disable missing_docs
 

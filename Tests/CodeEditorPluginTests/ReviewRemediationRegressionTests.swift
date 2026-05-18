@@ -9,7 +9,7 @@ import XCTest
 final class ReviewRemediationRegressionTests: XCTestCase {
     func testPrivateLayoutSelectorIsNotPresentInTextLayoutFragmentSource() throws {
         let source = try String(
-            contentsOfFile: sourcePath("Sources/CodeEditorPlugin/Core/Text/TextLayoutFragment.swift"),
+            contentsOfFile: sourcePath("Sources/CodeEditorTextModel/TextLayoutFragment.swift"),
             encoding: .utf8
         )
 

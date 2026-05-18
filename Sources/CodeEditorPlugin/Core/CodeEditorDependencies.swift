@@ -1,6 +1,7 @@
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
+import CodeEditorTextModel
 import Dependencies
 import Foundation
 
