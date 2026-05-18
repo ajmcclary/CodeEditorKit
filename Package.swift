@@ -78,6 +78,10 @@ let package = Package(
             targets: ["CodeEditorSearch"]
         ),
         .library(
+            name: "CodeEditorSwiftUI",
+            targets: ["CodeEditorSwiftUI"]
+        ),
+        .library(
             name: "CodeEditorUI",
             targets: ["CodeEditorUI"]
         ),
@@ -284,6 +288,24 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorSwiftUI",
+            dependencies: [
+                "CodeEditorAnnotations",
+                "CodeEditorCommon",
+                "CodeEditorCompletion",
+                "CodeEditorConfiguration",
+                "CodeEditorDiagnostics",
+                "CodeEditorLSP",
+                "CodeEditorLanguages",
+                "CodeEditorLayout",
+                "CodeEditorPlatform",
+                "CodeEditorTextModel",
+                "CodeEditorTheming",
+                "CodeEditorView"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorAnnotations",
@@ -298,6 +320,7 @@ let package = Package(
                 "CodeEditorLayout",
                 "CodeEditorPlatform",
                 "CodeEditorSmartEditing",
+                "CodeEditorSwiftUI",
                 "CodeEditorSymbols",
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
