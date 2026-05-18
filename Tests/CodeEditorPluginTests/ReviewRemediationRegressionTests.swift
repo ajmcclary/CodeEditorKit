@@ -9,7 +9,7 @@ import XCTest
 final class ReviewRemediationRegressionTests: XCTestCase {
     func testPrivateLayoutSelectorIsNotPresentInTextLayoutFragmentSource() throws {
         let source = try String(
-            contentsOfFile: sourcePath("Sources/CodeEditorPlugin/Text/TextLayoutFragment.swift"),
+            contentsOfFile: sourcePath("Sources/CodeEditorPlugin/Core/Text/TextLayoutFragment.swift"),
             encoding: .utf8
         )
 
@@ -77,7 +77,7 @@ final class ReviewRemediationRegressionTests: XCTestCase {
 
     func testEditorConfigurationDoesNotContainRuntimeDependencySlots() throws {
         let configurationSource = try String(
-            contentsOfFile: sourcePath("Sources/CodeEditorPlugin/Configuration/EditorConfiguration.swift"),
+            contentsOfFile: sourcePath("Sources/CodeEditorConfiguration/EditorConfiguration.swift"),
             encoding: .utf8
         )
         let runtimeSlots = [
