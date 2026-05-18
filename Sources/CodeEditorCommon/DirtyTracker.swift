@@ -8,19 +8,21 @@ import Foundation
 /// binding swap (`updateContainer` with `text != storage`), and on explicit
 /// `markClean(currentText:)`. Returns `false` when no baseline has been set
 /// (pre-mount initial state).
-struct DirtyTracker: Sendable {
+public struct DirtyTracker: Sendable {
     private var baseline: String?
 
-    mutating func setBaseline(_ text: String) {
+    public init() {}
+
+    public mutating func setBaseline(_ text: String) {
         baseline = text
     }
 
-    func isDirty(currentText: String) -> Bool {
+    public func isDirty(currentText: String) -> Bool {
         guard let baseline else { return false }
         return baseline != currentText
     }
 
-    mutating func markClean(currentText: String) {
+    public mutating func markClean(currentText: String) {
         baseline = currentText
     }
 }
