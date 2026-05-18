@@ -1,3 +1,4 @@
+import CodeEditorAnnotations
 import CodeEditorCommon
 import CodeEditorConfiguration
 import CodeEditorDiagnostics

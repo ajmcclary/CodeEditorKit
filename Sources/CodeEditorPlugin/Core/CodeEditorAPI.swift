@@ -1,3 +1,4 @@
+import CodeEditorAnnotations
 import CodeEditorConfiguration
 import CodeEditorLanguages
 import Foundation

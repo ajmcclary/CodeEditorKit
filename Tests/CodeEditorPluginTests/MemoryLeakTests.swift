@@ -1,3 +1,4 @@
+import CodeEditorAnnotations
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
 @testable import CodeEditorSyntaxHighlighting

@@ -1,3 +1,4 @@
+import CodeEditorAnnotations
 import CodeEditorCommon
 import CodeEditorLanguages
 @testable import CodeEditorPlugin

@@ -168,6 +168,15 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorAnnotations",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorPlatform",
+                "CodeEditorTheming"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorFolding",
             dependencies: [
                 "CodeEditorCommon",
@@ -196,6 +205,7 @@ let package = Package(
         .target(
             name: "CodeEditorPlugin",
             dependencies: [
+                "CodeEditorAnnotations",
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
@@ -229,6 +239,7 @@ let package = Package(
         .executableTarget(
             name: "CodeEditorSample",
             dependencies: [
+                "CodeEditorAnnotations",
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
@@ -253,6 +264,7 @@ let package = Package(
         .testTarget(
             name: "CodeEditorPluginTests",
             dependencies: [
+                "CodeEditorAnnotations",
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
@@ -303,6 +315,7 @@ let package = Package(
         .testTarget(
             name: "CodeEditorSampleTests",
             dependencies: [
+                "CodeEditorAnnotations",
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",

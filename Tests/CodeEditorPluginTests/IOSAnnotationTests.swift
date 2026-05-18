@@ -5,6 +5,7 @@
 //  Created on 2025-06-27.
 //
 
+import CodeEditorAnnotations
 @testable import CodeEditorPlugin
 import XCTest
 #if canImport(UIKit)

@@ -3,6 +3,7 @@
 // dedicated file lets each view's primary file stay focused on its own
 // concerns; the shape of the protocol is defined in BaseUIComponents.swift.
 
+import CodeEditorAnnotations
 import Foundation
 
 extension GutterView: ThemeableUIComponent {}

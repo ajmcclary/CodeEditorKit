@@ -1,3 +1,4 @@
+import CodeEditorAnnotations
 import CodeEditorCommon
 import CodeEditorPlatform
 import CodeEditorTextModel

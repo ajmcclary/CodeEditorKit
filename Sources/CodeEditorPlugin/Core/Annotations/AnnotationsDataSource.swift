@@ -1,3 +1,4 @@
+import CodeEditorAnnotations
 import CodeEditorPlatform
 import Foundation
 #if canImport(UIKit)

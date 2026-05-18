@@ -1,3 +1,4 @@
+import CodeEditorAnnotations
 @testable import CodeEditorPlugin
 import CodeEditorTheming
 import Foundation

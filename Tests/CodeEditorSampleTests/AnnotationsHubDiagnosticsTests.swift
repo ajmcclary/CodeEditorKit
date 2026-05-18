@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+import CodeEditorAnnotations
 import CodeEditorPlugin
 @testable import CodeEditorSample
 import XCTest
