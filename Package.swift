@@ -69,6 +69,10 @@ let package = Package(
             name: "CodeEditorUI",
             targets: ["CodeEditorUI"]
         ),
+        .library(
+            name: "CodeEditorWorkspace",
+            targets: ["CodeEditorWorkspace"]
+        ),
         .executable(
             name: "CodeEditorSample",
             targets: ["CodeEditorSample"]
@@ -178,6 +182,10 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorWorkspace",
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorCommon",
@@ -198,7 +206,8 @@ let package = Package(
                 "Info.plist",
                 "Languages",
                 "Performance",
-                "SyntaxHighlighting"
+                "SyntaxHighlighting",
+                "Workspace"
             ],
             swiftSettings: swiftSettings
         ),
@@ -224,7 +233,8 @@ let package = Package(
                 "CodeEditorPlugin",
                 "CodeEditorTextModel",
                 "CodeEditorTheming",
-                "CodeEditorUI"
+                "CodeEditorUI",
+                "CodeEditorWorkspace"
             ],
             exclude: [
                 "README.md"
@@ -292,6 +302,7 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorSample",
+                "CodeEditorWorkspace",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
             exclude: [

@@ -59,15 +59,14 @@ Sources/CodeEditorPlugin/
 ├── Languages/               # Language descriptors + folding/symbol/completion-model interfaces (compiled as CodeEditorLanguages target via `path:`)
 ├── Layout/                  # UI components + co-located ViewModels
 ├── Search/                  # Search result models and shared search support
-├── SwiftUI/                 # SwiftUI wrappers and modifiers
-└── Workspace/               # Workspace indexing/search types
+└── SwiftUI/                 # SwiftUI wrappers and modifiers
 ```
 
-Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`) have been carved out into sibling SPM targets — see "Other source roots" below.
+Pre-extraction directories (`Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`, `Workspace/`) have been carved out into sibling SPM targets — see "Other source roots" below.
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-10 top-level directories in the umbrella target, 313 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b), and 592 Swift source files under `Sources/`.
+9 top-level directories in the umbrella target, 311 Swift source files in the umbrella target (down from 480 before phase 0–4 extractions and §6.2.7 / §6.2.8a / §6.2.8b / §6.2.8f), and 592 Swift source files under `Sources/`.
 
 Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7).
@@ -82,6 +81,7 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorTheming/` — theme system, color tokens, appearance + bundled theme JSON (phase 2).
 - `Sources/CodeEditorSyntaxHighlighting/` — syntax-highlighting engine: color schemes, tokenizers, regex/SwiftSyntax highlighters, parsing helpers, descriptor execution, performance instrumentation (phase 3.5).
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
+- `Sources/CodeEditorWorkspace/` — workspace file-tree protocols + macOS `MacOSWorkspaceFileManager` adapter (phase 4; new in §6.2.8f). Productized as an opt-in `.library` per NEXT.md §6.3; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; AppKit-conditional manager. iOS adapter is a future session.
 - `Sources/CodeEditorSample/` — executable demo app target.
 - `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; it is not currently an SPM target.
 

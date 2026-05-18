@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import CodeEditorPlugin
+import CodeEditorWorkspace
 import Foundation
 
 /// File-tree state + WorkspaceFileWatching subscription for the
