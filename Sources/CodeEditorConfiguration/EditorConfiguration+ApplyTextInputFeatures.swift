@@ -1,4 +1,3 @@
-import CodeEditorConfiguration
 import Foundation
 
 // MARK: - EditorConfiguration Text Input Features Integration

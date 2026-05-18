@@ -1,4 +1,3 @@
-import CodeEditorConfiguration
 import CodeEditorPlatform
 import Foundation
 
