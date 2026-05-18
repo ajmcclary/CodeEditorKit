@@ -1,4 +1,3 @@
-import CodeEditorLanguages
 import Foundation
 
 /// A single open tab in the chrome's tab strip.

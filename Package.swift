@@ -357,6 +357,7 @@ let package = Package(
             name: "CodeEditorUITests",
             dependencies: [
                 "CodeEditorConfiguration",
+                "CodeEditorLanguages",
                 "CodeEditorSymbols",
                 "CodeEditorUI",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
