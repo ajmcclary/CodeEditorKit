@@ -120,7 +120,7 @@ let package = Package(
         ),
         .target(
             name: "CodeEditorTextModel",
-            dependencies: ["CodeEditorCommon"],
+            dependencies: ["CodeEditorCommon", "CodeEditorPlatform"],
             swiftSettings: swiftSettings
         ),
         .target(
