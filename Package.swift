@@ -274,6 +274,16 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorSmartEditing",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorPlatform",
+                "CodeEditorTextModel",
+                "CodeEditorView"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 "CodeEditorAnnotations",
@@ -287,6 +297,7 @@ let package = Package(
                 "CodeEditorLanguages",
                 "CodeEditorLayout",
                 "CodeEditorPlatform",
+                "CodeEditorSmartEditing",
                 "CodeEditorSymbols",
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
@@ -357,6 +368,7 @@ let package = Package(
                 "CodeEditorPlatform",
                 "CodeEditorPlugin",
                 "CodeEditorSearch",
+                "CodeEditorSmartEditing",
                 "CodeEditorSymbols",
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",

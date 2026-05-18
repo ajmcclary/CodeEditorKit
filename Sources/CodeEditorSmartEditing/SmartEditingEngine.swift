@@ -260,6 +260,9 @@ public struct AutoIndentRule {
 
 /// Smart editing configuration
 public struct SmartEditingConfiguration {
+    /// Creates a smart-editing configuration with default values.
+    public init() {}
+
     // Auto-bracket insertion
     /// Whether to automatically insert closing brackets
     public var autoInsertBrackets = true

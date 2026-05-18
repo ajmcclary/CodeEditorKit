@@ -1,4 +1,5 @@
 @testable import CodeEditorPlugin
+import CodeEditorSmartEditing
 import CodeEditorTextModel
 @testable import CodeEditorView
 import XCTest
@@ -123,7 +124,7 @@ final class SmartEditingEngineMultiplexerTests: XCTestCase {
             .deletingLastPathComponent() // Features
             .deletingLastPathComponent() // CodeEditorPluginTests
             .deletingLastPathComponent() // Tests
-            .appendingPathComponent("Sources/CodeEditorPlugin/Features/SmartEditingEngine.swift")
+            .appendingPathComponent("Sources/CodeEditorSmartEditing/SmartEditingEngine.swift")
         let source = try String(contentsOf: url, encoding: .utf8)
         XCTAssertFalse(
             source.contains("Replacing existing text view delegate"),

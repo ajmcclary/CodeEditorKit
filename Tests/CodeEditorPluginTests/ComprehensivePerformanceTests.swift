@@ -6,6 +6,7 @@ import CodeEditorLanguages
 import CodeEditorLSP
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+import CodeEditorSmartEditing
 import CodeEditorTextModel
 @testable import CodeEditorView
 import XCTest
