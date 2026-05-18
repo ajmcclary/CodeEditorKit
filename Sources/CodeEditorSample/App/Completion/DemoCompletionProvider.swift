@@ -1,6 +1,7 @@
 import CodeEditorCompletion
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Foundation
 
 /// Demonstrates the `CompletionProvider` protocol end-to-end *and* exercises

@@ -1,5 +1,6 @@
 #if canImport(UIKit)
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import SwiftUI
 import UIKit

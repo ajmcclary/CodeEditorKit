@@ -1,5 +1,6 @@
 #if !canImport(AppKit)
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// iOS / iPadOS root scene for the sample.

@@ -1,6 +1,7 @@
 import CodeEditorCompletion
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Stateless view backing the Completion inspector. Takes the coordinator's

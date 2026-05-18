@@ -1,6 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Foundation
 
 /// Renders an `EditorConfiguration` as Swift source — direct property

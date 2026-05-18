@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import AppKit
+import CodeEditorSwiftUI
 import Foundation
 
 /// macOS-only NSOpenPanel wrapper used by the workspace surface

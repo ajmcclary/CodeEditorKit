@@ -2,6 +2,7 @@
 import AppKit
 @testable import CodeEditorLayout
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import SwiftUI
 import XCTest

@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import CodeEditorView
 import SwiftUI
 

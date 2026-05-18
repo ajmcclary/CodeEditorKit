@@ -1,5 +1,6 @@
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Foundation
 
 /// Display-name-sorted list of `Language` cases for the language picker.

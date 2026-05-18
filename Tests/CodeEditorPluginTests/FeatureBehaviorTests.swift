@@ -3,6 +3,7 @@ import CodeEditorFolding
 import CodeEditorLanguages
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 import CodeEditorSymbols
 @testable import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel

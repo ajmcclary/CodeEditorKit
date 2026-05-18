@@ -1,6 +1,7 @@
 import CodeEditorCompletion
 import CodeEditorLanguages
 import CodeEditorPlatform
+@testable import CodeEditorSwiftUI
 #if canImport(AppKit) || canImport(UIKit)
 @testable import CodeEditorView
 import Foundation

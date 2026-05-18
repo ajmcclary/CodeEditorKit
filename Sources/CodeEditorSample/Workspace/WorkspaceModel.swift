@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import CodeEditorWorkspace
 import Foundation
 

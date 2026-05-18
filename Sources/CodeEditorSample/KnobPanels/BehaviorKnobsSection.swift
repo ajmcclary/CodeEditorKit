@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 struct BehaviorKnobsSection: View {

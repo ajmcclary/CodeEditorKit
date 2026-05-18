@@ -1,5 +1,6 @@
 import CodeEditorAnnotations
 import CodeEditorPlatform
+@testable import CodeEditorSwiftUI
 #if canImport(AppKit)
 import AppKit
 import CodeEditorTextModel

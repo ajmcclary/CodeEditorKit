@@ -1,6 +1,7 @@
 import CodeEditorAnnotations
 import CodeEditorPlatform
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import CodeEditorTextModel
 import CodeEditorView
 import Foundation

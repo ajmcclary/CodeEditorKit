@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorConfiguration
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 // `FrameworkEdgeInsets` is exported by `CodeEditorPlugin` to disambiguate

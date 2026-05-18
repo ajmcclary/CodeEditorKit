@@ -1,5 +1,6 @@
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Right-rail inspector showing the live state of the sample's

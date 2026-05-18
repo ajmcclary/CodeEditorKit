@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import CodeEditorCommon
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Foundation
 
 /// Maintains a one-to-one mapping between in-memory tabs and on-disk shadow

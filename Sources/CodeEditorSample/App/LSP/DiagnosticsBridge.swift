@@ -3,6 +3,7 @@ import AppKit
 import CodeEditorAnnotations
 import CodeEditorLSP
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Combine
 
 /// Translates LSP diagnostics into sample-side `Annotation` values for the

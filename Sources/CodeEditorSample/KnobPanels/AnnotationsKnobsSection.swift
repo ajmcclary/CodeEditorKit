@@ -1,5 +1,6 @@
 import CodeEditorAnnotations
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Settings-sidebar section with buttons to drive the demo annotations

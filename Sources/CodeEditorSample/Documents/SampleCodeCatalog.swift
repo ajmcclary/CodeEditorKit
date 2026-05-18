@@ -1,5 +1,6 @@
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Foundation
 
 /// Per-language sample snippets used by the sample app's editor pane.

@@ -1,5 +1,6 @@
 import CodeEditorConfiguration
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Observation
 
 /// Active editor configuration. Bound directly from the knob panels;

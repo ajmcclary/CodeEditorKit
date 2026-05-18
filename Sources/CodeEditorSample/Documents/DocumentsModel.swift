@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import CodeEditorView
 import Combine
 import Foundation

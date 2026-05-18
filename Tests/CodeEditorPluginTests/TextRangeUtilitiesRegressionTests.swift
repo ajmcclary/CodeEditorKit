@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import AppKit
 import CodeEditorCommon
+@testable import CodeEditorSwiftUI
 import CodeEditorTextModel
 #else
 @testable import CodeEditorView

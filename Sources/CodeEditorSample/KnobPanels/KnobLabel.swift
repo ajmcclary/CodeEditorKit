@@ -1,4 +1,5 @@
 import CodeEditorDiagnostics
+import CodeEditorSwiftUI
 import Foundation
 
 /// Converts raw camelCase property names into human-readable labels and

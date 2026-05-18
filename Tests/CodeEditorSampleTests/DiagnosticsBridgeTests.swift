@@ -3,6 +3,7 @@ import AppKit
 import CodeEditorLSP
 import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import Combine
 import Testing

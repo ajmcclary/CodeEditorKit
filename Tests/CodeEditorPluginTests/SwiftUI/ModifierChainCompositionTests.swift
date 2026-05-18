@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import CodeEditorDiagnostics
+@testable import CodeEditorSwiftUI
 //
 //  ModifierChainCompositionTests.swift
 //  CodeEditorPluginTests

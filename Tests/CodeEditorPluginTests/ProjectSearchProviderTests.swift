@@ -1,4 +1,5 @@
 import CodeEditorSearch
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import Foundation
 import Testing

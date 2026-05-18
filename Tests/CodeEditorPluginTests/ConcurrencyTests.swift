@@ -2,6 +2,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import XCTest
 

@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Styled sidebar container. *No tree* — the host fills `content` with

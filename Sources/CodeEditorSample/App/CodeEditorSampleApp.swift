@@ -1,3 +1,4 @@
+import CodeEditorSwiftUI
 import CodeEditorView
 import SwiftUI
 

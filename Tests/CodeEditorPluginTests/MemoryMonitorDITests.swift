@@ -3,6 +3,7 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import XCTest
 

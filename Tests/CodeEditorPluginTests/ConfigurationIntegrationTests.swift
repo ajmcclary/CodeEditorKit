@@ -1,6 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorPlatform
+@testable import CodeEditorSwiftUI
 #if canImport(AppKit)
 import AppKit
 import CodeEditorCommon

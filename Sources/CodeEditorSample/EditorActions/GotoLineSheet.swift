@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Modal sheet for jumping the caret to a specific line. Triggered from

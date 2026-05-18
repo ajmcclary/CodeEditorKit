@@ -7,6 +7,7 @@
 
 import CodeEditorCommon
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import XCTest
 #if canImport(AppKit)

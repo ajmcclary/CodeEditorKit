@@ -2,6 +2,7 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
 import CodeEditorSearch
+import CodeEditorSwiftUI
 import CodeEditorView
 import SwiftUI
 

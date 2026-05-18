@@ -1,6 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
+@testable import CodeEditorSwiftUI
 import CodeEditorTheming
 @testable import CodeEditorView
 import SwiftUI

@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// SwiftUI content for the hover popover. Renders an LSP `Hover` result's

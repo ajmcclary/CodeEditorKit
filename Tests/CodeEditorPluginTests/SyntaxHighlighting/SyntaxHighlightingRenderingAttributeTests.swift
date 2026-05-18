@@ -1,4 +1,5 @@
 import CodeEditorPlatform
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import XCTest
 

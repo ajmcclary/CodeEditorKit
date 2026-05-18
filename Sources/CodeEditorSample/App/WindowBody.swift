@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+import CodeEditorSwiftUI
 import CodeEditorTheming
 #if canImport(AppKit)
 import CodeEditorDesignTokens

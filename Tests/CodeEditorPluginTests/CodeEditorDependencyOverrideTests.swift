@@ -1,5 +1,6 @@
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 import CodeEditorTextModel
 @testable import CodeEditorView
 import Dependencies

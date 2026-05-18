@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import AppKit
+import CodeEditorSwiftUI
 import Foundation
 
 /// macOS NSSavePanel / NSOpenPanel wrappers used by the sample's

@@ -1,3 +1,4 @@
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import Combine
 import XCTest

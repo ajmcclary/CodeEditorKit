@@ -2,6 +2,7 @@
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
 @testable import CodeEditorSample
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import Foundation
 import Testing

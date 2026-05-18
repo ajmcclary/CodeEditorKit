@@ -1,5 +1,6 @@
 import CodeEditorDiagnostics
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 struct PerformanceKnobsSection: View {

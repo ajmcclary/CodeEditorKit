@@ -1,6 +1,7 @@
 import CodeEditorDesignTokens
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// One file tab in the chrome's tab strip.

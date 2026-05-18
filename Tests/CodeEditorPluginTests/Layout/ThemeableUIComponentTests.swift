@@ -1,6 +1,7 @@
 import CodeEditorAnnotations
 @testable import CodeEditorLayout
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 import CodeEditorTheming
 @testable import CodeEditorView
 import Foundation

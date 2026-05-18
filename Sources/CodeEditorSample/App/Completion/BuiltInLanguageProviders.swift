@@ -1,5 +1,6 @@
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Foundation
 
 /// Wraps the framework's `LanguageProviderFactory.createProvider(for:)`

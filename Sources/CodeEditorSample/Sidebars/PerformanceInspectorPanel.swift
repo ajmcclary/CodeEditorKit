@@ -1,6 +1,7 @@
 import CodeEditorDiagnostics
 import CodeEditorPlatform
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Right-rail inspector surfacing live editor performance metrics.

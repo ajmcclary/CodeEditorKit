@@ -1,5 +1,6 @@
 import CodeEditorDiagnostics
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
 @testable import CodeEditorView

@@ -1,3 +1,4 @@
+import CodeEditorSwiftUI
 import Foundation
 
 /// One item in the command palette.

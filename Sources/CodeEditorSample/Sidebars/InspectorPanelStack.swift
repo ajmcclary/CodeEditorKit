@@ -2,6 +2,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorPlatform
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Cross-platform composition of the six inspector panels. Reads

@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import CodeEditorPlugin
 import CodeEditorSearch
+import CodeEditorSwiftUI
 import Foundation
 
 extension EditorController {

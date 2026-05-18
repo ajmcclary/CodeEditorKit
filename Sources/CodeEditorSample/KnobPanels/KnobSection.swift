@@ -1,5 +1,6 @@
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// How a `KnobSection`'s content area behaves.

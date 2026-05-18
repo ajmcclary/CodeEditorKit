@@ -1,5 +1,6 @@
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// File-tab strip. Reads its style from `\.editorTabStripStyle` (default

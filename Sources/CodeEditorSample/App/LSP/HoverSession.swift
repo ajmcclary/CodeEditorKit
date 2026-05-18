@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+import CodeEditorSwiftUI
 import Foundation
 import Observation
 

@@ -1,3 +1,4 @@
+import CodeEditorSwiftUI
 import Foundation
 
 /// Centralized name-based filters for the workspace surface. Used by

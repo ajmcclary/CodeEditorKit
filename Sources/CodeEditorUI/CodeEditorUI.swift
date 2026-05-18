@@ -1,3 +1,4 @@
+import CodeEditorSwiftUI
 import Foundation
 
 /// Umbrella namespace for the `CodeEditorUI` target.

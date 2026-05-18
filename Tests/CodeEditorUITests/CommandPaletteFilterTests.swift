@@ -1,3 +1,4 @@
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorUI
 import Foundation
 import Testing

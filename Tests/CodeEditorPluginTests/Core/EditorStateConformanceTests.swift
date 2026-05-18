@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorLanguages
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 import CodeEditorSymbols
 @testable import CodeEditorView
 import Foundation

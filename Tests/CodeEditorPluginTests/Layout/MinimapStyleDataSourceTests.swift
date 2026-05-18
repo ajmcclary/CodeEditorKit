@@ -2,6 +2,7 @@ import CodeEditorConfiguration
 @testable import CodeEditorLayout
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorSyntaxHighlighting
 @testable import CodeEditorView
 import Foundation

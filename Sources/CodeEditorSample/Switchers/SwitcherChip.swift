@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// A single row inside the switcher card. Two-line layout: small-caps

@@ -2,6 +2,7 @@ import CodeEditorDesignTokens
 @testable import CodeEditorLayout
 import CodeEditorPlatform
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 import CodeEditorTheming
 @testable import CodeEditorView
 import Foundation

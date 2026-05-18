@@ -4,6 +4,7 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorLSP
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Combine
 import Foundation
 import Observation

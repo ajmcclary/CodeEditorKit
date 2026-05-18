@@ -1,6 +1,7 @@
 import CodeEditorDesignTokens
 import CodeEditorLanguages
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Filterable list of `EditorController.symbols`. Picking a row calls

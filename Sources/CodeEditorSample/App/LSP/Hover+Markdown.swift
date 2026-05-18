@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import CodeEditorLSP
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 
 extension HoverContents {
     /// Flatten the variant into a single markdown string for the popover.

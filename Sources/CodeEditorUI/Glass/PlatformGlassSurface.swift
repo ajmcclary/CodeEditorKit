@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// `ViewModifier` that applies the platform's Liquid Glass surface to its

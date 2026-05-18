@@ -1,6 +1,7 @@
 #if canImport(AppKit)
 import CodeEditorDesignTokens
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import CodeEditorView
 import CodeEditorWorkspace
 import SwiftUI

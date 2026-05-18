@@ -2,6 +2,7 @@
 import CodeEditorCommon
 import CodeEditorConfiguration
 @testable import CodeEditorPlugin
+@testable import CodeEditorSwiftUI
 import CodeEditorUI
 @testable import CodeEditorView
 import SnapshotTesting

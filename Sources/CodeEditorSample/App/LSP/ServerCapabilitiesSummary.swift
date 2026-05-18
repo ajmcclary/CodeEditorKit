@@ -1,5 +1,6 @@
 import CodeEditorLSP
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 
 /// Human-readable digest of the LSP server's advertised capabilities.
 /// Built from a `ServerCapabilities` after `initialize` completes; used by

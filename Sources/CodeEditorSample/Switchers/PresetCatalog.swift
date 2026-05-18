@@ -1,5 +1,6 @@
 import CodeEditorConfiguration
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import Foundation
 
 /// Demo presets exposed by the sample's preset picker. The iOS preset is

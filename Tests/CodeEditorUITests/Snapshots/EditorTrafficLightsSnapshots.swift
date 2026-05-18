@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+@testable import CodeEditorSwiftUI
 import CodeEditorUI
 import SnapshotTesting
 import SwiftUI

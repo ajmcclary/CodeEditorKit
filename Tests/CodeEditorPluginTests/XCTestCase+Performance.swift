@@ -5,6 +5,7 @@
 //  Created to optimize test performance by providing standard measure options
 //
 
+@testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import XCTest
 

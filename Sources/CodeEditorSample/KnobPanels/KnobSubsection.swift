@@ -1,4 +1,5 @@
 import CodeEditorPlugin
+import CodeEditorSwiftUI
 import SwiftUI
 
 /// Small-caps group label rendered between knob rows. Acts as the title

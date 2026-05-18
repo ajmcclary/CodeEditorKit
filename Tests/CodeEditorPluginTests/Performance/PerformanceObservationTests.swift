@@ -1,4 +1,5 @@
 import CodeEditorDiagnostics
+@testable import CodeEditorSwiftUI
 //
 //  PerformanceObservationTests.swift
 //  CodeEditorPluginTests

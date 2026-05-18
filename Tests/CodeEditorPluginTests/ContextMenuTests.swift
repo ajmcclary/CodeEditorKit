@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import AppKit
+@testable import CodeEditorSwiftUI
 #elseif canImport(UIKit)
 import UIKit
 #endif
