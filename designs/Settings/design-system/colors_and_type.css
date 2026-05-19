@@ -1,0 +1,730 @@
+/* ============================================================
+   @FONT-FACE — SF Pro Text / Display / Rounded
+   ------------------------------------------------------------
+   Uploaded by the user.  Apple licenses SF Pro for use under
+   their developer license; ship only with attribution.  SF Mono
+   was NOT uploaded — code keeps falling through to the system
+   "ui-monospace" / "SF Mono" / "JetBrains Mono" stack.
+   ============================================================ */
+
+@font-face { font-family: "SF Pro Text"; font-weight: 100; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Ultralight.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 200; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Thin.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 300; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Light.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 400; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Regular.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 500; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Medium.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 600; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Semibold.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 700; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Bold.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 800; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Heavy.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 900; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Text-Black.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 400; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Text-RegularItalic.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 500; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Text-MediumItalic.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 600; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Text-SemiboldItalic.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Text"; font-weight: 700; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Text-BoldItalic.otf") format("opentype"); }
+
+@font-face { font-family: "SF Pro Display"; font-weight: 100; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Ultralight.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 200; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Thin.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 300; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Light.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 400; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Regular.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 500; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Medium.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 600; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Semibold.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 700; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Bold.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 800; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Heavy.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 900; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Display-Black.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 400; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Display-RegularItalic.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 500; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Display-MediumItalic.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 600; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Display-SemiboldItalic.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Display"; font-weight: 700; font-style: italic; font-display: swap; src: url("fonts/SF-Pro-Display-BoldItalic.otf") format("opentype"); }
+
+@font-face { font-family: "SF Pro Rounded"; font-weight: 100; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Ultralight.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 200; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Thin.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 300; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Light.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 400; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Regular.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 500; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Medium.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 600; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Semibold.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 700; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Bold.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 800; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Heavy.otf") format("opentype"); }
+@font-face { font-family: "SF Pro Rounded"; font-weight: 900; font-style: normal; font-display: swap; src: url("fonts/SF-Pro-Rounded-Black.otf") format("opentype"); }
+
+/* ============================================================
+   CodeEditorPlugin Design System — Foundations
+   ------------------------------------------------------------
+   Mirrors the token system in Sources/CodeEditorDesignTokens/
+   and the Zed Trek theme family in
+   Sources/CodeEditorTheming/Resources/Themes/zed-trek.json.
+
+   Default theme is LCARS Dark.  Switch by changing the class
+   on <body> (or any ancestor) to one of:
+     .theme-lcars-dark        (default)
+     .theme-lcars-light
+     .theme-black-alert-dark  .theme-black-alert-light
+     .theme-borg-cube-dark    .theme-borg-cube-light
+     .theme-command-dark      .theme-command-light
+     .theme-federation-dark   .theme-federation-light
+     .theme-red-alert-dark    .theme-red-alert-light
+     .theme-yellow-alert-dark .theme-yellow-alert-light
+     .theme-sick-bay-dark     .theme-sick-bay-light
+   ============================================================ */
+
+/* ---------- 1.  FONT STACKS  ----------
+   Apple SF stacks first, with web fallbacks.  No external
+   fonts are required: SF Pro / SF Mono ship with macOS/iOS.
+   On non-Apple machines the browser falls through to system-ui.
+*/
+:root {
+  --font-sans: "SF Pro Text", -apple-system, BlinkMacSystemFont,
+               "SF Pro Display", "Inter", system-ui,
+               "Helvetica Neue", Arial, sans-serif;
+  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont,
+                  "Inter", system-ui, sans-serif;
+  --font-rounded: "SF Pro Rounded", ui-rounded, -apple-system,
+                  "Nunito", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo,
+               "Roboto Mono", Consolas, monospace;
+
+  /* ---------- 2.  TYPE SCALE (pt; 1pt ≈ 1px on web) ---------- */
+  --type-display-xl: 80px;     /* onboarding hero       */
+  --type-display-lg: 60px;
+  --type-display-md: 48px;
+  --type-display-sm: 44px;     /* hero numbers          */
+  --type-title-xl:   34px;     /* Apple .largeTitle     */
+  --type-title-lg:   28px;     /* Apple .title          */
+  --type-title-md:   22px;     /* Apple .title2         */
+  --type-title-sm:   20px;     /* Apple .title3         */
+  --type-heading-lg: 17px;     /* Apple .headline       */
+  --type-heading-md: 15px;     /* Apple .subheadline    */
+  --type-body-lg:    17px;     /* Apple .body           */
+  --type-body-md:    16px;     /* Apple .callout        */
+  --type-body-sm:    13px;     /* Apple .footnote       */
+  --type-caption-lg: 12px;     /* Apple .caption        */
+  --type-caption-md: 11px;     /* Apple .caption2       */
+  --type-overline:   11px;     /* uppercase overline    */
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight:   1.0;
+  --leading-normal:  1.2;
+  --leading-relaxed: 1.5;
+
+  --tracking-caps:   0.5px;
+  --tracking-tight: -0.01em;
+
+  /* ---------- 3.  SPACING SCALE (pt) ---------- */
+  --space-xxxs: 2px;
+  --space-xxs:  4px;
+  --space-xs:   6px;
+  --space-sm:   8px;
+  --space-sm-md: 10px;
+  --space-md:   12px;
+  --space-lg:   16px;
+  --space-xl:   20px;
+  --space-xxl:  24px;
+  --space-xxxl: 32px;
+
+  --space-card-padding: var(--space-lg);
+  --space-section:      var(--space-xl);
+  --space-content:      var(--space-xxl);
+
+  /* ---------- 4.  SHAPE  ---------- */
+  --radius-xs:     4px;   /* badge                  */
+  --radius-sm:     6px;   /* button                 */
+  --radius-md:    10px;   /* control / card-ish     */
+  --radius-lg:    12px;   /* card                   */
+  --radius-xl:    16px;   /* panel                  */
+  --radius-xxl:   20px;   /* state panel / modal    */
+  --radius-chip:   8px;
+  --radius-window: 40px;  /* macOS Tahoe window     */
+  --radius-full:  9999px;
+
+  --stroke-hairline: 0.5px;
+  --stroke-thin:     1px;
+  --stroke-med-light: 1.5px;
+  --stroke-medium:   2px;
+  --stroke-thick:    3px;
+  --stroke-ring:     8px;
+
+  /* ---------- 5.  ICON SIZES  ---------- */
+  --icon-indicator: 10px;
+  --icon-micro:     12px;
+  --icon-xs:        16px;
+  --icon-sm:        18px;
+  --icon-md:        24px;
+  --icon-lg:        32px;
+  --icon-xl:        44px;
+  --icon-xxl:       48px;
+
+  --touch-min: 44px;          /* Apple HIG minimum   */
+  --touch-comfortable: 48px;
+  --touch-row: 52px;
+  --touch-large: 56px;
+
+  /* ---------- 6.  OPACITY SCALE ---------- */
+  --opa-faint:     0.03;
+  --opa-dim:       0.04;
+  --opa-subtle:    0.05;
+  --opa-mist:      0.06;
+  --opa-soft:      0.08;
+  --opa-tint:      0.10;
+  --opa-glass-fill:      0.12;
+  --opa-glass-border:    0.14;
+  --opa-glass-highlight: 0.15;
+  --opa-light:    0.20;
+  --opa-disabled: 0.30;
+  --opa-medium:   0.50;
+  --opa-strong:   0.70;
+  --opa-heavy:    0.80;
+  --opa-near:     0.85;
+
+  /* ---------- 7.  ANIMATION ---------- */
+  --dur-instant: 100ms;
+  --dur-fast:    150ms;
+  --dur-quick:   200ms;
+  --dur-drawer:  250ms;
+  --dur-control: 300ms;
+  --dur-page:    350ms;
+  --dur-section: 400ms;
+  --dur-screen:  500ms;
+  --dur-very-slow: 600ms;
+
+  --ease-out-soft:     cubic-bezier(0.16, 1.00, 0.30, 1.00);
+  --ease-in-out-soft:  cubic-bezier(0.25, 0.80, 0.25, 1.00);
+  --ease-spring-snappy: cubic-bezier(0.22, 1.00, 0.36, 1.00);
+
+  /* ---------- 8.  TAHOE TRAFFIC LIGHTS ---------- */
+  --traffic-close:    #FF5D57;
+  --traffic-minimize: #FEBC2E;
+  --traffic-zoom:     #28C840;
+  --traffic-stroke:   rgba(0, 0, 0, 0.18);
+
+  /* ---------- 9.  STATUS COLORS (Apple system, dark mode) ---------- */
+  --status-success: #30D158;
+  --status-warning: #FF9F0A;
+  --status-error:   #FF453A;
+  --status-info:    #0A84FF;
+  --status-caution: #FFD60A;
+}
+
+/* ===============================================================
+   THEME PALETTES — each `.theme-*` class sets the semantic palette.
+   Names mirror Theme.style.* on the Swift side:
+     bg              background.appearance opaque
+     surface         surface.background
+     elevated        elevated_surface.background
+     panel           panel.background
+     editor-bg       editor.background
+     editor-fg       editor.foreground
+     editor-gutter   editor.gutter.background
+     title-bar       title_bar.background
+     toolbar         toolbar.background
+     tab-bar         tab_bar.background
+     tab-active      tab.active_background
+     status-bar      status_bar.background
+     border          border
+     border-variant  border.variant
+     border-focused  border.focused
+     text            text
+     text-accent     text.accent
+     text-muted      text.muted
+     text-disabled   text.disabled
+     icon            icon
+     icon-accent     icon.accent
+     icon-muted      icon.muted
+     element-bg      element.background
+     element-hover   element.hover
+     element-active  element.active
+     element-selected element.selected
+     ghost-hover     ghost_element.hover
+     ghost-active    ghost_element.active
+     ghost-selected  ghost_element.selected
+     accent-1..5     accents[0..4]
+     active-line     editor.active_line.background
+     line-num        editor.line_number
+     active-line-num editor.active_line_number
+     syn-keyword     syntax.keyword.color
+     syn-string      syntax.string.color
+     syn-comment     syntax.comment.color
+     syn-function    syntax.function.color
+     syn-type        syntax.type.color
+     syn-number      syntax.number.color
+     syn-constant    syntax.constant.color
+     syn-property    syntax.property.color
+     syn-variable    syntax.variable.color
+     syn-punct       syntax.punctuation.color
+     syn-tag         syntax.tag.color
+     glass-tint      base color blended into Liquid Glass surface
+   =============================================================== */
+
+/* ---- LCARS Dark  — DEFAULT theme, Star Trek TNG console ---- */
+.theme-lcars-dark, :root {
+  color-scheme: dark;
+  --bg:             #05060A;
+  --surface:        #0E1421;
+  --elevated:       #111827;
+  --panel:          #0C111B;
+  --editor-bg:      #080A0F;
+  --editor-fg:      #F2E7D8;
+  --editor-gutter:  #0D1018;
+  --title-bar:      #0D1018;
+  --toolbar:        #0D1018;
+  --tab-bar:        #05060A;
+  --tab-active:     #111827;
+  --tab-inactive:   #0D1018;
+  --status-bar:     #0D1018;
+  --border:         #2A2030;
+  --border-variant: #252B36;
+  --border-focused: #FF9933;
+  --border-selected:#FFD8B0;
+  --text:           #F2E7D8;
+  --text-accent:    #FFCC66;
+  --text-muted:     #8B93A1;
+  --text-disabled:  #4F5868;
+  --text-placeholder:#687282;
+  --icon:           #D8DEE8;
+  --icon-accent:    #FF9933;
+  --icon-muted:     #8B93A1;
+  --element-bg:     #151A24;
+  --element-hover:  #1E2636;
+  --element-active: #372216;
+  --element-selected:#2A1E14;
+  --ghost-hover:    rgba(255, 216, 176, 0.10);
+  --ghost-active:   rgba(255, 153, 51, 0.16);
+  --ghost-selected: rgba(255, 153, 51, 0.16);
+  --accent-1: #FF9933;  /* LCARS orange   */
+  --accent-2: #FFD8B0;  /* LCARS peach    */
+  --accent-3: #FFCC66;  /* LCARS amber    */
+  --accent-4: #7EC8DE;  /* status blue    */
+  --accent-5: #CC99FF;  /* LCARS lavender */
+  --active-line:        rgba(255, 153, 51, 0.08);
+  --highlighted-line:   #121725;
+  --line-num:           #6F7888;
+  --active-line-num:    #FFCC66;
+  --syn-keyword:    #FF9933;
+  --syn-string:     #FFCC66;
+  --syn-comment:    #687282;
+  --syn-function:   #FFD8B0;
+  --syn-type:       #7EC8DE;
+  --syn-number:     #FFD8B0;
+  --syn-constant:   #FFD8B0;
+  --syn-property:   #D8DEE8;
+  --syn-variable:   #F2E7D8;
+  --syn-punct:      #8B93A1;
+  --syn-tag:        #FFCC66;
+  --syn-attr:       #CC99FF;
+  --glass-tint:     #FF9933;
+  --search-match:   rgba(255, 216, 176, 0.50);
+  --diag-error:     #EF5A5A;
+  --diag-warning:   #FFCC66;
+  --diag-info:      #7EC8DE;
+  --diag-success:   #4EE6A6;
+  --diag-modified:  #FFB66B;
+}
+
+/* ---- LCARS Light ---- */
+.theme-lcars-light {
+  color-scheme: light;
+  --bg:             #FBF7F1;
+  --surface:        #F4ECDD;
+  --elevated:       #FFFCF4;
+  --panel:          #EFE4CF;
+  --editor-bg:      #FFFCF4;
+  --editor-fg:      #2A1F0A;
+  --editor-gutter:  #F4ECDD;
+  --title-bar:      #E5D2A5;
+  --toolbar:        #EFE4CF;
+  --tab-bar:        #EFE4CF;
+  --tab-active:     #FFFCF4;
+  --tab-inactive:   #E5D2A5;
+  --status-bar:     #E5D2A5;
+  --border:         #B8945A;
+  --border-variant: #D8B98A;
+  --border-focused: #C16E1D;
+  --border-selected:#FF9933;
+  --text:           #2A1F0A;
+  --text-accent:    #8B5D1A;
+  --text-muted:     #7A5A20;
+  --text-disabled:  #B8945A;
+  --text-placeholder:#A37D45;
+  --icon:           #4A3A18;
+  --icon-accent:    #C16E1D;
+  --icon-muted:     #8B6F35;
+  --element-bg:     #F4ECDD;
+  --element-hover:  #E5D2A5;
+  --element-active: #D8B98A;
+  --element-selected:#FFE4B5;
+  --ghost-hover:    rgba(193, 110, 29, 0.10);
+  --ghost-active:   rgba(193, 110, 29, 0.18);
+  --ghost-selected: rgba(255, 153, 51, 0.22);
+  --accent-1: #C16E1D;
+  --accent-2: #FF9933;
+  --accent-3: #FFCC66;
+  --accent-4: #1F8EA5;
+  --accent-5: #8B5DBE;
+  --active-line:        rgba(193, 110, 29, 0.07);
+  --highlighted-line:   #FAF2DE;
+  --line-num:           #A37D45;
+  --active-line-num:    #C16E1D;
+  --syn-keyword:    #C16E1D;
+  --syn-string:     #8B5D1A;
+  --syn-comment:    #A37D45;
+  --syn-function:   #B85C00;
+  --syn-type:       #1F8EA5;
+  --syn-number:     #B45D00;
+  --syn-constant:   #8B5DBE;
+  --syn-property:   #4A3A18;
+  --syn-variable:   #2A1F0A;
+  --syn-punct:      #7A5A20;
+  --syn-tag:        #B85C00;
+  --syn-attr:       #8B5DBE;
+  --glass-tint:     #FF9933;
+  --search-match:   rgba(255, 153, 51, 0.40);
+  --diag-error:     #B54747;
+  --diag-warning:   #B45D00;
+  --diag-info:      #1F8EA5;
+  --diag-success:   #2FA85B;
+  --diag-modified:  #B45D00;
+}
+
+/* ---- Black Alert Dark — minimal black with cyan/lavender ---- */
+.theme-black-alert-dark {
+  color-scheme: dark;
+  --bg:#020204; --surface:#07090f; --elevated:#10121c; --panel:#080b12;
+  --editor-bg:#010204; --editor-fg:#dfe7f1; --editor-gutter:#05070d;
+  --title-bar:#080b12; --toolbar:#080b12; --tab-bar:#020204;
+  --tab-active:#10121c; --tab-inactive:#05070d; --status-bar:#080b12;
+  --border:#1a2232; --border-variant:#121826; --border-focused:#7ec8de;
+  --border-selected:#b5a7ff;
+  --text:#dfe7f1; --text-accent:#c7e9f1; --text-muted:#8b99ab;
+  --text-disabled:#4f5d70; --text-placeholder:#68778c;
+  --icon:#c5d1df; --icon-accent:#7ec8de; --icon-muted:#768699;
+  --element-bg:#10121c; --element-hover:#151c2b; --element-active:#1b273a;
+  --element-selected:#252041;
+  --ghost-hover:rgba(126,200,222,0.094); --ghost-active:rgba(126,200,222,0.168);
+  --ghost-selected:rgba(181,167,255,0.2);
+  --accent-1:#7ec8de; --accent-2:#c7e9f1; --accent-3:#b5a7ff;
+  --accent-4:#4ee6a6; --accent-5:#ff9933;
+  --active-line:rgba(126,200,222,0.07); --highlighted-line:rgba(181,167,255,0.12);
+  --line-num:#5d6b7f; --active-line-num:#7ec8de;
+  --syn-keyword:#c7e9f1; --syn-string:#4ee6a6; --syn-comment:#68778c;
+  --syn-function:#7ec8de; --syn-type:#7ec8de; --syn-number:#ff9933;
+  --syn-constant:#b5a7ff; --syn-property:#c5d1df; --syn-variable:#dfe7f1;
+  --syn-punct:#8b99ab; --syn-tag:#c7e9f1; --syn-attr:#b5a7ff;
+  --glass-tint:#7ec8de; --search-match:rgba(181,167,255,0.4);
+  --diag-error:#ff7373; --diag-warning:#ff9933; --diag-info:#7ec8de;
+  --diag-success:#4ee6a6; --diag-modified:#7ec8de;
+}
+
+/* ---- Black Alert Light ---- */
+.theme-black-alert-light {
+  color-scheme: light;
+  --bg:#f7f8fb; --surface:#e9edf3; --elevated:#ffffff; --panel:#e1e6ee;
+  --editor-bg:#fcfdff; --editor-fg:#1e2530; --editor-gutter:#e9edf3;
+  --title-bar:#d8dfe8; --toolbar:#e1e6ee; --tab-bar:#cfd8e4;
+  --tab-active:#fcfdff; --tab-inactive:#d8dfe8; --status-bar:#d8dfe8;
+  --border:#a9b4c2; --border-variant:#c1cad6; --border-focused:#257ea7;
+  --border-selected:#b5a7ff;
+  --text:#1e2530; --text-accent:#09090b; --text-muted:#5b6675;
+  --text-disabled:#98a2ae; --text-placeholder:#7b8796;
+  --icon:#4a5766; --icon-accent:#257ea7; --icon-muted:#6f7d8d;
+  --element-bg:#dfe6ee; --element-hover:#d3dce7; --element-active:#c3cfdd;
+  --element-selected:#d9d4ff;
+  --ghost-hover:rgba(37,126,167,0.086); --ghost-active:rgba(37,126,167,0.157);
+  --ghost-selected:rgba(181,167,255,0.22);
+  --accent-1:#09090b; --accent-2:#257ea7; --accent-3:#7ec8de;
+  --accent-4:#b5a7ff; --accent-5:#4ee6a6;
+  --active-line:rgba(126,200,222,0.07); --highlighted-line:rgba(181,167,255,0.13);
+  --line-num:#7b8796; --active-line-num:#257ea7;
+  --syn-keyword:#09090b; --syn-string:#2f9f68; --syn-comment:#7b8796;
+  --syn-function:#257ea7; --syn-type:#257ea7; --syn-number:#b45d00;
+  --syn-constant:#6d5ed4; --syn-property:#4a5766; --syn-variable:#1e2530;
+  --syn-punct:#5b6675; --syn-tag:#1e3a5f; --syn-attr:#6d5ed4;
+  --glass-tint:#257ea7; --search-match:rgba(181,167,255,0.4);
+  --diag-error:#ef5a5a; --diag-warning:#b45d00; --diag-info:#257ea7;
+  --diag-success:#2f9f68; --diag-modified:#257ea7;
+}
+
+/* ---- Borg Cube Dark — green/green/green ---- */
+.theme-borg-cube-dark {
+  color-scheme: dark;
+  --bg:#050805; --surface:#0B120D; --elevated:#101B12; --panel:#0B120D;
+  --editor-bg:#020402; --editor-fg:#D8F5DC; --editor-gutter:#071009;
+  --title-bar:#0D1D10; --toolbar:#0B120D; --tab-bar:#050805;
+  --tab-active:#101B12; --tab-inactive:#071009; --status-bar:#0D1D10;
+  --border:#183221; --border-variant:#132318; --border-focused:#5EFC8D;
+  --border-selected:#27C267;
+  --text:#D8F5DC; --text-accent:#9EFFA8; --text-muted:#7B9A82;
+  --text-disabled:#49634F; --text-placeholder:#5F7B65;
+  --icon:#B3D9BA; --icon-accent:#5EFC8D; --icon-muted:#6F8A75;
+  --element-bg:#122017; --element-hover:#17291D; --element-active:#1D3826;
+  --element-selected:#1F6B3C;
+  --ghost-hover:rgba(94,252,141,0.094); --ghost-active:rgba(94,252,141,0.168);
+  --ghost-selected:rgba(39,194,103,0.2);
+  --accent-1:#5EFC8D; --accent-2:#27C267; --accent-3:#9EFFA8;
+  --accent-4:#7EC8DE; --accent-5:#FF9933;
+  --active-line:rgba(94,252,141,0.07); --highlighted-line:rgba(39,194,103,0.13);
+  --line-num:#5F7B65; --active-line-num:#27C267;
+  --syn-keyword:#5EFC8D; --syn-string:#27C267; --syn-comment:#5F7B65;
+  --syn-function:#9EFFA8; --syn-type:#7EC8DE; --syn-number:#FF9933;
+  --syn-constant:#9EFFA8; --syn-property:#B3D9BA; --syn-variable:#D8F5DC;
+  --syn-punct:#7B9A82; --syn-tag:#5EFC8D; --syn-attr:#9EFFA8;
+  --glass-tint:#5EFC8D; --search-match:rgba(255,153,51,0.4);
+  --diag-error:#FF7373; --diag-warning:#FF9933; --diag-info:#7EC8DE;
+  --diag-success:#5EFC8D; --diag-modified:#7EC8DE;
+}
+
+/* ---- Borg Cube Light ---- */
+.theme-borg-cube-light {
+  color-scheme: light;
+  --bg:#F4FAF5; --surface:#E9F2EC; --elevated:#FBFFFB; --panel:#E3ECE6;
+  --editor-bg:#FBFFF9; --editor-fg:#1D2A22; --editor-gutter:#E3ECE6;
+  --title-bar:#C9DFCE; --toolbar:#E3ECE6; --tab-bar:#D7E7DB;
+  --tab-active:#FBFFF9; --tab-inactive:#C9DFCE; --status-bar:#C9DFCE;
+  --border:#78947F; --border-variant:#B7C8BB; --border-focused:#2FA85B;
+  --border-selected:#5EFC8D;
+  --text:#1D2A22; --text-accent:#1F6B3C; --text-muted:#536A59;
+  --text-disabled:#9AAC9E; --text-placeholder:#78947F;
+  --icon:#34483A; --icon-accent:#2FA85B; --icon-muted:#66786A;
+  --element-bg:#D7E7DB; --element-hover:#C9DFCE; --element-active:#B7D5BE;
+  --element-selected:#5EFC8D;
+  --ghost-hover:rgba(47,168,91,0.094); --ghost-active:rgba(47,168,91,0.157);
+  --ghost-selected:rgba(94,252,141,0.227);
+  --accent-1:#2FA85B; --accent-2:#5EFC8D; --accent-3:#1F6B3C;
+  --accent-4:#7EC8DE; --accent-5:#4A5766;
+  --active-line:rgba(47,168,91,0.07); --highlighted-line:rgba(94,252,141,0.14);
+  --line-num:#78947F; --active-line-num:#1F6B3C;
+  --syn-keyword:#2FA85B; --syn-string:#168247; --syn-comment:#78947F;
+  --syn-function:#1F6B3C; --syn-type:#257EA7; --syn-number:#B45D00;
+  --syn-constant:#557A5F; --syn-property:#34483A; --syn-variable:#1D2A22;
+  --syn-punct:#536A59; --syn-tag:#1F6B3C; --syn-attr:#1F6B3C;
+  --glass-tint:#2FA85B; --search-match:rgba(255,153,51,0.47);
+  --diag-error:#EF5A5A; --diag-warning:#B45D00; --diag-info:#257EA7;
+  --diag-success:#2FA85B; --diag-modified:#257EA7;
+}
+
+/* ---- Command Dark — amber/orange operations theme ---- */
+.theme-command-dark {
+  color-scheme: dark;
+  --bg:#09090B; --surface:#18181B; --elevated:#18181B; --panel:#0D0D12;
+  --editor-bg:#09090B; --editor-fg:#D3D8DE; --editor-gutter:#09090B;
+  --title-bar:#0D0D12; --toolbar:#0D0D12; --tab-bar:#0D0D12;
+  --tab-active:#09090B; --tab-inactive:#18181B; --status-bar:#18181B;
+  --border:#27272A; --border-variant:#1E3A5F; --border-focused:#FF9933;
+  --border-selected:#FFD8B0;
+  --text:#D3D8DE; --text-accent:#FFD8B0; --text-muted:#A1A1AA;
+  --text-disabled:#52525B; --text-placeholder:#71717A;
+  --icon:#D3D8DE; --icon-accent:#FFD8B0; --icon-muted:#A1A1AA;
+  --element-bg:#18181B; --element-hover:rgba(30,58,95,0.4);
+  --element-active:#1E3A5F; --element-selected:#1E3A5F;
+  --ghost-hover:rgba(30,58,95,0.4); --ghost-active:rgba(255,153,51,0.2);
+  --ghost-selected:rgba(255,153,51,0.15);
+  --accent-1:#FF9933; --accent-2:#FFD8B0; --accent-3:#7EC8DE;
+  --accent-4:#257EA7; --accent-5:#EF5A5A;
+  --active-line:rgba(30,58,95,0.4); --highlighted-line:#18181B;
+  --line-num:#52525B; --active-line-num:#FFD8B0;
+  --syn-keyword:#FF9933; --syn-string:#7EC8DE; --syn-comment:#71717A;
+  --syn-function:#FFD8B0; --syn-type:#C7E9F1; --syn-number:#FFD8B0;
+  --syn-constant:#FFD8B0; --syn-property:#7EC8DE; --syn-variable:#D3D8DE;
+  --syn-punct:#A1A1AA; --syn-tag:#FFCC66; --syn-attr:#7EC8DE;
+  --glass-tint:#FF9933; --search-match:rgba(255,153,51,0.5);
+  --diag-error:#EF5A5A; --diag-warning:#FF9933; --diag-info:#7EC8DE;
+  --diag-success:#7EC8DE; --diag-modified:#FF9933;
+}
+
+/* ---- Federation Dark — Starfleet blue + duty-color orange ---- */
+.theme-federation-dark {
+  color-scheme: dark;
+  --bg:#080D15; --surface:#0E1724; --elevated:#172536; --panel:#0C1420;
+  --editor-bg:#050911; --editor-fg:#DBE8F2; --editor-gutter:#09111D;
+  --title-bar:#10213A; --toolbar:#0C1420; --tab-bar:#080D15;
+  --tab-active:#172536; --tab-inactive:#09111D; --status-bar:#10213A;
+  --border:#23384F; --border-variant:#1A2B3F; --border-focused:#7EC8DE;
+  --border-selected:#FFD8B0;
+  --text:#DBE8F2; --text-accent:#C7E9F1; --text-muted:#91A5B7;
+  --text-disabled:#566677; --text-placeholder:#718294;
+  --icon:#C6D6E4; --icon-accent:#7EC8DE; --icon-muted:#7C8FA1;
+  --element-bg:#172536; --element-hover:#1D3045; --element-active:#263D57;
+  --element-selected:#4C3724;
+  --ghost-hover:rgba(126,200,222,0.094); --ghost-active:rgba(126,200,222,0.168);
+  --ghost-selected:rgba(255,216,176,0.2);
+  --accent-1:#7EC8DE; --accent-2:#C7E9F1; --accent-3:#FFD8B0;
+  --accent-4:#FF9933; --accent-5:#FF7373;
+  --active-line:rgba(126,200,222,0.07); --highlighted-line:rgba(255,216,176,0.125);
+  --line-num:#718294; --active-line-num:#FFD8B0;
+  --syn-keyword:#7EC8DE; --syn-string:#C7E9F1; --syn-comment:#718294;
+  --syn-function:#FFD8B0; --syn-type:#7EC8DE; --syn-number:#FF9933;
+  --syn-constant:#C7E9F1; --syn-property:#C6D6E4; --syn-variable:#DBE8F2;
+  --syn-punct:#91A5B7; --syn-tag:#7EC8DE; --syn-attr:#C7E9F1;
+  --glass-tint:#7EC8DE; --search-match:rgba(255,216,176,0.5);
+  --diag-error:#FF7373; --diag-warning:#FF9933; --diag-info:#7EC8DE;
+  --diag-success:#7EC8DE; --diag-modified:#FF9933;
+}
+
+/* ---- Red Alert Dark — battle-stations red ---- */
+.theme-red-alert-dark {
+  color-scheme: dark;
+  --bg:#100708; --surface:#1B0B0E; --elevated:#260F13; --panel:#1B0B0E;
+  --editor-bg:#0C0506; --editor-fg:#F6D7CF; --editor-gutter:#16090B;
+  --title-bar:#5C1119; --toolbar:#1B0B0E; --tab-bar:#100708;
+  --tab-active:#2A0F14; --tab-inactive:#16090B; --status-bar:#5C1119;
+  --border:#7E1D27; --border-variant:#3A1D21; --border-focused:#EF5A5A;
+  --border-selected:#FF9933;
+  --text:#F6D7CF; --text-accent:#FF8A8A; --text-muted:#B88483;
+  --text-disabled:#725256; --text-placeholder:#8A6264;
+  --icon:#F0B4AA; --icon-accent:#EF5A5A; --icon-muted:#9A686B;
+  --element-bg:#3A151A; --element-hover:#541B22; --element-active:#6D202A;
+  --element-selected:#EF5A5A;
+  --ghost-hover:rgba(239,90,90,0.094); --ghost-active:rgba(239,90,90,0.168);
+  --ghost-selected:rgba(255,153,51,0.2);
+  --accent-1:#EF5A5A; --accent-2:#FF9933; --accent-3:#FFD8B0;
+  --accent-4:#7EC8DE; --accent-5:#C7E9F1;
+  --active-line:rgba(239,90,90,0.07); --highlighted-line:rgba(255,153,51,0.125);
+  --line-num:#8A6264; --active-line-num:#FF9933;
+  --syn-keyword:#EF5A5A; --syn-string:#FF9933; --syn-comment:#8A6264;
+  --syn-function:#FFD8B0; --syn-type:#7EC8DE; --syn-number:#FF9933;
+  --syn-constant:#FFD8B0; --syn-property:#F0B4AA; --syn-variable:#F6D7CF;
+  --syn-punct:#B88483; --syn-tag:#EF5A5A; --syn-attr:#FF9933;
+  --glass-tint:#EF5A5A; --search-match:rgba(255,153,51,0.5);
+  --diag-error:#EF5A5A; --diag-warning:#FF9933; --diag-info:#7EC8DE;
+  --diag-success:#7EC8DE; --diag-modified:#FF9933;
+}
+
+/* ---- Yellow Alert Dark — yellow alert standby ---- */
+.theme-yellow-alert-dark {
+  color-scheme: dark;
+  --bg:#0d0903; --surface:#171105; --elevated:#241a08; --panel:#141006;
+  --editor-bg:#080602; --editor-fg:#f3e8cf; --editor-gutter:#100c04;
+  --title-bar:#3a2a0c; --toolbar:#141006; --tab-bar:#0d0903;
+  --tab-active:#241a08; --tab-inactive:#100c04; --status-bar:#3a2a0c;
+  --border:#4f3911; --border-variant:#33260e; --border-focused:#ffd166;
+  --border-selected:#ff9933;
+  --text:#f3e8cf; --text-accent:#ffd166; --text-muted:#b6a37c;
+  --text-disabled:#6f634d; --text-placeholder:#8b7a58;
+  --icon:#e5d2a5; --icon-accent:#ffd166; --icon-muted:#9d895f;
+  --element-bg:#241a08; --element-hover:#30230b; --element-active:#3e2d0e;
+  --element-selected:#5a3a0d;
+  --ghost-hover:rgba(255,209,102,0.094); --ghost-active:rgba(255,209,102,0.168);
+  --ghost-selected:rgba(255,153,51,0.2);
+  --accent-1:#ffd166; --accent-2:#ff9933; --accent-3:#7ec8de;
+  --accent-4:#c7e9f1; --accent-5:#ff7373;
+  --active-line:rgba(255,209,102,0.086); --highlighted-line:rgba(255,153,51,0.122);
+  --line-num:#756443; --active-line-num:#ffd166;
+  --syn-keyword:#ffd166; --syn-string:#ff9933; --syn-comment:#8b7a58;
+  --syn-function:#ffd166; --syn-type:#7ec8de; --syn-number:#ff9933;
+  --syn-constant:#ffd166; --syn-property:#e5d2a5; --syn-variable:#f3e8cf;
+  --syn-punct:#b6a37c; --syn-tag:#ffd166; --syn-attr:#ff9933;
+  --glass-tint:#ffd166; --search-match:rgba(255,153,51,0.5);
+  --diag-error:#ff7373; --diag-warning:#ff9933; --diag-info:#7ec8de;
+  --diag-success:#7ec8de; --diag-modified:#ff9933;
+}
+
+/* ---- Sick Bay Dark — medical bay cyan/mint ---- */
+.theme-sick-bay-dark {
+  color-scheme: dark;
+  --bg:#071116; --surface:#0D1B22; --elevated:#142833; --panel:#0B1820;
+  --editor-bg:#050B0F; --editor-fg:#D9F2F6; --editor-gutter:#08141B;
+  --title-bar:#0F2C38; --toolbar:#0B1820; --tab-bar:#071116;
+  --tab-active:#142833; --tab-inactive:#08141B; --status-bar:#0F2C38;
+  --border:#1B3D4A; --border-variant:#16313D; --border-focused:#7EC8DE;
+  --border-selected:#3CCF91;
+  --text:#D9F2F6; --text-accent:#C7E9F1; --text-muted:#8FB4BF;
+  --text-disabled:#516974; --text-placeholder:#6E8B96;
+  --icon:#B8DCE4; --icon-accent:#7EC8DE; --icon-muted:#799CA7;
+  --element-bg:#142833; --element-hover:#193542; --element-active:#1F4352;
+  --element-selected:#164B35;
+  --ghost-hover:rgba(126,200,222,0.094); --ghost-active:rgba(126,200,222,0.168);
+  --ghost-selected:rgba(60,207,145,0.2);
+  --accent-1:#7EC8DE; --accent-2:#C7E9F1; --accent-3:#3CCF91;
+  --accent-4:#FFD8B0; --accent-5:#FF7373;
+  --active-line:rgba(126,200,222,0.07); --highlighted-line:rgba(60,207,145,0.125);
+  --line-num:#6E8B96; --active-line-num:#3CCF91;
+  --syn-keyword:#7EC8DE; --syn-string:#3CCF91; --syn-comment:#6E8B96;
+  --syn-function:#C7E9F1; --syn-type:#7EC8DE; --syn-number:#FFD8B0;
+  --syn-constant:#3CCF91; --syn-property:#B8DCE4; --syn-variable:#D9F2F6;
+  --syn-punct:#8FB4BF; --syn-tag:#7EC8DE; --syn-attr:#3CCF91;
+  --glass-tint:#7EC8DE; --search-match:rgba(255,216,176,0.5);
+  --diag-error:#FF7373; --diag-warning:#FFD8B0; --diag-info:#7EC8DE;
+  --diag-success:#3CCF91; --diag-modified:#7EC8DE;
+}
+
+/* ===============================================================
+   SEMANTIC TYPE STYLES
+   --------------------------------------------------------------- */
+.h1 {
+  font-family: var(--font-display);
+  font-size: var(--type-title-xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+.h2 {
+  font-family: var(--font-display);
+  font-size: var(--type-title-lg);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--text);
+}
+.h3 {
+  font-family: var(--font-display);
+  font-size: var(--type-title-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-normal);
+  color: var(--text);
+}
+.h4 {
+  font-family: var(--font-sans);
+  font-size: var(--type-title-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-normal);
+  color: var(--text);
+}
+.headline {
+  font-family: var(--font-sans);
+  font-size: var(--type-heading-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-normal);
+  color: var(--text);
+}
+.body {
+  font-family: var(--font-sans);
+  font-size: var(--type-body-lg);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-relaxed);
+  color: var(--text);
+}
+.callout {
+  font-family: var(--font-sans);
+  font-size: var(--type-body-md);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--text);
+}
+.footnote {
+  font-family: var(--font-sans);
+  font-size: var(--type-body-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--text-muted);
+}
+.caption {
+  font-family: var(--font-sans);
+  font-size: var(--type-caption-lg);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--text-muted);
+}
+.overline {
+  font-family: var(--font-sans);
+  font-size: var(--type-overline);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.code, code, pre {
+  font-family: var(--font-mono);
+  font-size: var(--type-body-sm);
+  line-height: 1.45;
+}
