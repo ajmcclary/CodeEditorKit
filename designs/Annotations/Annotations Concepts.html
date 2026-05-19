@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Annotations · Three concepts</title>
+  <link rel="stylesheet" href="../_shared/design-system/colors_and_type.css"/>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body {
+      font: 13px/1.4 "SF Pro Text", -apple-system, system-ui, sans-serif;
+      background: #f0eee9;
+    }
+    .pov {
+      position: absolute; left: 0; right: 0; top: 100%;
+      margin-top: 18px;
+      display: flex; flex-direction: column; gap: 8px;
+      font: 13px/1.4 -apple-system, system-ui, sans-serif;
+      color: rgba(40,30,20,0.85);
+      pointer-events: none;
+    }
+    .pov h3 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -0.005em; }
+    .pov p { margin: 0; color: rgba(60,50,40,0.72); max-width: 820px; }
+    .pov ul { margin: 0; padding-left: 18px; color: rgba(60,50,40,0.72); }
+    .pov li { margin: 2px 0; }
+    .pov strong { color: rgba(40,30,20,0.92); font-weight: 600; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="../_shared/design-canvas.jsx"></script>
+  <script type="text/babel" src="../_shared/chrome.jsx"></script>
+  <script type="text/babel" src="concept-a.jsx"></script>
+  <script type="text/babel" src="concept-b.jsx"></script>
+  <script type="text/babel" src="concept-c.jsx"></script>
+
+  <script type="text/babel">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+    const { AnnA, AnnB, AnnC } = window;
+
+    function POV({ pitch, pros, cons }) {
+      return (
+        <div className="pov">
+          <p>{pitch}</p>
+          <div style={{ display: "flex", gap: 24, marginTop: 4 }}>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: "block", marginBottom: 2, fontSize: 12, letterSpacing: 0.4, textTransform: "uppercase", color: "rgba(40,30,20,0.65)" }}>What this gets you</strong>
+              <ul>{pros.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: "block", marginBottom: 2, fontSize: 12, letterSpacing: 0.4, textTransform: "uppercase", color: "rgba(40,30,20,0.65)" }}>Where it might pinch</strong>
+              <ul>{cons.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection
+            id="concepts"
+            title="Annotations · three directions"
+            subtitle="All six AnnotationKind cases (info / note / todo / fixme / warning / error) rendered against the same Annotation.swift source, under three different mental models. Each board commits to whether annotations belong in the editor, around the editor, or anywhere but the editor.">
+
+            <DCArtboard id="a" label="A · INLINE — the editor is the panel" width={880} height={660}>
+              <AnnA.App/>
+              <POV
+                pitch="The in-editor presentation only. Gutter glyphs (one-to-one with AnnotationView's circular badge) plus optional trailing message bubbles in dense mode. Hover or click any badge to open a popover that mirrors AnnotationView's popover on macOS. No side rail, no problems panel — the editor is the entire surface."
+                pros={[
+                  "Matches the framework's actual default — AnnotationView attaches inline; this is what users see today, polished",
+                  "Sparse/Dense toggle scales the same canvas from review-mode to glance-mode without two layouts",
+                  "Severity hierarchy is unambiguous: gutter colour, message-bubble fill, line-number tint all derive from one AnnotationKind",
+                  "Floating tally in the top-right preserves the LSP-style health summary without claiming chrome real estate",
+                ]}
+                cons={[
+                  "Scales to ~12 annotations per screen comfortably; a 200-warning file becomes unreadable in dense mode",
+                  "No cross-file affordance — to jump between files the user still needs the project navigator",
+                  "Trailing bubbles compete with code on lines past ~80 columns; we fall back to ellipsis but the truncation is lossy",
+                ]}/>
+            </DCArtboard>
+
+            <DCArtboard id="b" label="B · WORKBENCH — file rail + editor + problems pane" width={880} height={660}>
+              <AnnB.App/>
+              <POV
+                pitch="A triage workbench. The 220-pt file rail rolls up annotation counts per file; the centre is a focused editor at the active issue; the 280-pt right pane is a grouped Problems list with severity pills and per-row Reveal/Quick-Fix. Mirrors Xcode's Issue Navigator but stays AnnotationKind-native — Fixme and Todo are first-class, not folded into 'all messages'."
+                pros={[
+                  "Best fit when the host is a code-review or QA tool — every annotation in the workspace is one click away",
+                  "Filter chips reuse the design system's diag-* tokens directly; no new colour vocabulary to learn",
+                  "Severity legend at the bottom of the file rail teaches the kind taxonomy at a glance",
+                  "Editor in the middle stays a code editor — annotation chrome doesn't bleed into the gutter",
+                ]}
+                cons={[
+                  "Three columns at 880-pt is tight; on a 13-in screen the right pane will need to collapse",
+                  "Loses the 'inline' feel — readers have to map row → editor manually unless they click",
+                  "Bias toward severity creates a Problems-panel mindset; long-running TODOs disappear into the bottom of the list",
+                ]}/>
+            </DCArtboard>
+
+            <DCArtboard id="c" label="C · STREAM — one page, command-driven feed" width={880} height={660}>
+              <AnnC.App/>
+              <POV
+                pitch="No editor in view. A project-wide annotation feed where each AnnotationKind is its own slab with an oversized count, blurb, and rows. The top command bar drives all filtering — kind:, file:, ANN-id, or free text. Inline preview expands the source context for any row. The model is 'inbox for diagnostics', not 'panel beside an editor'."
+                pros={[
+                  "Carries an unbounded number of annotations gracefully — 10 today, 1,000 tomorrow, same shape",
+                  "Single keystroke (⌘K) replaces every filter chip and tree expansion in concept B",
+                  "Slab headers double as a glossary of the kind taxonomy with their official blurbs",
+                  "Inline preview makes a navigator unnecessary for ~80 % of triage cases",
+                ]}
+                cons={[
+                  "Decouples the annotation from its file context — risk of fixing the wrong instance",
+                  "Errors and Warnings always dominate the top of the page; Notes/Info perpetually below the fold",
+                  "Demands keyboard culture (⌘K, ⌘⇧M) — pointer-only users get less leverage from the command bar",
+                ]}/>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>CodeEditorPlugin · Subsystem Concepts</title>
+  <link rel="stylesheet" href="_shared/design-system/colors_and_type.css"/>
+  <style>
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: #f0eee9;
+      font: 13px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      color: rgba(40,30,20,0.85);
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 80px 48px 96px; }
+    h1 { font-size: 44px; letter-spacing: -0.025em; font-weight: 600;
+         margin: 0 0 8px; color: rgba(30,22,12,0.92); }
+    .lede { max-width: 720px; font-size: 17px; line-height: 1.5; color: rgba(60,50,40,0.7); margin: 0 0 48px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    a.card {
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 22px 24px 20px;
+      background: #fff; border-radius: 10px;
+      text-decoration: none; color: inherit;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+      transition: transform .12s ease, box-shadow .12s ease;
+      position: relative; overflow: hidden;
+    }
+    a.card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 28px rgba(0,0,0,.08);
+    }
+    .accent { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .stem { font: 700 10px/1 -apple-system, system-ui; letter-spacing: 0.5px;
+            text-transform: uppercase; color: rgba(60,50,40,0.5); margin-bottom: 2px; }
+    .name { font: 600 22px/1.1 -apple-system, system-ui; letter-spacing: -0.018em; color: rgba(30,22,12,0.95); margin-bottom: 8px; }
+    .blurb { font-size: 13px; color: rgba(60,50,40,0.72); line-height: 1.45; margin: 0; }
+    .meta { margin-top: 14px; display: flex; align-items: center; gap: 6px;
+            font: 11px/1 -apple-system, system-ui; color: rgba(60,50,40,0.55); }
+    .pill { padding: 2px 7px; border-radius: 999px;
+            background: rgba(0,0,0,.04); font-family: ui-monospace, "SF Mono", Menlo, monospace;
+            font-size: 10px; letter-spacing: 0.2px; }
+    .foot { margin-top: 64px;
+            padding-top: 24px; border-top: 0.5px solid rgba(0,0,0,.12);
+            font-size: 12px; color: rgba(60,50,40,0.55); display: flex; gap: 24px; flex-wrap: wrap; }
+    .foot strong { color: rgba(40,30,20,0.8); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>CodeEditorPlugin · Subsystem Concepts</h1>
+    <p class="lede">
+      Three high-fidelity concept variants per subsystem, mirroring the
+      Console / Triptych / Command-Deck pattern established by Settings.
+      Every board uses the shared design system (SF Pro, LCARS tokens,
+      Apple HIG spacing) and renders against actual surfaces from the
+      Sources/CodeEditor* targets.  Light + dark for every concept; the
+      title-bar switcher is interactive.
+    </p>
+
+    <div class="grid">
+      <a class="card" href="Settings/Settings%20Concepts.html">
+        <div class="accent" style="background: var(--accent-1)"></div>
+        <span class="stem">Existing · CodeEditorConfiguration</span>
+        <span class="name">Settings</span>
+        <p class="blurb">The original reference set. 73 knobs across 7 categories under three layouts: a left-rail Console, a knob-list + live-preview Triptych, and a Command-Deck single page.</p>
+        <span class="meta"><span class="pill">Console</span><span class="pill">Triptych</span><span class="pill">Command Deck</span></span>
+      </a>
+
+      <a class="card" href="Annotations/Annotations%20Concepts.html">
+        <div class="accent" style="background: var(--diag-warning)"></div>
+        <span class="stem">CodeEditorAnnotations</span>
+        <span class="name">Annotations</span>
+        <p class="blurb">Inline annotation rendering. All six AnnotationKind cases (info / note / todo / fixme / warning / error) under three postures: in-editor only, a triage Workbench, and a project-wide diagnostics Stream.</p>
+        <span class="meta"><span class="pill">Inline</span><span class="pill">Workbench</span><span class="pill">Stream</span></span>
+      </a>
+
+      <a class="card" href="Completion/Completion%20Concepts.html">
+        <div class="accent" style="background: var(--syn-function)"></div>
+        <span class="stem">CodeEditorCompletion</span>
+        <span class="name">Completion</span>
+        <p class="blurb">Autocomplete popover, ranking, providers. Three takes: the canonical caret-anchored popover, a provider-debug Workbench with ranking breakdown, and a full-window Command-Deck palette.</p>
+        <span class="meta"><span class="pill">Popover</span><span class="pill">Workbench</span><span class="pill">Command Deck</span></span>
+      </a>
+
+      <a class="card" href="Folding/Folding%20Concepts.html">
+        <div class="accent" style="background: var(--accent-2)"></div>
+        <span class="stem">CodeEditorFolding</span>
+        <span class="name">Folding</span>
+        <p class="blurb">Fold regions and fold storage. The in-editor Gutter (chevrons + pills + hover previews), a structural Outline triptych with bulk controls, and a document-wide fold-density Atlas.</p>
+        <span class="meta"><span class="pill">Gutter</span><span class="pill">Outline</span><span class="pill">Atlas</span></span>
+      </a>
+
+      <a class="card" href="LSP/LSP%20Concepts.html">
+        <div class="accent" style="background: var(--status-success)"></div>
+        <span class="stem">CodeEditorLSP</span>
+        <span class="name">Language Server Protocol</span>
+        <p class="blurb">Operator-facing surfaces for sourcekit-lsp, pylsp, tsserver, rust-analyzer (remote), gopls (errored). A Status pip + popover, a Workbench triptych, and a one-page Command-Deck ops console.</p>
+        <span class="meta"><span class="pill">Status</span><span class="pill">Workbench</span><span class="pill">Command Deck</span></span>
+      </a>
+
+      <a class="card" href="SmartEditing/SmartEditing%20Concepts.html">
+        <div class="accent" style="background: var(--accent-1)"></div>
+        <span class="stem">CodeEditorSmartEditing</span>
+        <span class="name">Smart Editing</span>
+        <p class="blurb">Auto-bracket flash, multi-cursor stack, smart indent guides, selection-expansion HUD. Three audiences: end-user Moments, knob-tweaker Workbench, contributor Cheat Sheet.</p>
+        <span class="meta"><span class="pill">Moments</span><span class="pill">Workbench</span><span class="pill">Cheat Sheet</span></span>
+      </a>
+
+      <a class="card" href="SyntaxHighlighting/SyntaxHighlighting%20Concepts.html">
+        <div class="accent" style="background: var(--syn-keyword)"></div>
+        <span class="stem">CodeEditorSyntaxHighlighting</span>
+        <span class="name">Syntax Highlighting</span>
+        <p class="blurb">Token taxonomy, theme editor, language registry. A Theme Editor with side-by-side preview, a Language Workbench keyed to the registry, and a printable Spec Deck.</p>
+        <span class="meta"><span class="pill">Theme Editor</span><span class="pill">Workbench</span><span class="pill">Spec Deck</span></span>
+      </a>
+    </div>
+
+    <div class="foot">
+      <span><strong>Shared</strong> · _shared/design-system · _shared/chrome.jsx · _shared/design-canvas.jsx</span>
+      <span><strong>Window</strong> · 880 × 660 · native macOS chrome only</span>
+      <span><strong>Themes</strong> · LCARS Dark (default) + Light · switcher per concept</span>
+    </div>
+  </div>
+</body>
+</html>

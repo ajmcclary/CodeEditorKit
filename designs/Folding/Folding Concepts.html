@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Folding · Three concepts</title>
+  <link rel="stylesheet" href="../_shared/design-system/colors_and_type.css"/>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body { font: 13px/1.4 "SF Pro Text", -apple-system, system-ui, sans-serif; background: #f0eee9; }
+    .pov { position: absolute; left: 0; right: 0; top: 100%; margin-top: 18px;
+      display: flex; flex-direction: column; gap: 8px;
+      font: 13px/1.4 -apple-system, system-ui, sans-serif; color: rgba(40,30,20,0.85); pointer-events: none; }
+    .pov p { margin: 0; color: rgba(60,50,40,0.72); max-width: 820px; }
+    .pov ul { margin: 0; padding-left: 18px; color: rgba(60,50,40,0.72); }
+    .pov li { margin: 2px 0; }
+    .pov strong { color: rgba(40,30,20,0.92); font-weight: 600; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" src="../_shared/design-canvas.jsx"></script>
+  <script type="text/babel" src="../_shared/chrome.jsx"></script>
+  <script type="text/babel" src="concept-a.jsx"></script>
+  <script type="text/babel" src="concept-b.jsx"></script>
+  <script type="text/babel" src="concept-c.jsx"></script>
+
+  <script type="text/babel">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+    const { FoldA, FoldB, FoldC } = window;
+
+    function POV({ pitch, pros, cons }) {
+      return (
+        <div className="pov">
+          <p>{pitch}</p>
+          <div style={{ display: "flex", gap: 24, marginTop: 4 }}>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: "block", marginBottom: 2, fontSize: 12, letterSpacing: 0.4, textTransform: "uppercase", color: "rgba(40,30,20,0.65)" }}>What this gets you</strong>
+              <ul>{pros.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: "block", marginBottom: 2, fontSize: 12, letterSpacing: 0.4, textTransform: "uppercase", color: "rgba(40,30,20,0.65)" }}>Where it might pinch</strong>
+              <ul>{cons.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection
+            id="concepts"
+            title="Folding · three directions"
+            subtitle="One source file, five fold regions (function · type · region · comment · block), the same FoldStoreElement registry under three different metaphors. The folds themselves are interactive — click any chevron or pill to expand or collapse.">
+
+            <DCArtboard id="a" label="A · GUTTER — chevrons, pills, hover previews" width={880} height={660}>
+              <FoldA.App/>
+              <POV
+                pitch="The in-editor model.  A dedicated 14-pt chevron column lives between the line-number gutter and the source; collapsed regions render as inline pills (kind icon · ' Function · 9' ) carrying the FoldingType colour, with a hover preview popover that mirrors the would-be expansion verbatim. Depth is communicated via a 1-pt indent guide inside the chevron column."
+                pros={[
+                  "Closest to what the editor renders today — no new surface area for the user to learn",
+                  "Depth + kind both legible at a glance via indent and pill colour",
+                  "Hover preview reads the first ~5 lines of the fold so users never need to expand to peek",
+                  "Bulk actions (Fold All / Unfold All / Fold to Level 2) live in the breadcrumb strip and are reusable across files",
+                ]}
+                cons={[
+                  "Pills compete with code for column space — long signatures past 80 columns wrap or truncate",
+                  "Cross-cutting fold operations (e.g. fold every Comment in a 2,000-line file) are clumsy from the gutter alone",
+                  "On heavy files (~100 folds) the chevron column becomes a vertical line of dots — no structural overview",
+                ]}/>
+            </DCArtboard>
+
+            <DCArtboard id="b" label="B · OUTLINE — editor + fold tree with bulk controls" width={880} height={660}>
+              <FoldB.App/>
+              <POV
+                pitch="Triptych.  The editor lives on the left; the right pane is a tree of FoldStoreElement entries — id, kind, depth, line range, isCollapsed.  Clicking a node selects-and-scrolls the editor; clicking the chevron toggles collapse. Bulk Fold/Unfold and 'Fold to Level' live above the tree. The bottom of the outline panel shows the live LineFoldStorage state — provider, document length, active runs, collapsed count — useful when working out why a fold didn't appear."
+                pros={[
+                  "Solves the navigation problem at large file sizes — every fold is one click from anywhere",
+                  "Tree is structural: a folded type stays addressable because its name is in the outline",
+                  "Provider + RangeStore counters teach the architecture without opening source",
+                  "Bulk actions ergonomic — 'Fold to Level 2' lives above its outcome, not 4 menus deep",
+                ]}
+                cons={[
+                  "Two views of the same data — the user has to look in two places to read 'what's folded right now'",
+                  "Right rail is fixed-width; deeply-nested names (depth 3+) ellipsis early",
+                  "Editor-only-ish flows (single fold toggle) are now noisier — outline updates on every chevron click",
+                ]}/>
+            </DCArtboard>
+
+            <DCArtboard id="c" label="C · ATLAS — document-wide fold density map" width={880} height={660}>
+              <FoldC.App/>
+              <POV
+                pitch="A document-wide visualization.  The whole file is rendered as a two-lane density map (depth 0 / depth 1) where every fold paints a horizontal slab whose width is its line count and colour is its FoldingType.  Above the map: by-kind tallies (functions · types · regions · comments · blocks).  Below it: the FoldingProviderRegistry surface — every provider, the languages it handles, hit counts.  Hover any slab for a card with line range, depth, and toggle action."
+                pros={[
+                  "First view that scales to 2,000-line files — the atlas is constant-height regardless of line count",
+                  "Makes provider mapping legible — 'why doesn't my Lua file fold?' answers itself when LuaFoldingProvider shows hits 0",
+                  "Mode switcher (By Kind / By Depth / By Reads) lets the same atlas serve as a structural map or a usage heatmap",
+                  "Diagonal hatching on collapsed slabs reads as 'compressed' at a glance, no legend needed",
+                ]}
+                cons={[
+                  "Disconnected from the editor — to actually edit you still need concept A or B beside this",
+                  "Visualisation is bespoke; users will need a 5-second key the first time",
+                  "Atlas is most useful on long files; on a 60-line file it's mostly empty real estate",
+                ]}/>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>

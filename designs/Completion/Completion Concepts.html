@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Completion · Three concepts</title>
+  <link rel="stylesheet" href="../_shared/design-system/colors_and_type.css"/>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body {
+      font: 13px/1.4 "SF Pro Text", -apple-system, system-ui, sans-serif;
+      background: #f0eee9;
+    }
+    .pov {
+      position: absolute; left: 0; right: 0; top: 100%;
+      margin-top: 18px;
+      display: flex; flex-direction: column; gap: 8px;
+      font: 13px/1.4 -apple-system, system-ui, sans-serif;
+      color: rgba(40,30,20,0.85);
+      pointer-events: none;
+    }
+    .pov p { margin: 0; color: rgba(60,50,40,0.72); max-width: 820px; }
+    .pov ul { margin: 0; padding-left: 18px; color: rgba(60,50,40,0.72); }
+    .pov li { margin: 2px 0; }
+    .pov strong { color: rgba(40,30,20,0.92); font-weight: 600; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="../_shared/design-canvas.jsx"></script>
+  <script type="text/babel" src="../_shared/chrome.jsx"></script>
+  <script type="text/babel" src="concept-a.jsx"></script>
+  <script type="text/babel" src="concept-b.jsx"></script>
+  <script type="text/babel" src="concept-c.jsx"></script>
+
+  <script type="text/babel">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+    const { ComA, ComB, ComC } = window;
+
+    function POV({ pitch, pros, cons }) {
+      return (
+        <div className="pov">
+          <p>{pitch}</p>
+          <div style={{ display: "flex", gap: 24, marginTop: 4 }}>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: "block", marginBottom: 2, fontSize: 12, letterSpacing: 0.4, textTransform: "uppercase", color: "rgba(40,30,20,0.65)" }}>What this gets you</strong>
+              <ul>{pros.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: "block", marginBottom: 2, fontSize: 12, letterSpacing: 0.4, textTransform: "uppercase", color: "rgba(40,30,20,0.65)" }}>Where it might pinch</strong>
+              <ul>{cons.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection
+            id="concepts"
+            title="Completion · three directions"
+            subtitle="Same prefix ('ann'), same source file, same eight CompletionItems coming out of CompletionManager — presented under three different mental models. Each board commits to a different relationship between completion and the rest of the window.">
+
+            <DCArtboard id="a" label="A · POPOVER — the canonical in-editor list" width={880} height={660}>
+              <ComA.App/>
+              <POV
+                pitch="The canonical popover anchored at the caret, exactly what CompletionViewController draws today. Item rows show kind icons, fuzzy-highlighted text from OptimizedFuzzyMatcher.MatchResult.matchedRanges, and a right-aligned detail/type signature. A secondary documentation panel trails the popover and refreshes on selection. Loading/empty states are first-class — switch them from the title bar."
+                pros={[
+                  "Closest to LSP intent — popover stays attached to the editing locus, never claims chrome",
+                  "All three CompletionPopupState modes (results, isLoading, empty) live in one artboard",
+                  "Detail panel mirrors LSP completionItem/resolve — keeps the heavy text out of the result row",
+                  "Score badge is a quiet debug aid; collapses to a tooltip in production",
+                ]}
+                cons={[
+                  "Provider attribution is hidden — user has no idea whether 'Annotation' came from sourcekit-lsp or snippets",
+                  "Documentation panel collides with right-margin code at narrow widths",
+                  "No global navigation between unrelated symbols — useful only when you already know roughly what to type",
+                ]}/>
+            </DCArtboard>
+
+            <DCArtboard id="b" label="B · WORKBENCH — providers · ranking · docs" width={880} height={660}>
+              <ComB.App/>
+              <POV
+                pitch="A debugger's view of CompletionManager. The left rail lists every CompletionProvider with active dots, per-provider match counts, and timings (sourcekit-lsp 18 ms, keywords 1 ms, etc.). The centre is the merged result list with priority + score columns. The right pane is the documentation panel paired with CompletionRankingModel's score breakdown — fuzzy match, first-char bonus, camelCase bonus, priority — so you can see exactly why row N is at row N."
+                pros={[
+                  "Makes the provider architecture legible — invaluable when registering a new CompletionProvider",
+                  "Ranking transparency teaches the fuzzy model; safe ground-truth when tuning OptimizedFuzzyMatcher.Configuration",
+                  "Filter-by-provider chips let you preview what happens when one source goes silent (e.g. server crash)",
+                  "Doc panel is wider than concept A — fits real LSP completionItem/resolve markdown",
+                ]}
+                cons={[
+                  "Heavy for everyday typing — provider rail is debug surface area, not editor chrome",
+                  "Three columns at 880 pt is tight; below 1280 pt the doc panel will need to collapse to a hover",
+                  "Score numbers risk turning ranking into a goal in itself — beauty contest for fuzzy bonuses",
+                ]}/>
+            </DCArtboard>
+
+            <DCArtboard id="c" label="C · COMMAND DECK — palette takeover" width={880} height={660}>
+              <ComC.App/>
+              <POV
+                pitch="Completion as a full-window palette. Triggered by ⌘⇧Space (or implicit on a long-prefix typing pause). One enormous search row, two-column body with tall rows on the left and a generous detail pane on the right. Best-match is hoisted into its own slab. The keymap lives in the footer; insert is ⏎, insert-and-newline is ⌘⏎, snippet apply is ⌥⏎."
+                pros={[
+                  "Solves the documentation-room problem decisively — full half of the window is for help",
+                  "Best surface when the user is exploring an unfamiliar API (e.g. learning the Annotations module)",
+                  "Keyboard-first; the entire interaction is reachable without ever touching the trackpad",
+                  "Snippet preview shows tab stops literally, which the popover model can't fit",
+                ]}
+                cons={[
+                  "Disruptive — takes the editor away mid-keystroke; not appropriate as the default",
+                  "Two completion surfaces (popover + palette) raises the cognitive bill if both are kept",
+                  "Best-match slab can read as 'autocomplete' to users; expectations of single-action commit get mixed up",
+                ]}/>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>
