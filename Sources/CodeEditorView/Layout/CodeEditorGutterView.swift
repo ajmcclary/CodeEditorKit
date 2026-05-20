@@ -68,8 +68,10 @@ final class CodeEditorGutterView: NSView {
         guard let textView,
               let context = NSGraphicsContext.current?.cgContext else { return }
 
-        PlatformColors.controlBackground.set()
-        dirtyRect.fill()
+        // No background fill — the gutter floats over the text view, so an
+        // opaque fill would hide the code text behind it (and at this view's
+        // dirtyRect size, also paint into the sidebar). Numbers + separator
+        // render directly over the text view's own background.
 
         let activeLineNumber = Self.activeLineNumber(for: textView)
         lastActiveLineNumber = activeLineNumber
@@ -82,9 +84,6 @@ final class CodeEditorGutterView: NSView {
             fillBackground: false,
             activeLineNumber: activeLineNumber
         )
-
-        PlatformColors.separator.set()
-        NSRect(x: bounds.width - 1, y: dirtyRect.minY, width: 1, height: dirtyRect.height).fill()
     }
 
     // MARK: - Fold-control hit-testing
