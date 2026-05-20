@@ -202,10 +202,13 @@ public class GutterViewRenderer {
 
         if let lineRect = helper.getLineFragmentRect(for: lineRange) {
             #if canImport(AppKit)
-            // NSRulerView's draw context is synced to the document view's
-            // coordinate space, but `layoutFragmentFrame` is in the text
-            // container's coords — offset by `textContainerOrigin`.
+            // `layoutFragmentFrame` is in the text container's coords; add
+            // `textContainerOrigin` to reach text-view-local (document) Y,
+            // then subtract `visibleRect.origin.y` to translate into the
+            // ruler's local space (NSRulerView's bounds do not auto-scroll
+            // with TextKit2, so document Y plotted directly stays pinned).
             return textView.textContainerOrigin.y + lineRect.minY
+                - textView.visibleRect.origin.y
                 + (lineRect.height - fontLineHeight) / 2
             #else
             // iOS: gutter is a sibling view; account for inset + scroll.
@@ -242,9 +245,14 @@ public class GutterViewRenderer {
         let controlPadding = textView.configuration.layout.foldingControlPadding
 
         #if canImport(AppKit)
-        // macOS: Position control to the left of line numbers
+        // macOS: Position control to the left of line numbers. Match the
+        // line-number Y math: document Y (= textContainerOrigin + lineRect)
+        // minus scroll offset (= visibleRect.origin.y) to land in the
+        // ruler's local coordinate space.
         let xPosition = controlPadding
-        let yPosition = lineRect.minY + (lineRect.height - controlSize) / 2
+        let yPosition = textView.textContainerOrigin.y + lineRect.minY
+            - textView.visibleRect.origin.y
+            + (lineRect.height - controlSize) / 2
         #else
         // iOS: Account for text container inset and scroll offset
         let textContainerInset = textView.textContainerInset
