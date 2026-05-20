@@ -63,13 +63,19 @@ public class GutterViewRenderer {
 
     // MARK: - Public Interface
 
-    /// Draw line numbers for the given text view in the specified rectangle
+    /// Draw line numbers for the given text view in the specified rectangle.
+    ///
+    /// Walks `NSTextLayoutFragment`s in the viewport range and anchors each
+    /// line number against the first non-extra `NSTextLineFragment` of its
+    /// fragment, so a wrapped logical line shows its number at the top of
+    /// the wrapped block (cell Y and cell height come from the first visual
+    /// line, never the multi-visual-line fragment frame).
     /// - Parameters:
     ///   - rect: The rectangle to draw in
     ///   - context: The Core Graphics context to draw into
     ///   - textView: The text view to draw line numbers for
     ///   - gutterBounds: The bounds of the gutter view
-    ///   - fillBackground: Whether to fill the background (UIKit only)
+    ///   - fillBackground: Whether to fill the background (UIKit needs this)
     ///   - activeLineNumber: 1-based line index containing the caret, or
     ///     `nil` to draw every line in the inactive color.
     public func draw(
@@ -80,208 +86,99 @@ public class GutterViewRenderer {
         fillBackground: Bool = false,
         activeLineNumber: Int? = nil
     ) {
-        // Fill background if requested (UIKit needs this). Theme-applied
-        // gutters use the editor's gutter background color; otherwise fall
-        // back to the system control background.
         if fillBackground {
-            let fillColor: PlatformColor
-            if themedBackgroundFillColor.cgColor.alpha > 0 {
-                fillColor = themedBackgroundFillColor
-            } else {
-                fillColor = PlatformColors.controlBackground
-            }
+            let fillColor: PlatformColor = themedBackgroundFillColor.cgColor.alpha > 0
+                ? themedBackgroundFillColor
+                : PlatformColors.controlBackground
             context.setFillColor(fillColor.cgColor)
             context.fill(rect)
         }
 
-        // Use TextKitLineNumberHelper to get visible line ranges
-        let helper = TextKitLineNumberHelper(textView: textView)
-        let lineRanges = helper.getVisibleLineRanges()
+        guard let textLayoutManager = textView.textLayoutManager else { return }
+        let viewportController = textLayoutManager.textViewportLayoutController
+        // In production the viewport layout controller has populated
+        // `viewportRange` by the time we draw. In headless tests no viewport
+        // layout pass has run, so fall back to the document range.
+        let iterationRange = viewportController.viewportRange ?? textLayoutManager.documentRange
+        textLayoutManager.ensureLayout(for: iterationRange)
 
-        // Guard against no visible lines
-        guard !lineRanges.isEmpty else {
-            return
-        }
+        let font = textView.font ?? PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
+        let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
+        let bridge = TextKitBridge(textView: textView)
 
-        // Use the same font as the text view for proper baseline alignment
-        let textViewFont = textView.font ?? PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
+        #if canImport(AppKit)
+        let scrollOffsetY = textView.visibleRect.origin.y - textView.textContainerOrigin.y
+        let visibleHeight = textView.visibleRect.height
+        #else
+        let scrollOffsetY = textView.contentOffset.y - textView.textContainerInset.top
+        let visibleHeight = textView.bounds.height
+        #endif
+        let visibleTopY = scrollOffsetY
+        let visibleBottomY = scrollOffsetY + visibleHeight
 
-        // Draw each line number
-        for (lineNumber, lineRange) in lineRanges {
-            let drawingContext = LineDrawingContext(
-                font: textViewFont,
-                gutterBounds: gutterBounds,
-                textView: textView,
-                helper: helper
-            )
+        let foldingEnabled = textView.configuration.display.isCodeFoldingEnabled
+            && textView.configuration.display.areFoldingControlsVisible
 
-            drawLineNumber(
-                lineNumber,
-                for: lineRange,
-                color: color(forLineNumber: lineNumber, activeLineNumber: activeLineNumber),
-                context: drawingContext
-            )
-
-            // Draw folding controls if enabled
-            if textView.configuration.display.isCodeFoldingEnabled &&
-               textView.configuration.display.areFoldingControlsVisible {
-                drawFoldingControl(
-                    for: lineNumber,
-                    lineRange: lineRange,
-                    helper: helper,
-                    gutterBounds: gutterBounds,
-                    context: context,
-                    textView: textView
-                )
+        textLayoutManager.enumerateTextLayoutFragments(
+            from: iterationRange.location,
+            options: [.ensuresLayout]
+        ) { fragment in
+            // Stop once we've passed the visible bottom.
+            if fragment.layoutFragmentFrame.minY >= visibleBottomY {
+                return false
             }
+            // Skip fragments above the visible top (still iterate forward).
+            if fragment.layoutFragmentFrame.maxY <= visibleTopY {
+                return true
+            }
+            guard let firstLine = fragment.textLineFragments.first(where: { !$0.isExtraLineFragment }) else {
+                return fragment.layoutFragmentFrame.maxY < visibleBottomY
+            }
+            guard let fragmentRange = bridge.nsRangeFromTextRange(fragment.rangeInElement) else {
+                return fragment.layoutFragmentFrame.maxY < visibleBottomY
+            }
+            let lineNumber = textView.lineGeometryStore.lineIndex(forUtf16Offset: fragmentRange.location) + 1
+            let cellY = fragment.layoutFragmentFrame.minY + firstLine.typographicBounds.minY - scrollOffsetY
+            let cellHeight = firstLine.typographicBounds.height
+            let drawColor: PlatformColor = (lineNumber == activeLineNumber)
+                ? themedActiveLineNumberColor
+                : themedLineNumberColor
+
+            UnifiedDrawingCoordinator.saveGraphicsState()
+            UnifiedDrawingCoordinator.drawLineNumber(
+                lineNumber,
+                at: CGPoint(x: 0, y: cellY + (cellHeight - fontLineHeight) / 2),
+                font: font,
+                color: drawColor,
+                alignment: .right,
+                maxWidth: gutterBounds.width - rightPadding
+            )
+            UnifiedDrawingCoordinator.restoreGraphicsState()
+
+            if foldingEnabled, textView.isFoldable(at: lineNumber) {
+                let controlSize = textView.configuration.layout.foldingControlSize
+                let controlPadding = textView.configuration.layout.foldingControlPadding
+                let controlRect = CGRect(
+                    x: controlPadding,
+                    y: cellY + (cellHeight - controlSize) / 2,
+                    width: controlSize,
+                    height: controlSize
+                )
+                if controlRect.intersects(CGRect(origin: .zero, size: gutterBounds.size)) {
+                    drawFoldingIcon(
+                        in: controlRect,
+                        isFolded: textView.isFolded(at: lineNumber),
+                        context: context,
+                        textView: textView
+                    )
+                }
+            }
+
+            return fragment.layoutFragmentFrame.maxY < visibleBottomY
         }
     }
 
     // MARK: - Private Helpers
-
-    /// Context for drawing line numbers
-    private struct LineDrawingContext {
-        let font: PlatformFont
-        let gutterBounds: CGRect
-        let textView: CodeEditorView
-        let helper: TextKitLineNumberHelper
-    }
-
-    /// Draw a single line number
-    private func drawLineNumber(
-        _ lineNumber: Int,
-        for lineRange: NSRange,
-        color: PlatformColor,
-        context: LineDrawingContext
-    ) {
-        // Calculate Y position directly from line number and actual text layout
-        let yPosition = calculateLineNumberYPosition(
-            lineNumber: lineNumber,
-            lineRange: lineRange,
-            font: context.font,
-            textView: context.textView,
-            helper: context.helper
-        )
-
-        let drawingPoint = CGPoint(
-            x: 0, // Will be adjusted by the unified drawing method for right alignment
-            y: yPosition
-        )
-
-        // Save graphics state
-        UnifiedDrawingCoordinator.saveGraphicsState()
-
-        // Draw using unified drawing method
-        UnifiedDrawingCoordinator.drawLineNumber(
-            lineNumber,
-            at: drawingPoint,
-            font: context.font,
-            color: color,
-            alignment: .right,
-            maxWidth: context.gutterBounds.width - rightPadding
-        )
-
-        // Restore graphics state
-        UnifiedDrawingCoordinator.restoreGraphicsState()
-    }
-
-    /// Calculate the Y position for a line number. Uses the actual TextKit2
-    /// layout fragment frame for the line so the gutter follows the
-    /// rendered text height (which respects the paragraph style's
-    /// `lineHeightMultiple`). The `LineGeometryStore` carries unmeasured
-    /// estimates and drifts from the rendered y by ~2pt per line; relying
-    /// on it accumulated multi-line misalignment by line ~20.
-    private func calculateLineNumberYPosition(
-        lineNumber: Int,
-        lineRange: NSRange,
-        font: PlatformFont,
-        textView: CodeEditorView,
-        helper: TextKitLineNumberHelper
-    ) -> CGFloat {
-        let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
-
-        if let lineRect = helper.getLineFragmentRect(for: lineRange) {
-            #if canImport(AppKit)
-            // `layoutFragmentFrame` is in the text container's coords; add
-            // `textContainerOrigin` to reach text-view-local (document) Y,
-            // then subtract `visibleRect.origin.y` to translate into the
-            // ruler's local space (NSRulerView's bounds do not auto-scroll
-            // with TextKit2, so document Y plotted directly stays pinned).
-            return textView.textContainerOrigin.y + lineRect.minY
-                - textView.visibleRect.origin.y
-                + (lineRect.height - fontLineHeight) / 2
-            #else
-            // iOS: gutter is a sibling view; account for inset + scroll.
-            return lineRect.minY + textView.textContainerInset.top
-                - textView.contentOffset.y
-                + (lineRect.height - fontLineHeight) / 2
-            #endif
-        }
-
-        // Fallback when TextKit2 hasn't laid out fragments yet.
-        let lineIndex = max(0, lineNumber - 1)
-        return CGFloat(lineIndex) * fontLineHeight
-    }
-
-    /// Draw folding control (▶️/▼ icon) for foldable lines
-    private func drawFoldingControl(
-        for lineNumber: Int,
-        lineRange: NSRange,
-        helper: TextKitLineNumberHelper,
-        gutterBounds: CGRect,
-        context: CGContext,
-        textView: CodeEditorView
-    ) {
-        // Check if this line is foldable
-        guard textView.isFoldable(at: lineNumber) else { return }
-
-        // Get the rect for this line using helper
-        guard let lineRect = helper.getLineFragmentRect(for: lineRange) else {
-            return
-        }
-
-        // Calculate folding control position
-        let controlSize = textView.configuration.layout.foldingControlSize
-        let controlPadding = textView.configuration.layout.foldingControlPadding
-
-        #if canImport(AppKit)
-        // macOS: Position control to the left of line numbers. Match the
-        // line-number Y math: document Y (= textContainerOrigin + lineRect)
-        // minus scroll offset (= visibleRect.origin.y) to land in the
-        // ruler's local coordinate space.
-        let xPosition = controlPadding
-        let yPosition = textView.textContainerOrigin.y + lineRect.minY
-            - textView.visibleRect.origin.y
-            + (lineRect.height - controlSize) / 2
-        #else
-        // iOS: Account for text container inset and scroll offset
-        let textContainerInset = textView.textContainerInset
-        let baseY = lineRect.origin.y + textContainerInset.top - textView.contentOffset.y
-        let xPosition = controlPadding
-        let yPosition = baseY + (lineRect.height - controlSize) / 2
-        #endif
-
-        let controlRect = CGRect(
-            x: xPosition,
-            y: yPosition,
-            width: controlSize,
-            height: controlSize
-        )
-
-        // Skip if control rect is outside visible area
-        guard controlRect.intersects(CGRect(origin: .zero, size: gutterBounds.size)) else { return }
-
-        // Determine if this line is folded
-        let isFolded = textView.isFolded(at: lineNumber)
-
-        // Draw folding control
-        drawFoldingIcon(
-            in: controlRect,
-            isFolded: isFolded,
-            context: context,
-            textView: textView
-        )
-    }
 
     /// Draw the folding icon (▶️ for folded, ▼ for expanded)
     private func drawFoldingIcon(
@@ -290,37 +187,29 @@ public class GutterViewRenderer {
         context: CGContext,
         textView _: CodeEditorView
     ) {
-        // Save graphics state
         context.saveGState()
 
-        // Set up colors
         let iconColor = PlatformColors.secondaryLabel
         let backgroundColor = PlatformColors.controlBackground
 
-        // Draw background circle
         context.setFillColor(backgroundColor.cgColor)
         context.fillEllipse(in: rect)
 
-        // Draw border
         context.setStrokeColor(iconColor.withAlphaComponent(0.3).cgColor)
         context.setLineWidth(0.5)
         context.strokeEllipse(in: rect)
 
-        // Draw icon
         context.setFillColor(iconColor.cgColor)
 
         let iconInset: CGFloat = rect.width * 0.25
         let iconRect = rect.insetBy(dx: iconInset, dy: iconInset)
 
         if isFolded {
-            // Draw right-pointing triangle (▶️)
             drawTriangleIcon(in: iconRect, pointing: .right, context: context)
         } else {
-            // Draw down-pointing triangle (▼)
             drawTriangleIcon(in: iconRect, pointing: .down, context: context)
         }
 
-        // Restore graphics state
         context.restoreGState()
     }
 
@@ -334,14 +223,12 @@ public class GutterViewRenderer {
 
         switch direction {
         case .right:
-            // Right-pointing triangle (▶️)
             path.move(to: CGPoint(x: rect.minX, y: rect.minY))
             path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
             path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
             path.closeSubpath()
 
         case .down:
-            // Down-pointing triangle (▼)
             path.move(to: CGPoint(x: rect.minX, y: rect.minY))
             path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
             path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
