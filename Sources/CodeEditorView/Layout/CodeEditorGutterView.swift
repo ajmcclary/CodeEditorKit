@@ -92,7 +92,6 @@ final class CodeEditorGutterView: NSView {
     override func mouseDown(with event: NSEvent) {
         guard let textView,
               textView.configuration.display.isCodeFoldingEnabled else {
-            super.mouseDown(with: event)
             return
         }
 
@@ -101,18 +100,13 @@ final class CodeEditorGutterView: NSView {
         let controlPadding = textView.configuration.layout.foldingControlPadding
         let maxX = controlPadding + controlSize
 
-        guard point.x <= maxX else {
-            super.mouseDown(with: event)
-            return
-        }
+        guard point.x <= maxX else { return }
 
-        if let lineNumber = resolveLineNumber(at: point) {
-            if textView.isFoldable(at: lineNumber) {
-                _ = textView.toggleFold(at: lineNumber)
-                needsDisplay = true
-            }
+        if let lineNumber = resolveLineNumber(at: point),
+           textView.isFoldable(at: lineNumber) {
+            _ = textView.toggleFold(at: lineNumber)
+            needsDisplay = true
         }
-        super.mouseDown(with: event)
     }
 
     private func resolveLineNumber(at point: NSPoint) -> Int? {

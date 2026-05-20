@@ -123,24 +123,6 @@ extension CodeEditorView {
 
     // MARK: - Text Container Origin
 
-    #if canImport(AppKit)
-    /// Override textContainerOrigin to account for ruler view when using NSScrollView
-    override public var textContainerOrigin: NSPoint {
-        let origin = super.textContainerOrigin
-
-        // Check if we're in a scroll view with a ruler view
-        if let scrollView = self.enclosingScrollView,
-           scrollView.hasVerticalRuler && scrollView.rulersVisible,
-           scrollView.verticalRulerView != nil {
-            // Don't offset the origin - the ruler sits alongside the text view
-            // The text container inset handles the internal padding
-            // This prevents double offsetting
-        }
-
-        return origin
-    }
-    #endif
-
     // MARK: - Text Container Management
 
     /// Updates the text container size based on current configuration and bounds

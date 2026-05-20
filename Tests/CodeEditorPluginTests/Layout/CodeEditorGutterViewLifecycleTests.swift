@@ -66,5 +66,27 @@ final class CodeEditorGutterViewLifecycleTests: XCTestCase {
 
         XCTAssertNotEqual(beforeColor.cgColor, gutter.renderer.themedLineNumberColor.cgColor)
     }
+
+    func testTextContainerInsetRoundtripsWithGutterToggle() throws {
+        let container = CodeEditorContainerView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+
+        // Disable line numbers so we observe the bare baseline first.
+        var configWithout = container.configuration
+        configWithout.display.isLineNumbersEnabled = false
+        container.configuration = configWithout
+        let baseline = container.baseTextContainerInsetWidth
+        XCTAssertEqual(container.textView.textContainerInset.width, baseline, accuracy: 0.5)
+
+        // Toggle on — inset should grow by at least gutterWidth.
+        container.showsLineNumbers = true
+        XCTAssertGreaterThanOrEqual(
+            container.textView.textContainerInset.width,
+            baseline + container.configuration.layout.gutterWidth
+        )
+
+        // Toggle off — inset should return to baseline.
+        container.showsLineNumbers = false
+        XCTAssertEqual(container.textView.textContainerInset.width, baseline, accuracy: 0.5)
+    }
 }
 #endif

@@ -14,9 +14,9 @@ extension CodeEditorView {
 
     internal func updateGutterVisibility() {
         #if canImport(AppKit)
-        // On macOS, line numbers are handled by NSRulerView in the container's scroll view
-        // We should never create a GutterView on macOS
-        removeGutter()
+        // macOS gutter is owned by CodeEditorContainerView via macGutterView.
+        // CodeEditorContainerView.updateMacOSGutter manages textContainerInset.
+        // Nothing to do at the text-view level on macOS.
         #else
         // On iOS, gutter is managed by the text view when used standalone
         if configuration.display.isLineNumbersEnabled {
@@ -59,11 +59,10 @@ extension CodeEditorView {
         gutterViewStorage?.removeFromSuperview()
         gutterViewStorage = nil
 
-        // Reset text container inset when gutter is removed
+        #if canImport(UIKit)
+        // Reset text container inset when gutter is removed (iOS only —
+        // on macOS, the container owns the inset).
         let padding = configuration.layout.lineNumberPadding
-        #if canImport(AppKit)
-        textContainerInset = NSSize(width: padding, height: textContainerInset.height)
-        #else
         textContainerInset = UIEdgeInsets(top: textContainerInset.top, left: padding, bottom: textContainerInset.bottom, right: textContainerInset.right)
         #endif
     }

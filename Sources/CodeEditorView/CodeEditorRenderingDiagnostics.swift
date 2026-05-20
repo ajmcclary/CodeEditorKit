@@ -126,7 +126,7 @@ package enum CodeEditorRenderingDiagnostics {
         parts.append("scrollFrame=\(rectDescription(container.scrollView.frame))")
         parts.append("scrollBounds=\(rectDescription(container.scrollView.bounds))")
         parts.append("clipBounds=\(rectDescription(container.scrollView.contentView.bounds))")
-        parts.append("rulerAppearance=\(container.scrollView.verticalRulerView?.appearance?.name.rawValue ?? "nil")")
+        parts.append("gutterAppearance=\(container.macGutterView?.appearance?.name.rawValue ?? "nil")")
         #endif
 
         let suffix = ([note] + parts).filter { !$0.isEmpty }.joined(separator: " ")

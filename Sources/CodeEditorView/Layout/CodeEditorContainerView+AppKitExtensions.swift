@@ -172,29 +172,8 @@ extension CodeEditorContainerView {
         minimapView.layer?.zPosition = 1_000
         minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
 
-        // Configure scroll view for line numbers
-        scrollView.hasVerticalRuler = configuration.display.isLineNumbersEnabled
-        scrollView.rulersVisible = configuration.display.isLineNumbersEnabled
-
-        if configuration.display.isLineNumbersEnabled {
-            let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
-            rulerView.textView = textView
-            rulerView.ruleThickness = configuration.layout.gutterWidth
-            scrollView.verticalRulerView = rulerView
-
-            // Ensure ruler view is displayed
-            scrollView.hasVerticalRuler = true
-            scrollView.rulersVisible = true
-            rulerView.needsDisplay = true
-
-            // Observe text changes to update line numbers
-            NotificationCenter.default.addObserver(
-                rulerView,
-                selector: #selector(rulerView.textDidChange(_:)),
-                name: NSText.didChangeNotification,
-                object: textView
-            )
-        }
+        // Gutter setup is handled by `ContainerViewInitializer.setupGutterView`,
+        // called from `setupPlatformViews`. No ruler-view plumbing here.
 
         // Apply configuration
         do {
@@ -204,41 +183,39 @@ extension CodeEditorContainerView {
         }
     }
 
-    /// Updates the macOS-specific ruler view with new configuration
-    func updateMacOSRuler() {
+    /// Toggles the macOS gutter visibility and recomputes the text
+    /// container's horizontal inset so text neither hides behind the
+    /// floating gutter nor leaves an empty strip when line numbers are off.
+    func updateMacOSGutter() {
         guard let scrollView = textView.enclosingScrollView else { return }
+        let horizontalPadding = configuration.layout.lineNumberPadding
 
         if configuration.display.isLineNumbersEnabled {
-            if scrollView.verticalRulerView == nil {
-                let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
-                rulerView.textView = textView
-                scrollView.verticalRulerView = rulerView
-
-                NotificationCenter.default.addObserver(
-                    forName: NSTextView.didChangeSelectionNotification,
-                    object: textView,
-                    queue: nil
-                ) { [weak rulerView] _ in
-                    MainActor.assumeIsolated {
-                        rulerView?.selectionDidChange()
-                    }
+            let gutter: CodeEditorGutterView
+            if let existing = macGutterView {
+                gutter = existing
+            } else {
+                gutter = CodeEditorGutterView(frame: NSRect(
+                    x: 0,
+                    y: 0,
+                    width: configuration.layout.gutterWidth,
+                    height: scrollView.contentView.bounds.height
+                ))
+                macGutterView = gutter
+                gutter.attach(to: scrollView, textView: textView)
+                if let theme = appliedTheme {
+                    gutter.apply(theme: theme)
                 }
             }
-
-            if let rulerView = scrollView.verticalRulerView as? LineNumberRulerView {
-                rulerView.ruleThickness = configuration.layout.gutterWidth
-                rulerView.needsDisplay = true
-            }
-
-            scrollView.hasVerticalRuler = true
-            scrollView.rulersVisible = true
-
-            // Force ruler view update to ensure line numbers are visible
-            scrollView.verticalRulerView?.needsDisplay = true
+            gutter.frame.size.width = configuration.layout.gutterWidth
+            textView.textContainerInset.width = baseTextContainerInsetWidth
+                + configuration.layout.gutterWidth
+                + horizontalPadding
+            gutter.needsDisplay = true
         } else {
-            scrollView.hasVerticalRuler = false
-            scrollView.rulersVisible = false
-            scrollView.verticalRulerView = nil
+            macGutterView?.detach()
+            macGutterView = nil
+            textView.textContainerInset.width = baseTextContainerInsetWidth
         }
     }
 
@@ -410,15 +387,10 @@ extension CodeEditorContainerView {
         // Update minimap after layout changes
         updateMinimap()
 
-        // Force ruler view to update after layout changes
+        // Gutter has its own observers; mark dirty for any composite redraw.
         if configuration.display.isLineNumbersEnabled {
-            scrollView.verticalRulerView?.needsDisplay = true
-            // Also mark the scroll view itself for display update
+            macGutterView?.needsDisplay = true
             scrollView.needsDisplay = true
-            // Don't force immediate display - let it happen naturally to avoid layout recursion
-            // scrollView.window?.displayIfNeeded()
-            // Ensure the ruler view is visible
-            scrollView.rulersVisible = true
         }
     }
 }

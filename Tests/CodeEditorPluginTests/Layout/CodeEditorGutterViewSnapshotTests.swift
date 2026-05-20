@@ -7,7 +7,7 @@ import SnapshotTesting
 import XCTest
 
 @MainActor
-final class LineNumberRulerViewSnapshotTests: XCTestCase {
+final class CodeEditorGutterViewSnapshotTests: XCTestCase {
     /// Toggle to `true` locally to re-record baselines after intentional
     /// visual changes. Keep `false` on commit.
     private static let isRecording = false
@@ -22,32 +22,28 @@ final class LineNumberRulerViewSnapshotTests: XCTestCase {
         super.tearDown()
     }
 
-    /// Renders the ruler into a bitmap and returns the resulting NSImage. The
-    /// helper bypasses the AppKit display cycle so the test does not depend
-    /// on a real window appearing on-screen.
-    ///
-    /// The draw call runs inside `performAsCurrentDrawingAppearance` so
-    /// `NSColor.textColor` and other appearance-sensitive named colors
-    /// resolve against the ruler's own effective appearance instead of
-    /// whatever the test runner's current drawing appearance happens to be.
-    /// Without this wrapper, custom bitmap-context rendering picks up the
-    /// system appearance and the snapshot drifts when the host machine is
-    /// in dark mode.
-    private func renderedImage(of ruler: LineNumberRulerView) throws -> NSImage {
-        let rep = try XCTUnwrap(ruler.bitmapImageRepForCachingDisplay(in: ruler.bounds))
+    /// Renders the gutter into a bitmap and returns the resulting NSImage.
+    /// Bypasses the AppKit display cycle so the test does not depend on a
+    /// real window appearing on-screen. Wraps `draw` in
+    /// `performAsCurrentDrawingAppearance` so appearance-sensitive named
+    /// colors (`NSColor.textColor` etc.) resolve against the gutter's own
+    /// effective appearance instead of whatever the test runner's current
+    /// drawing appearance happens to be.
+    private func renderedImage(of gutter: CodeEditorGutterView) throws -> NSImage {
+        let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        ruler.effectiveAppearance.performAsCurrentDrawingAppearance {
-            ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        gutter.effectiveAppearance.performAsCurrentDrawingAppearance {
+            gutter.draw(gutter.bounds)
         }
         NSGraphicsContext.restoreGraphicsState()
-        let image = NSImage(size: ruler.bounds.size)
+        let image = NSImage(size: gutter.bounds.size)
         image.addRepresentation(rep)
         return image
     }
 
-    func testRulerRendersBaselineFiveLines() throws {
+    func testGutterRendersBaselineFiveLines() throws {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
             styleMask: [.titled, .resizable],
@@ -68,8 +64,8 @@ final class LineNumberRulerViewSnapshotTests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let ruler = try XCTUnwrap(container.textView.enclosingScrollView?.verticalRulerView as? LineNumberRulerView)
-        let image = try renderedImage(of: ruler)
+        let gutter = try XCTUnwrap(container.macGutterView)
+        let image = try renderedImage(of: gutter)
         assertSnapshot(of: image, as: .image, named: "baseline")
     }
 }

@@ -170,50 +170,41 @@ enum ContainerViewInitializer {
         components.minimapView.layer?.zPosition = 1_000
         components.minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
 
-        // Setup ruler view if line numbers are enabled
-        setupRulerView(for: container, scrollView: scrollView, textView: components.textView)
+        // Setup gutter if line numbers are enabled.
+        setupGutterView(for: container, scrollView: scrollView, textView: components.textView)
     }
 
-    private static func setupRulerView(
+    private static func setupGutterView(
         for container: CodeEditorContainerView,
         scrollView: NSScrollView,
         textView: CodeEditorView
     ) {
         let config = container.configuration
-        scrollView.hasVerticalRuler = config.display.isLineNumbersEnabled
-        scrollView.rulersVisible = config.display.isLineNumbersEnabled
 
-        if config.display.isLineNumbersEnabled {
-            let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
-            rulerView.textView = textView
-            rulerView.ruleThickness = config.layout.gutterWidth
-            scrollView.verticalRulerView = rulerView
+        // Capture the non-gutter inset baseline before applying any gutter
+        // contribution so it can be restored when line numbers are disabled.
+        container.baseTextContainerInsetWidth = textView.textContainerInset.width
 
-            scrollView.hasVerticalRuler = true
-            scrollView.rulersVisible = true
-            rulerView.needsDisplay = true
+        guard config.display.isLineNumbersEnabled else { return }
 
-            // Setup ruler view observer
-            NotificationCenter.default.addObserver(
-                rulerView,
-                selector: #selector(LineNumberRulerView.scrollViewDidScroll(_:)),
-                name: NSText.didChangeNotification,
-                object: textView
-            )
+        let gutter = CodeEditorGutterView(frame: NSRect(
+            x: 0,
+            y: 0,
+            width: config.layout.gutterWidth,
+            height: scrollView.contentView.bounds.height
+        ))
+        gutter.attach(to: scrollView, textView: textView)
+        container.macGutterView = gutter
 
-            // Redraw the active-line color when the caret crosses a line.
-            // Synchronous delivery: NSTextView.didChangeSelectionNotification
-            // is posted on the main thread and our handler is non-blocking.
-            NotificationCenter.default.addObserver(
-                forName: NSTextView.didChangeSelectionNotification,
-                object: textView,
-                queue: nil
-            ) { [weak rulerView] _ in
-                MainActor.assumeIsolated {
-                    rulerView?.selectionDidChange()
-                }
-            }
+        let horizontalPadding = config.layout.lineNumberPadding
+        textView.textContainerInset.width = container.baseTextContainerInsetWidth
+            + config.layout.gutterWidth
+            + horizontalPadding
+
+        if let theme = container.appliedTheme {
+            gutter.apply(theme: theme)
         }
+        gutter.needsDisplay = true
     }
     #else
     private static func setupUIKitViews(

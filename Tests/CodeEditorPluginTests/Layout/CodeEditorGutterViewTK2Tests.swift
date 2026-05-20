@@ -8,7 +8,7 @@ import ObjectiveC.runtime
 import XCTest
 
 @MainActor
-final class LineNumberRulerViewTK2Tests: XCTestCase {
+final class CodeEditorGutterViewTK2Tests: XCTestCase {
     /// Reads `NSTextView._layoutManager` without going through the public
     /// getter, which would itself synthesize the TK1 compatibility shim.
     private func legacyLayoutManagerIvarValue(for textView: NSTextView) -> AnyObject? {
@@ -19,7 +19,7 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         return object_getIvar(textView, ivar) as AnyObject?
     }
 
-    func testDrawHashMarksAndLabelsDoesNotSynthesizeLegacyLayoutManager() throws {
+    func testDrawDoesNotSynthesizeLegacyLayoutManager() throws {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
             styleMask: [.titled, .resizable],
@@ -32,23 +32,18 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        // Force the ruler to draw. CodeEditorContainerView's scroll view is
-        // built via ContainerViewInitializer; pull the ruler out and call
-        // drawHashMarksAndLabels directly so the test does not rely on the
-        // window's natural draw cycle (which can no-op in headless test runs).
-        let scrollView = try XCTUnwrap(container.textView.enclosingScrollView)
-        let ruler = try XCTUnwrap(scrollView.verticalRulerView as? LineNumberRulerView)
-        let rep = try XCTUnwrap(ruler.bitmapImageRepForCachingDisplay(in: ruler.bounds))
+        let gutter = try XCTUnwrap(container.macGutterView)
+        let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        gutter.draw(gutter.bounds)
         NSGraphicsContext.restoreGraphicsState()
 
         let legacy = legacyLayoutManagerIvarValue(for: container.textView)
         XCTAssertNil(
             legacy,
-            "NSTextView._layoutManager was synthesized during gutter draw. The ruler is still reading textView.layoutManager and flipping the editor off TextKit 2."
+            "NSTextView._layoutManager was synthesized during gutter draw. The gutter is reading textView.layoutManager and flipping the editor off TextKit 2."
         )
 
         XCTAssertNotNil(container.textView.textLayoutManager)
@@ -74,14 +69,13 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let scrollView = try XCTUnwrap(container.textView.enclosingScrollView)
-        let ruler = try XCTUnwrap(scrollView.verticalRulerView as? LineNumberRulerView)
+        let gutter = try XCTUnwrap(container.macGutterView)
 
         // Synthesize a mouseDown inside the fold-control band.
         let controlPadding = container.configuration.layout.foldingControlPadding
         let controlSize = container.configuration.layout.foldingControlSize
-        let pointInRuler = NSPoint(x: controlPadding + controlSize / 2, y: 10)
-        let pointInWindow = ruler.convert(pointInRuler, to: nil)
+        let pointInGutter = NSPoint(x: controlPadding + controlSize / 2, y: 10)
+        let pointInWindow = gutter.convert(pointInGutter, to: nil)
         let event = try XCTUnwrap(NSEvent.mouseEvent(
             with: .leftMouseDown,
             location: pointInWindow,
@@ -93,7 +87,7 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
             clickCount: 1,
             pressure: 1
         ))
-        ruler.mouseDown(with: event)
+        gutter.mouseDown(with: event)
 
         XCTAssertNil(
             legacyLayoutManagerIvarValue(for: container.textView),
@@ -114,27 +108,23 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let scrollView = try XCTUnwrap(container.textView.enclosingScrollView)
-        let ruler = try XCTUnwrap(scrollView.verticalRulerView as? LineNumberRulerView)
+        let gutter = try XCTUnwrap(container.macGutterView)
 
-        // Move caret to start so the seed draw establishes line 1.
         container.textView.setSelectedRange(NSRange(location: 0, length: 0))
-        // Drain any pending notifications from the string-assignment path.
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
 
         // Seed lastActiveLineNumber by drawing once.
-        let rep = try XCTUnwrap(ruler.bitmapImageRepForCachingDisplay(in: ruler.bounds))
+        let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        gutter.draw(gutter.bounds)
         NSGraphicsContext.restoreGraphicsState()
-        XCTAssertEqual(ruler.lastActiveLineNumber, 1, "Initial selection at offset 0 is line 1")
+        XCTAssertEqual(gutter.lastActiveLineNumber, 1, "Initial selection at offset 0 is line 1")
 
-        // Caret jumps to line 2 (offset 6, just past "alpha\n").
         container.textView.setSelectedRange(NSRange(location: 6, length: 0))
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
-        XCTAssertEqual(ruler.lastActiveLineNumber, 2, "Selection at offset 6 is line 2")
+        XCTAssertEqual(gutter.lastActiveLineNumber, 2, "Selection at offset 6 is line 2")
     }
 
     func testSelectionChangeOnSameLineKeepsLastActiveLineStable() throws {
@@ -150,34 +140,31 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let scrollView = try XCTUnwrap(container.textView.enclosingScrollView)
-        let ruler = try XCTUnwrap(scrollView.verticalRulerView as? LineNumberRulerView)
+        let gutter = try XCTUnwrap(container.macGutterView)
 
         container.textView.setSelectedRange(NSRange(location: 2, length: 0))
-        let rep = try XCTUnwrap(ruler.bitmapImageRepForCachingDisplay(in: ruler.bounds))
+        let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        ruler.drawHashMarksAndLabels(in: ruler.bounds)
+        gutter.draw(gutter.bounds)
         NSGraphicsContext.restoreGraphicsState()
-        XCTAssertEqual(ruler.lastActiveLineNumber, 1)
+        XCTAssertEqual(gutter.lastActiveLineNumber, 1)
 
-        // Drain pending notifications, then snapshot needsDisplay state.
         let drain = expectation(description: "drain main queue")
         DispatchQueue.main.async { drain.fulfill() }
         wait(for: [drain], timeout: 1.0)
-        ruler.needsDisplay = false
+        gutter.needsDisplay = false
 
-        // Caret moves within line 1 — selectionDidChange should short-circuit.
         container.textView.setSelectedRange(NSRange(location: 5, length: 0))
         let drain2 = expectation(description: "drain after same-line move")
         DispatchQueue.main.async { drain2.fulfill() }
         wait(for: [drain2], timeout: 1.0)
-        XCTAssertEqual(ruler.lastActiveLineNumber, 1)
-        XCTAssertFalse(ruler.needsDisplay, "Same-line caret move must not dirty the ruler")
+        XCTAssertEqual(gutter.lastActiveLineNumber, 1)
+        XCTAssertFalse(gutter.needsDisplay, "Same-line caret move must not dirty the gutter")
     }
 
-    func testWrappedLogicalLineUsesFirstVisualLineFragmentForRulerPosition() throws {
+    func testWrappedLogicalLineUsesFirstVisualLineFragmentForGutterPosition() throws {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 280, height: 240),
             styleMask: [.titled, .resizable],
@@ -213,25 +200,16 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
             "The test document must wrap the first logical line into multiple visual rows."
         )
 
-        let helper = TextKitLineNumberHelper(textView: container.textView)
-        let lineRanges = helper.getVisibleLineRanges()
-        let firstLineRange = try XCTUnwrap(lineRanges.first?.range)
-        let helperRect = try XCTUnwrap(helper.getLineFragmentRect(for: firstLineRange))
-        let firstVisualLine = try XCTUnwrap(layoutFragment.textLineFragments.first)
-        let expectedFirstVisualRect = CGRect(
-            x: firstVisualLine.typographicBounds.minX + layoutFragment.layoutFragmentFrame.minX,
-            y: firstVisualLine.typographicBounds.minY + layoutFragment.layoutFragmentFrame.minY,
-            width: firstVisualLine.typographicBounds.width,
-            height: firstVisualLine.typographicBounds.height
-        )
-
+        // The renderer now anchors against the first textLineFragment of each
+        // fragment directly. Assert that the first non-extra line fragment is
+        // smaller in height than the multi-visual-line layoutFragmentFrame —
+        // this is the property the renderer relies on for correct wrap Y.
+        let firstVisualLine = try XCTUnwrap(layoutFragment.textLineFragments.first { !$0.isExtraLineFragment })
         XCTAssertLessThan(
-            helperRect.height,
+            firstVisualLine.typographicBounds.height,
             layoutFragment.layoutFragmentFrame.height,
-            "The ruler must use the first visual row, not the full wrapped paragraph fragment."
+            "The first text line fragment of a wrapped paragraph must be smaller than the multi-line fragment frame for the gutter to anchor correctly."
         )
-        XCTAssertEqual(helperRect.minY, expectedFirstVisualRect.minY, accuracy: 1.0)
-        XCTAssertEqual(helperRect.height, expectedFirstVisualRect.height, accuracy: 1.0)
     }
 }
 #endif

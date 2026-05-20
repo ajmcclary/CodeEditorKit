@@ -85,7 +85,7 @@ public final class CodeEditorContainerView: PlatformView {
         gutterView.appearance = appKitAppearance
         minimapView.appearance = appKitAppearance
         textView.appearance = appKitAppearance
-        scrollView.verticalRulerView?.appearance = appKitAppearance
+        macGutterView?.appearance = appKitAppearance
         #endif
 
         if appliedTheme == theme {
@@ -102,7 +102,7 @@ public final class CodeEditorContainerView: PlatformView {
         minimapView.apply(theme: theme)
         textView.apply(theme: theme)
         #if canImport(AppKit)
-        (textView.enclosingScrollView?.verticalRulerView as? LineNumberRulerView)?.apply(theme: theme)
+        macGutterView?.apply(theme: theme)
         #endif
         CodeEditorRenderingDiagnostics.logContainer(
             "container.apply.end.changedTheme",
@@ -286,9 +286,9 @@ public final class CodeEditorContainerView: PlatformView {
             configuration = configuration.with(display: display)
 
             #if canImport(AppKit)
-            // On macOS, line numbers are handled by NSRulerView, not GutterView
-            // Update the ruler view instead
-            updateMacOSRuler()
+            // On macOS, the gutter is a floating subview managed by
+            // `updateMacOSGutter`; toggle it here.
+            updateMacOSGutter()
             #else
             // On iOS, use the GutterView
             gutterView.isHidden = !newValue
