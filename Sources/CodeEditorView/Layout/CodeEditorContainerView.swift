@@ -22,6 +22,20 @@ public final class CodeEditorContainerView: PlatformView {
     internal var minimapDataProvider: MinimapDataProvider?
     internal var isApplyingConfiguration = false
 
+    #if canImport(AppKit)
+    /// macOS-only floating gutter. Distinct from the cross-platform
+    /// `gutterView` (which is the iOS host). Assigned by
+    /// `ContainerViewInitializer.setupGutterView` when line numbers are
+    /// enabled; cleared by `updateMacOSGutter` on disable.
+    internal weak var macGutterView: CodeEditorGutterView?
+
+    /// The portion of `textView.textContainerInset.width` that does NOT
+    /// include the gutter contribution. Captured once during initial setup
+    /// before the gutter inset is applied; recomputed application is:
+    /// `inset.width = baseTextContainerInsetWidth + gutterWidth + horizontalPadding`.
+    internal var baseTextContainerInsetWidth: CGFloat = 0
+    #endif
+
     /// Tokens returned by the block-based `NotificationCenter` observers
     /// registered in `setupMinimap()`. The `removeObserver(self)` call in
     /// `deinit` only removes selector-based registrations; block
