@@ -68,5 +68,70 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
         let image = try renderedImage(of: gutter)
         assertSnapshot(of: image, as: .image, named: "baseline")
     }
+
+    /// Locks in the wrap-anchor behavior: a long logical line that wraps to
+    /// multiple visual rows must show its line number against the **first**
+    /// visual row only, with empty gutter beside continuation rows. Without
+    /// the renderer's fragment-walk fix the number would land in the middle
+    /// of the wrapped block.
+    func testGutterRendersWrappedLine() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 280, height: 240),
+            styleMask: [.titled, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.appearance = NSAppearance(named: .aqua)
+        let container = CodeEditorContainerView(frame: window.contentLayoutRect)
+        container.appearance = NSAppearance(named: .aqua)
+        var configuration = container.configuration
+        configuration.layout.wrapLines = true
+        configuration.display.isMinimapVisible = false
+        configuration.display.isSelectedLineHighlighted = false
+        container.configuration = configuration
+        container.textView.font = .monospacedSystemFont(ofSize: 16, weight: .regular)
+        container.textView.string = String(repeating: "wrapped ", count: 18) + "\nshort"
+        window.contentView = container
+        window.makeKeyAndOrderFront(nil)
+        defer { window.close() }
+
+        container.layoutSubtreeIfNeeded()
+        container.textView.updateTextContainerSize()
+
+        let gutter = try XCTUnwrap(container.macGutterView)
+        let image = try renderedImage(of: gutter)
+        assertSnapshot(of: image, as: .image, named: "wrapped-line")
+    }
+
+    /// Locks in the scroll-position behavior: after a programmatic vertical
+    /// scroll the gutter must show line numbers for the now-visible lines,
+    /// not the original 1..N pinned at the top of the gutter (the
+    /// pre-Approach-A scroll bug).
+    func testGutterRendersAfterScroll() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
+            styleMask: [.titled, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.appearance = NSAppearance(named: .aqua)
+        let container = CodeEditorContainerView(frame: window.contentLayoutRect)
+        container.appearance = NSAppearance(named: .aqua)
+        container.textView.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
+        container.textView.string = (1...100).map { "line \($0)" }.joined(separator: "\n")
+        window.contentView = container
+        window.makeKeyAndOrderFront(nil)
+        defer { window.close() }
+
+        container.layoutSubtreeIfNeeded()
+        // Programmatically scroll past the first ~10 lines.
+        container.scrollView.contentView.setBoundsOrigin(NSPoint(x: 0, y: 200))
+        container.scrollView.reflectScrolledClipView(container.scrollView.contentView)
+        container.layoutSubtreeIfNeeded()
+
+        let gutter = try XCTUnwrap(container.macGutterView)
+        let image = try renderedImage(of: gutter)
+        assertSnapshot(of: image, as: .image, named: "after-scroll")
+    }
 }
 #endif
