@@ -177,17 +177,13 @@ final class CodeEditorContainerViewTests: XCTestCase {
         let expectedPadding = containerView.configuration.layout.lineNumberPadding
         XCTAssertGreaterThanOrEqual(textInsets.left, expectedPadding, "Text should have at least the configured padding")
         #else
-        // macOS: Check ruler view thickness instead of gutter view
-        if let rulerView = containerView.scrollView.verticalRulerView {
-            XCTAssertEqual(rulerView.ruleThickness, gutterWidth, "Ruler view thickness should equal gutter width")
-        } else {
-            XCTFail("Ruler view should be present when line numbers are shown")
-        }
+        // macOS: Check that the floating gutter is attached with the configured width
+        let gutter = try XCTUnwrap(containerView.macGutterView, "Gutter view should be present when line numbers are shown")
+        XCTAssertEqual(gutter.frame.width, gutterWidth, "Gutter view width should match configuration")
 
-        // On macOS, ruler view handles the spacing, so text insets may be different
+        // On macOS, the container grows textContainerInset.width by the gutter width.
         let textInsets = containerView.textView.textContainerInset
-        // Just verify that insets exist - the ruler view handles the actual spacing
-        XCTAssertGreaterThanOrEqual(textInsets.width, 0, "Text container should have some inset")
+        XCTAssertGreaterThanOrEqual(textInsets.width, gutterWidth, "Text container inset should accommodate the gutter")
         #endif
     }
 

@@ -178,20 +178,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
 
     // MARK: - Drawing
 
-    #if canImport(AppKit)
-    override public func draw(_ dirtyRect: NSRect) {
-        // On macOS, GutterView should not be used - line numbers are handled by NSRulerView
-        // Only draw if we're actually in the view hierarchy (which shouldn't happen on macOS)
-        guard superview != nil else { return }
-
-        super.draw(dirtyRect)
-        // Always draw the full bounds to ensure line numbers are visible when scrolling
-        drawLineNumbers(in: bounds)
-    }
-
-    /// Text views need a flipped coordinate system on macOS
-    override nonisolated public var isFlipped: Bool { true }
-    #else
+    #if canImport(UIKit)
     override public func draw(_ rect: CGRect) {
         super.draw(rect)
 
@@ -384,45 +371,6 @@ extension GutterView {
         // This avoids conflicts with other components that need the delegate
         #endif
     }
-
-    #if canImport(AppKit)
-    /// Observe scroll view changes (macOS only)
-    func observeScrollView(_ scrollView: NSScrollView) {
-        // Guard against early calls
-        guard scrollView.contentView.bounds.width > 0 else { return }
-
-        // Remove any existing scroll observers
-        observers = observers.filter { _ in
-            // Keep non-scroll observers
-            true
-        }
-
-        // Observe scrolling via the content view's bounds changes
-        let scrollObserver = NotificationCenter.default.addObserver(
-            forName: NSView.boundsDidChangeNotification,
-            object: scrollView.contentView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.setNeedsDisplayLineNumbers()
-            }
-        }
-        observers.append(scrollObserver)
-
-        // Also observe the clipView's bounds changes as a backup
-        let clipView = scrollView.contentView
-        let clipObserver = NotificationCenter.default.addObserver(
-            forName: NSView.frameDidChangeNotification,
-            object: clipView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.setNeedsDisplayLineNumbers()
-            }
-        }
-        observers.append(clipObserver)
-    }
-    #endif
 
     /// Remove all text view observers
     func removeTextViewObservers() {
