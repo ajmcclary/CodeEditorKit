@@ -28,7 +28,7 @@ final class LineNumbersPlatformTests: XCTestCase {
     // MARK: - Platform-Specific Line Number Tests
 
     #if canImport(AppKit)
-    func testMacOSUsesNSRulerViewNotGutterView() throws {
+    func testMacOSUsesCodeEditorGutterViewNotCrossPlatformGutterView() throws {
         // Given: A container view on macOS with line numbers enabled
         let containerView = createContainerView()
         var config = containerView.configuration
@@ -38,21 +38,17 @@ final class LineNumbersPlatformTests: XCTestCase {
         // When: Configuration is applied
         containerView.applyConfiguration()
 
-        // Then: GutterView should NOT be in the view hierarchy
+        // Then: Cross-platform GutterView should NOT be in the view hierarchy
         XCTAssertFalse(containerView.subviews.contains(containerView.gutterView),
-                      "GutterView should not be added to view hierarchy on macOS")
+                      "Cross-platform GutterView should not be in macOS view hierarchy")
 
-        // And: NSRulerView should be configured on the scroll view
-        XCTAssertNotNil(containerView.scrollView.verticalRulerView,
-                       "Scroll view should have a vertical ruler view")
-        XCTAssertTrue(containerView.scrollView.hasVerticalRuler,
-                     "Scroll view should have vertical ruler enabled")
-        XCTAssertTrue(containerView.scrollView.rulersVisible,
-                     "Scroll view rulers should be visible")
+        // And: macGutterView (the floating CodeEditorGutterView) should be attached
+        XCTAssertNotNil(containerView.macGutterView,
+                       "Container should have a macGutterView when line numbers are enabled")
 
-        // And: The ruler view should be the correct type
-        XCTAssertTrue(containerView.scrollView.verticalRulerView is LineNumberRulerView,
-                     "Vertical ruler should be LineNumberRulerView")
+        // And: NSRulerView slot should not be in use
+        XCTAssertNil(containerView.scrollView.verticalRulerView,
+                    "Scroll view's verticalRulerView slot is no longer used")
     }
 
     func testMacOSGutterViewDoesNotDraw() throws {
@@ -98,13 +94,9 @@ final class LineNumbersPlatformTests: XCTestCase {
         config.display.isLineNumbersEnabled = false
         containerView.configuration = config
 
-        // Then: NSRulerView should be hidden
-        XCTAssertFalse(containerView.scrollView.hasVerticalRuler,
-                      "Scroll view should not have vertical ruler when line numbers are disabled")
-        XCTAssertFalse(containerView.scrollView.rulersVisible,
-                      "Scroll view rulers should not be visible when line numbers are disabled")
-        XCTAssertNil(containerView.scrollView.verticalRulerView,
-                    "Vertical ruler view should be nil when line numbers are disabled")
+        // Then: macGutterView should be detached
+        XCTAssertNil(containerView.macGutterView,
+                    "macGutterView should be nil when line numbers are disabled")
     }
     #endif
 
@@ -225,10 +217,9 @@ final class LineNumbersPlatformTests: XCTestCase {
 
         // Then: The appropriate platform-specific changes should occur
         #if canImport(AppKit)
-        // macOS should have ruler view
-        XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
-        XCTAssertTrue(containerView.scrollView.rulersVisible)
-        // GutterView should NOT be in hierarchy
+        // macOS should have macGutterView attached
+        XCTAssertNotNil(containerView.macGutterView)
+        // Cross-platform GutterView should NOT be in hierarchy
         XCTAssertFalse(containerView.subviews.contains(containerView.gutterView))
         #else
         // iOS should have visible GutterView
@@ -251,8 +242,7 @@ final class LineNumbersPlatformTests: XCTestCase {
 
             // Then: The state should match the configuration
             #if canImport(AppKit)
-            XCTAssertEqual(containerView.scrollView.hasVerticalRuler, enabled)
-            XCTAssertEqual(containerView.scrollView.rulersVisible, enabled)
+            XCTAssertEqual(containerView.macGutterView != nil, enabled)
             #else
             XCTAssertEqual(!containerView.gutterView.isHidden, enabled)
             #endif
@@ -269,11 +259,11 @@ final class LineNumbersPlatformTests: XCTestCase {
 
         // Then: Both features should work independently
         #if canImport(AppKit)
-        // macOS: Ruler view for line numbers, minimap as separate view
-        XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
+        // macOS: macGutterView for line numbers, minimap as separate view
+        XCTAssertNotNil(containerView.macGutterView)
         XCTAssertTrue(containerView.subviews.contains(containerView.minimapView))
         XCTAssertFalse(containerView.minimapView.isHidden)
-        // GutterView should still NOT be in hierarchy
+        // Cross-platform GutterView should still NOT be in hierarchy
         XCTAssertFalse(containerView.subviews.contains(containerView.gutterView))
         #else
         // iOS: Both GutterView and MinimapView in hierarchy
