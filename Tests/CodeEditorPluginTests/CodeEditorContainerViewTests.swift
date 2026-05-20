@@ -111,16 +111,13 @@ final class CodeEditorContainerViewTests: XCTestCase {
         }
 
         #if canImport(AppKit)
-        // On macOS, line numbers are handled by NSRulerView
-        // Initially show line numbers
+        // On macOS, line numbers are rendered by CodeEditorGutterView attached
+        // as a floating subview. Verify the gutter toggles in/out as expected.
         containerView.showsLineNumbers = true
-        XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
-        XCTAssertTrue(containerView.scrollView.rulersVisible)
+        XCTAssertNotNil(containerView.macGutterView)
 
-        // Hide line numbers
         containerView.showsLineNumbers = false
-        XCTAssertFalse(containerView.scrollView.hasVerticalRuler)
-        XCTAssertFalse(containerView.scrollView.rulersVisible)
+        XCTAssertNil(containerView.macGutterView)
 
         // Verify text container inset adjusted
         let insets = containerView.textView.textContainerInset
