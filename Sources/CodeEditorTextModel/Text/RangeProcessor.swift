@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import Foundation
+import os
 
 public enum RangeFillMode: Sendable, Hashable {
     /// No processing will be performed to satisfy the request.
@@ -56,6 +57,7 @@ public final class RangeProcessor: @unchecked Sendable {
     }
 
     private var pendingEventQueue = AwaitableQueue<VersionedMutation>()
+    private let fillTaskLock = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
 
     public let configuration: Configuration
 
@@ -302,13 +304,25 @@ public final class RangeProcessor: @unchecked Sendable {
     }
 
     private func scheduleFilling(in isolation: isolated (any Actor)) {
-        Task {
+        // Weak self so a rapid deinit can actually release the processor while
+        // the task is still queued. Task is stored so deinit can cancel any
+        // outstanding fill — see `deinit`.
+        let newTask = Task { [weak self] in
+            guard let self else { return }
+
             self.continueFillingIfNeeded(isolation: isolation)
 
             // it is very important to double check here, in case
             // any waiters stuck in and we have no more work to do
             self.pendingEventQueue.handlePendingWaiters()
         }
+
+        let previous = fillTaskLock.withLock { task -> Task<Void, Never>? in
+            let prior = task
+            task = newTask
+            return prior
+        }
+        previous?.cancel()
     }
 
     private func updateProcessedLocation(by delta: Int) {
@@ -324,6 +338,6 @@ public final class RangeProcessor: @unchecked Sendable {
     }
 
     deinit {
-        // Cleanup if needed
+        fillTaskLock.withLock { $0?.cancel() }
     }
 }

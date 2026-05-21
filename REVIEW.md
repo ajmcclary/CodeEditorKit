@@ -16,11 +16,13 @@ Resolution: Backed `pendingEvents` with `OSAllocatedUnfairLock<[Event]>` (NSLock
 
 ---
 
-**[High] `Sources/CodeEditorTextModel/Text/RangeProcessor.swift:~305` — Fire-and-forget `Task` with no cancellation tracking**
+**[High] `Sources/CodeEditorTextModel/Text/RangeProcessor.swift:~305` — Fire-and-forget `Task` with no cancellation tracking** — ✅ **Resolved**
 
 Explanation: `Task { self.continueFillingIfNeeded(...); self.pendingEventQueue.handlePendingWaiters() }` is not stored, so it cannot be cancelled when the owning view/processor is torn down. On rapid open/close cycles this leaks work that can mutate state after the owner expects to be quiescent.
 
 Suggestion: Store the `Task` in a property and cancel it in `deinit`/teardown, or make the call sites structured-async.
+
+Resolution: `scheduleFilling` now captures `self` weakly (so a deinit during a rapid open/close can actually release the processor) and stores the resulting `Task<Void, Never>` in a new `fillTaskLock: OSAllocatedUnfairLock<Task<Void, Never>?>`. Each new schedule cancels the prior task; `deinit` cancels whatever is outstanding. Structured-async wasn't viable because both call sites (`processLocation(.optional)` and `completeContentChanged`) are sync methods that need to return immediately.
 
 ---
 
@@ -339,7 +341,7 @@ Suggestion: None.
 | Severity | Count |
 |:---------|:------|
 | Critical | 0 |
-| High | 5 (RangeProcessor Task leak, LSPClient disconnect Task, 3 cache O(n) hot-paths) — 1 resolved (AwaitableQueue contract) |
+| High | 4 (LSPClient disconnect Task, 3 cache O(n) hot-paths) — 2 resolved (AwaitableQueue contract, RangeProcessor Task leak) |
 | Medium | 13 (Configuration/Languages path, umbrella re-export, search error swallowing, LSP cert bypass/message-drop/string-IDs/overflow/stderr, etc.) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
