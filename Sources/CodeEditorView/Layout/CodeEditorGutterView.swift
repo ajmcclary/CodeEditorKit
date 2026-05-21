@@ -23,6 +23,16 @@ final class CodeEditorGutterView: NSView {
 
     override var isFlipped: Bool { true }
 
+    /// The renderer walks every layout fragment in the visible viewport and
+    /// draws each line number at its own viewport-relative Y. AppKit's
+    /// default clipping confines drawing to `dirtyRect`, which for a
+    /// floating subview during scroll is often only a partial strip of the
+    /// view's bounds — and any renderer output that lands outside the
+    /// strip gets discarded, producing the "line numbers stop part-way down
+    /// after scroll" bug. Opting out makes the renderer's full output
+    /// commit to the layer on every draw.
+    override var wantsDefaultClipping: Bool { false }
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
