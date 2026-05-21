@@ -130,11 +130,13 @@ Resolution: Added `ProjectSearchError: LocalizedError, Sendable` (new file `Sour
 
 ---
 
-**[Medium] `Sources/CodeEditorSearch/ProjectSearchProvider.swift:~161` — Unreadable file silently skipped**
+**[Medium] `Sources/CodeEditorSearch/ProjectSearchProvider.swift:~161` — Unreadable file silently skipped** — ✅ **Resolved**
 
 Explanation: `guard let content = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }` hides permissions/encoding failures. Useful as a degraded mode but should at least log.
 
 Suggestion: `do { … } catch { logger.warning("Skipping \(fileURL): \(error)"); continue }`.
+
+Resolution: Replaced the `try?`/`guard` with explicit `do/catch`; the catch branch emits `Logger.warning("Skipping unreadable file <path>: <error>")` and continues. `Logger` is `os.Logger` via `#if canImport(os.log)` — kept `CodeEditorSearch` Foundation-only (no new dependency on `CodeEditorCommon`'s `CrossPlatformLogger`, matching the target's documented decoupled stance). Logger is a `private static let` on `PortableProjectSearchAdapter` (not top-level — the codebase's `prefixed_toplevel_constant` lint rejects unprefixed top-level constants). Used `Self.` reference inside the static `performSearch` call site (`prefer_self_in_static_references`). Added `searchSkipsUnreadableFiles` to `ProjectSearchProviderTests` — writes a binary file with invalid UTF-8 alongside a readable text file, indexes both, verifies the search returns the text match without aborting on the binary skip.
 
 ---
 
@@ -356,7 +358,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 10 — 3 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error) |
+| Medium | 9 — 4 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

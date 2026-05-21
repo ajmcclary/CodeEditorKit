@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(os.log)
+import os.log
+#endif
 
 // MARK: - Project Search Protocol
 
@@ -83,6 +86,16 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
     private var searchTask: Task<[ProjectSearchResult], Never>?
     private let lock = NSLock()
     private let fileManager = FileManager.default
+
+    #if canImport(os.log)
+    /// File-skip diagnostics for `performSearch`. Search is best-effort
+    /// across the workspace — files that fail to read still get skipped,
+    /// but they're recorded here rather than swallowed silently.
+    private static let logger = Logger(
+        subsystem: "com.codeeditor.search",
+        category: "ProjectSearchProvider"
+    )
+    #endif
 
     public init() {}
 
@@ -170,7 +183,18 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
 
         for fileURL in files {
             guard !Task.isCancelled, results.count < maxResults else { break }
-            guard let content = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+            let content: String
+            do {
+                content = try String(contentsOf: fileURL, encoding: .utf8)
+            } catch {
+                // Permissions, non-UTF-8 binary, or transient I/O failure.
+                // Search is best-effort across the workspace — skip the file
+                // but leave a breadcrumb so the cause isn't invisible.
+                #if canImport(os.log)
+                Self.logger.warning("Skipping unreadable file \(fileURL.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                #endif
+                continue
+            }
 
             let lines = content.components(separatedBy: "\n")
             for (idx, line) in lines.enumerated() {
