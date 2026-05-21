@@ -104,8 +104,8 @@ public final class SyntaxHighlightingService {
         asyncHighlighter.cancelAllHighlighting()
     }
 
-    /// Updates completion trigger characters for a language
-    public func getCompletionTriggerCharacters(for language: Language) -> Set<Character> {
+    /// Returns the completion trigger characters for the given language.
+    public func completionTriggerCharacters(for language: Language) -> Set<Character> {
         switch language {
         case .swift:
             return [".", "(", "[", "<", " ", ":"]
@@ -173,6 +173,12 @@ public final class SyntaxHighlightingService {
         case .plainText:
             return []
         }
+    }
+
+    /// Returns the completion trigger characters for the given language.
+    @available(*, deprecated, renamed: "completionTriggerCharacters(for:)")
+    public func getCompletionTriggerCharacters(for language: Language) -> Set<Character> {
+        completionTriggerCharacters(for: language)
     }
 
     /// Validates if a range is safe to highlight

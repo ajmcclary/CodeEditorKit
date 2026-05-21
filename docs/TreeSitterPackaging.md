@@ -51,6 +51,8 @@ There is currently no public runtime Tree-sitter gate. `Package.swift` does not 
 
 ## Extraction Checklist
 
+The empty `Sources/CodeEditorTreeSitterLanguages/` directory exists as a namespace placeholder (a `.gitkeep` reserves the path in git). It has no SPM target yet — see the extraction checklist below.
+
 - [ ] Create `CodeEditorTreeSitterLanguages` target in `Package.swift`
 - [ ] Move `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/` to new target
 - [ ] Replace `RegexBackedRangeQueryParser` with real C Tree-sitter integration

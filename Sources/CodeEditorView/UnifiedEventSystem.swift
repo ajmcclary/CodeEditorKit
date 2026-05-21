@@ -133,13 +133,19 @@ public final class UnifiedEventSystem: ObservableObject {
 
     // MARK: - Event History
 
-    /// Get recent events
-    public func getRecentEvents(count: Int = 10) -> [EditorEvent] {
+    /// Returns the most recent events from the history buffer.
+    public func recentEvents(count: Int = 10) -> [EditorEvent] {
         Array(eventHistory.suffix(count))
     }
 
-    /// Get events of specific type from history
-    public func getEvents<T: EditorEventType>(
+    /// Returns the most recent events from the history buffer.
+    @available(*, deprecated, renamed: "recentEvents(count:)")
+    public func getRecentEvents(count: Int = 10) -> [EditorEvent] {
+        recentEvents(count: count)
+    }
+
+    /// Returns events of the given type from the history buffer.
+    public func events<T: EditorEventType>(
         ofType type: T.Type,
         limit: Int = 10
     ) -> [T] {
@@ -150,6 +156,15 @@ public final class UnifiedEventSystem: ObservableObject {
                 }
                 .suffix(limit)
         )
+    }
+
+    /// Returns events of the given type from the history buffer.
+    @available(*, deprecated, renamed: "events(ofType:limit:)")
+    public func getEvents<T: EditorEventType>(
+        ofType type: T.Type,
+        limit: Int = 10
+    ) -> [T] {
+        events(ofType: type, limit: limit)
     }
 
     /// Clear event history

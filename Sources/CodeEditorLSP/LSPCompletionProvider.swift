@@ -20,6 +20,14 @@ public final class LSPCompletionProvider: CompletionProvider {
     /// Current file path for completion context
     private var currentFilePath: String?
 
+    /// In-flight document-sync task. Chained: each `updateContext` awaits the
+    /// previous sync's value before sending its own `didChange`, so the LSP
+    /// server observes notifications in submission order. `requestCompletions`
+    /// awaits this before issuing the request, guaranteeing the server has
+    /// processed the latest text. Mutated only from `@MainActor`-isolated
+    /// contexts (the provider itself is `@MainActor`).
+    private var pendingDocumentSync: Task<Void, Never>?
+
     /// Logger for debugging
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPCompletionProvider")
 
@@ -46,6 +54,12 @@ public final class LSPCompletionProvider: CompletionProvider {
     }
 
     public func requestCompletions(for context: CompletionContextModel) async -> CompletionResult {
+        // Wait for any pending document sync so the server has processed the
+        // latest text before we ask it to complete against that text. Without
+        // this barrier the prior fire-and-forget `Task { didChange }` could be
+        // outrun by a faster completion request.
+        await pendingDocumentSync?.value
+
         guard let lspManager,
               let filePath = currentFilePath else {
             return CompletionResult(
@@ -119,16 +133,19 @@ public final class LSPCompletionProvider: CompletionProvider {
         guard let lspManager,
               let filePath else { return }
 
-        Task {
+        // Chain onto the prior sync so didChange notifications are delivered
+        // in submission order. `requestCompletions` awaits `pendingDocumentSync`
+        // before sending its request, so the server sees the latest text first.
+        let previous = pendingDocumentSync
+        pendingDocumentSync = Task { [weak self] in
+            _ = await previous?.value
             do {
-                // Check if document is already open, if not open it
                 try await lspManager.updateDocument(filePath: filePath, content: text)
             } catch {
-                // Document might not be open yet, try opening it
                 do {
                     try await lspManager.openDocument(filePath: filePath, content: text)
                 } catch {
-                    logger.error("Failed to open/update document in LSP: \(error.localizedDescription)")
+                    self?.logger.error("Failed to open/update document in LSP: \(error.localizedDescription)")
                 }
             }
         }

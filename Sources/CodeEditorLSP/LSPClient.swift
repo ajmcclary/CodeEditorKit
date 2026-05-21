@@ -4,6 +4,7 @@
 import CodeEditorCommon
 import CodeEditorLanguages
 import Foundation
+import os.lock
 
 /// Language Server Protocol client implementation
 ///
@@ -133,6 +134,14 @@ public final class LSPClient: ObservableObject {
     /// from the `@MainActor`-isolated client.
     private var disconnectTask: Task<Void, Never>?
 
+    /// True while the client holds connection resources that need an explicit
+    /// `disconnect()`/`shutdown()` before deallocation. Set true on `connect`,
+    /// cleared on `disconnect`. `OSAllocatedUnfairLock` is used (rather than a
+    /// plain `Bool`) so the (nonisolated) `deinit` can safely read it without
+    /// crossing `@MainActor` isolation. Same pattern as `AwaitableQueue` /
+    /// `RangeProcessor.fillTaskLock` elsewhere in the codebase.
+    private let needsTeardownFlag = OSAllocatedUnfairLock<Bool>(initialState: false)
+
     /// Logger for debugging
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClient")
 
@@ -158,8 +167,16 @@ public final class LSPClient: ObservableObject {
     }
 
     deinit {
-        // Note: Cannot call MainActor-isolated methods from deinit
-        // Disconnection cleanup will happen automatically when the process terminates
+        // Cannot call MainActor-isolated methods from deinit, but the
+        // `OSAllocatedUnfairLock`-backed `needsTeardownFlag` is safe to read
+        // here. Warn if the owner dropped the client without calling
+        // `disconnect()` / `shutdown()` — pending request continuations may
+        // be stranded and the underlying process/transport will only be torn
+        // down when the OS reclaims it on process exit.
+        let stillNeedsTeardown = needsTeardownFlag.withLock { $0 }
+        if stillNeedsTeardown {
+            logger.warning("LSPClient deallocated without calling shutdown()/disconnect() — pending requests may leak; the transport will only be torn down at process exit")
+        }
     }
 
     // MARK: - Connection Management
@@ -175,6 +192,10 @@ public final class LSPClient: ObservableObject {
     ///   transport down before the error rethrows.
     public func connect(configuration: ServerConfiguration) async throws {
         try LSPConnectionManager.validateCanConnect(currentState: connectionState)
+
+        // Mark the client as holding teardown-pending resources so the deinit
+        // warning fires if the caller forgets `disconnect()`/`shutdown()`.
+        needsTeardownFlag.withLock { $0 = true }
 
         connectionState = .connecting
         logger.info("Connecting to LSP server: \(configuration.serverPath)")
@@ -232,6 +253,12 @@ public final class LSPClient: ObservableObject {
         if disconnectTask != nil {
             return
         }
+
+        // Teardown is now in progress. Clearing the flag synchronously means
+        // the deinit warning only fires when the owner dropped the client
+        // *without* calling disconnect/shutdown — completing the async
+        // teardown after this point is the caller's responsibility.
+        needsTeardownFlag.withLock { $0 = false }
 
         let wasInitialized = (connectionState == .initialized)
 
@@ -303,6 +330,16 @@ public final class LSPClient: ObservableObject {
                 Self.failPending(pendingToFail)
             }
         }
+    }
+
+    /// Tear down the LSP connection.
+    ///
+    /// Documented alias of `disconnect()` — the name matches the conventional
+    /// lifecycle term referenced by the deinit-time warning when the client
+    /// is dropped without an explicit teardown. Synchronous; the caller does
+    /// not need to await the async transport drain.
+    public func shutdown() {
+        disconnect()
     }
 
     /// Fail any captured pending request continuations. Called after transport

@@ -14,13 +14,41 @@ import UIKit
 public final class IOSLargeFileOptimizer: ObservableObject {
     // MARK: - Configuration
 
-    /// File size threshold for enabling optimizations (in bytes)
+    /// File size threshold (bytes) above which iOS-specific optimizations
+    /// engage. Defaults to 1 MB.
+    ///
+    /// Calibrated against the typical iPhone RAM tier in current shipping
+    /// devices (~4–6 GB physical, of which third-party apps may see roughly
+    /// 1–2 GB before jetsam pressure). The corresponding macOS path uses no
+    /// hard threshold — desktops can afford full-document highlighting at
+    /// most realistic sizes.
+    ///
+    /// Hosts can override this at construction time (the field is `var`)
+    /// when targeting iPads with larger RAM budgets or stripped-down memory
+    /// extensions.
     public var optimizationThreshold: Int = 1_048_576 // 1MB
 
-    /// Maximum syntax highlighting range for iOS
+    /// Upper bound (UTF-16 length) on a single syntax-highlighting chunk on
+    /// iOS. Defaults to 100 000 (~100 KB).
+    ///
+    /// Chosen so each chunk's highlighting work fits inside a single
+    /// frame's worth of CPU budget on the lowest iPhone tier we ship to.
+    /// The macOS analog (`PlatformConstants.maxSyntaxHighlightingLength`)
+    /// is roughly 10× larger because Mac CPUs can absorb a larger chunk
+    /// without dropping below 60 fps.
+    ///
+    /// Override when the host targets only newer iPads with more headroom.
     public var maxHighlightingRange: Int = 100_000 // 100KB chunks
 
-    /// Viewport expansion factor for prefetching
+    /// Multiplier on the visible viewport used when prefetching
+    /// highlighting work outside the visible range. Defaults to 0.5 (50 %).
+    ///
+    /// macOS uses ~1.5 (150 %): desktops can afford to render well past
+    /// the visible scroll edge to mask scroll latency. iOS halves it
+    /// because the off-screen attributed-string memory pressure adds up on
+    /// 4–6 GB tier devices when files are large.
+    ///
+    /// Override when the host needs different scroll-latency tradeoffs.
     public var viewportExpansion: CGFloat = 0.5 // 50% expansion vs 150% on macOS
 
     /// Memory pressure response mode

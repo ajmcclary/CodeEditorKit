@@ -188,8 +188,8 @@ public final class TextEditingService {
 
     // MARK: - Line Operations
 
-    /// Extracts the current line from text at a given location
-    public func getCurrentLine(at location: Int, in text: String) -> (line: String, range: NSRange)? {
+    /// Extracts the current line from text at a given location.
+    public func currentLine(at location: Int, in text: String) -> (line: String, range: NSRange)? {
         guard location >= 0 && location <= text.count else {
             return nil
         }
@@ -224,6 +224,12 @@ public final class TextEditingService {
         let lineRange = NSRange(location: startOffset, length: length)
 
         return (line, lineRange)
+    }
+
+    /// Extracts the current line from text at a given location.
+    @available(*, deprecated, renamed: "currentLine(at:in:)")
+    public func getCurrentLine(at location: Int, in text: String) -> (line: String, range: NSRange)? {
+        currentLine(at: location, in: text)
     }
 
     /// Counts lines in text

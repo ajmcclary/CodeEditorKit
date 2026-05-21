@@ -36,35 +36,43 @@ Resolution: Added a `disconnectTask: Task<Void, Never>?` property on `LSPClient`
 
 ---
 
-**[Medium] `Sources/CodeEditorLSP/LSPCompletionProvider.swift:~122` — Fire-and-forget document sync `Task`**
+**[Medium] `Sources/CodeEditorLSP/LSPCompletionProvider.swift:~122` — Fire-and-forget document sync `Task`** — ✅ **Resolved**
 
 Explanation: `Task { try await lspManager.updateDocument(...) }` issues `didChange` asynchronously without ordering guarantees against subsequent completion/hover requests, so completion can request against an older document version than what the server has.
 
 Suggestion: Serialize document sync through `LSPManager` (use a single per-URI actor or async sequence) and await sync before issuing dependent requests.
 
+Resolution: Added `private var pendingDocumentSync: Task<Void, Never>?` (MainActor-bound by the enclosing `@MainActor` class). `updateContext` now spawns a tracked Task that **chains onto the prior sync** via `_ = await previous?.value` before issuing its own `didChange` — strict FIFO so the LSP server observes notifications in submission order. `requestCompletions(for:)` awaits `pendingDocumentSync?.value` as its first line, guaranteeing the server has processed the latest text before a completion request is sent. Kept the public sync `updateContext(filePath:text:)` signature stable (SwiftUI bindings and event-driven callers still call it without `await`). Did **not** push the serialization down into `LSPManager` (the reviewer's other path) — that would have rippled through the existing `await lspManager.updateDocument(...)` call site in `LSPContentCoordinator.swift:176` for no extra correctness benefit since the only fire-and-forget caller was here.
+
 ---
 
-**[Medium] `Sources/CodeEditorCommon/ErrorRecoveryCoordinator.swift` — Actor state mutation around `await`**
+**[Medium] `Sources/CodeEditorCommon/ErrorRecoveryCoordinator.swift` — Actor state mutation around `await`** — ✅ **Resolved**
 
 Explanation: `activeRecoveries[recoveryId] = … → try await attemptRecovery(...) → activeRecoveries.removeValue(...)`. Actor re-entrancy means a second `recover()` call can see the in-progress entry. That can be intentional (it allows cancellation), but it isn't documented.
 
 Suggestion: Add a one-line comment noting why the suspension is safe (or guard against re-entry for the same `recoveryId`).
 
+Resolution: Took the documentation path (reviewer's preferred option). Added a four-line comment immediately above the `try await attemptRecovery(...)` call explaining that re-entry during suspension is safe because (a) `recoveryId = UUID()` is fresh per call so no key collisions are possible across concurrent `recover` invocations, and (b) `activeRecoveries` is write-only bookkeeping — never read or compared against elsewhere in the type. The grep-confirmed property is set on entry, removed on each success/failure path, and never inspected, so the suspension cannot leak observable state. The reviewer's alternative `recoveryId`-guarded re-entry block was redundant given the UUID guarantee.
+
 ---
 
-**[Low] `Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:32-49` — Cancel-outside-lock is intentional but easy to misread**
+**[Low] `Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:32-49` — Cancel-outside-lock is intentional but easy to misread** — ✅ **Resolved**
 
 Explanation: Verified the code and its rationale comment (lines 22–24). `Task.cancel()` is thread-safe and idempotent; previous is captured under the lock and retained on the stack, so the cancel cannot race against another mutation. This is **not a bug** — but it's a frequent source of false-positive review flags. (One agent flagged it as Critical; that finding is incorrect.)
 
 Suggestion: No change needed. Optionally inline the rationale next to the cancel call.
 
+Resolution: Took the inline-rationale option. Added a single-line comment immediately above each of the two `previous?.cancel()` call sites in `HighlightingTaskManager` (`setCurrentTask` and `cancelCurrent`) pointing back to the class-level docstring's `@unchecked Sendable` rationale: "Safe outside the lock — `Task.cancel()` is thread-safe and idempotent, and `previous` is retained on the stack. See class docstring." Future drive-by readers no longer have to scroll to the docstring to confirm the pattern's safety; static analysis tools that flag "cancel outside lock" as a heuristic now have a co-located rebuttal.
+
 ---
 
-**[Low] `Sources/CodeEditorLayout/Glass/CompletionCellComponents.swift` — `@unchecked Sendable` on all-`let` struct**
+**[Low] `Sources/CodeEditorLayout/Glass/CompletionCellComponents.swift` — `@unchecked Sendable` on all-`let` struct** — ⚠️ **Verified false alarm**
 
 Explanation: If every stored property is `let` and `Sendable`, the compiler will synthesize `Sendable` without `@unchecked`. Marking it `@unchecked` removes the compile-time check unnecessarily.
 
 Suggestion: Drop `@unchecked`.
+
+Resolution: **No change — the reviewer's premise is wrong.** The struct's stored properties are `PlatformFont` and `PlatformColor` (NSFont/UIFont and NSColor/UIColor on the respective platforms). Neither is formally `Sendable` under strict Swift 6 concurrency, so the compiler will **not** synthesize `Sendable` automatically — `@unchecked` is load-bearing. The existing block comment at lines 44–55 already documents this design choice and notes the future direction (holding design tokens rather than resolved platform types) — a removal here would require either making the platform color/font types `Sendable` upstream or refactoring the struct to hold design tokens, both out of scope.
 
 ---
 
@@ -90,19 +98,23 @@ Resolution: Added six `@_exported import` declarations for the targets the Quick
 
 ---
 
-**[Low] `Sources/CodeEditorUI` — `CodeEditorPlugin` dependency not imported in any UI source**
+**[Low] `Sources/CodeEditorUI` — `CodeEditorPlugin` dependency not imported in any UI source** — ⚠️ **Verified false alarm**
 
 Explanation: `CodeEditorUI` declares `CodeEditorPlugin` as a dep in `Package.swift:344` but no `.swift` file in the target imports it; UI references `CodeEditorView`, `CodeEditorSwiftUI`, `CodeEditorSymbols`, `CodeEditorTheming`, etc. directly. Over-declaration inflates build closure.
 
 Suggestion: Remove `CodeEditorPlugin` from the `CodeEditorUI` dependency list, unless it's there for re-export purposes (in which case document it).
 
+Resolution: **No change — the reviewer's premise is wrong.** Verification grep shows 13 files inside `Sources/CodeEditorUI/` do `import CodeEditorPlugin` and use its types directly (`EditorSidebarShell.swift`, `Theme+Glass.swift`, and 11 others). The dependency is a genuine functional one, not a re-export shim. Dropping it would break the UI build.
+
 ---
 
-**[Low] `Sources/CodeEditorTreeSitterLanguages` — Staging directory with no SPM target**
+**[Low] `Sources/CodeEditorTreeSitterLanguages` — Staging directory with no SPM target** — ✅ **Resolved**
 
 Explanation: Contains only `.gitkeep` and a planning README. `CLAUDE.md` confirms it's pre-staging; not a defect, just noted for awareness during future cleanup.
 
 Suggestion: Either gate behind an opt-in target stub, or move the planning README into `docs/` until a target is wired.
+
+Resolution: Took the docs-relocation path of the reviewer's two options. The staging README's content was already covered by the authoritative `docs/TreeSitterPackaging.md` (architecture diagram, extraction checklist, consumer opt-in snippet, binary-size comparison, exclusions matrix) — so `git rm Sources/CodeEditorTreeSitterLanguages/README.md` removed the duplicate rather than moving it. The `.gitkeep` stays in place to reserve the namespace in git for the eventual extraction. Added a one-line note in `docs/TreeSitterPackaging.md` under the "Extraction Checklist" header pointing readers at the placeholder directory so the relationship is discoverable: "The empty `Sources/CodeEditorTreeSitterLanguages/` directory exists as a namespace placeholder (a `.gitkeep` reserves the path in git). It has no SPM target yet — see the extraction checklist below." The reviewer's opt-in-target-stub alternative would have added a stub target to `Package.swift` solely to host an empty directory, which contravenes the project's "don't add abstractions beyond what the task requires" rule.
 
 ---
 
@@ -236,11 +248,13 @@ Resolution: Took the documentation path of the reviewer's two options. The `Weak
 
 ---
 
-**[Low] `Sources/CodeEditorView/IOSLargeFileOptimizer.swift:~18-24` — Hardcoded iOS thresholds without device-tier scaling**
+**[Low] `Sources/CodeEditorView/IOSLargeFileOptimizer.swift:~18-24` — Hardcoded iOS thresholds without device-tier scaling** — ✅ **Resolved (documentation path)**
 
 Explanation: `optimizationThreshold = 1MB`, `maxHighlightingRange = 100KB`, `viewportExpansion = 0.5` — no rationale, no device scaling.
 
 Suggestion: Derive from `ProcessInfo.processInfo.physicalMemory` or document the iPhone/iPad RAM tiers these were calibrated against.
+
+Resolution: Took the documentation path of the reviewer's two options — live derivation would have required device-tier benchmarking infrastructure that doesn't exist yet, and the values are already `var`s by design so callers can override at construction time. Replaced the one-line `///` summaries on all three properties with multi-paragraph docstrings that name (a) the calibration assumption (typical iPhone 4–6 GB RAM tier; ~1–2 GB headroom before jetsam pressure), (b) the macOS equivalent values for contrast (`PlatformConstants.maxSyntaxHighlightingLength` is ~10× `maxHighlightingRange`; macOS viewport expansion runs ~150% vs iOS's 50%), and (c) the explicit override allowance for hosts targeting newer iPads with more headroom. Reasoning behind the chosen numbers (single-frame CPU budget on lowest iPhone tier; off-screen attributed-string memory pressure ceiling) lives inline at each field rather than in a separate calibration doc that could drift.
 
 ---
 
@@ -296,37 +310,51 @@ Resolution: Restructured `attachStderrLogging()` to mirror the `startReading()` 
 
 ---
 
-**[Low] `Sources/CodeEditorLSP/LSPClient.swift` — `deinit` cannot run async cleanup**
+**[Low] `Sources/CodeEditorLSP/LSPClient.swift` — `deinit` cannot run async cleanup** — ✅ **Resolved**
 
 Explanation: Documented limitation — pending requests can outlive client release if `disconnect` wasn't called. Acceptable design, but should be enforced.
 
 Suggestion: Add a `@MainActor`-callable `shutdown` method and assert at `deinit` time that pending requests are empty (or warn).
 
+Resolution: Added `public func shutdown()` as a documented alias of the existing `disconnect()` — the name reads correctly at lifecycle-management call sites and is the canonical entry point referenced by the new deinit warning. Added `private let needsTeardownFlag = OSAllocatedUnfairLock<Bool>(initialState: false)` — `OSAllocatedUnfairLock` is `Sendable` so the (nonisolated) deinit can safely read the flag without crossing the class's `@MainActor` isolation (same pattern used elsewhere in the codebase: `AwaitableQueue`, `RangeProcessor.fillTaskLock`). The flag is set to `true` at the start of `connect(configuration:)` and cleared at the start of `disconnect()` (after the two early-return guards). `deinit` now reads the flag and emits `logger.warning("LSPClient deallocated without calling shutdown()/disconnect() — pending requests may leak; the transport will only be torn down at process exit")` when the client is dropped without explicit teardown. Chose `Logger.warning` rather than `assertionFailure` because deinit-side crashes are user-hostile — the warning surfaces the bug in development logs without taking down the host app at deallocation time. A client that was created but never connected silently deinits (flag never set to `true`), so the warning fires only for the actual misuse the reviewer cared about.
+
 ---
 
 ## 9. Code Organization, Naming, Docs
 
-**[Medium] Public types missing top-level doc comments**
+**[Medium] Public types missing top-level doc comments** — ⚠️ **Verified false alarm on the cited types**
 
 Explanation: Spot check found `CompletionManager`, `LanguageDetectionService`, and `MacOSWorkspaceFileManager` without `///` headers. These are publicly visible.
 
 Suggestion: Add 1–3 line `///` headers describing role and ownership.
 
+Resolution: **No change to the three cited types — all already have headers.** Verification confirms `CompletionManager` (`Sources/CodeEditorCompletion/CompletionManager.swift:19-31`), `LanguageDetectionService` (`Sources/CodeEditorLanguages/LanguageDetectionService.swift:6-7`), and `MacOSWorkspaceFileManager` (`Sources/CodeEditorWorkspace/MacOSWorkspaceFileManager.swift:7-12`) each have multi-line `///` docstrings describing role and ownership. Broader-grep scope-note for follow-up: a sweep across `Sources/` finds ~55 other public types without headers (representative examples: `WorkspaceFileTree`, `EditorEventPublisher`, `TextKitSetupHelper`, `EditorRuntimeDependencies` family in `EditorRuntime.swift`, `MinimapStyleDataSource`, `LayoutOptimizer`, `InsertionPointView`, `CompletionCellComponentProvider`, `AppKitCompletionCellComponents`, `UIKitCompletionCellComponents`, `BaseUIComponents` protocols, `LineHighlightView`, `AnnotationsContentViewProtocol`). That broader doc pass is appropriately a separate effort and is out of scope for this review-resolution loop.
+
 ---
 
-**[Low] Public getter methods with `get*` prefix violate Swift API Design Guidelines**
+**[Low] Public getter methods with `get*` prefix violate Swift API Design Guidelines** — ✅ **Resolved (cited public methods)**
 
 Explanation: Found ~10, including `getCachedCharacterWidth()`, `getCompletionTriggerCharacters()`, `getLineAndColumn()`, `getCurrentLine()`, `getRecentEvents()`, `getEvents<T>()`. Swift convention is property-style for parameter-less accessors, noun-style for parameterized ones.
 
 Suggestion: Rename per call site; for public ones, deprecate the old names and add forwarding shims for a release.
 
+Resolution: Renamed the four **public** methods from the reviewer's list and added `@available(*, deprecated, renamed:)` forwarding shims for each (the two remaining cited methods, `getCachedCharacterWidth(for:)` in `GutterSizingService` and `getLineAndColumn(for:)` in `CodeEditorView+AccessibilityExtensions`, are **private** — Swift API guidelines apply to the public/package surface, not internal/private — and were left unchanged).
+- `SyntaxHighlightingService.getCompletionTriggerCharacters(for:)` → `completionTriggerCharacters(for:)` + deprecated shim. The one in-tree caller (`CodeEditorView+SetupExtensions.swift:119`) was updated to the new name.
+- `TextEditingService.getCurrentLine(at:in:)` → `currentLine(at:in:)` + deprecated shim. No in-tree callers.
+- `UnifiedEventSystem.getRecentEvents(count:)` → `recentEvents(count:)` + deprecated shim. No in-tree callers.
+- `UnifiedEventSystem.getEvents<T:>(ofType:limit:)` → `events<T:>(ofType:limit:)` + deprecated shim. No in-tree callers (the generic parameter labels stay the same so the shim's `renamed:` clause maps cleanly).
+
+The broader 48 `get*`-prefix internal/private methods inventoried during exploration are out of scope — Swift API design guideline citations target the public/package surface that external consumers see.
+
 ---
 
-**[Low] `Sources/CodeEditorView/Platform/ToolbarCoordinator.swift:464` — Bare `TODO` without tracking issue**
+**[Low] `Sources/CodeEditorView/Platform/ToolbarCoordinator.swift:464` — Bare `TODO` without tracking issue** — ✅ **Resolved**
 
 Explanation: `// TODO: Add keyboard shortcut support` with no issue reference. `CLAUDE.md` doesn't require issue refs, but this one's been around long enough to deserve one (or removal).
 
 Suggestion: File an issue or delete the `TODO`.
+
+Resolution: Deleted the bare TODO. The keyboard-shortcut feature gap is already captured by the class-level docstring at `ToolbarCoordinator.swift:30` ("Keyboard Shortcuts: Configures shortcuts where supported"), and the project doesn't currently have an issue tracker URL to file against. The dangling inline TODO added no information beyond what the class header already communicates; removing it eliminates a recurring source of "is this still relevant" review noise.
 
 ---
 
@@ -354,11 +382,13 @@ would meaningfully complement this review.
 
 ## 12. Miscellaneous
 
-**[Low] `Sources/CodeEditorPlugin/CodeEditorPlugin.swift:32` — Demo code in doc comment uses `logger.debug(...)` as if `logger` were imported**
+**[Low] `Sources/CodeEditorPlugin/CodeEditorPlugin.swift:32` — Demo code in doc comment uses `logger.debug(...)` as if `logger` were imported** — ⚠️ **Verified false alarm**
 
 Explanation: The Quick Start snippet uses `logger.debug("Hello, World!")` with no surrounding context that would make `logger` resolvable. A first-time reader copy-pasting the snippet will get an error.
 
 Suggestion: Use a string literal or define `logger` in the snippet's context.
+
+Resolution: **No change — the reviewer misread the snippet.** The line is `@State private var code = "logger.debug(\"Hello, World!\")"` — that is, a `@State` property holding a `String` whose value happens to contain the text `logger.debug("Hello, World!")` as sample code to display in the editor. There is no actual `logger.debug(...)` call in the snippet; `logger` doesn't need to be in scope because it's never resolved as an identifier. A first-time reader copy-pasting the snippet gets a `@State var` of type `String`, which compiles fine.
 
 ---
 
@@ -376,19 +406,14 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 0 — 13 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc, ProcessTransport stderr offload, SmartTokenCache version docstring, MemoryMonitor cleanup-handler doc) |
-| Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
+| Medium | 0 — 15 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc, ProcessTransport stderr offload, SmartTokenCache version docstring, MemoryMonitor cleanup-handler doc, LSPCompletionProvider doc-sync serialization, ErrorRecoveryCoordinator re-entrancy doc) + 1 verified false alarm (public-type docstrings — the three cited types already have headers) |
+| Low | 0 actionable remaining — 6 resolved (cancel-rationale inline, TreeSitterLanguages staging README, IOSLargeFileOptimizer threshold docs, LSPClient `shutdown()` + deinit warning, `get*`-prefix renames on 4 public methods, ToolbarCoordinator bare TODO) + 3 verified false alarms (`@unchecked Sendable` on `CompletionCellTheme` is load-bearing; `CodeEditorUI` does import `CodeEditorPlugin`; the `logger.debug` "demo code" is a string literal) |
 | Style | 5+ (compliance confirmations) |
 
 ### Overall Assessment
 
-Ship-ready, with a recommended pre-release sweep of:
+Ship-ready. The pre-release sweep originally flagged here has now landed: the three O(n) LRU caches collapsed onto a shared `LinkedLRU`, the LSP transport hardened (malformed-header recovery, string-ID support, system-trust-always-on, stderr offload), the `AwaitableQueue` `@unchecked Sendable` contract enforced via `OSAllocatedUnfairLock`, and the umbrella `@_exported import` set added to `CodeEditorPlugin.swift` (with the matching umbrella re-export test). The remaining actionable Medium and Low items closed in this final pass — LSP doc-sync serialization, `ErrorRecoveryCoordinator` re-entrancy docs, inline cancel rationale, iOS threshold documentation, `LSPClient.shutdown()` + deinit warning, `ToolbarCoordinator` bare TODO, the four public `get*`-prefix renames with deprecation shims, and the Tree-sitter staging README consolidation.
 
-1. **The three O(n) LRU caches in the hot path** — easy wins, real user-visible impact for large documents.
-2. **The LSP transport hardening:** malformed-header recovery, string-ID support, system-trust-always-on, stderr offload.
-3. **The `AwaitableQueue` `@unchecked Sendable` contract** (either enforce isolation in the API surface or lock the backing array).
-4. **Add the missing `@_exported import`** in `CodeEditorPlugin.swift` or align the docstring with the actual multi-import surface.
+The codebase is unusually disciplined for its size: zero SwiftLint violations under strict mode, zero `#if os()` violations, zero force-unwraps, zero `try!`, no detectable singletons, and consistent dependency layering across 18 SPM targets.
 
-The codebase is unusually disciplined for its size: zero SwiftLint violations under strict mode, zero `#if os()` violations, zero force-unwraps, zero `try!`, no detectable singletons, and consistent dependency layering across 18 SPM targets. The remaining issues are localized engineering tasks, not architectural rework.
-
-Two agent claims I downgraded after verification: the `HighlightingTaskManager` cancel-outside-lock pattern is documented and correct (`cancel` is thread-safe + idempotent; the previous reference is retained on the stack), and the `WebSocketPinningDelegate` cert bypass is an explicit caller opt-in with a logged warning — not a covert defect, though the bypass is too coarse-grained.
+Four agent claims downgraded after verification (kept in the body for traceability): the `HighlightingTaskManager` cancel-outside-lock pattern is documented and correct (`cancel` is thread-safe + idempotent; the previous reference is retained on the stack); the `WebSocketPinningDelegate` cert bypass was an explicit caller opt-in with a logged warning (since narrowed to a system-trust-always-on policy); the `CompletionCellTheme` `@unchecked Sendable` is load-bearing because `PlatformFont`/`PlatformColor` aren't formally `Sendable`; and the `CodeEditorPlugin.swift` "demo code uses `logger.debug` as if imported" was a misread of a `@State` string literal.

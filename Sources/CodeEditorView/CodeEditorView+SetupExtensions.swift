@@ -116,7 +116,7 @@ extension CodeEditorView {
 
     internal func updateCompletionTriggerCharacters() {
         let syntaxService = featureDependencies.syntaxHighlightingService
-        completionTriggerCharacters = syntaxService.getCompletionTriggerCharacters(for: language)
+        completionTriggerCharacters = syntaxService.completionTriggerCharacters(for: language)
     }
 
     // MARK: - LSP Integration

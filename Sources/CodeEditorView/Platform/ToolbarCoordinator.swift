@@ -461,7 +461,6 @@ extension ToolbarCoordinator {
             }) {
                 Label(item.title, systemImage: item.icon)
             }
-            // TODO: Add keyboard shortcut support
         }
     }
 }

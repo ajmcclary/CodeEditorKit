@@ -34,6 +34,8 @@ private final class HighlightingTaskManager: @unchecked Sendable {
         let previous = currentTask
         currentTask = task
         lock.unlock()
+        // Safe outside the lock — `Task.cancel()` is thread-safe and idempotent,
+        // and `previous` is retained on the stack. See class docstring.
         previous?.cancel()
         return previous
     }
@@ -45,6 +47,8 @@ private final class HighlightingTaskManager: @unchecked Sendable {
         let previous = currentTask
         currentTask = nil
         lock.unlock()
+        // Safe outside the lock — `Task.cancel()` is thread-safe and idempotent,
+        // and `previous` is retained on the stack. See class docstring.
         previous?.cancel()
     }
 }

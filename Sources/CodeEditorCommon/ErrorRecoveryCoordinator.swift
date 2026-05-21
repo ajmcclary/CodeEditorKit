@@ -30,6 +30,11 @@ public actor ErrorRecoveryCoordinator {
                 startTime: Date()
             )
 
+            // Actor re-entry during the suspension below is safe:
+            // `recoveryId` is a fresh UUID per call (no key collisions across
+            // concurrent `recover` invocations), and `activeRecoveries` is
+            // write-only bookkeeping — never read or compared against
+            // elsewhere in this type.
             do {
                 let result = try await attemptRecovery(
                     strategy: strategy,
