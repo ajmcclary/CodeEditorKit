@@ -2,12 +2,37 @@ import CodeEditorLanguages
 import CodeEditorTextModel
 import Foundation
 
-/// Smart cache for syntax highlighting tokens with intelligent eviction strategies
+/// Smart cache for syntax highlighting tokens with intelligent eviction strategies.
+///
+/// Staleness model: each `CacheEntry` is keyed by a `(textLength,
+/// textFingerprint, language, version)` tuple, with the fingerprint being an
+/// FNV-1a hash over the whole document. The fingerprint is collision-resistant
+/// in aggregate but does not encode *which range* changed, so an entry tied
+/// to a partial-viewport tokenization could in principle survive a small edit
+/// that happens to keep the global fingerprint stable across the edited
+/// region. The `version` field exists as the structural hook for finer-
+/// grained invalidation — see its docstring.
 package actor SmartTokenCache {
     package struct CacheKey: Hashable {
         package let textLength: Int
         package let textFingerprint: UInt64
         package let language: Language
+
+        /// Caller-supplied document version, mixed into the hash so two
+        /// otherwise-identical keys with different versions miss against
+        /// each other.
+        ///
+        /// **Currently a placeholder.** Every in-tree call site passes `0`,
+        /// so the fingerprint is the sole invalidation signal in practice.
+        /// The slot is wired into the key on purpose: a future
+        /// edit-driven-invalidation pass (REVIEW.md §7) can thread a real
+        /// monotonic version through `OptimizedSyntaxHighlightingCoordinator
+        /// .highlight(text:language:visibleRange:)` and the prefetch path
+        /// without changing this type's shape — just stop passing `0` at
+        /// the call sites. A companion `invalidate(editedRange:)` would
+        /// then drop viewport-coverage entries whose tokens overlap the
+        /// edited UTF-16 range. Until then, do not pretend non-zero values
+        /// mean anything beyond what callers themselves coordinate.
         package let version: Int
 
         package init(text: String, language: Language, version: Int) {

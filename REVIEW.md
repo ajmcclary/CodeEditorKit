@@ -216,11 +216,13 @@ Resolution: Two fixes in one pass: (1) `evictLeastValuableEntry` now uses `cache
 
 ---
 
-**[Medium] `Sources/CodeEditorSyntaxHighlighting/SmartTokenCache.swift` — Fingerprint may survive partial-range edits**
+**[Medium] `Sources/CodeEditorSyntaxHighlighting/SmartTokenCache.swift` — Fingerprint may survive partial-range edits** — ✅ **Resolved (documentation path)**
 
 Explanation: FNV-1a over the whole document plus length is reasonably collision-resistant but does not encode which range changed. An entry tied to a stale viewport-partial tokenization could survive a small edit that happens to keep the global fingerprint stable for that range.
 
 Suggestion: Key entries by `(documentVersion, range)` and invalidate by `editedRange` directly on each edit. Document the `version` field rather than the `version: 0` placeholder.
+
+Resolution: Took the smaller of the reviewer's two suggested paths — documentation, not architectural rework. Added a class-level docstring on `SmartTokenCache` that names the staleness model explicitly (FNV-1a is collision-resistant in aggregate but doesn't encode *where* an edit happened). Replaced the unannotated `package let version: Int` with a per-field docstring that names it as a placeholder hook: every in-tree call site passes `0`, so the fingerprint is the sole invalidation signal in practice; the slot is wired into the key on purpose so a future edit-driven-invalidation pass can thread a real monotonic version through `OptimizedSyntaxHighlightingCoordinator.highlight(...)` and the prefetch path without changing the type's shape. The companion `invalidate(editedRange:)` method the reviewer suggested was *not* added — it would be unused dead API by the local-fix-scope rule ("don't design for hypothetical future requirements"); the docstring records the intent, and any future plumbing PR will add the method with its first real caller. The architectural rework (`(documentVersion, range)` key + edit-range invalidation) requires touching upstream callers in `CodeEditorView` and is appropriately deferred to its own dedicated session.
 
 ---
 
@@ -372,7 +374,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 2 — 11 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc, ProcessTransport stderr offload) |
+| Medium | 1 — 12 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc, ProcessTransport stderr offload, SmartTokenCache version docstring) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 
