@@ -184,11 +184,13 @@ Resolution: Replaced `[CacheKey: NSParagraphStyle]` + `[CacheKey]` with a doubly
 
 ---
 
-**[High] `Sources/CodeEditorLayout/LayoutCache.swift:~75` — Same O(n) LRU pattern as `ParagraphStyleCache`**
+**[High] `Sources/CodeEditorLayout/LayoutCache.swift:~75` — Same O(n) LRU pattern as `ParagraphStyleCache`** — ✅ **Resolved**
 
 Explanation: Layout cache uses the same `accessOrder.removeAll { … }` pattern, hit per viewport update / bounds change.
 
 Suggestion: Refactor both caches to share a tested LRU helper.
+
+Resolution: Extracted a generic doubly-linked-list LRU as `LinkedLRU<Key, Value>` in `CodeEditorCommon` (deliberately distinct from the existing `CodeEditorDiagnostics.LRUCache` — that one is `@MainActor`, memory-monitor-aware, and Value-must-be-Sendable, none of which fits the layout-hot-path callers). Both `ParagraphStyleCache` and `LayoutCache` now wrap `LinkedLRU`; the cache classes themselves shrank to thin coordinators over the shared structure. Added a focused `LinkedLRUTests` suite (10 tests) covering hit/miss promotion, capacity eviction, mid-list removal, predicate-based bulk removal, and the post-`removeAll()` re-insert path. Existing `ParagraphStyleCacheTests` and downstream concurrency/highlighter suites all still pass.
 
 ---
 
@@ -345,7 +347,7 @@ Suggestion: None.
 | Severity | Count |
 |:---------|:------|
 | Critical | 0 |
-| High | 2 (LayoutCache + SmartTokenCache O(n) hot-paths) — 4 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU) |
+| High | 1 (SmartTokenCache eviction sort) — 5 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`) |
 | Medium | 13 (Configuration/Languages path, umbrella re-export, search error swallowing, LSP cert bypass/message-drop/string-IDs/overflow/stderr, etc.) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |

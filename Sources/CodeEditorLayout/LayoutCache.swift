@@ -11,19 +11,17 @@ public final class LayoutCache {
 
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "LayoutCache")
 
-    /// The cached layout frames
-    private var cache: [String: ComponentFrames] = [:]
-    private var accessOrder: [String] = []
-
-    /// Maximum number of entries to keep in cache
-    private let maxCacheSize: Int
+    /// LRU-backed cache of computed component frames. Synchronization is
+    /// provided by this type's `@MainActor` isolation; the underlying helper
+    /// is intentionally thread-unsafe.
+    private let lru: LinkedLRU<String, ComponentFrames>
 
     // MARK: - Initialization
 
     /// Creates a new layout cache
     /// - Parameter maxSize: Maximum number of entries to cache (default: 10)
     public init(maxSize: Int = 10) {
-        self.maxCacheSize = maxSize
+        self.lru = LinkedLRU(capacity: maxSize)
     }
 
     // MARK: - Public API
@@ -32,9 +30,7 @@ public final class LayoutCache {
     /// - Parameter key: The cache key
     /// - Returns: Cached frames if available, nil otherwise
     public func get(_ key: String) -> ComponentFrames? {
-        guard let frames = cache[key] else { return nil }
-        markAccessed(key)
-        return frames
+        lru.value(forKey: key)
     }
 
     /// Stores frames in the cache
@@ -42,18 +38,12 @@ public final class LayoutCache {
     ///   - frames: The frames to cache
     ///   - key: The cache key
     public func store(_ frames: ComponentFrames, forKey key: String) {
-        cache[key] = frames
-        markAccessed(key)
-        while cache.count > maxCacheSize, let oldestKey = accessOrder.first {
-            accessOrder.removeFirst()
-            cache.removeValue(forKey: oldestKey)
-        }
+        lru.setValue(frames, forKey: key)
     }
 
     /// Clears the entire cache
     public func clear() {
-        cache.removeAll()
-        accessOrder.removeAll()
+        lru.removeAll()
         logger.debug("Layout cache cleared")
     }
 
@@ -61,20 +51,13 @@ public final class LayoutCache {
     /// - Parameter configuration: The configuration to invalidate
     public func invalidate(for configuration: EditorConfiguration) {
         let configHash = String(configuration.hashValue)
-        let keysToRemove = cache.keys.filter { $0.contains(configHash) }
-        keysToRemove.forEach { cache.removeValue(forKey: $0) }
-        accessOrder.removeAll { keysToRemove.contains($0) }
+        lru.removeAll { $0.contains(configHash) }
         logger.debug("Layout cache invalidated for configuration")
     }
 
     /// Returns the current number of cached entries
     public var count: Int {
-        cache.count
-    }
-
-    private func markAccessed(_ key: String) {
-        accessOrder.removeAll { $0 == key }
-        accessOrder.append(key)
+        lru.count
     }
 
     // MARK: - Key Generation
