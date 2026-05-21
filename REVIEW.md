@@ -6,11 +6,13 @@ I dispatched parallel investigation agents across 7 dimensions, ran swiftlint di
 
 ## 1. Concurrency Safety
 
-**[High] `Sources/CodeEditorTextModel/Text/AwaitableQueue.swift:9-44` — `@unchecked Sendable` contract under-enforced**
+**[High] `Sources/CodeEditorTextModel/Text/AwaitableQueue.swift:9-44` — `@unchecked Sendable` contract under-enforced** — ✅ **Resolved**
 
 Explanation: Only `processingCompleted(isolation:)` takes an actor isolation parameter; `enqueue`, `next`, `handlePendingWaiters`, `pendingElements`, and `hasPendingEvents` are reachable from arbitrary contexts. The documented "all access happens from a caller-supplied actor" contract is therefore unenforced — a caller invoking `enqueue` from one actor while another is suspended in `processingCompleted` would race on `pendingElements`.
 
 Suggestion: Add `isolation: isolated any Actor` parameters to every mutating method, or wrap `pendingElements` in an `NSLock`. Otherwise narrow visibility to package and add a comment naming the single owning actor.
+
+Resolution: Backed `pendingEvents` with `OSAllocatedUnfairLock<[Event]>` (NSLock isn't async-safe under Swift 6); every read, write, and the `processingCompleted` check-then-append sequence now runs inside `withLock`. Waiter continuations are drained under the lock and resumed outside it to avoid re-entrancy. The queue is now unconditionally thread-safe, so `@unchecked Sendable` no longer depends on caller discipline; the rationale comment was updated to match.
 
 ---
 
@@ -337,7 +339,7 @@ Suggestion: None.
 | Severity | Count |
 |:---------|:------|
 | Critical | 0 |
-| High | 6 (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, 3 cache O(n) hot-paths) |
+| High | 5 (RangeProcessor Task leak, LSPClient disconnect Task, 3 cache O(n) hot-paths) — 1 resolved (AwaitableQueue contract) |
 | Medium | 13 (Configuration/Languages path, umbrella re-export, search error swallowing, LSP cert bypass/message-drop/string-IDs/overflow/stderr, etc.) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
