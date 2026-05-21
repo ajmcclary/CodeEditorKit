@@ -116,6 +116,12 @@ public final class LSPClient: ObservableObject {
     private var pendingRequests: [Int: LSPRequestCompletion] = [:]
     private var nextRequestId: Int = 1
 
+    /// In-flight disconnect Task, if any. Used to serialize transport teardown
+    /// so two concurrent `disconnect()` calls cannot each spawn a Task that
+    /// races on `transport.disconnect()` and `connectionState`. Accessed only
+    /// from the `@MainActor`-isolated client.
+    private var disconnectTask: Task<Void, Never>?
+
     /// Logger for debugging
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClient")
 
@@ -200,6 +206,15 @@ public final class LSPClient: ObservableObject {
             return
         }
 
+        // Disconnect already in flight — another `disconnect()` is awaiting
+        // `transport.disconnect()` right now. Letting this call proceed would
+        // spawn a second Task that races on the transport and on
+        // `connectionState`. Skipping is safe because the in-flight Task will
+        // drive state to `.disconnected` on its own.
+        if disconnectTask != nil {
+            return
+        }
+
         let wasInitialized = (connectionState == .initialized)
 
         // Capture in-flight request continuations BEFORE clearing the map.
@@ -215,7 +230,7 @@ public final class LSPClient: ObservableObject {
         if wasInitialized {
             connectionState = .shuttingDown
 
-            Task { [weak self] in
+            disconnectTask = Task { [weak self] in
                 guard let self else {
                     Self.failPending(pendingToFail)
                     return
@@ -252,15 +267,17 @@ public final class LSPClient: ObservableObject {
                 self.connectionState = .disconnected
                 Self.failPending(pendingToFail)
                 Self.failPending(postShutdownPending)
+                self.disconnectTask = nil
             }
         } else {
             // Not initialized (e.g. `.connecting`, `.initializing`, `.error`):
             // skip the shutdown request and tear the transport down directly.
             if let transport {
-                Task { [weak self] in
+                disconnectTask = Task { [weak self] in
                     await transport.disconnect()
                     self?.connectionState = .disconnected
                     Self.failPending(pendingToFail)
+                    self?.disconnectTask = nil
                 }
             } else {
                 processManager.terminateServerProcess()

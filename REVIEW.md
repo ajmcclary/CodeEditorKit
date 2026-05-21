@@ -26,11 +26,13 @@ Resolution: `scheduleFilling` now captures `self` weakly (so a deinit during a r
 
 ---
 
-**[High] `Sources/CodeEditorLSP/LSPClient.swift:~260` — Untracked `Task` during disconnect race**
+**[High] `Sources/CodeEditorLSP/LSPClient.swift:~260` — Untracked `Task` during disconnect race** — ✅ **Resolved**
 
 Explanation: `Task { [weak self] in await transport.disconnect(); self?.connectionState = .disconnected; Self.failPending(pendingToFail) }` is unowned. If a second `connect()` races the disconnect, `connectionState` writes interleave.
 
 Suggestion: Serialize transport lifecycle inside the actor (or `@MainActor`) and `await` disconnect rather than detaching it.
+
+Resolution: Added a `disconnectTask: Task<Void, Never>?` property on `LSPClient` (already `@MainActor`, so the property is serialized by main-actor isolation). `disconnect()` now short-circuits when `disconnectTask != nil`, so a second call during teardown returns instead of spawning a parallel transport-tearing Task. Both branches (`wasInitialized` and the not-initialized fallback) store their spawned Task into `disconnectTask` and clear it from the Task body's tail. Kept `disconnect()` sync rather than making it `async` — that would have rippled through `LSPClientRegistry` / `LSPManager` public APIs and four downstream sync callers (sample + tests) for no extra correctness, since `@MainActor` already prevents writers from interleaving outside of `await` suspension, and the new `disconnectTask` guard covers the only suspension window.
 
 ---
 
@@ -341,7 +343,7 @@ Suggestion: None.
 | Severity | Count |
 |:---------|:------|
 | Critical | 0 |
-| High | 4 (LSPClient disconnect Task, 3 cache O(n) hot-paths) — 2 resolved (AwaitableQueue contract, RangeProcessor Task leak) |
+| High | 3 (3 cache O(n) hot-paths) — 3 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task) |
 | Medium | 13 (Configuration/Languages path, umbrella re-export, search error swallowing, LSP cert bypass/message-drop/string-IDs/overflow/stderr, etc.) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
