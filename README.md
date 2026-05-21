@@ -1,10 +1,10 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/test%20files-216-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/test%20files-221-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
 [![Swift](https://img.shields.io/badge/Swift-6.3%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS-lightgrey)](#requirements)
-[![Files](https://img.shields.io/badge/source%20files-572-blue)](#architecture)
+[![Files](https://img.shields.io/badge/source%20files-589-blue)](#architecture)
 
 A powerful, production-ready code editor component for native macOS and iOS / iPadOS. Built with Swift 6.3, TextKit2, and Swift 6 strict concurrency, featuring syntax highlighting for 25 concrete languages plus plain text, comprehensive theming, and a modern architecture designed for performance and extensibility.
 
@@ -85,43 +85,52 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 
 ## 🏗️ Architecture
 
-### Directory Structure
+### SPM Targets
+
+The package is split into focused SPM targets. `CodeEditorPlugin` is the umbrella that
+`@_exported`-imports the most common surface; opt-in subsystems (LSP, Search, Workspace,
+Diagnostics) are separate libraries you import by name when you need them.
 
 ```
-Sources/CodeEditorPlugin/
-├── Core/              # Core functionality, APIs, services, event system
-├── Text/              # TextKit2, layout, parsing, range store, processing
-├── Layout/            # UI components and view models
-├── Configuration/     # Settings, presets, validation
-├── SyntaxHighlighting/# Language highlighting and tree-sitter adapters
-├── Languages/         # Language providers (25 concrete languages + plain text)
-├── Theming/           # Theme system and bundled theme loading
-├── Completion/        # Code completion
-├── Documents/         # EditorDocument + EditorDocuments value/observable types
-├── Features/          # Folding, smart editing, search/replace, feature helpers
-├── SwiftUI/           # SwiftUI integration
-├── Platform/          # Cross-platform abstractions
-├── Extensions/        # Type extensions (+Extensions suffix)
-├── Performance/       # Monitoring and optimization
-├── LSP/               # Language Server Protocol
-├── Annotations/       # Code annotations
-├── Search/            # Search support types
-├── Workspace/         # Workspace indexing/search types
-├── Models/            # Data models
-├── Utilities/         # Shared utilities
-└── Resources/         # Bundled theme JSON
+Sources/
+├── CodeEditorPlugin/          # Umbrella: re-exports the common surface (1 .swift file)
+├── CodeEditorView/            # Editor surface: CodeEditorView class + services
+├── CodeEditorSwiftUI/         # SwiftUI host wrapper, EditorController, modifiers
+├── CodeEditorUI/              # Optional SwiftUI chrome/components
+├── CodeEditorCommon/          # Shared utilities, models, error/recovery infrastructure
+├── CodeEditorConfiguration/   # Settings, presets, validation
+├── CodeEditorTheming/         # Theme system + bundled Zed Trek theme JSON
+├── CodeEditorDesignTokens/    # Colors, spacing, typography tokens
+├── CodeEditorPlatform/        # Cross-platform color/font/view abstractions
+├── CodeEditorTextModel/       # TextKit2 primitives, RangeStore, geometry
+├── CodeEditorLanguages/       # Language descriptors (25 languages + plain text)
+├── CodeEditorSyntaxHighlighting/  # Highlighting engine (regex + SwiftSyntax)
+├── CodeEditorLayout/          # Layout caches/coordinators, fold chevrons, popovers
+├── CodeEditorAnnotations/     # Annotation data model + view chrome
+├── CodeEditorFolding/         # Fold-storage primitives + provider registry
+├── CodeEditorSymbols/         # Breadcrumb + symbol-navigation surface
+├── CodeEditorCompletion/      # CompletionManager, ranking, providers, UI bridge
+├── CodeEditorSmartEditing/    # Auto-bracket, multi-cursor, smart indent/selection
+├── CodeEditorLSP/             # Language Server Protocol (process + WebSocket)
+├── CodeEditorSearch/          # Project-wide file-search protocols + adapter
+├── CodeEditorWorkspace/       # Workspace file-tree protocols + macOS adapter
+├── CodeEditorDiagnostics/     # Performance instrumentation, memory monitoring
+├── CodeEditorSample/          # Demo app (executable)
+└── CodeEditorTreeSitterLanguages/  # Tree-sitter staging sources (not an SPM target yet)
 ```
 
 Long-form prose docs live in [`docs/`](docs/README.md), organized by topic.
 
-21 top-level main-target directories, 480 Swift files in the main target, and 572 Swift files under `Sources/`.
+24 source roots under `Sources/`, 589 Swift files total. The `CodeEditorPlugin` umbrella
+target itself ships a single `CodeEditorPlugin.swift` entry stub plus `Resources/Info.plist`
+— all subsystems live in sibling targets.
 
 ### Core Components
 
 - **CodeEditorView**: TextKit2-based editor with platform adaptations
 - **EditorConfiguration**: Structured settings with presets
 - **Platform Abstraction**: Unified API for cross-platform development
-- **Text Processing**: Consolidated text handling in unified `Text/` directory
+- **CodeEditorTextModel**: TextKit2 primitives + RangeStore shared across targets
 
 ## 🎨 Configuration
 
@@ -152,7 +161,7 @@ CodeEditor(text: $code)
 
 ### Themes
 
-The bundled default theme is `LCARS Dark`, drawn from the `Zed Trek` family (20 Star-Trek-inspired dark/light variants shipped in `Sources/CodeEditorPlugin/Resources/Themes/zed-trek.json`). `Theme.default`, `Theme.dark`, and `Theme.lcarsDark` all resolve to the same variant. Additional Zed-compatible theme JSON can be decoded through `ThemeFamily.bundled(_:)`, `ThemeFamily(jsonData:)`, `ThemeFamily(contentsOf:)`, and `Theme.bundled(family:variant:)`.
+The bundled default theme is `LCARS Dark`, drawn from the `Zed Trek` family (20 Star-Trek-inspired dark/light variants shipped in `Sources/CodeEditorTheming/Resources/Themes/zed-trek.json`). `Theme.default`, `Theme.dark`, and `Theme.lcarsDark` all resolve to the same variant. Additional Zed-compatible theme JSON can be decoded through `ThemeFamily.bundled(_:)`, `ThemeFamily(jsonData:)`, `ThemeFamily(contentsOf:)`, and `Theme.bundled(family:variant:)`.
 
 ```swift
 CodeEditor(text: $code)
@@ -230,7 +239,7 @@ try await client.connect(configuration: server, language: .swift)
 
 ## 🧪 Testing
 
-The package includes 4 test targets and 216 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
+The package includes 4 test targets and 221 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:
 
 ```bash
 # Run tests in parallel (faster)

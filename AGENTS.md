@@ -51,38 +51,40 @@ Tree-sitter work is internal scaffolding only. There is no public configuration 
 
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Main APIs, services, event system
-├── Text/                    # TextKit2 handling, layout, parsing, range store, processing
-├── Layout/                  # UI components + co-located ViewModels
-├── Configuration/           # Settings, presets, validation
-├── SyntaxHighlighting/      # Language highlighting engine + tree-sitter adapters
-├── Languages/               # Language-specific providers (25 concrete languages + plain text)
-├── Theming/                 # Theme system, color tokens, appearance
-├── Completion/              # Code completion providers
-├── Documents/               # EditorDocument value type + EditorDocuments observable manager
-├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
-├── SwiftUI/                 # SwiftUI wrappers and modifiers
-├── Platform/                # Cross-platform color/font/view abstractions
-├── Extensions/              # Catch-all type extensions (+Extensions suffix; see Conventions)
-├── Performance/             # Monitoring, profiling, memory tracking
-├── LSP/                     # Language Server Protocol support
-├── Annotations/             # Data-source driven annotation badges
-├── Search/                  # Search result models and shared search support
-├── Workspace/               # Workspace indexing/search types
-├── Models/                  # Shared data models
-├── Utilities/               # Shared helpers
-└── Resources/               # Bundled theme JSON (processed via `resources:`)
+├── CodeEditorPlugin.swift   # Public-facing entry stub (@_exported re-export hub)
+└── Resources/               # Info.plist
 ```
+
+Pre-extraction directories (`Core/`, `Text/`, `SyntaxHighlighting/`, `Theming/`, `Configuration/`, `Documents/`, `Platform/`, `Extensions/`, `Models/`, `Utilities/`, `Resources/`, `Workspace/`, `Search/`, `Annotations/`, `Completion/`, `LSP/`, `Layout/`, `Languages/`, `Features/`) have been carved out into sibling SPM targets — see "Other source roots" below.
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-21 top-level directories, 480 Swift source files in the main target, and 572 Swift source files under `Sources/`.
+No top-level directories left in the umbrella target source tree (`Resources/` holds only `Info.plist`); 1 Swift source file in the umbrella (`CodeEditorPlugin.swift`). Total Swift source files under `Sources/`: ~589.
 
-Other source roots:
+Other source roots (each is its own SPM target — see `Package.swift`):
+- `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra, `SendablePerformanceMetric`, `FileChangeNotification`, `SelectionState`, `EditorInteractionState`+`EditorCursorPosition`, `DirtyTracker`, `ErrorRecoveryCoordinator`.
 - `Sources/CodeEditorDesignTokens/` — standalone design-token library.
+- `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds).
+- `Sources/CodeEditorFolding/` — fold-storage primitives (`FoldStoreElement`, `LineFoldStorage`, `FoldInfo`), `FoldRegionAdapter`, and `FoldingProviderRegistry`. The umbrella-coupled fold engine, operations service, and presentation strategy live in `Sources/CodeEditorView/Folding/`.
+- `Sources/CodeEditorSymbols/` — symbol-navigation surface: `BreadcrumbItem`, `SymbolNavigationConfiguration`, `SymbolProviderCatalog`, and generic `SymbolRangeIndex` storage. The view-coupled `SymbolNavigator` lives in `Sources/CodeEditorView/Symbols/`.
+- `Sources/CodeEditorLanguages/` — language descriptors + folding/symbol/completion-model interfaces; `TabModel` + `LanguageDetectionService`.
+- `Sources/CodeEditorPlatform/` — cross-platform color/font/view abstractions.
+- `Sources/CodeEditorTextModel/` — TextKit2 primitives, `RangeStore`/`RangeStoreElement`/`RangeStoreRun`, geometry, location, parsing primitives.
+- `Sources/CodeEditorConfiguration/` — settings, presets, validation.
+- `Sources/CodeEditorTheming/` — theme system, color tokens, appearance + bundled theme JSON.
+- `Sources/CodeEditorAnnotations/` — annotation data model + view chrome: `Annotation`, `AnnotationKind`, `AnnotationView`, `AnnotationsContentView`, `CodeEditorViewAnnotation`, `LineAnnotation`, `MessageLineAnnotation`. The `AnnotationsDataSource` protocol stays in `CodeEditorView` (its required method takes `CodeEditorView`).
+- `Sources/CodeEditorSearch/` — project-wide file-search protocols + portable adapter. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; cross-platform (no `#if canImport`). The in-document `SearchReplaceEngine` lives in `Sources/CodeEditorView/Search/`.
+- `Sources/CodeEditorSmartEditing/` — smart-editing engines: `SmartEditingEngine` (coordinator) + 4 strategy engines (`AutoBracketingEngine`, `MultiCursorEditor`, `SmartIndentationEngine`, `SmartSelectionExpander`). Hosts attach via `engine.attach(to: codeEditorView)`.
+- `Sources/CodeEditorSwiftUI/` — SwiftUI host wrapper + Representable bridge: `CodeEditor` (SwiftUI view), `EditorController`, `CodeEditorBaseCoordinator` (conforms to `CodeEditorCoordinating` package protocol in `CodeEditorView`), `CodeEditorIntent`, plus SwiftUI environment and platform adapter glue.
+- `Sources/CodeEditorSyntaxHighlighting/` — syntax-highlighting engine: color schemes, tokenizers, regex/SwiftSyntax highlighters, parsing helpers, descriptor execution, performance instrumentation.
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
+- `Sources/CodeEditorWorkspace/` — workspace file-tree protocols + macOS `MacOSWorkspaceFileManager` adapter. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; AppKit-conditional manager.
+- `Sources/CodeEditorCompletion/` — completion subsystem: `CompletionManager`, ranking model, fuzzy matcher, built-in providers, view controllers + adapter, event broadcaster, SwiftUI bridge types.
+- `Sources/CodeEditorLSP/` — Language Server Protocol subsystem: `LSPClient`, `LSPManager`, transport (process + WebSocket with cert pinning), document/path/process/connection managers, message handler, wire types, completion + semantic-token storage, retry config. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` depends on it. The two `CodeEditorView`-coupled files (`LSPSemanticTokenProvider`, `LSPContentCoordinator`) live in `Sources/CodeEditorView/LSP/`.
+- `Sources/CodeEditorLayout/` — presentation primitives: layout caches/coordinator/optimizer, fold chevrons, `_GlassSurface`, insertion-point/line-highlight views, layout providers, event bus, completion popover chrome, `ThemeableUIComponent` protocol + `LayoutConformances`, `MinimapStyleDataSource`. Productized as a `.library`; umbrella depends on it.
+- `Sources/CodeEditorView/` — editor-surface target: `CodeEditorView` class + 24 `CodeEditorView+*Extensions` slices + delegate companions (`CodeEditorViewDelegate`, `CodeEditorViewDelegateProxy`, `CodeEditorViewProtocol`) + standalone services (`ActorCoordinator`, `CodeEditorAPI`, `EditorEvent`/`EditorEventHandler`/`EditorEventPublisher`, `EditorLayoutService`, `EditorRuntime`, `EditorState`/`EditorStateBridge`, `MemoryManagementCoordinator`, `SyntaxHighlightingService`, `TextEditingService`, `TextKitSetupHelper`, `UnifiedEventSystem`, etc.) + carve-out residues from `Annotations/`, `Configuration/`, `Documents/`, `Folding/`, `Layout/`, `LSP/`, `Platform/`, `Search/`, `Symbols/`, `SyntaxHighlighting/`, `Text/`, `Actors/` + `CodeEditorCoordinating.swift` (package-visible marker protocol that breaks the would-be circular dep with `CodeEditorSwiftUI`). Productized as a `.library`; umbrella depends on it.
 - `Sources/CodeEditorSample/` — executable demo app target.
-- `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; it is not currently an SPM target.
+- `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; not currently an SPM target.
 
 ## Conventions
 
@@ -168,3 +170,23 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 - **Scripts are intentionally narrow**: `Scripts/generate-dependency-diagrams.sh` uses `swift package describe`, and `Scripts/run-parallel-tests.sh` delegates to SwiftPM. Do not reintroduce stale plugin, Pandoc, or sample-directory assumptions.
 
 - **`docs/superpowers/` is archived working notes**: don't link it as authoritative project documentation.
+
+- **`Sources/CodeEditorPlugin/Core/` is gone.** All 118 files moved to `Sources/CodeEditorView/`. References to old paths in scripts / regression tests / documentation need updating. The new target preserves the same sub-directory structure (`Actors/`, `Annotations/`, `Configuration/`, `Documents/`, `Folding/`, `LSP/`, `Layout/`, `Platform/`, `Search/`, `Symbols/`, `SyntaxHighlighting/`, `Text/`).
+
+- **`CodeEditorView` is now both a target name AND a class name.** Module and type live in separate Swift namespaces, so `import CodeEditorView` followed by `CodeEditorView()` is unambiguous — no rename needed. The collision is intentional and matches the `CodeEditor<Concept>` naming convention.
+
+- **`CodeEditorCoordinating` protocol** (package-visible, MainActor, in `Sources/CodeEditorView/CodeEditorCoordinating.swift`) exists solely to break the would-be circular dep between `CodeEditorView` and `CodeEditorSwiftUI`. `CodeEditorBaseCoordinator` (the conformer) lives in `Sources/CodeEditorSwiftUI/CodeEditor+CoordinatorsExtensions.swift`. Do not type-cast back to `CodeEditorBaseCoordinator` from inside `CodeEditorView` (that re-introduces the circular dep).
+
+- **`@testable import CodeEditorPlugin` is rarely useful.** The umbrella retains only `CodeEditorPlugin.swift` + `Resources/Info.plist`. Tests reach internal symbols via `@testable import CodeEditorView` and `@testable import CodeEditorSwiftUI`; keep both alongside the existing umbrella `@testable`, but new test code targeting umbrella-internal symbols will almost never need them.
+
+- **`CodeEditorView` has `@unchecked Sendable` conformance.** Swift's cross-module strict-concurrency checking refuses to compile `[weak codeEditorView] _ in MainActor.assumeIsolated { ... }` patterns when `CodeEditorView` lives in a different module. The marker is safe because `CodeEditorView` is @MainActor-isolated end-to-end. Don't remove it without replacing every cross-isolation capture pattern with something the compiler can prove safe.
+
+- **SwiftLint `missing_docs` is asymmetric between public struct and public actor inits.** An undocumented `public init()` on a `public struct` passes lint; the same `public init()` on a `public actor` fails with a `missing_docs` violation. Empirical, not configured anywhere obvious — keep this in mind when adding explicit synth-init-replacement inits to cross-target moves.
+
+- **`package extension Foo { ... }` form is rejected by SwiftLint's `no_extension_access_modifier` rule.** Use per-method `package func ...` instead.
+
+- **`TextSystem` protocol and its styler classes are deleted.** `TextSystem`, `TextSystemStyler<Interface>`, `ThreePhaseTextSystemStyler<Interface>`, and `TokenSystemValidator<Interface>` were earlier TextKit2 styling-experiment scaffolding with zero in-tree consumers. External consumers depending on these need to remove the dependency.
+
+- **`CompletionAsyncError` is deleted.** Public enum with zero in-tree callers. External consumers pattern-matching on `CompletionAsyncError.providerNotAvailable(_:)` need to switch to whatever they ultimately mapped it to.
+
+- **`ErrorRecoveryCoordinator`, `SelectionState`, `EditorInteractionState`, `EditorCursorPosition`, `DirtyTracker` live in `CodeEditorCommon`.** Previously umbrella-public. External consumers doing `import CodeEditorPlugin` still see them transitively; consumers that need direct access should `import CodeEditorCommon`. Test targets that previously reached these via `@testable import CodeEditorPlugin` need `import CodeEditorCommon`.
