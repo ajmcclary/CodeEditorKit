@@ -86,6 +86,16 @@ let container = CodeEditorContainerView()
 container.configuration.display.isLineNumbersEnabled = true
 ```
 
+### Gutter line numbers stop part-way down after scrolling (macOS)
+
+**Issue**: After scrolling a document past the initial viewport, only the top ~10–15 rows of the visible viewport show line numbers in the gutter; the rest of the visible code area renders without numbers. The pattern is consistent regardless of scroll position.
+
+**Cause**: A previous revision hosted the macOS gutter as a floating document subview via `scrollView.addFloatingSubview(_:for:)`. AppKit's floating-document-subview compositor only presented a partial strip of the floating view after vertical scrolling, so the renderer drew every visible line but most draw calls were discarded at compositing time. Diagnostic instrumentation in `GutterViewRenderer.draw` confirmed the renderer issued ~37 line-number draws per scrolled frame while only ~11 reached the screen.
+
+**Solution**: The macOS gutter is now hosted by `LineNumberRulerView` (an `NSRulerView` subclass) and installed through `scrollView.verticalRulerView` with `hasVerticalRuler = true` / `rulersVisible = true`. The scroll view's ruler slot owns the gutter width; the macOS text container's leading inset only carries internal editor padding. If you see this symptom return after a host-level refactor, verify that `CodeEditorContainerView` is still using the vertical-ruler path rather than re-introducing `addFloatingSubview`.
+
+The full investigation log (diagnostic data, ruled-out hypotheses, the layer/compositing anomaly that pointed at the host rather than the renderer) is preserved in [`../archive/Gutter-Line-Numbers-After-Scroll.md`](../archive/Gutter-Line-Numbers-After-Scroll.md).
+
 ### iOS Keyboard Overlap
 
 **Issue**: Keyboard covers the editor on iOS.
