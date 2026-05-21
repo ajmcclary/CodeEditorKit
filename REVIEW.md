@@ -80,11 +80,13 @@ Resolution: `git mv` of 73 tracked files (74 incl. an untracked `.DS_Store`) fro
 
 ---
 
-**[Medium] `Sources/CodeEditorPlugin/CodeEditorPlugin.swift` — Doc promises a single-import surface, code doesn't `@_exported import` sub-targets**
+**[Medium] `Sources/CodeEditorPlugin/CodeEditorPlugin.swift` — Doc promises a single-import surface, code doesn't `@_exported import` sub-targets** — ✅ **Resolved**
 
 Explanation: The file's docstring shows `import CodeEditorPlugin` and uses `CodeEditor`, `CodeEditorView`, `EditorConfiguration`, etc. Without `@_exported import`, Swift module re-export of dependent modules is incomplete — consumers will usually also need explicit `import CodeEditorSwiftUI` / `import CodeEditorView`. This contradicts the stated quick-start.
 
 Suggestion: Either add `@_exported import CodeEditorView` / `CodeEditorSwiftUI` / `CodeEditorConfiguration` / `CodeEditorTheming` / `CodeEditorLanguages` in this file, or update the docstring to show the multi-import reality.
+
+Resolution: Added six `@_exported import` declarations for the targets the Quick Start docstring visibly uses: `CodeEditorCommon` (for `CodeEditorError`), `CodeEditorConfiguration` (`EditorConfiguration`), `CodeEditorLanguages` (`Language`), `CodeEditorSwiftUI` (`CodeEditor` view), `CodeEditorTheming` (theme types), `CodeEditorView` (`CodeEditorView` class). Opt-in subsystems (`CodeEditorAnnotations` / `CodeEditorCompletion` / `CodeEditorLSP` / `CodeEditorSearch` / `CodeEditorWorkspace` / etc.) stay explicit-import on purpose so the umbrella's surface area matches what the docstring actually documents. Added `UmbrellaReExportTests` (2 tests) — the test file imports ONLY `CodeEditorPlugin` and references each promised type by name, so a future regression that drops an `@_exported import` stops compiling. Side note unrelated to imports: the docstring example `config.display.theme = .dark` references a property that doesn't exist on `EditorConfiguration.Display`; left for the matching docstring fix in section 12 (Misc.).
 
 ---
 
@@ -352,7 +354,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 12 — 1 resolved (Languages path + dead Layout exclude) |
+| Medium | 11 — 2 resolved (Languages path + dead Layout exclude, umbrella re-export) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

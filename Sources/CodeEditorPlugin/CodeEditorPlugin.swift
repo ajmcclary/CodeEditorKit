@@ -1,3 +1,16 @@
+// Umbrella re-exports: `import CodeEditorPlugin` is the single entry the
+// Quick Start docstring promises, so the six sibling targets it visibly uses
+// (CodeEditor / CodeEditorView / EditorConfiguration / Language / theme tokens
+// / CodeEditorError) must come along automatically. Opt-in subsystems
+// (Annotations, Completion, LSP, Search, Workspace, etc.) stay
+// explicit-import — consumers reach for them by name when they want them.
+@_exported import CodeEditorCommon
+@_exported import CodeEditorConfiguration
+@_exported import CodeEditorLanguages
+@_exported import CodeEditorSwiftUI
+@_exported import CodeEditorTheming
+@_exported import CodeEditorView
+
 #if canImport(AppKit)
 import AppKit
 #endif
