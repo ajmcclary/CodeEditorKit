@@ -226,11 +226,13 @@ Resolution: Took the smaller of the reviewer's two suggested paths — documenta
 
 ---
 
-**[Medium] `Sources/CodeEditorDiagnostics/MemoryMonitor.swift:~321` — Cleanup-handler API doesn't enforce weak capture**
+**[Medium] `Sources/CodeEditorDiagnostics/MemoryMonitor.swift:~321` — Cleanup-handler API doesn't enforce weak capture** — ✅ **Resolved (documentation path)**
 
 Explanation: `registerCleanupHandler(handler: @escaping @MainActor @Sendable () async -> CleanupResult)` strongly captures whatever the closure does; callers must remember `[weak self]`. Easy retain-cycle footgun.
 
 Suggestion: Document the requirement prominently, or accept a `Weak<Owner>`-style wrapper and pass it to the closure.
+
+Resolution: Took the documentation path of the reviewer's two options. The `Weak<Owner>` wrapper alternative would have added a typed overload that no caller exercises yet, violating the project's "don't design for hypothetical future requirements" rule. Replaced the bare three-line method docstring with a prominent `- Important:` block on `registerCleanupHandler` that names the failure mode in plain language ("the owner cannot deinit while the handler is registered"), lays out the two requirements every caller must meet (capture weakly **and** unregister in the owner's teardown path), and cross-references the canonical example in the class-level docstring. The `handler:` parameter doc now ends with **"Must capture any owner weakly."** so it's visible right at the call site in Xcode's signature popover. Verified the existing call sites (`IOSLargeFileOptimizer`, `MemoryManagementCoordinator`, `AsyncSyntaxHighlighter`, `CodeFoldingEngine`, `TextKit2RenderingOptimizer`, `CompletionManager`, `LRUCache`, `LSPManager`) all already use the `[weak self]` + unregister pattern — the existing 8 `MemoryLeakTests` pass.
 
 ---
 
@@ -374,7 +376,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 1 — 12 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc, ProcessTransport stderr offload, SmartTokenCache version docstring) |
+| Medium | 0 — 13 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc, ProcessTransport stderr offload, SmartTokenCache version docstring, MemoryMonitor cleanup-handler doc) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

@@ -310,11 +310,36 @@ public final class MemoryMonitor: ObservableObject {
 
     // MARK: - Public Methods
 
-    /// Register a cleanup handler
+    /// Register a cleanup handler.
+    ///
+    /// - Important: Retain-cycle footgun. The `handler` closure is stored
+    ///   strongly inside the monitor for the lifetime of the registration.
+    ///   If the closure captures an owner (`self`) by strong reference, the
+    ///   owner cannot deinit while the handler is registered — and because
+    ///   the typical pattern is "the owner registers in its own init," that
+    ///   means the owner *never* deinits.
+    ///
+    ///   Two requirements every caller must meet:
+    ///   1. Capture the owner with `[weak self]` (or `[weak owner]`) — never
+    ///      a bare `self.` reference inside the closure.
+    ///   2. Unregister via `unregisterCleanupHandler(identifier:)` from the
+    ///      owner's teardown path (e.g. `deinit` of a `@MainActor` actor's
+    ///      coordinator, or a `removeFromSuperview` override on a view) so
+    ///      that the handler entry — and the captured weak reference — go
+    ///      away with the owner instead of lingering until the monitor
+    ///      itself is released.
+    ///
+    ///   When the closure has no natural owner (a static cache, a leaf
+    ///   service that lives for the process lifetime), captureless form is
+    ///   fine; just be explicit about the lifetime in a comment.
+    ///
+    ///   The class-level docstring example at the top of this file shows
+    ///   the canonical `[weak self]` + unregister-in-teardown pattern.
+    ///
     /// - Parameters:
     ///   - identifier: Unique identifier for the handler
     ///   - priority: Cleanup priority (higher values are cleaned first)
-    ///   - handler: The cleanup handler
+    ///   - handler: The cleanup handler. **Must capture any owner weakly.**
     public func registerCleanupHandler(
         identifier: String,
         priority: CleanupPriority = .normal,
