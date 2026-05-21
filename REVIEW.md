@@ -174,11 +174,13 @@ Suggestion: No action.
 
 ## 7. Performance Patterns
 
-**[High] `Sources/CodeEditorTextModel/ParagraphStyleCache.swift:~113` — O(n) LRU update per cache access**
+**[High] `Sources/CodeEditorTextModel/ParagraphStyleCache.swift:~113` — O(n) LRU update per cache access** — ✅ **Resolved**
 
 Explanation: `markAccessed(_:)` does `accessOrder.removeAll { $0 == key }` + `append`. Each cache hit is O(n) in cache size. Paragraph styles are looked up extremely frequently during layout, so this is a hot-path quadratic.
 
 Suggestion: Replace `[CacheKey]` + `[CacheKey: Value]` with a proper LRU (e.g., doubly-linked list + dictionary). For a 50-entry cache, even moving to `OrderedDictionary` from `swift-collections` beats the current pattern.
+
+Resolution: Replaced `[CacheKey: NSParagraphStyle]` + `[CacheKey]` with a doubly-linked-list LRU: a private `Node` class with `prev`/`next` pointers, plus `nodes: [CacheKey: Node]`, `head`, and `tail`. All operations (insert, hit/touch, evict) are now O(1) under the same `cacheQueue` serial dispatch queue. Kept the helper inline (not extracted to a shared type) — when the next issue (`LayoutCache` O(n) LRU) lands, if the pattern is identical I'll pull both into a shared `LRUCache` in `CodeEditorCommon`. Added `testLRUEvictsLeastRecentlyAccessed` to lock the eviction order — the existing tests only verified hit/miss identity, which a future regression that swapped eviction order would still pass.
 
 ---
 
@@ -343,7 +345,7 @@ Suggestion: None.
 | Severity | Count |
 |:---------|:------|
 | Critical | 0 |
-| High | 3 (3 cache O(n) hot-paths) — 3 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task) |
+| High | 2 (LayoutCache + SmartTokenCache O(n) hot-paths) — 4 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU) |
 | Medium | 13 (Configuration/Languages path, umbrella re-export, search error swallowing, LSP cert bypass/message-drop/string-IDs/overflow/stderr, etc.) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |

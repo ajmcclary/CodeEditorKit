@@ -73,6 +73,34 @@ final class ParagraphStyleCacheTests: XCTestCase {
         XCTAssertNotIdentical(style2, style3, "All styles should be different")
     }
 
+    func testLRUEvictsLeastRecentlyAccessed() {
+        // Locks the doubly-linked-list LRU semantics: the cache must evict the
+        // least-recently-touched entry, and accessing an entry must promote it
+        // out of the eviction window. A regression that swaps eviction order
+        // (e.g. evicting most-recent first) would still pass the hit-vs-miss
+        // tests above; this one fails it.
+        let lruCache = ParagraphStyleCache(capacity: 3)
+        let font = PlatformFonts.monospacedSystemFont(ofSize: 14, weight: .regular)
+
+        func style(_ tabWidth: Int) -> NSParagraphStyle {
+            lruCache.paragraphStyle(tabWidth: tabWidth, lineHeightMultiple: 1.0, font: font)
+        }
+
+        let original1 = style(1)
+        let original2 = style(2)
+        let original3 = style(3)
+
+        // Touch entry 1 — entry 2 is now the LRU.
+        XCTAssertIdentical(style(1), original1, "touched entry should still be the same instance")
+
+        // Insert a 4th entry — capacity exceeded, LRU (entry 2) is evicted.
+        _ = style(4)
+
+        XCTAssertIdentical(style(1), original1, "entry 1 was touched; must survive eviction")
+        XCTAssertIdentical(style(3), original3, "entry 3 was never LRU; must survive eviction")
+        XCTAssertNotIdentical(style(2), original2, "entry 2 was LRU at eviction time; must be a fresh instance")
+    }
+
     func testCacheClear() {
         let font = PlatformFonts.monospacedSystemFont(ofSize: 14, weight: .regular)
 

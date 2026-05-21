@@ -9,15 +9,16 @@ import AppKit
 /// Cache for paragraph styles to avoid recomputation.
 ///
 /// `@unchecked Sendable` rationale (Swift 6 strict concurrency):
-/// - Mutable state: `cache: [CacheKey: NSParagraphStyle]` (line ~37) — capped at `capacity`.
-/// - Synchronization: every read/write goes through `cacheQueue`, a serial
-///   `DispatchQueue` (line ~38). Public accessors `paragraphStyle(...)` and
-///   `clear()` use `sync` to preserve the synchronous API drawing code expects.
-/// - Why not synthesized: the type is a reference type owning a mutable
-///   dictionary; Swift cannot prove safety automatically. The serial-queue
+/// - Mutable state: `nodes`, `head`, `tail` form a doubly-linked-list LRU keyed
+///   by `CacheKey` and capped at `capacity`. All access is serialized through
+///   `cacheQueue`, a serial `DispatchQueue`. Public accessors `paragraphStyle(...)`
+///   and `clear()` use `sync` to preserve the synchronous API drawing code
+///   expects.
+/// - Why not synthesized: the type is a reference type owning mutable
+///   collections; Swift cannot prove safety automatically. The serial-queue
 ///   discipline below is what makes the cross-actor crossings safe.
-/// - `NSParagraphStyle` values stored in the dictionary are themselves
-///   immutable copies (see `createParagraphStyle` returning `paragraphStyle.copy()`).
+/// - `NSParagraphStyle` values stored in the cache are themselves immutable
+///   copies (see `createParagraphStyle` returning `paragraphStyle.copy()`).
 public final class ParagraphStyleCache: @unchecked Sendable {
     // MARK: - Types
 
@@ -37,10 +38,25 @@ public final class ParagraphStyleCache: @unchecked Sendable {
         }
     }
 
+    /// Doubly-linked-list node holding one cached paragraph style. Owned
+    /// exclusively by the cache; `prev`/`next` are mutated under `cacheQueue`.
+    private final class Node {
+        let key: CacheKey
+        let value: NSParagraphStyle
+        var prev: Node?
+        var next: Node?
+
+        init(key: CacheKey, value: NSParagraphStyle) {
+            self.key = key
+            self.value = value
+        }
+    }
+
     // MARK: - Properties
 
-    private var cache: [CacheKey: NSParagraphStyle] = [:]
-    private var accessOrder: [CacheKey] = []
+    private var nodes: [CacheKey: Node] = [:]
+    private var head: Node?
+    private var tail: Node?
     private let cacheQueue = DispatchQueue(label: "com.codeeditor.paragraphstyle-cache")
     private let capacity: Int
 
@@ -70,9 +86,9 @@ public final class ParagraphStyleCache: @unchecked Sendable {
         )
 
         return cacheQueue.sync {
-            if let cached = cache[key] {
-                markAccessed(key)
-                return cached
+            if let existing = nodes[key] {
+                moveToHead(existing)
+                return existing.value
             }
 
             let paragraphStyle = createParagraphStyle(
@@ -81,11 +97,13 @@ public final class ParagraphStyleCache: @unchecked Sendable {
                 spaceWidth: spaceWidth
             )
 
-            cache[key] = paragraphStyle
-            markAccessed(key)
-            while cache.count > capacity, let oldestKey = accessOrder.first {
-                accessOrder.removeFirst()
-                cache.removeValue(forKey: oldestKey)
+            let node = Node(key: key, value: paragraphStyle)
+            nodes[key] = node
+            insertAtHead(node)
+
+            if nodes.count > capacity, let evict = tail {
+                detach(evict)
+                nodes.removeValue(forKey: evict.key)
             }
 
             return paragraphStyle
@@ -95,9 +113,45 @@ public final class ParagraphStyleCache: @unchecked Sendable {
     /// Clear the cache
     public func clear() {
         cacheQueue.sync {
-            cache.removeAll()
-            accessOrder.removeAll()
+            nodes.removeAll()
+            head = nil
+            tail = nil
         }
+    }
+
+    // MARK: - LRU Helpers (call only under `cacheQueue`)
+
+    private func insertAtHead(_ node: Node) {
+        node.prev = nil
+        node.next = head
+        head?.prev = node
+        head = node
+        if tail == nil {
+            tail = node
+        }
+    }
+
+    private func detach(_ node: Node) {
+        let prev = node.prev
+        let next = node.next
+        prev?.next = next
+        next?.prev = prev
+        if head === node {
+            head = next
+        }
+        if tail === node {
+            tail = prev
+        }
+        node.prev = nil
+        node.next = nil
+    }
+
+    private func moveToHead(_ node: Node) {
+        if head === node {
+            return
+        }
+        detach(node)
+        insertAtHead(node)
     }
 
     // MARK: - Private Methods
@@ -107,11 +161,6 @@ public final class ParagraphStyleCache: @unchecked Sendable {
         let spaceString = "    " // Four spaces
         let size = spaceString.size(withAttributes: attributes)
         return size.width / 4.0
-    }
-
-    private func markAccessed(_ key: CacheKey) {
-        accessOrder.removeAll { $0 == key }
-        accessOrder.append(key)
     }
 
     private func createParagraphStyle(
