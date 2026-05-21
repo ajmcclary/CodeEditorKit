@@ -24,7 +24,7 @@ The public `Language` enum currently contains 25 concrete languages plus plain t
 | Markup / data | HTML, CSS, JSON, YAML, XML, Markdown, SQL, TOML, Dockerfile, Lua |
 | Fallback | Plain Text |
 
-The single source of truth is `Sources/CodeEditorPlugin/Languages/LanguageDescriptor.swift`; update that descriptor, the regex definitions, and tests together when adding a language.
+The single source of truth is `Sources/CodeEditorLanguages/LanguageDescriptor.swift`; update that descriptor, the regex definitions, and tests together when adding a language.
 
 ## Setting Language
 

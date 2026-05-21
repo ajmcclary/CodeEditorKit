@@ -152,7 +152,6 @@ let package = Package(
                 "CodeEditorPlatform",
                 "CodeEditorTextModel"
             ],
-            path: "Sources/CodeEditorPlugin/Languages",
             swiftSettings: swiftSettings
         ),
         .target(
@@ -330,9 +329,7 @@ let package = Package(
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
             ],
             exclude: [
-                "Info.plist",
-                "Languages",
-                "Layout"
+                "Info.plist"
             ],
             swiftSettings: swiftSettings
         ),

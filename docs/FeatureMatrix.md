@@ -20,7 +20,7 @@ What works on the package's declared Apple platforms. Reflects the package as of
 | Capability | macOS | iOS | Where |
 |---|:---:|:---:|---|
 | TextKit2 layout | ✅ | ✅ | `NSTextLayoutManager` directly; `Sources/CodeEditorPlugin/Text/TextKitBridge.swift` is the TK2-safe accessor funnel |
-| Syntax highlighting (25 concrete languages + plain text) | ✅ | ✅ | `Sources/CodeEditorPlugin/Languages/` |
+| Syntax highlighting (25 concrete languages + plain text) | ✅ | ✅ | `Sources/CodeEditorLanguages/` |
 | SwiftSyntax-backed Swift highlighter | ✅ | ✅ | unconditional dependency on `swift-syntax` |
 | Range-based highlighting (experimental) | ✅ | ✅ | `Display.useRangeStoreHighlighting` and `Performance.usesRangeBasedHighlighting` toggles |
 | Streaming highlighter for large files | ✅ | ✅ | adaptive chunk sizes via `StreamingHighlighter.Configuration` |

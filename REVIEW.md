@@ -70,11 +70,13 @@ Suggestion: Drop `@unchecked`.
 
 ## 2. Modularity & Dependency Direction
 
-**[Medium] `Package.swift:149-156, 332-336` — `CodeEditorLanguages` target lives at `Sources/CodeEditorPlugin/Languages`**
+**[Medium] `Package.swift:149-156, 332-336` — `CodeEditorLanguages` target lives at `Sources/CodeEditorPlugin/Languages`** — ✅ **Resolved**
 
 Explanation: `CodeEditorLanguages` is a sibling SPM target but its source path is `Sources/CodeEditorPlugin/Languages`, and the umbrella target excludes that directory. `CLAUDE.md` explains the history, but the layout is structurally confusing for newcomers and complicates future moves.
 
 Suggestion: Move to `Sources/CodeEditorLanguages/`, drop the `path:` override and the umbrella exclude line. (Same applies to Layout if it's still excluded for the same reason.)
+
+Resolution: `git mv` of 73 tracked files (74 incl. an untracked `.DS_Store`) from `Sources/CodeEditorPlugin/Languages/` to `Sources/CodeEditorLanguages/`. Dropped the `path:` override on the target — it now follows the SPM default. Dropped both `"Languages"` and `"Layout"` from the umbrella's `exclude:` — the Layout entry was already dead (Layout was extracted in §6.2.11 and the empty leftover dir contained only a `.DS_Store` and an empty `Glass/`); `rm -rf` cleaned that out. The umbrella source tree now contains exactly `CodeEditorPlugin.swift` + `Resources/Info.plist`. CLAUDE.md, `docs/FeatureMatrix.md`, and `docs/Features/syntax-highlighting.md` were updated to the new path; archived plans/specs under `docs/superpowers/` and `docs/archive/` were left alone per the "archived working notes" convention.
 
 ---
 
@@ -350,7 +352,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 13 (Configuration/Languages path, umbrella re-export, search error swallowing, LSP cert bypass/message-drop/string-IDs/overflow/stderr, etc.) |
+| Medium | 12 — 1 resolved (Languages path + dead Layout exclude) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 
