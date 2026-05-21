@@ -14,8 +14,8 @@ extension CodeEditorView {
 
     internal func updateGutterVisibility() {
         #if canImport(AppKit)
-        // macOS gutter is owned by CodeEditorContainerView via macGutterView.
-        // CodeEditorContainerView.updateMacOSGutter manages textContainerInset.
+        // macOS gutter is owned by CodeEditorContainerView via the scroll
+        // view's vertical ruler.
         // Nothing to do at the text-view level on macOS.
         #else
         // On iOS, gutter is managed by the text view when used standalone

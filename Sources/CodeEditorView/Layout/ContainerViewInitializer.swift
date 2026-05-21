@@ -170,7 +170,7 @@ enum ContainerViewInitializer {
         components.minimapView.layer?.zPosition = 1_000
         components.minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
 
-        // Setup gutter if line numbers are enabled.
+        // Setup ruler-backed gutter if line numbers are enabled.
         setupGutterView(for: container, scrollView: scrollView, textView: components.textView)
     }
 
@@ -187,24 +187,20 @@ enum ContainerViewInitializer {
 
         guard config.display.isLineNumbersEnabled else { return }
 
-        let gutter = CodeEditorGutterView(frame: NSRect(
-            x: 0,
-            y: 0,
-            width: config.layout.gutterWidth,
-            height: scrollView.contentView.bounds.height
-        ))
-        gutter.attach(to: scrollView, textView: textView)
-        container.macGutterView = gutter
+        let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
+        rulerView.textView = textView
+        rulerView.ruleThickness = config.layout.gutterWidth
+        rulerView.observeTextAndSelectionChanges(for: textView)
+        scrollView.verticalRulerView = rulerView
+        scrollView.hasVerticalRuler = true
+        scrollView.rulersVisible = true
 
-        let horizontalPadding = config.layout.lineNumberPadding
         textView.textContainerInset.width = container.baseTextContainerInsetWidth
-            + config.layout.gutterWidth
-            + horizontalPadding
 
         if let theme = container.appliedTheme {
-            gutter.apply(theme: theme)
+            rulerView.apply(theme: theme)
         }
-        gutter.needsDisplay = true
+        rulerView.needsDisplay = true
     }
     #else
     private static func setupUIKitViews(

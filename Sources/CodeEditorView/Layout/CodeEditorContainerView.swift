@@ -23,11 +23,12 @@ public final class CodeEditorContainerView: PlatformView {
     internal var isApplyingConfiguration = false
 
     #if canImport(AppKit)
-    /// macOS-only floating gutter. Distinct from the cross-platform
-    /// `gutterView` (which is the iOS host). Assigned by
-    /// `ContainerViewInitializer.setupGutterView` when line numbers are
-    /// enabled; cleared by `updateMacOSGutter` on disable.
-    internal weak var macGutterView: CodeEditorGutterView?
+    /// macOS-only ruler-backed gutter. Distinct from the cross-platform
+    /// `gutterView` (which is the iOS host). The scroll view owns the ruler
+    /// through `verticalRulerView`.
+    internal var macLineNumberRulerView: LineNumberRulerView? {
+        scrollView.verticalRulerView as? LineNumberRulerView
+    }
 
     /// The portion of `textView.textContainerInset.width` that does NOT
     /// include the gutter contribution. Captured once during initial setup
@@ -85,7 +86,7 @@ public final class CodeEditorContainerView: PlatformView {
         gutterView.appearance = appKitAppearance
         minimapView.appearance = appKitAppearance
         textView.appearance = appKitAppearance
-        macGutterView?.appearance = appKitAppearance
+        macLineNumberRulerView?.appearance = appKitAppearance
         #endif
 
         if appliedTheme == theme {
@@ -102,7 +103,7 @@ public final class CodeEditorContainerView: PlatformView {
         minimapView.apply(theme: theme)
         textView.apply(theme: theme)
         #if canImport(AppKit)
-        macGutterView?.apply(theme: theme)
+        macLineNumberRulerView?.apply(theme: theme)
         #endif
         CodeEditorRenderingDiagnostics.logContainer(
             "container.apply.end.changedTheme",
@@ -286,8 +287,7 @@ public final class CodeEditorContainerView: PlatformView {
             configuration = configuration.with(display: display)
 
             #if canImport(AppKit)
-            // On macOS, the gutter is a floating subview managed by
-            // `updateMacOSGutter`; toggle it here.
+            // On macOS, the gutter is the scroll view's vertical ruler.
             updateMacOSGutter()
             #else
             // On iOS, use the GutterView

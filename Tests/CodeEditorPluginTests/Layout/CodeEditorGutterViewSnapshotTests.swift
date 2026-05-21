@@ -29,13 +29,13 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
     /// colors (`NSColor.textColor` etc.) resolve against the gutter's own
     /// effective appearance instead of whatever the test runner's current
     /// drawing appearance happens to be.
-    private func renderedImage(of gutter: CodeEditorGutterView) throws -> NSImage {
+    private func renderedImage(of gutter: LineNumberRulerView) throws -> NSImage {
         let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
         gutter.effectiveAppearance.performAsCurrentDrawingAppearance {
-            gutter.draw(gutter.bounds)
+            gutter.drawHashMarksAndLabels(in: gutter.bounds)
         }
         NSGraphicsContext.restoreGraphicsState()
         let image = NSImage(size: gutter.bounds.size)
@@ -64,7 +64,7 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let gutter = try XCTUnwrap(container.macGutterView)
+        let gutter = try XCTUnwrap(container.macLineNumberRulerView)
         let image = try renderedImage(of: gutter)
         assertSnapshot(of: image, as: .image, named: "baseline")
     }
@@ -98,7 +98,7 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
         container.layoutSubtreeIfNeeded()
         container.textView.updateTextContainerSize()
 
-        let gutter = try XCTUnwrap(container.macGutterView)
+        let gutter = try XCTUnwrap(container.macLineNumberRulerView)
         let image = try renderedImage(of: gutter)
         assertSnapshot(of: image, as: .image, named: "wrapped-line")
     }
@@ -129,7 +129,7 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
         container.scrollView.reflectScrolledClipView(container.scrollView.contentView)
         container.layoutSubtreeIfNeeded()
 
-        let gutter = try XCTUnwrap(container.macGutterView)
+        let gutter = try XCTUnwrap(container.macLineNumberRulerView)
         let image = try renderedImage(of: gutter)
         assertSnapshot(of: image, as: .image, named: "after-scroll")
     }

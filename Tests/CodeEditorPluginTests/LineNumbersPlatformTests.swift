@@ -28,7 +28,7 @@ final class LineNumbersPlatformTests: XCTestCase {
     // MARK: - Platform-Specific Line Number Tests
 
     #if canImport(AppKit)
-    func testMacOSUsesCodeEditorGutterViewNotCrossPlatformGutterView() throws {
+    func testMacOSUsesVerticalRulerViewNotFloatingGutterView() throws {
         // Given: A container view on macOS with line numbers enabled
         let containerView = createContainerView()
         var config = containerView.configuration
@@ -42,13 +42,14 @@ final class LineNumbersPlatformTests: XCTestCase {
         XCTAssertFalse(containerView.subviews.contains(containerView.gutterView),
                       "Cross-platform GutterView should not be in macOS view hierarchy")
 
-        // And: macGutterView (the floating CodeEditorGutterView) should be attached
-        XCTAssertNotNil(containerView.macGutterView,
-                       "Container should have a macGutterView when line numbers are enabled")
-
-        // And: NSRulerView slot should not be in use
-        XCTAssertNil(containerView.scrollView.verticalRulerView,
-                    "Scroll view's verticalRulerView slot is no longer used")
+        // And: macOS should use AppKit's vertical ruler host, not a
+        // floating document subview. The floating-subview host is clipped by
+        // AppKit during vertical scroll and drops line numbers below the
+        // first visible strip.
+        XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
+        XCTAssertTrue(containerView.scrollView.rulersVisible)
+        XCTAssertNotNil(containerView.scrollView.verticalRulerView,
+                        "Scroll view's verticalRulerView slot should host macOS line numbers")
     }
 
     func testMacOSGutterViewDoesNotDraw() throws {
@@ -94,9 +95,10 @@ final class LineNumbersPlatformTests: XCTestCase {
         config.display.isLineNumbersEnabled = false
         containerView.configuration = config
 
-        // Then: macGutterView should be detached
-        XCTAssertNil(containerView.macGutterView,
-                    "macGutterView should be nil when line numbers are disabled")
+        // Then: vertical ruler should be detached
+        XCTAssertNil(containerView.macLineNumberRulerView,
+                    "Line-number ruler should be nil when line numbers are disabled")
+        XCTAssertFalse(containerView.scrollView.hasVerticalRuler)
     }
     #endif
 
@@ -217,8 +219,8 @@ final class LineNumbersPlatformTests: XCTestCase {
 
         // Then: The appropriate platform-specific changes should occur
         #if canImport(AppKit)
-        // macOS should have macGutterView attached
-        XCTAssertNotNil(containerView.macGutterView)
+        // macOS should have the ruler-backed gutter attached.
+        XCTAssertNotNil(containerView.macLineNumberRulerView)
         // Cross-platform GutterView should NOT be in hierarchy
         XCTAssertFalse(containerView.subviews.contains(containerView.gutterView))
         #else
@@ -242,7 +244,8 @@ final class LineNumbersPlatformTests: XCTestCase {
 
             // Then: The state should match the configuration
             #if canImport(AppKit)
-            XCTAssertEqual(containerView.macGutterView != nil, enabled)
+            XCTAssertEqual(containerView.macLineNumberRulerView != nil, enabled)
+            XCTAssertEqual(containerView.scrollView.hasVerticalRuler, enabled)
             #else
             XCTAssertEqual(!containerView.gutterView.isHidden, enabled)
             #endif
@@ -259,8 +262,8 @@ final class LineNumbersPlatformTests: XCTestCase {
 
         // Then: Both features should work independently
         #if canImport(AppKit)
-        // macOS: macGutterView for line numbers, minimap as separate view
-        XCTAssertNotNil(containerView.macGutterView)
+        // macOS: vertical ruler for line numbers, minimap as separate view
+        XCTAssertNotNil(containerView.macLineNumberRulerView)
         XCTAssertTrue(containerView.subviews.contains(containerView.minimapView))
         XCTAssertFalse(containerView.minimapView.isHidden)
         // Cross-platform GutterView should still NOT be in hierarchy

@@ -8,7 +8,7 @@ import ObjectiveC.runtime
 import XCTest
 
 @MainActor
-final class CodeEditorGutterViewTK2Tests: XCTestCase {
+final class LineNumberRulerViewTK2Tests: XCTestCase {
     /// Reads `NSTextView._layoutManager` without going through the public
     /// getter, which would itself synthesize the TK1 compatibility shim.
     private func legacyLayoutManagerIvarValue(for textView: NSTextView) -> AnyObject? {
@@ -32,12 +32,12 @@ final class CodeEditorGutterViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let gutter = try XCTUnwrap(container.macGutterView)
+        let gutter = try XCTUnwrap(container.macLineNumberRulerView)
         let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        gutter.draw(gutter.bounds)
+        gutter.drawHashMarksAndLabels(in: gutter.bounds)
         NSGraphicsContext.restoreGraphicsState()
 
         let legacy = legacyLayoutManagerIvarValue(for: container.textView)
@@ -69,7 +69,7 @@ final class CodeEditorGutterViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let gutter = try XCTUnwrap(container.macGutterView)
+        let gutter = try XCTUnwrap(container.macLineNumberRulerView)
 
         // Synthesize a mouseDown inside the fold-control band.
         let controlPadding = container.configuration.layout.foldingControlPadding
@@ -108,7 +108,7 @@ final class CodeEditorGutterViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let gutter = try XCTUnwrap(container.macGutterView)
+        let gutter = try XCTUnwrap(container.macLineNumberRulerView)
 
         container.textView.setSelectedRange(NSRange(location: 0, length: 0))
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
@@ -118,7 +118,7 @@ final class CodeEditorGutterViewTK2Tests: XCTestCase {
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        gutter.draw(gutter.bounds)
+        gutter.drawHashMarksAndLabels(in: gutter.bounds)
         NSGraphicsContext.restoreGraphicsState()
         XCTAssertEqual(gutter.lastActiveLineNumber, 1, "Initial selection at offset 0 is line 1")
 
@@ -140,14 +140,14 @@ final class CodeEditorGutterViewTK2Tests: XCTestCase {
         window.makeKeyAndOrderFront(nil)
         defer { window.close() }
 
-        let gutter = try XCTUnwrap(container.macGutterView)
+        let gutter = try XCTUnwrap(container.macLineNumberRulerView)
 
         container.textView.setSelectedRange(NSRange(location: 2, length: 0))
         let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        gutter.draw(gutter.bounds)
+        gutter.drawHashMarksAndLabels(in: gutter.bounds)
         NSGraphicsContext.restoreGraphicsState()
         XCTAssertEqual(gutter.lastActiveLineNumber, 1)
 

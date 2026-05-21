@@ -30,7 +30,7 @@ extension CodeEditorContainerView {
         minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
 
         // Gutter setup is handled by `ContainerViewInitializer.setupGutterView`,
-        // called from `setupPlatformViews`. No ruler-view plumbing here.
+        // called from `setupPlatformViews`.
 
         // Apply configuration
         do {
@@ -40,38 +40,33 @@ extension CodeEditorContainerView {
         }
     }
 
-    /// Toggles the macOS gutter visibility and recomputes the text
-    /// container's horizontal inset so text neither hides behind the
-    /// floating gutter nor leaves an empty strip when line numbers are off.
+    /// Toggles the macOS ruler-backed gutter and keeps text container
+    /// insets independent from the ruler's reserved width.
     func updateMacOSGutter() {
         guard let scrollView = textView.enclosingScrollView else { return }
-        let horizontalPadding = configuration.layout.lineNumberPadding
 
         if configuration.display.isLineNumbersEnabled {
-            let gutter: CodeEditorGutterView
-            if let existing = macGutterView {
-                gutter = existing
+            let rulerView: LineNumberRulerView
+            if let existing = scrollView.verticalRulerView as? LineNumberRulerView {
+                rulerView = existing
             } else {
-                gutter = CodeEditorGutterView(frame: NSRect(
-                    x: 0,
-                    y: 0,
-                    width: configuration.layout.gutterWidth,
-                    height: scrollView.contentView.bounds.height
-                ))
-                macGutterView = gutter
-                gutter.attach(to: scrollView, textView: textView)
-                if let theme = appliedTheme {
-                    gutter.apply(theme: theme)
-                }
+                rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
+                rulerView.observeTextAndSelectionChanges(for: textView)
+                scrollView.verticalRulerView = rulerView
             }
-            gutter.frame.size.width = configuration.layout.gutterWidth
+            rulerView.textView = textView
+            rulerView.ruleThickness = configuration.layout.gutterWidth
+            scrollView.hasVerticalRuler = true
+            scrollView.rulersVisible = true
             textView.textContainerInset.width = baseTextContainerInsetWidth
-                + configuration.layout.gutterWidth
-                + horizontalPadding
-            gutter.needsDisplay = true
+            if let theme = appliedTheme {
+                rulerView.apply(theme: theme)
+            }
+            rulerView.needsDisplay = true
         } else {
-            macGutterView?.detach()
-            macGutterView = nil
+            scrollView.hasVerticalRuler = false
+            scrollView.rulersVisible = false
+            scrollView.verticalRulerView = nil
             textView.textContainerInset.width = baseTextContainerInsetWidth
         }
     }
@@ -244,9 +239,9 @@ extension CodeEditorContainerView {
         // Update minimap after layout changes
         updateMinimap()
 
-        // Gutter has its own observers; mark dirty for any composite redraw.
+        // Ruler has its own observers; mark dirty for any composite redraw.
         if configuration.display.isLineNumbersEnabled {
-            macGutterView?.needsDisplay = true
+            scrollView.verticalRulerView?.needsDisplay = true
             scrollView.needsDisplay = true
         }
     }

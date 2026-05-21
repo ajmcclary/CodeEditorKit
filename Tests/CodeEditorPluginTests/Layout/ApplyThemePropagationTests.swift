@@ -60,11 +60,11 @@ struct ApplyThemePropagationTests {
     }
 
     #if canImport(AppKit)
-    @Test("apply(theme:) propagates to the macOS CodeEditorGutterView renderer")
+    @Test("apply(theme:) propagates to the macOS LineNumberRulerView renderer")
     @MainActor
     func applyThemePropagatesToGutter() async throws {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        let gutter = try #require(container.macGutterView)
+        let gutter = try #require(container.macLineNumberRulerView)
 
         container.apply(theme: .lcarsDark)
 

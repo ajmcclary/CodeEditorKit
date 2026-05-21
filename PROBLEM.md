@@ -1,8 +1,34 @@
 # Gutter Line-Numbers Stop Part-Way After Scroll — Investigation Log
 
-**Status:** UNRESOLVED. Two distinct fix attempts have both failed.
+**Status:** RESOLVED on 2026-05-21.
 
 **Date opened:** 2026-05-21
+
+## Resolution
+
+The root cause was the macOS host choice, not TextKit layout or
+line-number drawing. `CodeEditorGutterView` used
+`scrollView.addFloatingSubview(self, for: .horizontal)`, but AppKit's
+floating-document-subview compositor only presented a partial strip of that
+view after vertical scrolling. Runtime diagnostics already showed the
+renderer visited and drew every visible line; those draw calls were being
+lost after the renderer.
+
+The fix removes the floating-subview host and restores an AppKit-owned
+vertical ruler:
+
+- `Sources/CodeEditorView/Layout/LineNumberRulerView.swift` now hosts macOS
+  line numbers as an `NSRulerView`.
+- `CodeEditorContainerView` installs it through
+  `scrollView.verticalRulerView` and toggles `hasVerticalRuler` /
+  `rulersVisible`.
+- macOS text insets once again contain only internal editor padding; the
+  scroll view's ruler slot owns the gutter width.
+- Regression coverage now asserts the vertical-ruler host is installed and
+  updates the ruler lifecycle / TK2 / snapshot tests accordingly.
+
+The rest of this file is the historical investigation log that led to this
+resolution.
 
 ## The Bug (observed)
 

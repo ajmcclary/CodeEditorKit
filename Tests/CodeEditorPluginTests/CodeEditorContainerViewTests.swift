@@ -111,13 +111,15 @@ final class CodeEditorContainerViewTests: XCTestCase {
         }
 
         #if canImport(AppKit)
-        // On macOS, line numbers are rendered by CodeEditorGutterView attached
-        // as a floating subview. Verify the gutter toggles in/out as expected.
+        // On macOS, line numbers are rendered by the scroll view's vertical
+        // ruler. Verify the ruler toggles in/out as expected.
         containerView.showsLineNumbers = true
-        XCTAssertNotNil(containerView.macGutterView)
+        XCTAssertNotNil(containerView.macLineNumberRulerView)
+        XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
 
         containerView.showsLineNumbers = false
-        XCTAssertNil(containerView.macGutterView)
+        XCTAssertNil(containerView.macLineNumberRulerView)
+        XCTAssertFalse(containerView.scrollView.hasVerticalRuler)
 
         // Verify text container inset adjusted
         let insets = containerView.textView.textContainerInset
@@ -174,13 +176,14 @@ final class CodeEditorContainerViewTests: XCTestCase {
         let expectedPadding = containerView.configuration.layout.lineNumberPadding
         XCTAssertGreaterThanOrEqual(textInsets.left, expectedPadding, "Text should have at least the configured padding")
         #else
-        // macOS: Check that the floating gutter is attached with the configured width
-        let gutter = try XCTUnwrap(containerView.macGutterView, "Gutter view should be present when line numbers are shown")
-        XCTAssertEqual(gutter.frame.width, gutterWidth, "Gutter view width should match configuration")
+        // macOS: Check that the ruler-backed gutter is attached with the configured width.
+        let gutter = try XCTUnwrap(containerView.macLineNumberRulerView, "Ruler view should be present when line numbers are shown")
+        XCTAssertEqual(gutter.ruleThickness, gutterWidth, "Ruler thickness should match configuration")
 
-        // On macOS, the container grows textContainerInset.width by the gutter width.
+        // On macOS, the scroll view's ruler reserves the gutter width, so
+        // the text inset should not also include that width.
         let textInsets = containerView.textView.textContainerInset
-        XCTAssertGreaterThanOrEqual(textInsets.width, gutterWidth, "Text container inset should accommodate the gutter")
+        XCTAssertLessThan(textInsets.width, gutterWidth, "Text container inset should not duplicate the ruler width")
         #endif
     }
 
