@@ -155,6 +155,13 @@ public final class LSPClient: ObservableObject {
 
     /// Connect to an LSP server with the given configuration
     /// - Parameter configuration: Server configuration
+    /// - Throws: `LSPError.alreadyConnected` if the client is not in
+    ///   `.disconnected`; `LSPError.transportNotConfigured` if a transport
+    ///   was expected but missing; `LSPError.connectionFailed`,
+    ///   `LSPError.invalidResponse`, or `LSPError.decodingError` for
+    ///   transport / initialize-handshake failures. On failure the state
+    ///   moves to `.error` and `disconnect()` is dispatched to tear the
+    ///   transport down before the error rethrows.
     public func connect(configuration: ServerConfiguration) async throws {
         try LSPConnectionManager.validateCanConnect(currentState: connectionState)
 
@@ -299,6 +306,10 @@ public final class LSPClient: ObservableObject {
     // MARK: - Document Management
 
     /// Open a document in the language server
+    /// - Throws: `LSPError.notConnected` if the client is not in
+    ///   `.initialized`; transport-layer errors (`.connectionFailed`,
+    ///   underlying I/O) if the `textDocument/didOpen` notification cannot
+    ///   be sent.
     public func openDocument(
         uri: String,
         languageId: String,
@@ -321,6 +332,9 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Update document content
+    /// - Throws: `LSPError.notConnected` if the client is not in
+    ///   `.initialized`; transport-layer errors if the
+    ///   `textDocument/didChange` notification cannot be sent.
     public func updateDocument(
         uri: String,
         version: Int,
@@ -338,6 +352,9 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Close a document
+    /// - Throws: `LSPError.notConnected` if the client is not in
+    ///   `.initialized`; transport-layer errors if the
+    ///   `textDocument/didClose` notification cannot be sent.
     public func closeDocument(uri: String) async throws {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
@@ -356,6 +373,10 @@ public final class LSPClient: ObservableObject {
     // MARK: - Language Features
 
     /// Request code completion
+    /// - Throws: `LSPError.notConnected` if the client is not in
+    ///   `.initialized`; `LSPError.serverError` if the server responded
+    ///   with an error code; `LSPError.invalidResponse` or
+    ///   `LSPError.decodingError` if the response payload was malformed.
     public func requestCompletion(
         uri: String,
         position: Position
@@ -368,6 +389,9 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Request hover information
+    /// - Throws: `LSPError.notConnected` if the client is not in
+    ///   `.initialized`; `LSPError.serverError`, `LSPError.invalidResponse`,
+    ///   or `LSPError.decodingError` per the standard request envelope.
     public func requestHover(
         uri: String,
         position: Position
@@ -380,6 +404,9 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Request symbol definition
+    /// - Throws: `LSPError.notConnected` if the client is not in
+    ///   `.initialized`; `LSPError.serverError`, `LSPError.invalidResponse`,
+    ///   or `LSPError.decodingError` per the standard request envelope.
     public func requestDefinition(
         uri: String,
         position: Position
@@ -392,6 +419,9 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Request document symbols
+    /// - Throws: `LSPError.notConnected` if the client is not in
+    ///   `.initialized`; `LSPError.serverError`, `LSPError.invalidResponse`,
+    ///   or `LSPError.decodingError` per the standard request envelope.
     public func requestDocumentSymbols(uri: String) async throws -> [LSPDocumentSymbol] {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
@@ -403,6 +433,14 @@ public final class LSPClient: ObservableObject {
     // MARK: - Semantic Tokens
 
     /// Request full semantic tokens for a document.
+    ///
+    /// Returns `nil` without throwing if the client is not currently
+    /// `.initialized` — semantic-token consumers are expected to tolerate a
+    /// not-yet-ready server rather than treat it as an error condition.
+    ///
+    /// - Throws: `LSPError.serverError`, `LSPError.invalidResponse`, or
+    ///   `LSPError.decodingError` if the request envelope succeeds but the
+    ///   payload is malformed or the server reports an error.
     public func requestSemanticTokens(uri: String) async throws -> SemanticTokens? {
         guard connectionState == .initialized else { return nil }
 
@@ -417,6 +455,13 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Request semantic-token delta since a previous result.
+    ///
+    /// Returns `nil` without throwing if the client is not currently
+    /// `.initialized`. See `requestSemanticTokens(uri:)` for the rationale.
+    ///
+    /// - Throws: `LSPError.serverError`, `LSPError.invalidResponse`, or
+    ///   `LSPError.decodingError` for malformed-payload / server-error
+    ///   responses.
     public func requestSemanticTokensDelta(
         uri: String,
         previousResultId: String
@@ -435,6 +480,13 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Request semantic tokens for a specific range.
+    ///
+    /// Returns `nil` without throwing if the client is not currently
+    /// `.initialized`. See `requestSemanticTokens(uri:)` for the rationale.
+    ///
+    /// - Throws: `LSPError.serverError`, `LSPError.invalidResponse`, or
+    ///   `LSPError.decodingError` for malformed-payload / server-error
+    ///   responses.
     public func requestSemanticTokensRange(
         uri: String,
         range: LSPRange

@@ -64,9 +64,20 @@ public struct ProjectSearchResult: Sendable {
 public protocol ProjectSearchProvider: AnyObject, Sendable {
     /// Index a set of file URLs. Called once before search, or
     /// incrementally as files change.
+    ///
+    /// - Throws: Implementation-defined indexing errors. The portable adapter
+    ///   currently never throws — `throws` is declared on the protocol so
+    ///   future system-backed adapters (e.g. SearchKit) can surface index
+    ///   build failures without breaking source compatibility.
     func indexFiles(urls: [URL]) async throws
 
     /// Search the indexed files.
+    ///
+    /// - Throws: `ProjectSearchError.invalidRegex` if `options.useRegex` is
+    ///   true and `query` does not compile as an `NSRegularExpression`.
+    ///   System-backed adapters may throw additional implementation-defined
+    ///   errors; individual unreadable files are logged and skipped rather
+    ///   than aborting the search.
     func search(query: String, options: ProjectSearchOptions) async throws -> [ProjectSearchResult]
 
     /// Cancel any in-progress search.
@@ -99,6 +110,9 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
 
     public init() {}
 
+    /// - Throws: Never. The portable adapter only filters paths in memory;
+    ///   `throws` is inherited from the protocol for future-richer-adapter
+    ///   compatibility.
     public func indexFiles(urls: [URL]) async throws {
         let files = urls.filter { url in
             var isDir: ObjCBool = false
@@ -111,6 +125,9 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
     }
 
     /// Re-index with file extension filtering applied.
+    ///
+    /// - Throws: Never. See `indexFiles(urls:)` for why the signature is
+    ///   `throws`.
     public func indexFiles(urls: [URL], extensions: [String]) async throws {
         let extSet = Set(extensions.map { $0.lowercased() })
         let files = urls.filter { url in
@@ -125,6 +142,10 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
         }
     }
 
+    /// - Throws: `ProjectSearchError.invalidRegex` if `options.useRegex` is
+    ///   true and `query` fails to compile as an `NSRegularExpression`.
+    ///   Individual files that fail to decode as UTF-8 are logged and
+    ///   skipped, not surfaced as a throw.
     public func search(query: String, options: ProjectSearchOptions) async throws -> [ProjectSearchResult] {
         cancelSearch()
         let files: [URL] = locked {

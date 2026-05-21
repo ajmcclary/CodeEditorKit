@@ -140,11 +140,13 @@ Resolution: Replaced the `try?`/`guard` with explicit `do/catch`; the catch bran
 
 ---
 
-**[Medium] Public throwing APIs missing `- Throws:` doc comments**
+**[Medium] Public throwing APIs missing `- Throws:` doc comments** — ✅ **Resolved**
 
 Explanation: `ProjectSearchProvider.indexFiles(urls:)` / `.search(query:options:)` and several LSP client requests lack `/// - Throws:` lines despite documenting other behavior.
 
 Suggestion: Add the throws clause and enumerate cases.
+
+Resolution: Added `/// - Throws:` lines naming the concrete error cases on the methods the reviewer flagged: `ProjectSearchProvider.indexFiles(urls:)` + `.search(query:options:)` (protocol and `PortableProjectSearchAdapter`'s implementations, including the `urls:extensions:` overload), and the eleven public throwing methods on `LSPClient` + the `LSPClient+Transport` convenience `connect(configuration:languageId:)` overload — `connect`, `openDocument`, `updateDocument`, `closeDocument`, `requestCompletion`, `requestHover`, `requestDefinition`, `requestDocumentSymbols`, `requestSemanticTokens`, `requestSemanticTokensDelta`, `requestSemanticTokensRange`. Each `- Throws:` clause names the LSPError cases the body produces; the semantic-token requests' "returns nil if not initialized" pre-throw behavior is documented explicitly so callers know not to wrap it in `do/catch` just for the not-ready state. `LSPLanguageFeatures.parse*` static helpers are throwing but are lower-level building blocks of the request methods rather than "LSP client requests," and so were left for a future broader doc pass.
 
 ---
 
@@ -358,7 +360,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 9 — 4 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging) |
+| Medium | 8 — 5 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

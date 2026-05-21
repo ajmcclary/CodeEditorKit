@@ -16,6 +16,11 @@ extension LSPClient {
     /// - Parameters:
     ///   - configuration: Unified server configuration (`.local` or `.remote`).
     ///   - languageId: LSP language identifier (e.g. "swift", "python") used during init handshake.
+    /// - Throws: Whatever `LSPServerConfiguration.createTransport()` throws
+    ///   (e.g. WebSocket / certificate-pinning errors for `.remote`,
+    ///   process-spawn errors for `.local`), plus everything
+    ///   `connect(configuration: ServerConfiguration)` throws when it runs
+    ///   the init handshake. See that method for the LSPError surface.
     public func connect(configuration: LSPServerConfiguration, languageId: String) async throws {
         // Test-only hook (production callers leave this nil).
         if let handler = recordingHandler {
