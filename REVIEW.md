@@ -262,11 +262,13 @@ Resolution: Replaced both `messageBuffer.removeAll()` calls (the header-decode-f
 
 ---
 
-**[Medium] `Sources/CodeEditorLSP/LSPMessageHandler.swift:~161` — String request IDs coerced to `Int`, non-numeric strings dropped**
+**[Medium] `Sources/CodeEditorLSP/LSPMessageHandler.swift:~161` — String request IDs coerced to `Int`, non-numeric strings dropped** — ✅ **Resolved**
 
 Explanation: LSP spec allows string IDs; this transport rejects them. Servers that emit UUID-style IDs (or future client code that uses them) will see their responses silently dropped, causing the caller to hang until timeout.
 
 Suggestion: Use `enum RequestID: Hashable { case int(Int); case string(String) }` (or `AnyHashable`) as the pending-request key.
+
+Resolution: The wire-level `RequestId` enum (already defined in `LSPTypes.swift` with `.string(String)` and `.number(Int)` cases for `Codable` round-tripping) gained `Hashable` conformance and is now used as the routing-layer key. `LSPClient.pendingRequests` switched from `[Int: LSPRequestCompletion]` to `[RequestId: LSPRequestCompletion]`; `handleResponse(id: Int, ...)` to `(id: RequestId, ...)`; `failPending(_:)` parameter type to match. `nextRequestId` stayed `Int` (it's a local counter — the wrapping into `.number(...)` happens at the send site, matching the spec's "you choose your own ID format" model). `LSPMessageHandler.onResponse` callback signature updated to `(RequestId, Result<...>) -> Void`; `extractRequestId(from: Any) -> RequestId?` now preserves string IDs verbatim (including numeric-looking ones like `"42"` — they stay `.string("42")`, never collapse to `.number(42)`, so a server can't accidentally collide a string ID with a pending numeric request). Added `testStringRequestIdResponseRoutesToInbox` and `testNumericStringRequestIdIsNotCoercedToInt` to `LSPMessageHandlerRecoveryTests`. 36 broader LSP tests still pass.
 
 ---
 
@@ -366,7 +368,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 5 — 8 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery) |
+| Medium | 4 — 9 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

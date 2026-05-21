@@ -18,7 +18,7 @@ actor LSPMessageHandler {
     var onNotification: (@Sendable (String, Data) -> Void)?
 
     /// Callback for incoming responses
-    var onResponse: (@Sendable (Int, Result<LSPResponse, LSPError>) -> Void)?
+    var onResponse: (@Sendable (RequestId, Result<LSPResponse, LSPError>) -> Void)?
 
     /// Buffer for incomplete messages
     private var messageBuffer = Data()
@@ -33,8 +33,8 @@ actor LSPMessageHandler {
         onNotification = callback
     }
 
-    /// Set the response callback  
-    func setResponseCallback(_ callback: @escaping @Sendable (Int, Result<LSPResponse, LSPError>) -> Void) {
+    /// Set the response callback
+    func setResponseCallback(_ callback: @escaping @Sendable (RequestId, Result<LSPResponse, LSPError>) -> Void) {
         onResponse = callback
     }
 
@@ -196,11 +196,16 @@ actor LSPMessageHandler {
         }
     }
 
-    private func extractRequestId(from id: Any) -> Int? {
+    private func extractRequestId(from id: Any) -> RequestId? {
+        // LSP / JSON-RPC permits numeric or string IDs. Preserve string IDs
+        // verbatim (including non-numeric ones like UUIDs) so they route to
+        // the correct pending continuation — the previous coercion to `Int`
+        // silently dropped responses whose ID didn't parse as a number.
         if let intId = id as? Int {
-            return intId
-        } else if let stringId = id as? String, let intId = Int(stringId) {
-            return intId
+            return .number(intId)
+        }
+        if let stringId = id as? String {
+            return .string(stringId)
         }
         return nil
     }

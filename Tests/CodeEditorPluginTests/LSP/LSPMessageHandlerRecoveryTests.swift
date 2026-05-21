@@ -11,13 +11,13 @@ import XCTest
 final class LSPMessageHandlerRecoveryTests: XCTestCase {
     actor MessageInbox {
         private(set) var notifications: [(String, Data)] = []
-        private(set) var responses: [(Int, Result<LSPResponse, LSPError>)] = []
+        private(set) var responses: [(RequestId, Result<LSPResponse, LSPError>)] = []
 
         func appendNotification(_ method: String, _ params: Data) {
             notifications.append((method, params))
         }
 
-        func appendResponse(_ id: Int, _ result: Result<LSPResponse, LSPError>) {
+        func appendResponse(_ id: RequestId, _ result: Result<LSPResponse, LSPError>) {
             responses.append((id, result))
         }
     }
@@ -101,6 +101,40 @@ final class LSPMessageHandlerRecoveryTests: XCTestCase {
         let notifications = await inbox.notifications
         XCTAssertEqual(notifications.count, 1, "Non-UTF-8 header bytes must not nuke pending messages")
         XCTAssertEqual(notifications.first?.0, "window/logMessage")
+    }
+
+    func testStringRequestIdResponseRoutesToInbox() async throws {
+        // LSP/JSON-RPC allows string IDs. Servers emitting UUID-style IDs
+        // (e.g. "abc-123") used to have their responses silently dropped by
+        // the message handler's old Int-coercion path.
+        let inbox = MessageInbox()
+        let handler = await makeHandler(inbox: inbox)
+
+        let response = #"{"jsonrpc":"2.0","id":"abc-123","result":{"ok":true}}"#
+        await handler.processIncomingData(frame(body: response))
+
+        try await Task.sleep(for: .milliseconds(50))
+
+        let responses = await inbox.responses
+        XCTAssertEqual(responses.count, 1, "Server response with string ID must route to the response callback")
+        guard let first = responses.first else { return }
+        XCTAssertEqual(first.0, .string("abc-123"), "ID must be preserved verbatim as RequestId.string")
+    }
+
+    func testNumericStringRequestIdIsNotCoercedToInt() async throws {
+        // Even a string ID whose contents are numeric must surface as
+        // RequestId.string, not RequestId.number — otherwise a server could
+        // emit "42" and we'd misroute to a pending .number(42) continuation.
+        let inbox = MessageInbox()
+        let handler = await makeHandler(inbox: inbox)
+
+        let response = #"{"jsonrpc":"2.0","id":"42","result":{}}"#
+        await handler.processIncomingData(frame(body: response))
+
+        try await Task.sleep(for: .milliseconds(50))
+
+        let responses = await inbox.responses
+        XCTAssertEqual(responses.first?.0, .string("42"))
     }
 
     func testUnrecoverableBufferIsClearedAsFallback() async throws {

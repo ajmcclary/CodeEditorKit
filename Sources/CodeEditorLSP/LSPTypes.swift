@@ -38,8 +38,14 @@ public struct LSPNotification: Codable {
     }
 }
 
-/// Request identifier (can be string or number)
-public enum RequestId: Codable, Sendable {
+/// Request identifier (can be string or number).
+///
+/// The LSP / JSON-RPC spec permits both numeric and string IDs in the wire
+/// protocol. The pending-request map in `LSPClient` keys on this enum directly
+/// (`Hashable`) so a server emitting UUID-style string IDs routes its response
+/// to the correct continuation instead of having the ID silently coerced to
+/// `nil` and the caller hung on its continuation.
+public enum RequestId: Codable, Hashable, Sendable {
     case string(String)
     case number(Int)
 

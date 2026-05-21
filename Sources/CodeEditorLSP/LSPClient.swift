@@ -112,8 +112,11 @@ public final class LSPClient: ObservableObject {
     /// Process manager for local server processes (macOS only)
     private lazy var processManager = LSPProcessManager(messageHandler: messageHandler)
 
-    /// Request/response tracking
-    private var pendingRequests: [Int: LSPRequestCompletion] = [:]
+    /// Request/response tracking. Keyed by the JSON-RPC `RequestId` so
+    /// string-typed IDs (UUID-style or otherwise) route back to their
+    /// pending continuation; the prior `[Int: ...]` map silently dropped
+    /// non-numeric IDs at the message-handler layer.
+    private var pendingRequests: [RequestId: LSPRequestCompletion] = [:]
     private var nextRequestId: Int = 1
 
     /// In-flight disconnect Task, if any. Used to serialize transport teardown
@@ -297,7 +300,7 @@ public final class LSPClient: ObservableObject {
     /// Fail any captured pending request continuations. Called after transport
     /// teardown so awaiters do not observe a `.notConnected` failure while the
     /// transport is still draining.
-    private static func failPending(_ pending: [Int: LSPRequestCompletion]) {
+    private static func failPending(_ pending: [RequestId: LSPRequestCompletion]) {
         for completion in pending.values {
             completion(.failure(.notConnected))
         }
@@ -527,16 +530,17 @@ public final class LSPClient: ObservableObject {
     private func sendRequest(method: String, params: any Codable & Sendable) async throws -> LSPResponse {
         let requestId = nextRequestId
         nextRequestId += 1
+        let key: RequestId = .number(requestId)
 
         let request = LSPRequest(
-            id: .number(requestId),
+            id: key,
             method: method,
             params: params
         )
 
         return try await withCheckedThrowingContinuation { continuation in
             // Store completion handler
-            pendingRequests[requestId] = { result in
+            pendingRequests[key] = { result in
                 continuation.resume(with: result)
             }
 
@@ -546,7 +550,7 @@ public final class LSPClient: ObservableObject {
                     try await self.sendMessage(request)
                 } catch {
                     _ = await MainActor.run {
-                        self.pendingRequests.removeValue(forKey: requestId)
+                        self.pendingRequests.removeValue(forKey: key)
                     }
                     continuation.resume(throwing: error)
                 }
@@ -590,7 +594,7 @@ public final class LSPClient: ObservableObject {
         }
     }
 
-    private func handleResponse(id: Int, result: Result<LSPResponse, LSPError>) async {
+    private func handleResponse(id: RequestId, result: Result<LSPResponse, LSPError>) async {
         if let completion = pendingRequests.removeValue(forKey: id) {
             completion(result)
         }
