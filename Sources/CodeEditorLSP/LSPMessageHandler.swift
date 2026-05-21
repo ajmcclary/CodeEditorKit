@@ -55,39 +55,77 @@ actor LSPMessageHandler {
 
     private func extractCompleteMessage() -> Data? {
         // LSP messages have format: "Content-Length: <length>\r\n\r\n<json>"
-        guard let headerEndRange = messageBuffer.range(of: Data("\r\n\r\n".utf8)) else {
-            return nil // Header not complete
-        }
+        // The internal loop is what gives the recovery path a chance to be
+        // useful: after `recoverFromMalformedFraming` advances the buffer
+        // past a bad header, the next iteration immediately re-attempts the
+        // parse on whatever framing now sits at the front of the buffer.
+        // Without it, the outer `while` in `processIncomingData` would exit
+        // on the bad-header `return nil` and never look at the recovered
+        // bytes until more data arrived from the transport.
+        while true {
+            guard let headerEndRange = messageBuffer.range(of: Data("\r\n\r\n".utf8)) else {
+                return nil // Header not complete
+            }
 
-        let headerData = messageBuffer.subdata(in: 0..<headerEndRange.lowerBound)
-        guard let headerString = String(data: headerData, encoding: .utf8) else {
-            logger.error("Failed to decode message header")
+            let headerData = messageBuffer.subdata(in: 0..<headerEndRange.lowerBound)
+            guard let headerString = String(data: headerData, encoding: .utf8) else {
+                logger.error("Failed to decode message header")
+                recoverFromMalformedFraming(skipPast: headerEndRange.upperBound)
+                continue
+            }
+
+            // Parse Content-Length
+            guard let contentLength = parseContentLength(from: headerString) else {
+                logger.error("Failed to parse Content-Length from header: \(headerString)")
+                recoverFromMalformedFraming(skipPast: headerEndRange.upperBound)
+                continue
+            }
+
+            let messageStart = headerEndRange.upperBound
+            let messageEnd = messageStart + contentLength
+
+            // Check if we have the complete message
+            guard messageBuffer.count >= messageEnd else {
+                return nil // Message not complete
+            }
+
+            // Extract the complete message
+            let messageData = messageBuffer.subdata(in: messageStart..<messageEnd)
+
+            // Remove processed data from buffer
+            messageBuffer.removeSubrange(0..<messageEnd)
+
+            return messageData
+        }
+    }
+
+    /// Drop bytes up to the next plausible message-framing marker so that
+    /// pending well-formed messages later in the buffer survive a parse
+    /// failure on the head. Searches for `Content-Length:` starting after
+    /// the malformed header's own `\r\n\r\n` (passed as `searchStart`).
+    /// LSP frames concatenate body-then-next-header with no separator, so
+    /// the marker is the header keyword on its own; the rare case where a
+    /// JSON body literally contains the string "Content-Length:" (e.g. a
+    /// server logging its own LSP traffic) could cause a false recovery
+    /// point — accepted in exchange for not nuking the buffer. When no
+    /// marker is found, the buffer is unrecoverable in-protocol and is
+    /// cleared (matches the prior unconditional behavior).
+    private func recoverFromMalformedFraming(skipPast searchStart: Data.Index) {
+        let marker = Data("Content-Length:".utf8)
+        let bufferEnd = messageBuffer.endIndex
+
+        guard searchStart < bufferEnd,
+              let nextMarker = messageBuffer.range(of: marker, in: searchStart..<bufferEnd) else {
+            logger.warning("Cannot locate next Content-Length framing — clearing message buffer")
             messageBuffer.removeAll()
-            return nil
+            return
         }
 
-        // Parse Content-Length
-        guard let contentLength = parseContentLength(from: headerString) else {
-            logger.error("Failed to parse Content-Length from header: \(headerString)")
-            messageBuffer.removeAll()
-            return nil
-        }
-
-        let messageStart = headerEndRange.upperBound
-        let messageEnd = messageStart + contentLength
-
-        // Check if we have the complete message
-        guard messageBuffer.count >= messageEnd else {
-            return nil // Message not complete
-        }
-
-        // Extract the complete message
-        let messageData = messageBuffer.subdata(in: messageStart..<messageEnd)
-
-        // Remove processed data from buffer
-        messageBuffer.removeSubrange(0..<messageEnd)
-
-        return messageData
+        let droppedBytes = nextMarker.lowerBound
+        logger.warning(
+            "Recovered message buffer past malformed framing: dropped \(droppedBytes) bytes, resuming at next Content-Length"
+        )
+        messageBuffer.removeSubrange(0..<nextMarker.lowerBound)
     }
 
     private func parseContentLength(from header: String) -> Int? {

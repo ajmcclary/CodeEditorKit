@@ -252,11 +252,13 @@ Resolution: Implemented option (b). `WebSocketPinningDelegate.urlSession(_:didRe
 
 ---
 
-**[Medium] `Sources/CodeEditorLSP/LSPMessageHandler.swift:~56-91` — Malformed `Content-Length` wipes the entire buffer**
+**[Medium] `Sources/CodeEditorLSP/LSPMessageHandler.swift:~56-91` — Malformed `Content-Length` wipes the entire buffer** — ✅ **Resolved**
 
 Explanation: On parse failure, `messageBuffer.removeAll()` is invoked, which discards any subsequent well-formed messages already in the buffer.
 
 Suggestion: Find the next `\r\n\r\n` boundary and resume parsing from there, or terminate the connection and reconnect — but don't silently nuke pending messages.
+
+Resolution: Replaced both `messageBuffer.removeAll()` calls (the header-decode-failure and Content-Length-parse-failure paths) with a new `recoverFromMalformedFraming(skipPast:)` helper that scans for the next `Content-Length:` marker starting after the malformed header's `\r\n\r\n` boundary and drops bytes up to (but not including) it. Only when no subsequent marker exists does the buffer fall back to the prior wipe behavior. Searched-for marker is the bare `Content-Length:` keyword (not `\r\nContent-Length:`) because LSP frames concatenate body-then-next-header with no separator — a leading-CRLF marker never matches at real message boundaries; accepted false-positive risk in the pathological case where a JSON body literally contains the string is documented in the helper's docstring. Also restructured `extractCompleteMessage()` into an internal `while true` loop so the recovery path's advance is immediately re-attempted instead of returning `nil` and waiting for the next transport callback — without that, recovery would advance the buffer but consumers wouldn't see the now-parseable message until more data arrived. Added `LSPMessageHandlerRecoveryTests` (4 tests): back-to-back-good ordering, bad-Content-Length recovers the next message, non-UTF-8 header bytes recover the next message, unrecoverable buffer clears as fallback and the handler stays usable for subsequent traffic. All 40 LSP suite tests pass.
 
 ---
 
@@ -364,7 +366,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 6 — 7 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed) |
+| Medium | 5 — 8 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 
