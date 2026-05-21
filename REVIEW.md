@@ -120,11 +120,13 @@ Suggestion: No action required. Worth keeping the `canImport` discipline note in
 
 ## 4. Error Handling
 
-**[Medium] `Sources/CodeEditorSearch/ProjectSearchProvider.swift:~152` — Invalid regex silently produces empty results**
+**[Medium] `Sources/CodeEditorSearch/ProjectSearchProvider.swift:~152` — Invalid regex silently produces empty results** — ✅ **Resolved**
 
 Explanation: `let regex = options.useRegex ? try? NSRegularExpression(...) : nil` swallows pattern errors. A user who types `[abc` gets zero matches with no signal that the pattern was rejected.
 
 Suggestion: Throw a typed `SearchError.invalidRegex(reason:)` and surface it in the UI.
+
+Resolution: Added `ProjectSearchError: LocalizedError, Sendable` (new file `Sources/CodeEditorSearch/ProjectSearchError.swift`) with a `.invalidRegex(pattern:, underlying:)` case. `search(query:options:)` now compiles the regex up-front — *before* detaching the background search task — and throws `ProjectSearchError.invalidRegex` if the pattern is malformed. `performSearch` gained a `regex: NSRegularExpression?` parameter so the compiled object travels with the search instead of being recompiled inside the detached closure. The sample app's `ProjectSearchModel` already routes thrown errors into `status = .error(message: error.localizedDescription)`, so the user-facing message now reads "Invalid regex pattern \"[abc\": …" instead of silent zero-results. Added `searchSurfacesInvalidRegexError` to `ProjectSearchProviderTests` to pin the contract.
 
 ---
 
@@ -354,7 +356,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 11 — 2 resolved (Languages path + dead Layout exclude, umbrella re-export) |
+| Medium | 10 — 3 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

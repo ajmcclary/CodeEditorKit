@@ -6,6 +6,29 @@ import Testing
 
 @Suite("Portable project search")
 struct ProjectSearchProviderTests {
+    @Test("search throws ProjectSearchError.invalidRegex for malformed patterns")
+    func searchSurfacesInvalidRegexError() async throws {
+        let adapter = PortableProjectSearchAdapter()
+        // No indexed files needed — the regex compiles before any file walk.
+        do {
+            _ = try await adapter.search(
+                query: "[abc",
+                options: ProjectSearchOptions(useRegex: true)
+            )
+            Issue.record("Expected ProjectSearchError.invalidRegex to be thrown")
+        } catch let error as ProjectSearchError {
+            guard case let .invalidRegex(pattern, _) = error else {
+                Issue.record("Expected .invalidRegex, got \(error)")
+                return
+            }
+            #expect(pattern == "[abc")
+            #expect(
+                error.errorDescription?.contains("[abc") == true,
+                "errorDescription should include the offending pattern"
+            )
+        }
+    }
+
     @Test("search applies file extension filters to indexed files")
     func searchAppliesFileExtensionFilters() async throws {
         let fileManager = FileManager.default

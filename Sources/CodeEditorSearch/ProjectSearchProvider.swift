@@ -124,13 +124,31 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
         }
         let opts = options
 
+        // Compile the regex up-front so an invalid pattern fails fast with a
+        // typed error rather than yielding silent zero-results from inside
+        // the detached search task.
+        let regex: NSRegularExpression?
+        if options.useRegex {
+            do {
+                regex = try NSRegularExpression(
+                    pattern: query,
+                    options: options.caseSensitive ? [] : .caseInsensitive
+                )
+            } catch {
+                throw ProjectSearchError.invalidRegex(pattern: query, underlying: error)
+            }
+        } else {
+            regex = nil
+        }
+
         let task = Task.detached(priority: .userInitiated) { () -> [ProjectSearchResult] in
             // swiftlint:disable:next prefer_self_in_static_references
             PortableProjectSearchAdapter.performSearch(
                 query: query,
                 options: opts,
                 files: files,
-                maxResults: opts.maxResults
+                maxResults: opts.maxResults,
+                regex: regex
             )
         }
 
@@ -144,16 +162,10 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
         query: String,
         options: ProjectSearchOptions,
         files: [URL],
-        maxResults: Int
+        maxResults: Int,
+        regex: NSRegularExpression?
     ) -> [ProjectSearchResult] {
         var results: [ProjectSearchResult] = []
-        // Compile the regex once when in regex mode; otherwise nil.
-        let regex: NSRegularExpression? = options.useRegex
-            ? try? NSRegularExpression(
-                pattern: query,
-                options: options.caseSensitive ? [] : .caseInsensitive
-            )
-            : nil
         let predicate = makePredicate(query: query, options: options, regex: regex)
 
         for fileURL in files {
