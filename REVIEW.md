@@ -272,11 +272,13 @@ Resolution: The wire-level `RequestId` enum (already defined in `LSPTypes.swift`
 
 ---
 
-**[Medium] `Sources/CodeEditorLSP/LSPClient.swift` — `nextRequestId` overflow + thread-safety**
+**[Medium] `Sources/CodeEditorLSP/LSPClient.swift` — `nextRequestId` overflow + thread-safety** — ✅ **Resolved**
 
 Explanation: `Int` counter without overflow guard, mutated outside a clearly named isolation domain. Overflow is a theoretical concern for very long-lived sessions; thread-safety is the more immediate one.
 
 Suggestion: Move into the actor and reset / use UUIDs.
+
+Resolution: The thread-safety half of the concern was already covered — `LSPClient` is `@MainActor` (class declaration), so every access to `nextRequestId` is MainActor-isolated; the reviewer flagged this because the isolation wasn't documented at the field. Spelled out the @MainActor isolation directly in the field's docstring so future readers don't need to cross-reference the class header. Extracted a small `allocateRequestId() -> RequestId` helper that consolidates the read-then-increment policy in one place and adds the overflow guard: wraps to 1 when the counter would otherwise overflow at `Int.max`. The realistic risk of reaching that ceiling is zero (`Int64.max` requests at 100K req/s would take ~2.9 trillion years), but the explicit guard prevents trap behavior on pathological long-lived sessions; any pending entries from before the wrap will have completed long ago by definition. UUIDs (the reviewer's other suggestion) were considered and skipped — real-world LSP servers handle numeric IDs more uniformly than string ones, and the prior fix to preserve `RequestId.string` already lets servers send string IDs if they want; the *client*-generated counter staying numeric is the safer interop choice. `sendRequest` is now a one-liner against the helper. All 42 LSP suite tests still pass.
 
 ---
 
@@ -368,7 +370,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 4 — 9 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs) |
+| Medium | 3 — 10 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

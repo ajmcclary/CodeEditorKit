@@ -117,6 +117,14 @@ public final class LSPClient: ObservableObject {
     /// pending continuation; the prior `[Int: ...]` map silently dropped
     /// non-numeric IDs at the message-handler layer.
     private var pendingRequests: [RequestId: LSPRequestCompletion] = [:]
+
+    /// Monotonic counter for outgoing request IDs.
+    ///
+    /// MainActor isolation (inherited from `LSPClient`'s class declaration)
+    /// is the sole synchronization mechanism — `allocateRequestId()` reads
+    /// and increments this from MainActor-bound contexts only, so no lock
+    /// is needed. Overflow is handled by wrapping to 1 at `Int.max`; see
+    /// the helper for the rationale.
     private var nextRequestId: Int = 1
 
     /// In-flight disconnect Task, if any. Used to serialize transport teardown
@@ -528,9 +536,7 @@ public final class LSPClient: ObservableObject {
     // MARK: - Private Methods
 
     private func sendRequest(method: String, params: any Codable & Sendable) async throws -> LSPResponse {
-        let requestId = nextRequestId
-        nextRequestId += 1
-        let key: RequestId = .number(requestId)
+        let key = allocateRequestId()
 
         let request = LSPRequest(
             id: key,
@@ -556,6 +562,21 @@ public final class LSPClient: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Allocate the next outgoing request ID.
+    ///
+    /// Reads-then-increments `nextRequestId`. Wraps to 1 when the counter
+    /// would otherwise overflow at `Int.max`. The realistic risk of
+    /// reaching that ceiling is zero (`Int64.max` requests would take ~2.9
+    /// trillion years at 100K req/s), but the explicit guard prevents trap
+    /// behavior on pathological long-lived sessions; any `pendingRequests`
+    /// entries from before the wrap will have completed long ago by
+    /// definition. Called only from MainActor-isolated contexts.
+    private func allocateRequestId() -> RequestId {
+        let value = nextRequestId
+        nextRequestId = (value == Int.max) ? 1 : value + 1
+        return .number(value)
     }
 
     private func sendNotification(method: String, params: any Codable & Sendable) async throws {
