@@ -254,16 +254,28 @@ public actor ProcessTransport: LSPTransport {
 
     private func attachStderrLogging() {
         guard let stderrPipe else { return }
-        let logger = self.logger
-        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+        // Mirror the stdout pattern: bounce off the FileHandle's private
+        // dispatch queue into the actor via a Task so a chatty server
+        // emitting MB/s of stderr cannot starve stdout's reads on the
+        // same queue. The Task hop also serializes stderr deliveries with
+        // any other actor-isolated work (teardown, EOF cleanup).
+        stderrPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
-            if data.isEmpty {
-                handle.readabilityHandler = nil
-                return
+            guard let self else { return }
+            Task { [data] in
+                await self.deliverStderrData(data)
             }
-            if let string = String(data: data, encoding: .utf8) {
-                logger.debug("LSP stderr: \(string)")
-            }
+        }
+    }
+
+    private func deliverStderrData(_ data: Data) async {
+        // Empty data signals EOF on the pipe — the process closed stderr.
+        guard !data.isEmpty else {
+            stderrPipe?.fileHandleForReading.readabilityHandler = nil
+            return
+        }
+        if let string = String(data: data, encoding: .utf8) {
+            logger.debug("LSP stderr: \(string)")
         }
     }
 

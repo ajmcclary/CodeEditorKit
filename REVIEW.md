@@ -282,11 +282,13 @@ Resolution: The thread-safety half of the concern was already covered — `LSPCl
 
 ---
 
-**[Medium] `Sources/CodeEditorLSP/Transport/ProcessTransport.swift` — `stderr` handler runs on dispatch queue without offloading**
+**[Medium] `Sources/CodeEditorLSP/Transport/ProcessTransport.swift` — `stderr` handler runs on dispatch queue without offloading** — ✅ **Resolved**
 
 Explanation: `stderrPipe.readabilityHandler` logs synchronously on `FileHandle`'s dispatch queue while `stdout` handler dispatches to a `Task`. A chatty server emitting MB/s of `stderr` could starve `stdout` reads.
 
 Suggestion: Mirror the `stdout` path — dispatch `stderr` drains into a `Task`.
+
+Resolution: Restructured `attachStderrLogging()` to mirror the `startReading()` stdout path: `[weak self]` capture in the `readabilityHandler`, `Task { [data] in await self.deliverStderrData(data) }` bounce, plus a new private `deliverStderrData(_:)` async method that runs on actor isolation. The async hop is what gives the asymmetry-fix its teeth: stdout and stderr now share the FileHandle's private dispatch queue *only* long enough to grab the bytes, then both deliveries are serialized through the actor, so a chatty stderr can't backpressure the stdout reads. EOF semantics matched (empty data clears the handler). No new test — verifying the no-starvation property end-to-end would need an integration test with a real chatty server; the structural symmetry with the stdout path is the verification and the 30 broader LSP suite tests pass.
 
 ---
 
@@ -370,7 +372,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 3 — 10 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc) |
+| Medium | 2 — 11 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed, LSP buffer recovery, LSP string request IDs, LSP nextRequestId overflow + isolation doc, ProcessTransport stderr offload) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 
