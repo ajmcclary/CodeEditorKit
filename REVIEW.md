@@ -150,11 +150,13 @@ Resolution: Added `/// - Throws:` lines naming the concrete error cases on the m
 
 ---
 
-**[Medium] `Sources/CodeEditorLSP/LSPClient.swift` — Bare `Error` caught and rethrown without recovery**
+**[Medium] `Sources/CodeEditorLSP/LSPClient.swift` — Bare `Error` caught and rethrown without recovery** — ✅ **Resolved**
 
 Explanation: Several `catch`es log and rethrow the underlying `Error` without typing or wiring into `ErrorRecoveryCoordinator`. LSP transport errors are exactly the recoverable-with-backoff case the recovery infrastructure was built for, but it isn't used here.
 
 Suggestion: Wrap network-facing operations in `ErrorRecoveryCoordinator.recover(strategy:)` with the existing `BackoffStrategy`.
+
+Resolution: Made `LSPError` conform to `RecoverableAsyncError` (added an extension in `LSPProtocol.swift` after the existing `LocalizedError` conformance, imported `CodeEditorCommon` for the recovery types). The conformance categorizes each case: `.connectionFailed`, `.timeout`, and `.serverError` with codes in the JSON-RPC/LSP reserved internal band (-32603 plus -32099…-32000) are retryable; protocol-contract violations (`.invalidResponse`, `.decodingError`), state-machine misuses (`.notConnected`, `.alreadyConnected`), and config errors (`.transportNotConfigured`) are non-retryable. Retryable cases ship two strategies — `.retry(maxAttempts: 3, backoffStrategy: .exponential(initial: 1s, multiplier: 2, maxDelay: 30s))` at priority 20, then `.reportToUser` at 10. Non-retryable cases ship only `.reportToUser`. Did **not** wrap the bare `catch` blocks inside `LSPClient.connect()` because `LSPClientRegistry.startLanguageServer` already drives connect-level retries via `LSPRetryConfiguration` — adding a second recovery layer inside the client would compound retries. The conformance makes the *typed recovery surface reachable* from any future LSP-facing call site (per-request hosts, background-only services) without coupling `LSPClient` to `ErrorRecoveryCoordinator`. Added `LSPErrorRecoveryTests` (6 tests) covering the retryable/non-retryable classification per case, including a live end-to-end test that runs a fails-twice-then-succeeds operation through `ErrorRecoveryCoordinator.recover(from:operation:)` and asserts the operation was invoked three times (~3s runtime — exercises real exponential backoff).
 
 ---
 
@@ -360,7 +362,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 8 — 5 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments) |
+| Medium | 7 — 6 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

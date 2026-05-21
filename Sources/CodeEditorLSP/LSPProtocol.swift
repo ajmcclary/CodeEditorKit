@@ -1,5 +1,6 @@
 // LSP protocol types are available on all platforms to support remote LSP connections
 
+import CodeEditorCommon
 import Foundation
 
 // MARK: - Initialize Request/Response
@@ -528,5 +529,83 @@ public enum LSPError: Error, LocalizedError, Sendable {
         case .timeout:
             return "LSP request timeout"
         }
+    }
+}
+
+// MARK: - RecoverableAsyncError Conformance
+
+/// `LSPError` participates in the package-wide recovery infrastructure
+/// (`ErrorRecoveryCoordinator`). Transport-level failures (`.timeout`,
+/// `.connectionFailed`) and JSON-RPC server-defined internal errors
+/// (`.serverError` with codes in the LSP/JSON-RPC reserved internal range)
+/// are retryable with exponential backoff; protocol-contract violations
+/// (`.invalidResponse`, `.decodingError`), state-machine misuses
+/// (`.notConnected`, `.alreadyConnected`), and configuration errors
+/// (`.transportNotConfigured`) surface to the caller without retry.
+///
+/// Note: the existing `LSPClientRegistry.startLanguageServer` already drives
+/// per-attempt connect retries via `LSPRetryConfiguration`; this conformance
+/// exists so other LSP-facing call sites (per-request hosts, future
+/// background-only services) can opt into the generic
+/// `ErrorRecoveryCoordinator.recover(from:operation:)` flow without
+/// inventing their own retry loop.
+extension LSPError: RecoverableAsyncError {
+    public var isRetryable: Bool {
+        switch self {
+        case .connectionFailed, .timeout:
+            return true
+
+        case let .serverError(code, _, _):
+            // LSP/JSON-RPC reserve codes -32099…-32000 for server-defined
+            // implementation errors, plus -32603 for "internal error".
+            // Treat the whole reserved internal band as transient.
+            return code == -32_603 || (code <= -32_000 && code >= -32_099)
+
+        case .notConnected,
+             .alreadyConnected,
+             .transportNotConfigured,
+             .invalidResponse,
+             .decodingError:
+            return false
+        }
+    }
+
+    public var retryDelay: Duration? {
+        isRetryable ? .seconds(1) : nil
+    }
+
+    public var userDescription: String {
+        errorDescription ?? "LSP error"
+    }
+
+    public var recoveryStrategies: [RecoveryStrategy] {
+        if isRetryable {
+            return [
+                RecoveryStrategy(
+                    action: .retry(
+                        maxAttempts: 3,
+                        backoffStrategy: .exponential(
+                            initial: .seconds(1),
+                            multiplier: 2.0,
+                            maxDelay: .seconds(30)
+                        )
+                    ),
+                    priority: 20,
+                    description: "Transient LSP failure — retry with exponential backoff"
+                ),
+                RecoveryStrategy(
+                    action: .reportToUser(message: userDescription),
+                    priority: 10,
+                    description: "All retries exhausted — surface to caller"
+                )
+            ]
+        }
+        return [
+            RecoveryStrategy(
+                action: .reportToUser(message: userDescription),
+                priority: 10,
+                description: "Non-retryable LSP error — surface to caller"
+            )
+        ]
     }
 }
