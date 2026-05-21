@@ -1,6 +1,6 @@
 # CodeEditorSample — Package Dependencies & Architecture
 
-The CodeEditorSample executable demonstrates CodeEditorPlugin integration. It lives in `Sources/CodeEditorSample/` and depends on the three framework targets.
+The CodeEditorSample executable demonstrates CodeEditorPlugin integration. It lives in `Sources/CodeEditorSample/` and depends on the umbrella editor product plus the focused products it exercises directly.
 
 ## Dependency Graph
 
@@ -14,14 +14,39 @@ flowchart LR
         Plugin[CodeEditorPlugin]
         UI[CodeEditorUI]
         Tokens[CodeEditorDesignTokens]
+        Annotations[CodeEditorAnnotations]
+        Common[CodeEditorCommon]
+        Completion[CodeEditorCompletion]
+        Configuration[CodeEditorConfiguration]
+        Diagnostics[CodeEditorDiagnostics]
+        LSP[CodeEditorLSP]
+        Languages[CodeEditorLanguages]
+        Platform[CodeEditorPlatform]
+        Search[CodeEditorSearch]
+        SwiftUI[CodeEditorSwiftUI]
+        TextModel[CodeEditorTextModel]
+        Theming[CodeEditorTheming]
+        View[CodeEditorView]
+        Workspace[CodeEditorWorkspace]
     end
 
     Sample --> Plugin
     Sample --> UI
     Sample --> Tokens
-    Plugin --> Tokens
-    UI --> Tokens
-    UI --> Plugin
+    Sample --> Annotations
+    Sample --> Common
+    Sample --> Completion
+    Sample --> Configuration
+    Sample --> Diagnostics
+    Sample --> LSP
+    Sample --> Languages
+    Sample --> Platform
+    Sample --> Search
+    Sample --> SwiftUI
+    Sample --> TextModel
+    Sample --> Theming
+    Sample --> View
+    Sample --> Workspace
 ```
 
 ## Test Targets
@@ -39,13 +64,24 @@ flowchart LR
         Plugin[CodeEditorPlugin]
         UI[CodeEditorUI]
         Tokens[CodeEditorDesignTokens]
+        Search[CodeEditorSearch]
+        SwiftUI[CodeEditorSwiftUI]
+        View[CodeEditorView]
+        Workspace[CodeEditorWorkspace]
         Sample[CodeEditorSample]
     end
 
     PluginTests --> Plugin
+    PluginTests --> View
+    PluginTests --> SwiftUI
+    PluginTests --> Search
     TokensTests --> Tokens
     UITests --> UI
+    UITests --> SwiftUI
+    UITests --> View
     SampleTests --> Sample
+    SampleTests --> Search
+    SampleTests --> Workspace
 ```
 
 ## Sample App Internal Structure

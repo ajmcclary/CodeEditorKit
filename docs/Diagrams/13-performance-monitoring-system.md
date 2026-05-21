@@ -1,6 +1,6 @@
 # Performance Monitoring & Optimization System
 
-This diagram reflects the current implementation in `Sources/CodeEditorPlugin/Performance/`. The system is split into low-level operation timing, user-facing insights, production aggregation, budget reporting, adaptive mode selection, viewport tracking, memory pressure handling, and iOS large-file optimization.
+This diagram reflects the current implementation split across `Sources/CodeEditorDiagnostics/` and the view-coupled optimization helpers in `Sources/CodeEditorView/`. The system is split into low-level operation timing, user-facing insights, production aggregation, budget reporting, adaptive mode selection, viewport tracking, memory pressure handling, and iOS large-file optimization.
 
 ```mermaid
 classDiagram

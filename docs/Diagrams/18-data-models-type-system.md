@@ -319,6 +319,12 @@ classDiagram
         case scrollPositionChanged(NSRange)
     }
 
+    class EditorRuntime {
+        <<@MainActor composition root>>
+        +dependencies EditorRuntimeDependencies
+        +featureDependencies EditorFeatureRuntimeDependencies
+    }
+
     class CleanupPriority {
         <<enum Sendable>>
         case low
@@ -340,8 +346,8 @@ classDiagram
     ActorCoordinator --> PerformanceMetricsActor : manages
     ActorCoordinator --> DocumentStateActor : manages
     
-    EditorConfiguration --> ActorCoordinator : optionally contains
-    EditorConfiguration --> MemoryMonitor : configures
+    EditorRuntime --> ActorCoordinator : owns via dependencies
+    EditorRuntime --> MemoryMonitor : owns via dependencies
     
     TokenProvider --> Token : provides
     TokenProvider --> TokenApplication : produces
@@ -446,8 +452,8 @@ classDiagram
 - **Duration API**: Modern `Duration` types instead of `TimeInterval` where appropriate
 - **Result Builders**: Configuration DSL support through builder patterns
 
-### 6. Business Logic Integration
-- **Service Architecture**: Models designed to integrate with service-based architecture
+### 6. Runtime Integration
+- **Service Architecture**: Models designed to integrate with runtime dependency injection
 - **Event System**: Unified event system with sendable event types
 - **Completion Engine**: Advanced completion models with LSP compatibility
 - **Document Management**: Sophisticated document state tracking with version control

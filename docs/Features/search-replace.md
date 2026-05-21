@@ -1,10 +1,10 @@
-# `CodeEditorPlugin/SearchReplaceEngine`
+# `CodeEditorView/SearchReplaceEngine`
 
 Provides comprehensive search and replace functionality with support for regular expressions, highlighting, and batch operations.
 
 ## Overview
 
-`SearchReplaceEngine` offers a full-featured search and replace system for the code editor. It supports plain text and regular expression searches, case-sensitive and whole-word matching, search result highlighting, and efficient batch replacements. The engine maintains search statistics and provides navigation through results with wraparound support.
+`SearchReplaceEngine` lives in `Sources/CodeEditorView/Search/` and offers a full-featured in-document search and replace system for the code editor. It supports plain text and regular expression searches, case-sensitive and whole-word matching, search result highlighting, current-match highlighting, and efficient batch replacements. The engine maintains search statistics and provides navigation through results with wraparound support.
 
 ## Key Features
 

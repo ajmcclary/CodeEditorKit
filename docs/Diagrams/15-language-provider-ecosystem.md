@@ -9,24 +9,19 @@ classDiagram
     %% Row 1 - Core Provider Management
     class LanguageProviderFactory {
         <<factory>>
-        +registry CompletionProviderRegistry
-        +metadataRegistry LanguageMetadataRegistry
-        +sharedBuilder SharedCompletionBuilder
-        +createProvider()
-        +registerCustomProvider()
-        +initializeAllProviders()
+        +createProvider(for:) CompletionProvider?
+        +profile(for:) CompletionProfile?
+        +supportedLanguages [Language]
     }
 
-    class CompletionProviderRegistry {
-        <<registry>>
+    class CompletionManager {
+        <<completion manager>>
         +providers [String: CompletionProvider]
-        +symbolProviders [String: SymbolProvider]
-        +foldingProviders [String: FoldingProvider]
-        +universalProvider UniversalCompletionProvider
         +registerProvider()
-        +getProvider()
-        +validateProvider()
-        +getAllSupportedLanguages()
+        +requestCompletions()
+        +requestCompletionsDebounced()
+        +recordSelection()
+        +statistics CompletionStatistics
     }
 
     class LanguageMetadataRegistry {
@@ -187,11 +182,19 @@ classDiagram
     }
 
     %% Row 7 - Shared Infrastructure
+    class CompletionProfile {
+        <<descriptor profile>>
+        +keywords [String]
+        +snippets [SnippetTemplate]
+        +triggerCharacters [String]
+        +analyze() UniversalContextAnalysisResult
+    }
+
     class SharedCompletionBuilder {
         <<shared builder>>
-        +buildKeywordCompletions()
-        +buildSnippetCompletions()
-        +calculatePriorities()
+        +createKeywordCompletions()
+        +createSnippetCompletions()
+        +createMemberItems()
     }
 
     class LanguageMemberCompletions {
@@ -202,32 +205,32 @@ classDiagram
     }
 
     %% Key Relationships
-    LanguageProviderFactory --> CompletionProviderRegistry : manages
+    LanguageProviderFactory --> CompletionManager : manages
     LanguageProviderFactory --> LanguageMetadataRegistry : uses
-    LanguageProviderFactory --> SharedCompletionBuilder : coordinates
+    LanguageProviderFactory --> CompletionProfile : creates
 
-    CompletionProviderRegistry --> SwiftCompletionProvider : contains
-    CompletionProviderRegistry --> PythonCompletionProvider : contains
-    CompletionProviderRegistry --> JavaScriptCompletionProvider : contains
-    CompletionProviderRegistry --> TypeScriptCompletionProvider : contains
-    CompletionProviderRegistry --> JavaCompletionProvider : contains
-    CompletionProviderRegistry --> GoCompletionProvider : contains
-    CompletionProviderRegistry --> RustCompletionProvider : contains
-    CompletionProviderRegistry --> CCompletionProvider : contains
-    CompletionProviderRegistry --> PHPCompletionProvider : contains
-    CompletionProviderRegistry --> RubyCompletionProvider : contains
-    CompletionProviderRegistry --> JSONCompletionProvider : contains
-    CompletionProviderRegistry --> YAMLCompletionProvider : contains
-    CompletionProviderRegistry --> XMLCompletionProvider : contains
-    CompletionProviderRegistry --> MarkdownCompletionProvider : contains
-    CompletionProviderRegistry --> CSSCompletionProvider : contains
-    CompletionProviderRegistry --> HTMLCompletionProvider : contains
-    CompletionProviderRegistry --> SQLCompletionProvider : contains
-    CompletionProviderRegistry --> ShellCompletionProvider : contains
-    CompletionProviderRegistry --> LSPCompletionProvider : contains
+    CompletionManager --> SwiftCompletionProvider : contains
+    CompletionManager --> PythonCompletionProvider : contains
+    CompletionManager --> JavaScriptCompletionProvider : contains
+    CompletionManager --> TypeScriptCompletionProvider : contains
+    CompletionManager --> JavaCompletionProvider : contains
+    CompletionManager --> GoCompletionProvider : contains
+    CompletionManager --> RustCompletionProvider : contains
+    CompletionManager --> CCompletionProvider : contains
+    CompletionManager --> PHPCompletionProvider : contains
+    CompletionManager --> RubyCompletionProvider : contains
+    CompletionManager --> JSONCompletionProvider : contains
+    CompletionManager --> YAMLCompletionProvider : contains
+    CompletionManager --> XMLCompletionProvider : contains
+    CompletionManager --> MarkdownCompletionProvider : contains
+    CompletionManager --> CSSCompletionProvider : contains
+    CompletionManager --> HTMLCompletionProvider : contains
+    CompletionManager --> SQLCompletionProvider : contains
+    CompletionManager --> ShellCompletionProvider : contains
+    CompletionManager --> LSPCompletionProvider : contains
     
-    CompletionProviderRegistry --> SymbolProviderRegistry : coordinates
-    CompletionProviderRegistry --> UniversalCompletionProvider : fallback
+    CompletionManager --> SymbolProviderRegistry : coordinates
+    CompletionManager --> UniversalCompletionProvider : fallback
 
     SymbolProviderRegistry --> BraceFoldingProvider : uses
     SymbolProviderRegistry --> IndentationFoldingProvider : uses
@@ -251,7 +254,7 @@ classDiagram
     classDef shared fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class LanguageProviderFactory factory
-    class CompletionProviderRegistry registry
+    class CompletionManager factory
     class LanguageMetadataRegistry registry
     class SwiftCompletionProvider compiled
     class CCompletionProvider compiled
@@ -281,6 +284,7 @@ classDiagram
     class XMLFoldingProvider folding
     class ShellFoldingProvider folding
     class SQLFoldingProvider folding
+    class CompletionProfile shared
     class SharedCompletionBuilder shared
     class LanguageMemberCompletions shared
 ```
@@ -357,7 +361,7 @@ flowchart TB
 - **Automatic Registration**: Self-registering language providers
 - **Capability Discovery**: Runtime provider capability detection
 - **Dynamic Loading**: Lazy loading of language-specific providers
-- **Custom Provider Support**: Plugin architecture for additional languages
+- **Custom Provider Support**: provider protocols for additional language integrations
 
 ### 2. Comprehensive Language Support
 - **25 Concrete Languages**: Full support for major programming languages (plus plain text and LSP integration)

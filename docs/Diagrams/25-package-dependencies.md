@@ -1,95 +1,135 @@
 # Package Dependencies - CodeEditorPlugin
 
-This diagram shows the package dependencies for the main CodeEditorPlugin framework.
+This diagram reflects the current `Package.swift` product and target layout. The package now exposes focused library products in addition to the `CodeEditorPlugin` umbrella product.
 
 ## Overview
 
-**Runtime Dependencies:**
-- **SwiftSyntax 602.0.0+** - Apple's Swift source code manipulation library
-- **SwiftParser** - Swift source code parsing (part of swift-syntax)
-- **swift-dependencies** - Dependency management library (Point-Free)
-- **xctest-dynamic-overlay** - Runtime issue reporting
+**Runtime dependencies:**
+- **SwiftSyntax 602.0.0+** - Swift source parsing and syntax APIs.
+- **SwiftParser** - Swift parser product from `swift-syntax`.
+- **swift-dependencies** - Point-Free dependency injection utilities.
+- **xctest-dynamic-overlay / IssueReporting** - runtime issue reporting.
 
-**Development Dependencies:**
-- **swift-custom-dump** - Custom pretty-printing and diffing (Point-Free)
-- **swift-snapshot-testing** - Snapshot testing (Point-Free, ajmcclary fork for Swift 6.3 compat)
+**Test-only dependencies:**
+- **swift-custom-dump** - test diffing and diagnostics.
+- **swift-snapshot-testing** - snapshot tests, currently using the `ajmcclary/fix-swift-6.3-attachable` fork documented in `Package.swift`.
 
-**Security Status:** Low risk - Runtime dependencies come from Apple / Swift project packages and Point-Free libraries; snapshot testing currently uses the project fork documented in `Package.swift`.
-**Platform Support:** macOS 26.3+, iOS 26.3+ (Mac Catalyst retired in 0.2.0)
+**Platform support:** macOS 26.3+, iOS 26.3+ (Mac Catalyst retired in 0.2.0).
 
-## Default View (Products Only)
+## Product View
 
 ```mermaid
 flowchart LR
-    CodeEditorUI-->CodeEditorPlugin
-    CodeEditorUI-->CodeEditorDesignTokens
-    CodeEditorPlugin-->CodeEditorDesignTokens
-    CodeEditorPlugin-->SwiftSyntax[[SwiftSyntax 602+]]
-    CodeEditorPlugin-->SwiftParser[[SwiftParser]]
-    CodeEditorPlugin-->Dependencies[[swift-dependencies]]
-    CodeEditorPlugin-->IssueReporting[[IssueReporting]]
-    CodeEditorSample-->CodeEditorPlugin
-    CodeEditorSample-->CodeEditorUI
-    CodeEditorSample-->CodeEditorDesignTokens
+    App["Host app"] --> Plugin["CodeEditorPlugin<br/>umbrella"]
+    App --> SwiftUI["CodeEditorSwiftUI"]
+    App --> View["CodeEditorView"]
+    App --> UI["CodeEditorUI"]
+    App --> LSP["CodeEditorLSP"]
+    App --> Diagnostics["CodeEditorDiagnostics"]
+    App --> Layout["CodeEditorLayout"]
+    App --> Search["CodeEditorSearch"]
+    App --> Workspace["CodeEditorWorkspace"]
+    App --> Tokens["CodeEditorDesignTokens"]
 
-    style SwiftSyntax fill:#e1f5fe
-    style SwiftParser fill:#e1f5fe
-    style CodeEditorDesignTokens fill:#e8f5e9
-    style CodeEditorUI fill:#e8f5e9
-    style CodeEditorPlugin fill:#f3e5f5
-    style CodeEditorSample fill:#f3e5f5
-    style Dependencies fill:#fff3e0
-    style IssueReporting fill:#fff3e0
+    Sample["CodeEditorSample<br/>executable"] --> Plugin
+    Sample --> UI
+    Sample --> Search
+    Sample --> Workspace
+    Sample --> Tokens
+
+    UI --> Plugin
+    UI --> SwiftUI
+    UI --> View
+    SwiftUI --> View
+    Plugin --> SwiftUI
+    Plugin --> View
+
+    classDef product fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b1b1b
+    classDef sample fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#1b1b1b
+    class App,Plugin,SwiftUI,View,UI,LSP,Diagnostics,Layout,Search,Workspace,Tokens product
+    class Sample sample
 ```
 
-## Complete View (Including Test Targets)
+## Umbrella Target View
+
+```mermaid
+flowchart TB
+    Plugin["CodeEditorPlugin target<br/>1 Swift re-export file"]
+
+    Plugin --> Common["CodeEditorCommon"]
+    Plugin --> Configuration["CodeEditorConfiguration"]
+    Plugin --> Languages["CodeEditorLanguages"]
+    Plugin --> SwiftUI["CodeEditorSwiftUI"]
+    Plugin --> Theming["CodeEditorTheming"]
+    Plugin --> View["CodeEditorView"]
+
+    Plugin -. "build dependency" .-> Annotations["CodeEditorAnnotations"]
+    Plugin -. "build dependency" .-> Completion["CodeEditorCompletion"]
+    Plugin -. "build dependency" .-> DesignTokens["CodeEditorDesignTokens"]
+    Plugin -. "build dependency" .-> Diagnostics["CodeEditorDiagnostics"]
+    Plugin -. "build dependency" .-> Folding["CodeEditorFolding"]
+    Plugin -. "build dependency" .-> LSP["CodeEditorLSP"]
+    Plugin -. "build dependency" .-> Layout["CodeEditorLayout"]
+    Plugin -. "build dependency" .-> Platform["CodeEditorPlatform"]
+    Plugin -. "build dependency" .-> SmartEditing["CodeEditorSmartEditing"]
+    Plugin -. "build dependency" .-> Symbols["CodeEditorSymbols"]
+    Plugin -. "build dependency" .-> Syntax["CodeEditorSyntaxHighlighting"]
+    Plugin -. "build dependency" .-> TextModel["CodeEditorTextModel"]
+
+    Syntax --> SwiftSyntax[[SwiftSyntax]]
+    Syntax --> SwiftParser[[SwiftParser]]
+    Common --> Dependencies[[swift-dependencies]]
+    Common --> IssueReporting[[IssueReporting]]
+    View --> Dependencies
+    View --> IssueReporting
+
+    classDef target fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b1b1b
+    classDef external fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#1b1b1b
+    class Plugin,Common,Configuration,Languages,SwiftUI,Theming,View,Annotations,Completion,DesignTokens,Diagnostics,Folding,LSP,Layout,Platform,SmartEditing,Symbols,Syntax,TextModel target
+    class SwiftSyntax,SwiftParser,Dependencies,IssueReporting external
+```
+
+## Test Target View
 
 ```mermaid
 flowchart LR
-    CodeEditorPlugin-->SwiftSyntax[[SwiftSyntax 602+]]
-    CodeEditorPlugin-->SwiftParser[[SwiftParser]]
-    CodeEditorPlugin-->Dependencies[[swift-dependencies]]
-    CodeEditorPlugin-->IssueReporting[[IssueReporting]]
-    CodeEditorPlugin-->CodeEditorDesignTokens
-    CodeEditorUI-->CodeEditorPlugin
-    CodeEditorUI-->CodeEditorDesignTokens
-    CodeEditorSample-->CodeEditorPlugin
-    CodeEditorSample-->CodeEditorUI
-    CodeEditorSample-->CodeEditorDesignTokens
-    CodeEditorPluginTests{{CodeEditorPluginTests}}-->CodeEditorPlugin
-    CodeEditorPluginTests-->CustomDump[[swift-custom-dump]]
-    CodeEditorPluginTests-->SnapshotTesting[[swift-snapshot-testing]]
-    CodeEditorDesignTokensTests{{DesignTokensTests}}-->CodeEditorDesignTokens
-    CodeEditorUITests{{CodeEditorUITests}}-->CodeEditorUI
-    CodeEditorSampleTests{{CodeEditorSampleTests}}-->CodeEditorSample
+    PluginTests{{CodeEditorPluginTests}} --> Plugin["CodeEditorPlugin"]
+    PluginTests --> View["CodeEditorView"]
+    PluginTests --> SwiftUI["CodeEditorSwiftUI"]
+    PluginTests --> Search["CodeEditorSearch"]
+    PluginTests --> SmartEditing["CodeEditorSmartEditing"]
+    PluginTests --> SnapshotTesting[[swift-snapshot-testing]]
+    PluginTests --> CustomDump[[swift-custom-dump]]
 
-    style SwiftSyntax fill:#e1f5fe
-    style SwiftParser fill:#e1f5fe
-    style CodeEditorDesignTokens fill:#e8f5e9
-    style CodeEditorUI fill:#e8f5e9
-    style CodeEditorPlugin fill:#f3e5f5
-    style CodeEditorSample fill:#f3e5f5
-    style CodeEditorPluginTests fill:#fff3e0
-    style CodeEditorDesignTokensTests fill:#fff3e0
-    style CodeEditorUITests fill:#fff3e0
-    style CodeEditorSampleTests fill:#fff3e0
+    TokensTests{{CodeEditorDesignTokensTests}} --> Tokens["CodeEditorDesignTokens"]
+    TokensTests --> SnapshotTesting
+    TokensTests --> CustomDump
+
+    UITests{{CodeEditorUITests}} --> UI["CodeEditorUI"]
+    UITests --> SwiftUI
+    UITests --> View
+    UITests --> SnapshotTesting
+    UITests --> CustomDump
+
+    SampleTests{{CodeEditorSampleTests}} --> Sample["CodeEditorSample"]
+    SampleTests --> Search
+    SampleTests --> Workspace["CodeEditorWorkspace"]
+    SampleTests --> SnapshotTesting
 ```
 
 ## Platform Compatibility Matrix
 
 | Dependency | macOS | iOS | Notes |
 |---|:---:|:---:|---|
-| SwiftSyntax | ✅ | ✅ | 602.0.0+ |
-| SwiftParser | ✅ | ✅ | Included with SwiftSyntax |
-| swift-dependencies | ✅ | ✅ | Point-Free |
-| IssueReporting | ✅ | ✅ | xctest-dynamic-overlay |
-| swift-custom-dump | ✅ | ✅ | Test-only |
-| swift-snapshot-testing | ✅ | ✅ | Test-only, ajmcclary fork for Swift 6.3 compatibility |
+| SwiftSyntax | yes | yes | 602.0.0+ |
+| SwiftParser | yes | yes | Included with SwiftSyntax |
+| swift-dependencies | yes | yes | Point-Free |
+| IssueReporting | yes | yes | xctest-dynamic-overlay |
+| swift-custom-dump | yes | yes | Test-only |
+| swift-snapshot-testing | yes | yes | Test-only, ajmcclary fork for Swift 6.3 compatibility |
 
-## Performance Notes
+## Notes
 
-- SwiftSyntax provides efficient AST-based parsing
-- Background processing via AsyncSyntaxHighlighter prevents UI blocking
-- SmartTokenCache with LRU eviction for syntax highlighting results
-- ActorCoordinator injected via EditorConfiguration for concurrency management
-- MemoryMonitor injected through configuration for resource tracking
+- `CodeEditorSearch` and `CodeEditorWorkspace` are opt-in products; the `CodeEditorPlugin` umbrella does not depend on them.
+- `CodeEditorPlugin.swift` re-exports the common host-facing modules, but subsystem-specific modules can still be imported directly by tests and clients that need lower-level APIs.
+- Tree-sitter grammar packaging is not an SPM target yet; `Sources/CodeEditorTreeSitterLanguages/` is a reserved namespace placeholder.

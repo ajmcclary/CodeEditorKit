@@ -108,7 +108,7 @@ editor.text = "New content continues to work"
 ### Comprehensive Test Suite
 - **216 Test Files**: Comprehensive coverage across all functionality
 - **100% Pass Rate**: All tests passing on macOS, iOS
-- **Zero Linting Violations**: Maintained across 480 Swift files in the main target and 572 Swift files under `Sources/`
+- **Zero Linting Violations**: Maintained across the current split target graph (589 Swift files under `Sources/`, with the umbrella target reduced to one re-export file)
 - **Swift 6 Compliant**: Full actor isolation and concurrency safety
 
 ### Test Categories

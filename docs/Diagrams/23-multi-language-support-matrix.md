@@ -118,17 +118,19 @@ classDiagram
         +buildCompletions()
     }
 
-    class CompletionProviderRegistry {
-        <<registry>>
+    class CompletionManager {
+        <<completion manager>>
         +providers: [String: CompletionProvider]
-        +register()
-        +getProvider()
-        +ensureProvider()
+        +registerProvider()
+        +requestCompletions()
+        +recordSelection()
     }
 
     class LanguageProviderFactory {
         <<factory>>
-        +createProvider()
+        +createProvider(for:)
+        +profile(for:)
+        +supportedLanguages
     }
 
     class LanguageMetadataRegistry {
@@ -161,10 +163,19 @@ classDiagram
         +serverCommunication
     }
 
+    class CompletionProfile {
+        <<descriptor profile>>
+        +keywords
+        +snippets
+        +triggerCharacters
+        +analyze()
+    }
+
     class SharedCompletionBuilder {
-        <<shared>>
-        +buildKeywordCompletions()
-        +buildSnippetCompletions()
+        <<shared builder>>
+        +createKeywordCompletions()
+        +createSnippetCompletions()
+        +createMemberItems()
     }
 
     class LanguageMemberCompletions {
@@ -177,11 +188,11 @@ classDiagram
     CompletionProvider <|.. UniversalCompletionProvider : implements
     CompletionProvider <|.. LSPCompletionProvider : implements
 
-    CompletionProviderRegistry --> CompletionProvider : contains
-    LanguageProviderFactory --> CompletionProviderRegistry : manages
+    CompletionManager --> CompletionProvider : contains
+    CompletionManager --> LanguageProviderFactory : requests providers
     LanguageProviderFactory --> LanguageMetadataRegistry : uses
-    LanguageProviderFactory --> SharedCompletionBuilder : coordinates
-    LanguageProviderFactory --> UniversalCompletionProvider : fallback
+    LanguageProviderFactory --> CompletionProfile : creates
+    LanguageProviderFactory --> UniversalCompletionProvider : creates
 
     LSPCompletionProvider --> LSPClientRegistry : uses
     LSPClientRegistry --> LSPClient : manages
@@ -197,13 +208,14 @@ classDiagram
 
     class CompletionProvider protocol
     class UniversalCompletionProvider base
-    class CompletionProviderRegistry registry
+    class CompletionManager dynamic
     class LanguageProviderFactory factory
     class LanguageMetadataRegistry registry
     class UniversalCompletionProvider base
     class LSPCompletionProvider lsp
     class LSPClientRegistry registry
     class LSPClient registry
+    class CompletionProfile shared
     class SharedCompletionBuilder shared
     class LanguageMemberCompletions shared
 ```
@@ -286,9 +298,9 @@ classDiagram
 - **Fallback Completion**: Unified completion experience when language-specific providers are unavailable
 
 ### Shared Infrastructure
-- **CompletionProviderRegistry**: Central registration and lookup of completion providers
+- **CompletionManager**: Provider management, request orchestration, caching, and ranking
 - **LanguageProviderFactory**: Factory for creating language-specific providers
-- **SharedCompletionBuilder**: Common completion building logic
+- **CompletionProfile**: Descriptor-derived keywords, snippets, trigger characters, and context analysis
 - **LanguageMemberCompletions**: Member completion resolution
 
 ## Extension Strategy
@@ -304,14 +316,14 @@ classDiagram
 1. **LSPClientRegistry**: Automatic discovery and path resolution for language servers
 2. **LSPClient**: Observable client for server communication
 3. **UniversalCompletionProvider**: Unified completion system with language metadata support
-4. **SharedCompletionBuilder**: Reusable keyword and snippet completion infrastructure
+4. **CompletionProfile**: Reusable keyword and snippet completion infrastructure derived from language descriptors
 
 ## Benefits
 
 1. **Comprehensive Coverage**: Support for 25 concrete programming languages with enhanced capabilities
 2. **Performance Tiers**: Native integration for Swift/JSON, enhanced LSP for major languages, improved pattern-based for others
 3. **LSP Infrastructure**: Client registry with server registration and lookup
-4. **Universal Completion System**: Unified completion provider with language metadata
+4. **Universal Completion System**: Descriptor-backed completion provider with language metadata
 5. **Extensible Design**: Easy addition of new languages
 6. **Standards Compliant**: LSP integration ensures compatibility with ecosystem tools
 7. **Performance Optimized**: Appropriate performance targets for each language tier

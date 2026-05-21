@@ -1,6 +1,6 @@
 # CodeEditorPlugin Documentation
 
-A modern code editor framework for Apple platforms — TextKit2, Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a feature-based source tree. This folder is the canonical documentation for the framework. Every page is plain Markdown and renders directly on GitHub or in any Markdown viewer.
+A modern code editor framework for Apple platforms — TextKit2, Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a modular feature-target source tree. This folder is the canonical documentation for the framework. Every page is plain Markdown and renders directly on GitHub or in any Markdown viewer.
 
 ## Start here
 
@@ -23,7 +23,9 @@ The floor is intentional, not aspirational — the editor uses APIs introduced i
 
 ## Distribution
 
-The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. Release tags are not published yet, so SwiftPM consumers should use the `main` branch until tags exist. `CodeEditorDesignTokens` is a standalone library — depend on it directly if you only need the design-token surface without the editor.
+The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. Release tags are not published yet, so SwiftPM consumers should use the `main` branch until tags exist.
+
+`CodeEditorPlugin` is now a small umbrella library over extracted sibling targets. `import CodeEditorPlugin` gives host apps the normal editor entry points, while focused products are available for direct use when you only need a subsystem: `CodeEditorDesignTokens`, `CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, and `CodeEditorWorkspace`.
 
 ## By topic
 

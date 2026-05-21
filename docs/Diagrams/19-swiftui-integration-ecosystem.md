@@ -275,25 +275,22 @@ classDiagram
         +accessibilityTextualContext String
     }
 
-    %% Row 8 - Business Logic Integration
+    %% Row 8 - Runtime Dependency Integration
     class EditorRuntime {
         <<@MainActor dependency injection>>
-        +lineNumberCalculationService LineNumberCalculationService
-        +gutterSizingService GutterSizingService
-        +codeFoldingCoordinatorService CodeFoldingCoordinatorService
-        +editorLayoutService EditorLayoutService
-        +syntaxHighlightingService SyntaxHighlightingService
-        +languageDetectionService LanguageDetectionService
-        +textEditingService TextEditingService
-        +completionProviderRegistry CompletionProviderRegistry
-        +configureForEditor() Void
-        +clearAllCaches() Void
+        +dependencies EditorRuntimeDependencies
+        +featureDependencies EditorFeatureRuntimeDependencies
+        +update(dependencies) Void
+        +update(featureDependencies) Void
+        +update(workspaceRoot) Void
+        +update(eventSystem) Void
+        +update(memoryMonitor) Void
     }
 
     class GutterViewModel {
         <<@Observable @MainActor>>
         +configuration EditorConfiguration
-        +businessLogicServices EditorRuntime
+        +runtime EditorRuntime
         +configure() Void
         +updateConfiguration() Void
         +textDidChange() Void
@@ -501,7 +498,7 @@ sequenceDiagram
 - **EditorContainerViewModel**: Central state coordination with @Observable
 - **Child ViewModels**: Specialized ViewModels for gutter, completion, minimap
 - **SwiftUI Bindings**: Direct binding support for reactive UI updates
-- **Business Logic Integration**: Clean separation with service registry injection
+- **Runtime Dependency Integration**: Clean separation between value configuration and injected live services
 - **Real-time Metrics**: Performance monitoring and error handling
 
 ### 7. Accessibility & Performance
@@ -558,6 +555,7 @@ struct PerformanceAwareEditor: View {
     @State private var code = ""
     @State private var memoryMonitor = MemoryMonitor()
     @State private var eventSystem = UnifiedEventSystem()
+    @State private var performanceObservation = PerformanceObservation()
     
     var body: some View {
         VStack {
@@ -568,6 +566,7 @@ struct PerformanceAwareEditor: View {
                 .isMinimapVisible(true)
                 .memoryMonitor(memoryMonitor)
                 .eventSystem(eventSystem)
+                .performanceObserver(performanceObservation)
                 .onTextChange { newText in
                     // Handle with custom debouncing
                     performExpensiveOperation(newText)
@@ -576,8 +575,10 @@ struct PerformanceAwareEditor: View {
                     await fetchCompletions(for: context)
                 }
             
-            PerformanceInsightsPanel(insights: memoryMonitor.performanceInsights)
+            Text("Health: \(performanceObservation.lastInsights.overallHealth, format: .number)")
         }
+        .onAppear { performanceObservation.start() }
+        .onDisappear { performanceObservation.stop() }
     }
 }
 ```
@@ -654,14 +655,14 @@ struct FactoryExampleView: View {
 4. **Cross-Platform**: Unified API across macOS, iOS, iPadOS
 5. **Developer Experience**: Rich modifier ecosystem, factory methods, and comprehensive completion support
 6. **Accessibility First**: Dynamic Type, VoiceOver, and accessibility preference awareness
-7. **Business Logic Separation**: Clean architecture with dependency injection and service registry
+7. **Runtime Dependency Separation**: Clean architecture with dependency injection through `EditorRuntimeDependencies`
 8. **Memory Efficient**: Smart memory monitoring with adaptive performance modes
 9. **Environment Consolidation**: Single environment configuration with result builder support
-10. **Extensible Architecture**: Plugin-ready with event system and custom completion providers
+10. **Extensible Architecture**: Event-system hooks, custom completion providers, and focused subsystem products
 
 ## Technical Highlights
 
-- **572 Swift files** under `Sources/` (480 in the main `CodeEditorPlugin` target) — see [CLAUDE.md](../../CLAUDE.md) for the up-to-date breakdown.
+- **589 Swift files** under `Sources/`; the `CodeEditorPlugin` umbrella target is now a single re-export file, with implementation in sibling SwiftPM targets.
 - **20+ View Modifiers** for declarative configuration
 - **Zero SwiftLint Violations** maintained for code quality (strict mode)
 - **Swift 6.3 Ready** with full concurrency compliance

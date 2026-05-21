@@ -138,10 +138,10 @@ Current key files:
 
 | File | Role |
 |---|---|
-| `Sources/CodeEditorPlugin/Text/LineGeometryStore.swift` | Red-black tree with UTF-16 offsets, height tracking, y-position lookup, and fold state. |
-| `Sources/CodeEditorPlugin/Text/LineGeometryEditHandler.swift` | Keeps the store synchronized after character edits. |
-| `Sources/CodeEditorPlugin/Text/LineGeometryStore+GeometryHelpers.swift` | Cursor, rect, visible range, and point-to-line helpers. |
-| `Sources/CodeEditorPlugin/Utilities/ViewReuseQueue.swift` | Generic view reuse pool for gutter and minimap optimizations. |
+| `Sources/CodeEditorTextModel/Text/LineGeometryStore.swift` | Red-black tree with UTF-16 offsets, height tracking, y-position lookup, and fold state. |
+| `Sources/CodeEditorView/Text/LineGeometryEditHandler.swift` | Keeps the store synchronized after character edits. |
+| `Sources/CodeEditorTextModel/Text/LineGeometryStore+GeometryHelpers.swift` | Cursor, rect, visible range, and point-to-line helpers. |
+| `Sources/CodeEditorPlatform/ViewReuseQueue.swift` | Generic view reuse pool for gutter and minimap optimizations. |
 | `Tests/CodeEditorPluginTests/LineGeometryStoreBenchmarkTests.swift` | Reference, integration, performance, edit-handler, reuse, and geometry coverage. |
 
 ### Build Baseline

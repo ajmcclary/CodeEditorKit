@@ -1,10 +1,10 @@
-# `CodeEditorPlugin/SmartEditingEngine`
+# `CodeEditorSmartEditing/SmartEditingEngine`
 
 Provides intelligent editing features including auto-brackets, multi-cursor support, smart indentation, and selection expansion.
 
 ## Overview
 
-`SmartEditingEngine` enhances the editing experience with intelligent features that boost productivity. It automatically inserts matching brackets and quotes, manages multiple cursors for simultaneous edits, provides context-aware auto-indentation, and offers smart selection expansion. The engine works by intercepting text changes through the text view delegate pattern.
+`SmartEditingEngine` lives in `Sources/CodeEditorSmartEditing/` and enhances the editing experience with automatic bracket and quote insertion, multiple cursors, context-aware auto-indentation, and smart selection expansion. The engine registers as a behavior-phase participant with `CodeEditorView`'s `TextViewDelegateMultiplexer`; it does not take ownership of the text view's delegate.
 
 ## Key Features
 
@@ -229,15 +229,16 @@ smartEngine.configuration = config
 
 ## Delegate Integration
 
-SmartEditingEngine works by implementing the text view delegate:
+SmartEditingEngine works by registering with the editor's delegate multiplexer:
 
 ```swift
-// The engine intercepts these delegate methods:
-// - textView(_:shouldChangeTextIn:replacementString:)
-// - textViewDidChangeSelection(_:)
+smartEngine.attach(to: codeEditorView)
 
-// Your existing delegates will be replaced
-// Consider this when integrating with other features
+// Internally this calls:
+// codeEditorView.addDelegateParticipant(smartEngine, phase: .behavior)
+//
+// Host gating still runs first. If a host CodeEditorViewDelegate rejects
+// a change, smart-editing interception does not fire.
 ```
 
 ## Common Patterns
@@ -286,8 +287,8 @@ if config.detectIndentation {
 // Check configuration
 assert(smartEngine.configuration.autoInsertBrackets)
 
-// Verify attachment
-assert(codeEditorView.delegate === smartEngine)
+// Verify attachment by checking that the engine was attached to the editor
+// that should receive smart-editing behavior.
 ```
 
 ### Indentation Not Working
@@ -296,8 +297,7 @@ assert(codeEditorView.delegate === smartEngine)
 // Ensure auto-indent is enabled
 assert(smartEngine.configuration.isAutoIndentEnabled)
 
-// Check for conflicting delegate
-// SmartEditingEngine must be the text view delegate
+// Check for host delegates that reject edits before the behavior phase.
 ```
 
 ## Best Practices
@@ -305,7 +305,7 @@ assert(smartEngine.configuration.isAutoIndentEnabled)
 1. **Single Engine**: Use one SmartEditingEngine per text view
 2. **Early Attachment**: Attach before user interaction begins
 3. **Configuration**: Configure before attaching
-4. **Delegate Conflicts**: Be aware of delegate replacement
+4. **Delegate Multiplexing**: Host delegates can still gate edits before smart editing runs
 5. **Platform Testing**: Test features on all target platforms
 
 ## See Also

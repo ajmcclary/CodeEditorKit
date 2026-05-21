@@ -72,12 +72,13 @@ import SwiftUI
 ///
 /// ## Architecture
 ///
-/// The plugin uses a feature-based architecture with clear separation of concerns:
-/// - **Core**: Main text view and editing functionality
-/// - **Configuration**: Unified nested configuration values and presets
-/// - **SyntaxHighlighting**: Multi-language highlighting with SwiftSyntax integration
-/// - **Platform**: Cross-platform abstraction layer
-/// - **Extensions**: Utility extensions and helpers
+/// The plugin uses a modular target architecture with clear separation of concerns:
+/// - **CodeEditorView**: TextKit2 editor surface and view-coupled services
+/// - **CodeEditorSwiftUI**: SwiftUI `CodeEditor` wrapper and environment integration
+/// - **CodeEditorConfiguration**: Unified nested configuration values and presets
+/// - **CodeEditorSyntaxHighlighting / CodeEditorLanguages**: Multi-language highlighting with SwiftSyntax integration
+/// - **CodeEditorPlatform / CodeEditorCommon / CodeEditorTextModel**: Shared platform, utility, and text-model primitives
+/// - **Focused products**: Diagnostics, LSP, layout, UI chrome, project search, and workspace APIs
 ///
 /// ## Performance
 ///

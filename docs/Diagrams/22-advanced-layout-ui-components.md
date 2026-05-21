@@ -212,7 +212,7 @@ classDiagram
         +registerHandler(_ EventHandler) EventHandlerToken
     }
 
-    %% Row 6 - Performance & Business Logic Integration
+    %% Row 6 - Performance & Runtime Integration
     class PerformanceInsights {
         <<@ObservableObject performance monitoring>>
         +metrics PerformanceMetrics
@@ -234,7 +234,7 @@ classDiagram
     }
 
     class EditorRuntime {
-        <<service registry>>
+        <<runtime dependencies>>
         +lineNumberCalculationService LineNumberCalculationService
         +gutterSizingService GutterSizingService
         +codeFoldingCoordinatorService CodeFoldingCoordinatorService
@@ -409,7 +409,7 @@ classDiagram
 ```mermaid
 flowchart TB
     INIT[Initialize Layout System] --> CONFIG[Configure Cross-Platform Coordinator]
-    CONFIG --> SERVICES[Setup Business Logic Services]
+    CONFIG --> SERVICES[Resolve Runtime Services]
     SERVICES --> COMPONENTS[Create UI Components]
     
     COMPONENTS --> CONTAINER[CodeEditorContainerView]
@@ -445,7 +445,7 @@ flowchart TB
     end
     
     subgraph "Actor-based Services"
-        ACTORS[Business Logic Services]
+        ACTORS[Runtime Services]
         LINES[LineNumberCalculationService]
         SIZING[GutterSizingService]
         FOLDING[CodeFoldingCoordinatorService]
@@ -576,7 +576,7 @@ flowchart TB
 3. **Maintainability**: Clean separation of concerns with MVVM and dependency injection
 4. **Testability**: Protocol-based architecture enables comprehensive unit testing
 5. **Cross-Platform**: Single codebase with platform-specific optimizations
-6. **Extensibility**: Plugin architecture allows easy feature additions
+6. **Extensibility**: Focused modules and protocol surfaces allow feature additions
 7. **Memory Efficiency**: Proper memory management with real-time monitoring
 8. **Developer Experience**: SwiftUI integration provides excellent developer ergonomics
 

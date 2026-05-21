@@ -42,7 +42,7 @@ Rationale:
 
 ## Required Implementation
 
-The implemented `RangeStore` API lives in `Sources/CodeEditorPlugin/Text/RangeStore/` and is backed by a simple sorted array of stored runs. Edits shift subsequent offsets, and adjacent compatible gap runs are coalesced after mutations.
+The implemented `RangeStore` API lives in `Sources/CodeEditorTextModel/` (`RangeStore.swift`, `RangeStoreRun.swift`, and `RangeStoreElement.swift`) and is backed by a simple sorted array of stored runs. Edits shift subsequent offsets, and adjacent compatible gap runs are coalesced after mutations.
 
 ## Rejected Alternatives
 

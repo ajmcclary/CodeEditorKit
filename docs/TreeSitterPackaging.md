@@ -9,7 +9,7 @@
 
 ```
 ┌─────────────────────────────────────────┐
-│ CodeEditorPlugin (core, ~2 MB)          │
+│ CodeEditorPlugin umbrella + core targets│
 │  ├── Language catalog (25 + plain text) │
 │  ├── RangeHighlightProviding protocol   │
 │  ├── RangeBasedHighlightingController   │
@@ -30,10 +30,10 @@
 
 ## Current State (Phases 5-6)
 
-After the §6.2.7 carve-out, regex-query types are split across two source roots: `RegexRangeHighlightProvider.swift` stays in the umbrella because it references `CodeEditorView`; the rest moved to `CodeEditorSyntaxHighlighting`. The pure-data Range-Query infrastructure (`RangeQueryParserProtocol`, `RangeQueryParseResult`, `RangeQueryCapture`, `RangeQueryParserError`) was extracted into `RangeQueryParser.swift` so the new target's parser can reach them.
+After the target extraction, regex-query types are split across two source roots: `RegexRangeHighlightProvider.swift` stays in `CodeEditorView` because it references `CodeEditorView`; the parser/fold/symbol helper types live in `CodeEditorSyntaxHighlighting`. The pure-data Range-Query infrastructure (`RangeQueryParserProtocol`, `RangeQueryParseResult`, `RangeQueryCapture`, `RangeQueryParserError`) lives in `RangeQueryParser.swift` so it can be reused without depending on the editor view target.
 ```
-Sources/CodeEditorPlugin/Core/SyntaxHighlighting/RegexQuery/
-└── RegexRangeHighlightProvider.swift   # umbrella — references CodeEditorView
+Sources/CodeEditorView/SyntaxHighlighting/RegexQuery/
+└── RegexRangeHighlightProvider.swift   # view-coupled — references CodeEditorView
 
 Sources/CodeEditorSyntaxHighlighting/RegexQuery/
 ├── HeuristicFoldProvider.swift
@@ -54,7 +54,8 @@ There is currently no public runtime Tree-sitter gate. `Package.swift` does not 
 The empty `Sources/CodeEditorTreeSitterLanguages/` directory exists as a namespace placeholder (a `.gitkeep` reserves the path in git). It has no SPM target yet — see the extraction checklist below.
 
 - [ ] Create `CodeEditorTreeSitterLanguages` target in `Package.swift`
-- [ ] Move `Sources/CodeEditorPlugin/SyntaxHighlighting/RegexQuery/` to new target
+- [ ] Extract the portable parser/provider pieces from `Sources/CodeEditorSyntaxHighlighting/RegexQuery/` into the new target as needed
+- [ ] Keep view-coupled adapters such as `RegexRangeHighlightProvider` in `Sources/CodeEditorView/SyntaxHighlighting/RegexQuery/`
 - [ ] Replace `RegexBackedRangeQueryParser` with real C Tree-sitter integration
 - [ ] Add grammar binaries as target resources
 - [ ] Add query files as target resources
@@ -86,7 +87,7 @@ config.performance.usesRangeBasedHighlighting = true
 
 | Component | Size | Notes |
 |-----------|------|-------|
-| CodeEditorPlugin (regex only) | ~2 MB | Swift + SwiftSyntax + regex engine |
+| CodeEditorPlugin umbrella + core targets (regex only) | ~2 MB | Swift + SwiftSyntax + regex engine |
 | CodeEditorTreeSitterLanguages | ~35 MB | Grammar binaries for the 25 concrete language catalog as XCFramework resources |
 | Combined | ~37 MB | Full editor with Tree-sitter |
 

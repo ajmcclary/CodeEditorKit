@@ -662,7 +662,7 @@ flowchart TB
 4. **Unicode Compliance**: Full Unicode normalization and validation
 5. **Performance Optimization**: Adaptive processing based on content size
 6. **Cross-Platform**: Unified processing across Apple platforms
-7. **Extensible Architecture**: Plugin-based operations and validators
+7. **Extensible Architecture**: Protocol-based operations and validators
 8. **Real-Time Monitoring**: Comprehensive performance and memory tracking
 9. **Fault Tolerance**: Error recovery and graceful degradation
 10. **Developer Experience**: Rich debugging and profiling capabilities

@@ -1,6 +1,6 @@
 # Advanced Features Integration Architecture
 
-This diagram shows the sophisticated advanced features system with performance monitoring, actor-based coordination, and cross-platform abstractions that provide production-ready debugging, search/replace, smart editing, code folding, and symbol navigation capabilities.
+This diagram shows the advanced features system with performance monitoring, actor-based coordination, and cross-platform abstractions that provide search/replace, smart editing, code folding, symbol navigation, annotations, gutter affordances, and LSP integration.
 
 ```mermaid
 classDiagram
@@ -474,11 +474,11 @@ classDiagram
 2. **Enhanced Actor-Based Concurrency**: Safe concurrent operations with priority-based scheduling, lifecycle management, and error recovery
 3. **Platform Excellence**: Sophisticated cross-platform abstractions with specialized coordinators for input, toolbar, and context menu management
 4. **Intelligent Memory Management**: Component-aware memory coordination with dynamic monitor updates and priority-based cleanup
-5. **Extensible Provider Systems**: Comprehensive plugin architecture with language-specific providers for folding, symbols, and text input features
+5. **Extensible Provider Systems**: Language-specific providers for folding, symbols, completion, and text input features
 6. **Data-Driven Optimization**: Performance insights with automated recommendations and adaptive configuration based on usage patterns
 7. **Advanced Symbol Navigation**: Interval tree indexing with breadcrumb navigation, flattened caching, and optimized search capabilities
 8. **Sophisticated Smart Editing**: Multi-cursor operations, intelligent bracket matching, context-aware indentation, and selection expansion
-9. **Production-Ready Debugging**: Multi-session debugging with LSP integration, breakpoint management, and performance profiling
+9. **Diagnostic and Gutter Affordances**: Annotation badges, sample breakpoint markers, and performance profiling hooks
 10. **Enterprise-Scale LSP Support**: Full Language Server Protocol implementation with document synchronization, workspace management, and multi-language support
 11. **Async Operation Excellence**: Priority-based operation scheduling with debouncing, throttling, retry logic, and batch processing
 12. **Advanced Code Folding**: Hierarchical folding with incremental updates, performance optimization, and comprehensive provider support

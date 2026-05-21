@@ -2,7 +2,7 @@
 
 This directory contains architectural diagrams for the CodeEditorPlugin framework, illustrating major components, systems, integrations, and their data flows.
 
-> **Note (0.2.0):** several diagrams in this folder were authored while Mac Catalyst was a supported platform and legacy TextKit was a live fallback. As of 0.2.0 both have been retired — the framework targets macOS and iOS only, and TextKit2 is the only supported layout system. Catalyst-specific boxes / class members in the mermaid sources below are preserved for historical context but no longer reflect source. For the current state, see [`docs/Platform/platform-abstraction.md`](../Platform/platform-abstraction.md) and [`docs/FeatureMatrix.md`](../FeatureMatrix.md). The pre-0.2.0 platform-abstraction diagram is preserved as a historical snapshot in [`../archive/Diagrams/08-platform-abstraction-layer.md`](../archive/Diagrams/08-platform-abstraction-layer.md).
+> **Current platform baseline:** these diagrams describe the native macOS and iOS / iPadOS implementation. Mac Catalyst and legacy TextKit fallback designs have been moved to the archive; current diagrams should not introduce Catalyst-specific boxes or TextKit1 branches.
 
 When a diagram conflicts with source or a topic page, treat the source and topic page as authoritative. The diagrams are subsystem maps, not complete generated type inventories.
 
@@ -20,7 +20,7 @@ Detailed class diagram of the main components including CodeEditorView, CodeEdit
 Configuration architecture including EditorConfiguration structure with Display, Layout, Behavior, and Performance sections. Shows presets, validation, and SwiftUI environment integration.
 
 ### 4. [Service Architecture](04-service-architecture.md)
-Service-oriented architecture diagram showing EditorRuntime and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionProviderRegistry, LineNumberCalculationService, GutterSizingService, CodeFoldingCoordinatorService, EditorLayoutService, MemoryManagementCoordinator).
+Service-oriented architecture diagram showing EditorRuntime and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionManager, LineNumberCalculationService, GutterSizingService, CodeFoldingCoordinatorService, EditorLayoutService, MemoryManagementCoordinator).
 
 ### 5. [Event System Flow](05-event-system-flow.md)
 Unified event system flow diagram illustrating event sources (UI, text changes, system, service, configuration), built-in `EditorEvent` creation, filtering, history, Combine subscriptions, and handler-token execution. Adjacent debouncing and async utilities are shown as integration points rather than custom event-type support.
@@ -29,7 +29,7 @@ Unified event system flow diagram illustrating event sources (UI, text changes, 
 Complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths. Shows caching, tokenization, rendering stages, and enhanced performance optimization with OptimizedSyntaxHighlightingCoordinator, performance tracking, chunking, and circuit breaker pattern.
 
 ### 7. [Completion System Architecture](07-completion-system-architecture.md)
-Code completion system including CompletionManager, provider registry, session management, caching, and UI components. Includes sequence diagram of completion flow.
+Code completion system including `CompletionManager`, provider management, session management, caching, and UI components. Includes sequence diagram of completion flow.
 
 ### 9. [Text Processing Pipeline](09-text-processing-pipeline.md)
 Text processing flow from input to rendering, including TextKit2 integration, line index management, batch processing, and performance optimizations. Shows incremental updates and viewport rendering.
@@ -71,16 +71,16 @@ Utility systems and extensions network providing shared utilities, cross-platfor
 Advanced layout system and UI component architecture handling positioning, responsive design, and complex component interactions. Includes flexbox/grid layouts, constraint solving, animation coordination, and accessibility integration.
 
 ### 23. [Multi-Language Support Matrix](23-multi-language-support-matrix.md)
-Matrix view of language support capabilities across 25 concrete supported languages plus plain text. Shows feature comparison, performance characteristics, LSP integrations, and debugging support for each language.
+Matrix view of language support capabilities across 25 concrete supported languages plus plain text. Shows feature comparison, performance characteristics, and LSP integration notes.
 
 ### 24. [Performance Optimization Pipeline](24-performance-optimization-pipeline.md)
 Comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance. Includes real-time monitoring, bottleneck detection, adaptive optimization strategies, and machine learning-based improvements.
 
 ### 25. [Package Dependencies](25-package-dependencies.md)
-Package dependency diagram showing the main CodeEditorPlugin framework's dependencies on SwiftSyntax, SwiftParser, swift-dependencies, and xctest-dynamic-overlay, plus test target dependencies.
+Package dependency diagram showing the current library products, the single-file `CodeEditorPlugin` umbrella target, runtime dependencies, and test target dependencies.
 
 ### 26. [Sample App Dependencies](26-sample-dependencies.md)
-CodeEditorSample demonstration app architecture showing dependencies on CodeEditorPlugin, CodeEditorUI, and CodeEditorDesignTokens, with sample code and configuration management.
+CodeEditorSample demonstration app architecture showing its direct dependencies on the umbrella editor product, focused subsystem targets, optional project search/workspace products, and sample code structure.
 
 ### 28. [Performance Budget System](28-performance-budget-system.md)
 Comprehensive performance budget system that monitors and enforces performance targets across all operations. Includes budget definitions, status tracking, violation reporting, test integration, and enforcement configuration with support for warning, critical, and exceeded thresholds.
@@ -105,7 +105,7 @@ All diagrams are written in Mermaid syntax and can be viewed:
 
 ## Regenerating Dependency Diagrams
 
-Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. These diagrams reflect the actual dependencies declared in the package manifest — direct runtime dependencies (SwiftSyntax, SwiftParser, swift-dependencies, xctest-dynamic-overlay), internal product dependencies (CodeEditorDesignTokens, CodeEditorUI, CodeEditorSample), and test target dependencies (CodeEditorPluginTests, CodeEditorDesignTokensTests, CodeEditorUITests, CodeEditorSampleTests, swift-custom-dump, swift-snapshot-testing).
+Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. They reflect the actual products and important target dependencies declared in the manifest, including the focused library products (`CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, `CodeEditorWorkspace`, `CodeEditorDesignTokens`), the umbrella `CodeEditorPlugin`, the sample executable, runtime dependencies, and test-only dependencies.
 
 ## Diagram Conventions
 

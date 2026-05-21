@@ -34,17 +34,12 @@ classDiagram
         +cancelCurrentRequest()
     }
 
-    %% Registry and Factory Layer (ENHANCED)
-    class CompletionProviderRegistry {
-        <<centralized registry>>
-        -providers [String: CompletionProvider]
-        -languageProviders [Language: [CompletionProvider]]
-        +register() CompletionProvider
-        +ensureProvider() CompletionProvider?
-        +getCompletions() async [CompletionResult]
-        +mergeCompletionResults()
-        +loadAllLanguageProviders()
-        +validateProviders() async
+    %% Factory and Metadata Layer
+    class LanguageProviderFactory {
+        <<provider factory>>
+        +createProvider(for:) CompletionProvider?
+        +profile(for:) CompletionProfile?
+        +supportedLanguages [Language]
     }
 
     class LanguageMetadataRegistry {
@@ -308,8 +303,8 @@ classDiagram
         +createTypeCompletions() [CompletionItemModel]
         +createFunctionCompletions() [CompletionItemModel]
         +createLiteralCompletions() [CompletionItemModel]
+        +createSnippetCompletions() [CompletionItemModel]
         +createMemberItems() [CompletionItemModel]
-        +createParameterCompletions() [CompletionItemModel]
     }
 
     %% Key Relationships
@@ -317,11 +312,11 @@ classDiagram
     CompletionManager --> MemoryMonitor : registers cleanup handlers
     CompletionManager --> CompletionDebouncer : debounces requests
 
-    CompletionManager --> CompletionProviderRegistry : queries
+    CompletionManager --> LanguageProviderFactory : creates fallback providers
     CompletionManager --> LRUCache : caches results
     CompletionManager --> CompletionStatistics : tracks metrics
     
-    CompletionProviderRegistry --> LanguageMetadataRegistry : uses metadata
+    LanguageProviderFactory --> LanguageMetadataRegistry : uses metadata
     LanguageMetadataRegistry --> UniversalCompletionProvider : creates
     LanguageMetadataRegistry --> ExtendedLanguageMetadata : contains
     
@@ -364,7 +359,7 @@ classDiagram
 
     class ActorCoordinator actor
     class CompletionManager engine
-    class CompletionProviderRegistry registry
+    class LanguageProviderFactory registry
     class LanguageMetadataRegistry registry
     class UniversalCompletionProvider provider
     class UniversalCompletionProvider provider
@@ -398,7 +393,7 @@ sequenceDiagram
     participant TextView
     participant ActorCoordinator
     participant CompletionManager
-    participant Registry as CompletionProviderRegistry
+    participant Registry as CompletionManager
     participant Provider as UniversalCompletionProvider
     participant Cache as CompletionCacheManager
     participant Memory as MemoryMonitor
@@ -478,28 +473,28 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant Registry as CompletionProviderRegistry
-    participant Metadata as LanguageMetadataRegistry
+    participant Manager as CompletionManager
+    participant Factory as LanguageProviderFactory
+    participant Descriptor as LanguageDescriptor
+    participant Profile as CompletionProfile
     participant Universal as UniversalCompletionProvider
-    participant BaseProvider as UniversalCompletionProvider
     participant Builder as SharedCompletionBuilder
     
-    Registry->>Registry: ensureProvider(for: .swift)
-    Registry->>Metadata: createProvider(for: .swift)
-    Metadata->>Metadata: metadata(for: .swift)
-    Metadata->>Universal: init(language, metadata)
-    Universal->>BaseProvider: super.init()
+    Manager->>Factory: createProvider(for: .swift)
+    Factory->>Descriptor: descriptor(for: .swift)
+    Descriptor-->>Factory: Swift descriptor
+    Factory->>Profile: init(descriptor:)
+    Factory->>Universal: init(language, profile)
     
-    Note over Universal,BaseProvider: Provider created with language-specific metadata
+    Note over Factory,Universal: Provider created from descriptor-derived metadata
     
+    Universal->>Profile: analyze(context)
+    Profile-->>Universal: context analysis
     Universal->>Builder: createKeywordCompletions()
-    Builder-->>Universal: Completion items
-    Universal->>Builder: createMemberCompletions()
-    Builder-->>Universal: Member items
+    Builder-->>Universal: completion items
     
-    Universal-->>Metadata: Configured provider
-    Metadata-->>Registry: Provider instance
-    Registry->>Registry: register(provider)
+    Universal-->>Manager: Provider instance
+    Manager->>Manager: registerProvider(provider)
 ```
 
 ## Key Features
@@ -507,7 +502,7 @@ sequenceDiagram
 ### Core Architecture Enhancements
 1. **ActorCoordinator Integration**: Centralized actor management with dependency injection
 2. **Enhanced Memory Management**: Sophisticated memory monitoring with automatic cleanup
-3. **Registry-Based Providers**: Centralized provider registry with dynamic language support
+3. **Factory-Based Providers**: `LanguageProviderFactory` creates descriptor-backed providers with dynamic language support
 4. **Production-Ready Statistics**: Comprehensive performance tracking and metrics
 
 ### Advanced Caching Strategy

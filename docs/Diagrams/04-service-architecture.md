@@ -6,20 +6,16 @@ This diagram shows the service-oriented architecture and how services interact w
 classDiagram
     direction LR
     
-    %% Top Row - Central Registry & Core Services
+    %% Top Row - Runtime Composition & Core Services
     class EditorRuntime {
-        &lt;&lt;dependency injection&gt;&gt;
-        -services Dictionary&lt;String, Any&gt;
-        -eventSystem UnifiedEventSystem
-        -coordinator MemoryManagementCoordinator
-        +register()
-        +resolve()
-        +initialize()
-        +shutdown()
-        +configureForEditor()
-        +getServiceStatus()
-        +clearAllCaches()
-        +resetAllServices()
+        &lt;&lt;composition root&gt;&gt;
+        +dependencies EditorRuntimeDependencies
+        +featureDependencies EditorFeatureRuntimeDependencies
+        +update(dependencies)
+        +update(featureDependencies)
+        +update(workspaceRoot)
+        +update(eventSystem)
+        +update(memoryMonitor)
     }
 
     %% Second Row - Core Text & Language Services
@@ -53,16 +49,13 @@ classDiagram
         +clearCache()
     }
 
-    %% Third Row - Enhanced Service Registry (8 Services Total)
-    class CompletionProviderRegistry {
+    %% Third Row - Runtime Services (8 Services Total)
+    class CompletionManager {
         &lt;&lt;completion orchestration&gt;&gt;
-        -providers Dictionary&lt;String, CompletionProvider&gt;
-        -universalProvider UniversalCompletionProvider
         -activeSession CompletionSession?
-        -debouncer Debouncer
+        -providers [CompletionProvider]
         +requestCompletions()
         +registerProvider()
-        +unregisterProvider()
         +cancelActiveSession()
         +getProvidersForLanguage()
     }
@@ -340,7 +333,7 @@ classDiagram
     EditorRuntime *-- TextEditingService : manages
     EditorRuntime *-- SyntaxHighlightingService : manages
     EditorRuntime *-- LanguageDetectionService : manages
-    EditorRuntime *-- CompletionProviderRegistry : manages
+    EditorRuntime *-- CompletionManager : manages
     EditorRuntime *-- LineNumberCalculationService : manages
     EditorRuntime *-- GutterSizingService : manages
     EditorRuntime *-- CodeFoldingCoordinatorService : manages
@@ -372,12 +365,12 @@ classDiagram
     LanguageDetectionService --> LanguageDetector : uses
     LanguageDetectionService --> Language : detects
     
-    CompletionProviderRegistry --> UniversalCompletionProvider : uses
-    CompletionProviderRegistry --> CompletionSession : creates
-    CompletionProviderRegistry --> CompletionProvider : manages
-    CompletionProviderRegistry --> CompletionContext : creates
-    CompletionProviderRegistry --> CompletionItem : provides
-    CompletionProviderRegistry --> Debouncer : uses
+    CompletionManager --> UniversalCompletionProvider : uses
+    CompletionManager --> CompletionSession : creates
+    CompletionManager --> CompletionProvider : manages
+    CompletionManager --> CompletionContext : creates
+    CompletionManager --> CompletionItem : provides
+    CompletionManager --> Debouncer : uses
     UniversalCompletionProvider --> CompletionProvider : creates
     
     LineNumberCalculationService --> LineNumberInfo : creates
@@ -389,7 +382,7 @@ classDiagram
     MemoryMonitor --> ActorCoordinator : uses
     
     %% Styling - Light/Dark mode compatible colors
-    classDef registry fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef runtime fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
     classDef service fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
     classDef coordinator fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef support fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
@@ -399,11 +392,11 @@ classDiagram
     classDef highlighting fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef completion fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     
-    class EditorRuntime registry
+    class EditorRuntime runtime
     class TextEditingService service
     class SyntaxHighlightingService service
     class LanguageDetectionService service
-    class CompletionProviderRegistry service
+    class CompletionManager service
     class LineNumberCalculationService service
     class GutterSizingService service
     class CodeFoldingCoordinatorService service
@@ -438,6 +431,7 @@ classDiagram
     class Language completion
     class LineNumberInfo completion
     class FoldingPattern completion
+    class CompletionManager service
     class ActorCoordinator coordinator
 ```
 
@@ -445,14 +439,14 @@ classDiagram
 
 ### Enhanced 8-Service Architecture
 
-The CodeEditorPlugin framework now implements a sophisticated service architecture with **8 core services** managed through a central registry pattern with enhanced memory coordination and dependency management.
+The CodeEditorPlugin framework uses `EditorRuntime` as the composition root for live dependencies. Durable settings stay in `EditorConfiguration`; non-codable runtime services such as `MemoryMonitor`, `UnifiedEventSystem`, `ActorCoordinator`, platform services, and performance telemetry live in `EditorRuntimeDependencies` and can be replaced without pretending they are configuration values.
 
 #### Core Services (8 Total)
 
 1. **TextEditingService** - Text manipulation and editing operations
 2. **SyntaxHighlightingService** - Syntax highlighting coordination
 3. **LanguageDetectionService** - Language detection and configuration
-4. **CompletionProviderRegistry** - Code completion orchestration (replaces CompletionManager)
+4. **CompletionManager** - Code completion orchestration and provider management
 5. **LineNumberCalculationService** - Line numbering calculations and caching
 6. **GutterSizingService** - Gutter layout and sizing calculations
 7. **CodeFoldingCoordinatorService** - Code folding state management
@@ -460,7 +454,7 @@ The CodeEditorPlugin framework now implements a sophisticated service architectu
 
 #### Key Architectural Patterns
 
-1. **Enhanced Service Registry**: Central registry with **configureForEditor()**, **getServiceStatus()**, **clearAllCaches()**, and **resetAllServices()** methods
+1. **Runtime Composition Root**: `EditorRuntime` owns `EditorRuntimeDependencies` and feature-specific dependency groups.
 2. **Memory Management Coordination**: **MemoryManagementCoordinator** provides centralized memory oversight and cleanup coordination
 3. **Dependency Injection**: All services receive dependencies through constructor injection - **no singletons**
 4. **Service Interdependencies**: 

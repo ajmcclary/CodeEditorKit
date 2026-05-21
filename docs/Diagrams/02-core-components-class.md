@@ -94,22 +94,16 @@ classDiagram
         languageChanged
     }
 
-    %% Fifth Row - Service Registry
+    %% Fifth Row - Runtime Services
     class EditorRuntime {
         &lt;&lt;dependency injection&gt;&gt;
-        +textEditingService TextEditingService
-        +syntaxHighlightingService SyntaxHighlightingService
-        +languageDetectionService LanguageDetectionService
-        +completionProviderRegistry CompletionProviderRegistry
-        +lineNumberCalculationService LineNumberCalculationService
-        +gutterSizingService GutterSizingService
-        +codeFoldingCoordinatorService CodeFoldingCoordinatorService
-        +editorLayoutService EditorLayoutService
-        +memoryManagementCoordinator MemoryManagementCoordinator
-        +configureForEditor()
-        +getServiceStatus()
-        +clearAllCaches()
-        +resetAllServices()
+        +dependencies EditorRuntimeDependencies
+        +featureDependencies EditorFeatureRuntimeDependencies
+        +update(dependencies)
+        +update(featureDependencies)
+        +update(workspaceRoot)
+        +update(eventSystem)
+        +update(memoryMonitor)
     }
 
     class TextEditingService {
@@ -133,16 +127,6 @@ classDiagram
         +detectLanguage()
         +supportedLanguages [Language]
         +registerLanguage()
-    }
-
-    class CompletionProviderRegistry {
-        &lt;&lt;provider management&gt;&gt;
-        +providers [String: CompletionProvider]
-        +languageProviders [Language: [CompletionProvider]]
-        +register()
-        +getCompletions()
-        +mergeCompletionResults()
-        +validateProviders()
     }
 
     class CompletionManager {
@@ -294,7 +278,7 @@ classDiagram
     EditorRuntime --> TextEditingService : manages
     EditorRuntime --> SyntaxHighlightingService : manages
     EditorRuntime --> LanguageDetectionService : manages
-    EditorRuntime --> CompletionProviderRegistry : manages
+    EditorRuntime --> CompletionManager : manages
     EditorRuntime --> LineNumberCalculationService : manages
     EditorRuntime --> GutterSizingService : manages
     EditorRuntime --> CodeFoldingCoordinatorService : manages
@@ -307,8 +291,8 @@ classDiagram
     CodeFoldingCoordinatorService --> LineNumberCalculationService : uses
     MemoryManagementCoordinator --> MemoryMonitor : orchestrates
     
-    EditorConfiguration --> ActorCoordinator : includes
-    EditorConfiguration --> UnifiedEventSystem : includes
+    EditorRuntime --> ActorCoordinator : owns via dependencies
+    EditorRuntime --> UnifiedEventSystem : owns via dependencies
     
     MemoryManagementCoordinator --> CompletionManager : creates
     
@@ -350,7 +334,7 @@ classDiagram
     class TextEditingService service
     class SyntaxHighlightingService service
     class LanguageDetectionService service
-    class CompletionProviderRegistry service
+    class CompletionManager service
     class CompletionManager service
     class MemoryMonitor service
     class TextLayoutManager layout

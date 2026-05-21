@@ -57,9 +57,9 @@ graph TD
     end
 
     %% Business Services Layer
-    subgraph SERVICES [" Business Logic Services "]
+    subgraph SERVICES [" Runtime Services "]
         direction TB
-        BLS["Service Registry<br/>Dependency Injection"]
+        BLS["Editor Runtime<br/>Dependencies"]
         subgraph SRVS [" Core Services "]
             TES["Text Editing<br/>Operations"]
             LDS["Language<br/>Detection"]
@@ -136,11 +136,18 @@ graph TD
         SS["SwiftSyntax<br/>Swift AST"]
     end
 
-    %% Separate Products
-    subgraph PRODUCTS [" Separate Products "]
+    %% Focused Products / Targets
+    subgraph PRODUCTS [" Focused Products & Targets "]
         direction TB
+        CDP["Umbrella<br/>CodeEditorPlugin"]
+        CEVP["Editor Surface<br/>CodeEditorView"]
+        CSUI["SwiftUI Wrapper<br/>CodeEditorSwiftUI"]
         CDT["Design Tokens<br/>CodeEditorDesignTokens"]
-        CUI["SwiftUI Components<br/>CodeEditorUI"]
+        CUI["Optional Chrome<br/>CodeEditorUI"]
+        CDIAG["Diagnostics<br/>CodeEditorDiagnostics"]
+        CLSP["LSP<br/>CodeEditorLSP"]
+        CSEARCH["Project Search<br/>CodeEditorSearch"]
+        CWORK["Workspace<br/>CodeEditorWorkspace"]
     end
 
     %% Main Architecture Flow
@@ -189,7 +196,10 @@ graph TD
     CMS --> LSP
     SHL --> SS
 
-    CORE --> PRODUCTS
+    PRODUCTS --> CORE
+    CDP --> CEVP
+    CDP --> CSUI
+    CUI --> CDP
 
     %% Styling - Light/Dark mode compatible colors
     classDef swiftui fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
@@ -265,19 +275,26 @@ graph TD
     class TOK lang
     class LSP external
     class SS external
+    class CDP product
+    class CEVP product
+    class CSUI product
     class CDT product
     class CUI product
+    class CDIAG product
+    class CLSP product
+    class CSEARCH product
+    class CWORK product
 ```
 
 ## Key Architectural Principles
 
 1. **Layered Architecture**: Clear separation between UI (SwiftUI), Core logic, Services, and Platform abstractions
 2. **Protocol-Oriented**: Core functionality defined through protocols (CodeEditorAPI)
-3. **Service-Based**: Business logic encapsulated in services managed by a central registry
+3. **Runtime-Composed**: Business logic is encapsulated in services supplied through `EditorRuntimeDependencies` and feature-specific dependency groups
 4. **Dependency Injection**: No singletons - all dependencies injected via configuration
 5. **Platform Agnostic**: Platform-specific code isolated in abstraction layer
 6. **Event-Driven**: Unified event system for decoupled communication
 7. **Configurable**: Comprehensive configuration system with environment integration
 8. **Concurrent**: ActorCoordinator manages safe concurrent operations
 9. **Memory Efficient**: Active memory monitoring and platform-specific optimizations
-10. **Modular**: Separate product targets for design tokens and SwiftUI components
+10. **Modular**: Focused SwiftPM products for the umbrella editor, view surface, SwiftUI wrapper, optional UI chrome, diagnostics, LSP, layout, search, workspace, and design tokens

@@ -485,4 +485,4 @@ await textProcessor.process(text: content, with: .syntaxHighlighting, priority: 
 5. **Memory Intelligence**: Smart memory management prevents OOM crashes
 6. **Developer Insights**: Comprehensive performance analytics for optimization decisions
 7. **Production Ready**: Lightweight telemetry suitable for App Store distribution
-8. **Extensible Architecture**: Plugin architecture for custom performance monitoring
+8. **Extensible Architecture**: Injected runtime dependencies and protocol surfaces for custom performance monitoring
