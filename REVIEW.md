@@ -194,11 +194,13 @@ Resolution: Extracted a generic doubly-linked-list LRU as `LinkedLRU<Key, Value>
 
 ---
 
-**[High] `Sources/CodeEditorSyntaxHighlighting/SmartTokenCache.swift:~350` — `evictLeastValuableEntry` sorts the whole cache per eviction**
+**[High] `Sources/CodeEditorSyntaxHighlighting/SmartTokenCache.swift:~350` — `evictLeastValuableEntry` sorts the whole cache per eviction** — ✅ **Resolved**
 
 Explanation: `cache.sorted { … }` is O(n log n) per eviction; the eviction loop can run many iterations under memory pressure.
 
 Suggestion: Maintain a min-heap keyed by the "value" metric; eviction becomes O(log n) per entry.
+
+Resolution: Two fixes in one pass: (1) `evictLeastValuableEntry` now uses `cache.min(by:)` — O(n) per eviction, no allocation; (2) deleted the `accessOrder` array entirely (declaration + 8 write sites): every reference was a write, nothing ever read it, so the cache was paying an O(n) `removeAll { $0 == key }` on every cache get/set/eviction to maintain dead state. Skipped the suggested min-heap because the score formula's `ageFactor` is time-volatile — every entry's score shifts each tick, which would require constant heap re-sifting and wipe out the asymptotic win at the default 50-entry capacity. Net per-eviction work drops from O(n log n) + O(n) (sort + accessOrder removeAll) to O(n) (single min scan); per-cache-access work drops by an O(n) `accessOrder.removeAll + append`. All existing `SmartTokenCacheCoverageTests` (5) and eviction-behavior coverage in `AsyncSyntaxHighlighterCacheTests` (12) still pass.
 
 ---
 
@@ -347,7 +349,7 @@ Suggestion: None.
 | Severity | Count |
 |:---------|:------|
 | Critical | 0 |
-| High | 1 (SmartTokenCache eviction sort) — 5 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`) |
+| High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
 | Medium | 13 (Configuration/Languages path, umbrella re-export, search error swallowing, LSP cert bypass/message-drop/string-IDs/overflow/stderr, etc.) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |

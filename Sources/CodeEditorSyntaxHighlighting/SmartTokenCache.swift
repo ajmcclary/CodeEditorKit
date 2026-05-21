@@ -118,7 +118,6 @@ package actor SmartTokenCache {
     // MARK: - State
 
     private var cache: [CacheKey: CacheEntry] = [:]
-    private var accessOrder: [CacheKey] = []
     private var hitCount: Int = 0
     private var missCount: Int = 0
     private var evictionCount: Int = 0
@@ -134,7 +133,6 @@ package actor SmartTokenCache {
             if age > staleThreshold {
                 // Remove stale entry
                 cache.removeValue(forKey: key)
-                accessOrder.removeAll { $0 == key }
                 missCount += 1
                 return []
             }
@@ -158,10 +156,6 @@ package actor SmartTokenCache {
                 coverage: entry.coverage
             )
             cache[key] = updated
-
-            // Move to end of access order
-            accessOrder.removeAll { $0 == key }
-            accessOrder.append(key)
 
             hitCount += 1
 
@@ -195,8 +189,6 @@ package actor SmartTokenCache {
         )
 
         cache[key] = entry
-        accessOrder.removeAll { $0 == key }
-        accessOrder.append(key)
 
         // Evict if necessary
         evictIfNeeded()
@@ -204,7 +196,6 @@ package actor SmartTokenCache {
 
     package func clearCache() {
         cache.removeAll()
-        accessOrder.removeAll()
         hitCount = 0
         missCount = 0
         evictionCount = 0
@@ -318,7 +309,6 @@ package actor SmartTokenCache {
 
         for key in staleKeys {
             cache.removeValue(forKey: key)
-            accessOrder.removeAll { $0 == key }
             evictionCount += 1
         }
 
@@ -366,14 +356,17 @@ package actor SmartTokenCache {
     }
 
     private func evictLeastValuableEntry() {
-        // Find the entry with the lowest value score
-        let sortedEntries = cache.sorted { $0.value.score < $1.value.score }
-
-        if let leastValuable = sortedEntries.first {
-            cache.removeValue(forKey: leastValuable.key)
-            accessOrder.removeAll { $0 == leastValuable.key }
-            evictionCount += 1
+        // O(n) scan for the lowest-score entry. A min-heap would knock this to
+        // O(log n) per eviction, but `score` is time-volatile — every entry's
+        // `ageFactor` changes each tick — so a heap snapshot would need
+        // re-sifting on every operation, wiping out the asymptotic win at the
+        // default 50-entry capacity.
+        guard let leastValuable = cache.min(by: { $0.value.score < $1.value.score }) else {
+            return
         }
+
+        cache.removeValue(forKey: leastValuable.key)
+        evictionCount += 1
     }
 
     private func estimateMemoryUsage() -> Double {
