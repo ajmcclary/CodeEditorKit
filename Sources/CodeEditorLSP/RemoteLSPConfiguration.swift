@@ -32,7 +32,18 @@ public struct RemoteLSPConfiguration: Sendable, Codable {
     /// Transport configuration overrides
     public let transportConfiguration: LSPTransportConfiguration?
 
-    /// Whether to validate SSL certificates (for wss:// connections)
+    /// Whether to enforce certificate pinning when `certificatePinning` is
+    /// configured.
+    ///
+    /// **System trust evaluation always runs**, regardless of this flag —
+    /// a server cert that fails the platform's own trust evaluation is
+    /// always rejected. The flag's narrower role: when `false` (and pinning
+    /// is configured), the pin check is skipped with a logged warning. This
+    /// is the dev-time escape hatch for rotating pinned material without
+    /// breaking running clients.
+    ///
+    /// Self-signed dev servers must be added to the system keychain — this
+    /// flag no longer papers over an untrusted chain (REVIEW.md LSP §8).
     public let validateSSLCertificates: Bool
 
     /// Certificate pinning configuration for enhanced security

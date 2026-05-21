@@ -242,11 +242,13 @@ Suggestion: Derive from `ProcessInfo.processInfo.physicalMemory` or document the
 
 ## 8. LSP Integration
 
-**[Medium] `Sources/CodeEditorLSP/Transport/WebSocketPinningDelegate.swift:46-51` — `validateSSLCertificates=false` is a hard bypass**
+**[Medium] `Sources/CodeEditorLSP/Transport/WebSocketPinningDelegate.swift:46-51` — `validateSSLCertificates=false` is a hard bypass** — ✅ **Resolved**
 
 Explanation: Verified the code. The bypass is intentional, gated by an explicit caller opt-in, logged as a warning, and documented in the surrounding comments — it is **not** a covert misconfiguration as one agent characterized it. However, the bypass is coarse (skips even system trust evaluation) and global per-session, which is a footgun.
 
 Suggestion: Either (a) require a per-host allowlist (`allowSelfSigned: Set<String>`) instead of a global boolean, or (b) at minimum, evaluate system trust first and only skip the pinning policy on the flag — never skip system trust. The latter is a small refactor against the existing structure.
+
+Resolution: Implemented option (b). `WebSocketPinningDelegate.urlSession(_:didReceive:completionHandler:)` now runs `SecTrustEvaluateWithError` **unconditionally** and rejects the challenge on failure — the `validateSSLCertificates` flag no longer bypasses platform trust. The flag's role narrows to: when `false` *and* `pinning` is configured, skip the pin check with a logged warning (the dev-time escape hatch for rotating pinned material without breaking running clients); when `false` with no pinning configured, the flag is now a no-op since system trust suffices on its own. The class-level docstring spells the new policy out in three numbered steps; the public `RemoteLSPConfiguration.validateSSLCertificates` field docstring is updated to flag that self-signed dev servers must now be added to the system keychain rather than papered over with a global boolean. **This is a behavior change for callers who relied on `validateSSLCertificates = false` to accept untrusted certs** — the original behavior was the footgun the reviewer flagged, so the change is the intended fix. The existing `WebSocketTransportSecurityTests` cover configuration plumbing (still all 4 passing); the new challenge-handling policy is documented inline because reliably exercising it from a unit test would require mocking `URLAuthenticationChallenge` (not viable without test infrastructure changes out of scope here).
 
 ---
 
@@ -362,7 +364,7 @@ Suggestion: None.
 |:---------|:------|
 | Critical | 0 |
 | High | 0 — 6 resolved (AwaitableQueue contract, RangeProcessor Task leak, LSPClient disconnect Task, ParagraphStyleCache LRU, LayoutCache LRU via shared `LinkedLRU`, SmartTokenCache eviction + dead `accessOrder`) |
-| Medium | 7 — 6 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance) |
+| Medium | 6 — 7 resolved (Languages path + dead Layout exclude, umbrella re-export, search invalid-regex error, search unreadable-file logging, throwing-API doc comments, LSPError recovery conformance, WebSocket pinning bypass narrowed) |
 | Low | 9 (cache scaling, getter naming, undocumented public types, etc.) |
 | Style | 5+ (compliance confirmations) |
 

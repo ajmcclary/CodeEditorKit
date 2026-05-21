@@ -12,6 +12,17 @@ import Security
 /// `delegate: nil` in that case so this code only runs when the caller has
 /// asked for tighter behavior than `URLSession` does on its own.
 ///
+/// Trust policy (post-narrowing of the `validateSSLCertificates` semantic):
+/// 1. System trust evaluation runs unconditionally. A failure here always
+///    rejects the challenge — the `validateSSLCertificates` flag no longer
+///    bypasses platform trust. Self-signed dev servers must now be added to
+///    the system keychain rather than papered over with a global boolean.
+/// 2. If `validateSSLCertificates == true` (default) and `pinning` is
+///    configured, the pin is enforced; mismatch rejects.
+/// 3. If `validateSSLCertificates == false` and `pinning` is configured,
+///    the pin check is skipped with a logged warning — the dev-time escape
+///    hatch for rotating pinned material without breaking running clients.
+///
 /// Callbacks fire on `URLSession`'s delegate queue (not the actor), so this
 /// class is intentionally a `final` `NSObject` whose only stored state is
 /// immutable. Marked `@unchecked Sendable` because `NSObject` is not
@@ -41,23 +52,20 @@ final class WebSocketPinningDelegate: NSObject, URLSessionDelegate, @unchecked S
             return
         }
 
-        // Caller has explicitly opted out of certificate validation. Useful
-        // for self-signed dev servers; *not* recommended outside that case.
-        if !validateSSLCertificates {
-            logger.warning(
-                "Bypassing TLS certificate validation for \(challenge.protectionSpace.host) (validateSSLCertificates=false)"
-            )
-            completionHandler(.useCredential, URLCredential(trust: serverTrust))
-            return
-        }
-
-        // Run system trust evaluation first; if the trust is invalid by the
-        // platform's own rules, reject regardless of pinning state.
+        // System trust evaluation always runs and always gates the
+        // connection. The `validateSSLCertificates` flag no longer bypasses
+        // this — that was the coarse footgun flagged in REVIEW.md (LSP §8).
         var trustError: CFError?
         let isSystemTrustValid = SecTrustEvaluateWithError(serverTrust, &trustError)
         guard isSystemTrustValid else {
             if let trustError {
-                logger.error("Server trust failed system evaluation: \(trustError)")
+                logger.error(
+                    "Server trust failed system evaluation for \(challenge.protectionSpace.host): \(trustError)"
+                )
+            } else {
+                logger.error(
+                    "Server trust failed system evaluation for \(challenge.protectionSpace.host)"
+                )
             }
             completionHandler(.cancelAuthenticationChallenge, nil)
             return
@@ -65,6 +73,17 @@ final class WebSocketPinningDelegate: NSObject, URLSessionDelegate, @unchecked S
 
         guard let pinning else {
             // No pinning configured — system trust suffices.
+            completionHandler(.useCredential, URLCredential(trust: serverTrust))
+            return
+        }
+
+        // Pinning is configured. The `validateSSLCertificates` flag, if
+        // false, lets callers skip the pin check (e.g. while rotating
+        // pinned material) without disabling system trust.
+        if !validateSSLCertificates {
+            logger.warning(
+                "Skipping certificate-pinning enforcement for \(challenge.protectionSpace.host) (validateSSLCertificates=false). System trust still enforced."
+            )
             completionHandler(.useCredential, URLCredential(trust: serverTrust))
             return
         }
