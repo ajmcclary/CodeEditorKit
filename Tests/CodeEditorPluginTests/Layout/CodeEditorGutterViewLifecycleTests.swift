@@ -67,6 +67,60 @@ final class CodeEditorGutterViewLifecycleTests: XCTestCase {
         XCTAssertNotEqual(beforeColor.cgColor, gutter.renderer.themedLineNumberColor.cgColor)
     }
 
+    func testAttachSyncsGutterHeightToClipView() throws {
+        // Simulate the production race: gutter was created with a stale
+        // (small) frame before SwiftUI gave the container its final size.
+        // After `attach`, the gutter's frame.size.height must match the
+        // scroll view's clip-view bounds.height — otherwise the renderer's
+        // viewport-coordinate output gets clipped short of the visible code.
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 400, height: 600))
+        let textView = CodeEditorView(frame: .zero)
+        scrollView.documentView = textView
+
+        let staleHeight: CGFloat = 12 // pretend pre-layout viewport
+        let gutter = CodeEditorGutterView(frame: NSRect(x: 0, y: 0, width: 50, height: staleHeight))
+
+        gutter.attach(to: scrollView, textView: textView)
+
+        XCTAssertEqual(
+            gutter.frame.size.height,
+            scrollView.contentView.bounds.height,
+            accuracy: 1.0,
+            "Gutter height must equal clip-view height after attach"
+        )
+    }
+
+    func testGutterHeightFollowsClipViewFrameChange() throws {
+        // Simulate a window/container resize after the gutter has been
+        // attached. The clip view's frameDidChangeNotification must drive
+        // the gutter to grow (or shrink) so the renderer can draw across
+        // the full new visible viewport.
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: .zero)
+        scrollView.documentView = textView
+
+        let gutter = CodeEditorGutterView(frame: NSRect(x: 0, y: 0, width: 50, height: 300))
+        gutter.attach(to: scrollView, textView: textView)
+
+        // Grow the scroll view; AppKit propagates this to the clip view.
+        scrollView.frame = NSRect(x: 0, y: 0, width: 400, height: 900)
+        scrollView.tile()
+
+        // Force the frame-changed notification synchronously so the test
+        // doesn't depend on run-loop draining.
+        NotificationCenter.default.post(
+            name: NSView.frameDidChangeNotification,
+            object: scrollView.contentView
+        )
+
+        XCTAssertEqual(
+            gutter.frame.size.height,
+            scrollView.contentView.bounds.height,
+            accuracy: 1.0,
+            "Gutter height must follow clip-view bounds.height on frame change"
+        )
+    }
+
     func testTextContainerInsetRoundtripsWithGutterToggle() throws {
         let container = CodeEditorContainerView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 

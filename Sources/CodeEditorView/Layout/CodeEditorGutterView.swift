@@ -43,6 +43,7 @@ final class CodeEditorGutterView: NSView {
         self.textView = textView
         attachedScrollView = scrollView
         scrollView.addFloatingSubview(self, for: .horizontal)
+        syncFrameToClipView()
         registerObservers(scrollView: scrollView, textView: textView)
     }
 
@@ -125,6 +126,19 @@ final class CodeEditorGutterView: NSView {
         }
     }
 
+    /// Resizes the gutter so its frame height equals the enclosing scroll
+    /// view's clip-view bounds height. The renderer draws line numbers in
+    /// viewport coordinates and is clipped to this view's bounds, so the
+    /// gutter must be exactly as tall as the visible code area or numbers
+    /// past the gutter's height will be silently clipped.
+    private func syncFrameToClipView() {
+        guard let scrollView = attachedScrollView else { return }
+        let clipHeight = scrollView.contentView.bounds.height
+        if !frame.size.height.isEqual(to: clipHeight) {
+            frame.size.height = clipHeight
+        }
+    }
+
     private static func activeLineNumber(for textView: CodeEditorView) -> Int? {
         let location = textView.selectedRange().location
         guard location != NSNotFound,
@@ -134,6 +148,7 @@ final class CodeEditorGutterView: NSView {
 
     private func registerObservers(scrollView: NSScrollView, textView: CodeEditorView) {
         scrollView.contentView.postsBoundsChangedNotifications = true
+        scrollView.contentView.postsFrameChangedNotifications = true
 
         observers.append(NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
@@ -141,6 +156,7 @@ final class CodeEditorGutterView: NSView {
             queue: .main
         ) { [weak self, weak scrollView] _ in
             MainActor.assumeIsolated {
+                self?.syncFrameToClipView()
                 self?.handleScrollOrResize(scrollView: scrollView)
             }
         })
@@ -151,6 +167,7 @@ final class CodeEditorGutterView: NSView {
             queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
+                self?.syncFrameToClipView()
                 self?.needsDisplay = true
             }
         })
