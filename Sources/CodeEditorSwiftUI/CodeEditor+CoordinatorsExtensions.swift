@@ -31,12 +31,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// The current configuration
     @Published var currentConfiguration: EditorConfiguration = .default
 
-    /// Callbacks (common across platforms)
-    var onTextChange: ((String) -> Void)?
+    /// Selection callback shared across platforms.
     var onSelectionChange: ((NSRange) -> Void)?
 
-    /// Text binding for SwiftUI integration
-    var textBinding: Binding<String>?
+    /// Owns editor-to-host text propagation and debounce state.
+    let bindingSynchronizer = EditorBindingSynchronizer()
 
     /// Optional interaction-state binding for cursor persistence/restoration.
     var interactionStateBinding: Binding<EditorInteractionState>?
@@ -58,19 +57,8 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// a host explicitly wires one via `.environment(\.editorState, _:)`.
     weak var hostEditorState: EditorState?
 
-    /// Additional callbacks for extended functionality
-    var onTextChangeCallback: ((String) -> Void)?
+    /// Additional callback for extended selection functionality.
     var onSelectionChangeCallback: ((NSRange) -> Void)?
-
-    /// Debounce task for text changes
-    var textUpdateTask: Task<Void, Never>?
-
-    /// Debounce interval for text changes
-    @available(macOS 13.0, iOS 16.0, *)
-    var textDebounceInterval: Duration = .milliseconds(100)
-
-    /// Legacy debounce interval for older OS versions
-    var legacyTextDebounceInterval: TimeInterval = 0.1
 
     /// Track if focus has been requested to avoid duplicate requests
     private var hasFocusBeenRequested = false
@@ -153,6 +141,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         if currentConfiguration != configuration {
             currentConfiguration = configuration
         }
+        bindingSynchronizer.installHostText(text)
 
         // Mirror into the host's shared `EditorState`, if any. Status bar
         // and other chrome read these fields out of the SwiftUI environment.
@@ -189,47 +178,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         guard newText != currentText else { return }
 
         currentText = newText
-
-        // Cancel any existing debounce task and wait for it
-        let taskToCancel = textUpdateTask
-        textUpdateTask = nil
-
-        // Immediate update for internal state
-        onTextChange?(newText)
-
-        // Create new debounced update task
-        textUpdateTask = Task { [weak self] in
-            // First, await the cancellation of the previous task if it exists
-            if let taskToCancel {
-                taskToCancel.cancel()
-                _ = await taskToCancel.value
-            }
-
-            do {
-                guard let self else { return }
-                if #available(macOS 13.0, iOS 16.0, *) {
-                    try await Task.sleep(for: self.textDebounceInterval)
-                } else {
-                    try await Task.sleep(for: .seconds(self.legacyTextDebounceInterval))
-                }
-
-                await MainActor.run { [weak self] in
-                    guard let self else { return }
-
-                    // Update SwiftUI binding if available
-                    if let textBinding = self.textBinding, textBinding.wrappedValue != newText {
-                        textBinding.wrappedValue = newText
-                    }
-
-                    // Call the debounced callback
-                    self.onTextChangeCallback?(newText)
-                }
-            } catch is CancellationError {
-                // Task was cancelled, which is expected behavior
-            } catch {
-                // Unexpected error - still continue
-            }
-        }
+        bindingSynchronizer.receiveEditorText(newText)
     }
 
     /// Handle selection changes from the editor
@@ -384,7 +333,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
             note: "language=\(language.rawValue) incomingTextLength=\(text.count)"
         )
         // Store callbacks
-        self.onTextChange = onTextChange
+        bindingSynchronizer.onEditorText = onTextChange
         self.onSelectionChange = onSelectionChange
 
         // Get the text view
@@ -628,10 +577,9 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
         interactionState: Binding<EditorInteractionState>? = nil
     ) {
         super.init()
-        self.textBinding = text
+        bindingSynchronizer.bind(text)
+        bindingSynchronizer.onEditorText = onTextChange
         self.interactionStateBinding = interactionState
-        self.onTextChange = onTextChange
-        self.onTextChangeCallback = onTextChange
         self.onSelectionChange = onSelectionChange
         self.onSelectionChangeCallback = onSelectionChange
     }
@@ -661,10 +609,9 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
         interactionState: Binding<EditorInteractionState>? = nil
     ) {
         super.init()
-        self.textBinding = text
+        bindingSynchronizer.bind(text)
+        bindingSynchronizer.onEditorText = onTextChange
         self.interactionStateBinding = interactionState
-        self.onTextChange = onTextChange
-        self.onTextChangeCallback = onTextChange
         self.onSelectionChange = onSelectionChange
         self.onSelectionChangeCallback = onSelectionChange
     }

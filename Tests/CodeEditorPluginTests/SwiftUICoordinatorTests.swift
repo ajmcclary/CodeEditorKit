@@ -27,7 +27,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
 
         XCTAssertNotNil(coordinator)
-        XCTAssertEqual(coordinator.textDebounceInterval, .milliseconds(100)) // Default is 100ms
+        XCTAssertEqual(coordinator.bindingSynchronizer.debounce, .milliseconds(100))
         XCTAssertEqual(textChangeCount, 0)
         XCTAssertEqual(selectionChangeCount, 0)
     }
@@ -46,8 +46,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
 
         // Set custom debounce interval
-        coordinator.textDebounceInterval = .milliseconds(500)
-        XCTAssertEqual(coordinator.textDebounceInterval, .milliseconds(500))
+        coordinator.bindingSynchronizer.debounce = .milliseconds(500)
+        XCTAssertEqual(coordinator.bindingSynchronizer.debounce, .milliseconds(500))
     }
 
     // MARK: - Container Setup Tests
@@ -268,10 +268,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // The onTextChange callback should be called immediately
         XCTAssertEqual(onTextChangeText, "new text from editor")
 
-        // Wait for the coordinator's debounced task to complete
-        if let updateTask = coordinator.textUpdateTask {
-            _ = await updateTask.value
-        }
+        // Wait for the synchronizer's debounced write to complete.
+        await coordinator.bindingSynchronizer.waitForPendingWrite()
 
         // The binding should have been updated after the debounce
         XCTAssertEqual(holder.text, "new text from editor")
@@ -301,7 +299,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
 
         // Set a longer debounce interval
-        coordinator.textDebounceInterval = .milliseconds(500)
+        coordinator.bindingSynchronizer.debounce = .milliseconds(500)
 
         // Send multiple rapid updates
         coordinator.handleTextChange("a")
@@ -365,8 +363,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // Test cleanup doesn't crash
         coordinator.removeNotificationObservers()
 
-        // Cancel text update task
-        coordinator.textUpdateTask?.cancel()
+        // Cancel pending binding synchronization.
+        coordinator.bindingSynchronizer.cancel()
 
         // Verify cleanup doesn't crash
         XCTAssertNotNil(coordinator)
@@ -540,7 +538,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
             textDebounceInterval: .seconds(0.5)
         )
 
-        XCTAssertEqual(coordinator.textDebounceInterval, .milliseconds(500))
+        XCTAssertEqual(coordinator.bindingSynchronizer.debounce, .milliseconds(500))
 
         // Test helper cleanup
         CodeEditorRepresentableHelper.dismantle(coordinator: coordinator)

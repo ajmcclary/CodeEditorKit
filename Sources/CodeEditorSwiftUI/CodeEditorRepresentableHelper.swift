@@ -386,7 +386,7 @@ enum CodeEditorRepresentableHelper {
     /// Clean up resources when view is being removed
     static func dismantle(coordinator: CodeEditorCoordinator) {
         coordinator.removeNotificationObservers()
-        coordinator.textUpdateTask?.cancel()
+        coordinator.bindingSynchronizer.cancel()
         // Detach the host's controller so it stops vending operations
         // against a view that's about to disappear.
         coordinator.editorController?.attach(to: nil)
@@ -429,7 +429,7 @@ enum CodeEditorRepresentableHelper {
             onSelectionChange: onSelectionChange,
             interactionState: interactionState
         )
-        coordinator.textDebounceInterval = textDebounceInterval
+        coordinator.bindingSynchronizer.debounce = textDebounceInterval
         return coordinator
     }
 }
