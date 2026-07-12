@@ -1,40 +1,26 @@
+import CodeEditorCommon
 import CodeEditorLanguages
 import Foundation
 
 /// A thread-safe LRU (Least Recently Used) cache implementation
 @MainActor
 public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
-    private final class Node {
-        let key: Key
-        var value: Value
-        var prev: Node?
-        var next: Node?
-
-        init(key: Key, value: Value) {
-            self.key = key
-            self.value = value
-        }
-    }
-
-    private var capacity: Int
-    private var cache: [Key: Node] = [:]
-    private var head: Node?
-    private var tail: Node?
+    private let storage: LinkedLRU<Key, Value>
     private let cacheId = UUID().uuidString
     private var memoryMonitor: MemoryMonitor
 
     /// Total number of items currently in cache
-    public var count: Int { cache.count }
+    public var count: Int { storage.count }
 
     /// Maximum capacity of the cache
-    public var maxCapacity: Int { capacity }
+    public var maxCapacity: Int { storage.capacity }
 
     /// Creates a new LRU cache with the specified capacity
     /// - Parameters:
     ///   - capacity: Maximum number of items to store
     ///   - memoryMonitor: Memory monitor for tracking cache memory usage
     public init(capacity: Int, memoryMonitor: MemoryMonitor) {
-        self.capacity = max(1, capacity)
+        self.storage = LinkedLRU(capacity: capacity)
         self.memoryMonitor = memoryMonitor
 
         // Register with memory monitor for cleanup
@@ -43,18 +29,14 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
 
     /// Check if the cache is empty
     public var isEmpty: Bool {
-        cache.isEmpty
+        storage.isEmpty
     }
 
     /// Gets a value from the cache, moving it to most recently used
     /// - Parameter key: The key to look up
     /// - Returns: The cached value, or nil if not found
     public func get(_ key: Key) -> Value? {
-        guard let node = cache[key] else { return nil }
-
-        // Move to head (most recently used)
-        moveToHead(node)
-        return node.value
+        storage.value(forKey: key)
     }
 
     /// Sets a value in the cache
@@ -62,23 +44,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     ///   - value: The value to store
     ///   - key: The key to associate with the value
     public func set(_ value: Value, forKey key: Key) {
-        if let existingNode = cache[key] {
-            // Update existing node
-            existingNode.value = value
-            moveToHead(existingNode)
-        } else {
-            // Add new node
-            let newNode = Node(key: key, value: value)
-            cache[key] = newNode
-            addToHead(newNode)
-
-            // Remove least recently used if over capacity
-            if cache.count > capacity {
-                if let removedNode = removeTail() {
-                    cache.removeValue(forKey: removedNode.key)
-                }
-            }
-        }
+        storage.setValue(value, forKey: key)
     }
 
     /// Removes a value from the cache
@@ -86,88 +52,33 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     /// - Returns: The removed value, or nil if not found
     @discardableResult
     public func removeValue(forKey key: Key) -> Value? {
-        guard let node = cache.removeValue(forKey: key) else { return nil }
-        removeNode(node)
-        return node.value
+        storage.removeValue(forKey: key)
     }
 
     /// Removes all items from the cache
     public func removeAll() {
-        cache.removeAll()
-        head = nil
-        tail = nil
+        storage.removeAll()
     }
 
     /// Checks if the cache contains a value for the given key
     /// - Parameter key: The key to check
     /// - Returns: true if the key exists in the cache
     public func contains(_ key: Key) -> Bool {
-        cache[key] != nil
+        storage.contains(key)
     }
 
     /// Returns all keys in the cache, ordered from most to least recently used
     public var allKeys: [Key] {
-        var keys: [Key] = []
-        var current = head
-        while let node = current {
-            keys.append(node.key)
-            current = node.next
-        }
-        return keys
+        storage.keysMostRecentFirst
     }
 
     /// Returns statistics about the cache
     public var statistics: CacheStatistics {
         CacheStatistics(
             currentSize: count,
-            maxSize: capacity,
-            utilizationPercentage: Double(count) / Double(capacity) * 100
+            maxSize: storage.capacity,
+            utilizationPercentage: Double(count) / Double(storage.capacity) * 100
         )
-    }
-
-    // MARK: - Private Methods
-
-    private func addToHead(_ node: Node) {
-        node.prev = nil
-        node.next = head
-        head?.prev = node
-        head = node
-
-        // If this is the first node, also set it as tail
-        if tail == nil {
-            tail = node
-        }
-    }
-
-    private func removeNode(_ node: Node) {
-        // Update head if needed
-        if node === head {
-            head = node.next
-        }
-
-        // Update tail if needed
-        if node === tail {
-            tail = node.prev
-        }
-
-        // Update neighbor connections
-        node.prev?.next = node.next
-        node.next?.prev = node.prev
-
-        // Clear node's references
-        node.prev = nil
-        node.next = nil
-    }
-
-    private func moveToHead(_ node: Node) {
-        removeNode(node)
-        addToHead(node)
-    }
-
-    private func removeTail() -> Node? {
-        guard let lastNode = tail else { return nil }
-        removeNode(lastNode)
-        return lastNode
     }
 
     /// Register with memory monitor for automatic cleanup
@@ -183,9 +94,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
 
                 for _ in 0..<itemsToRemove {
                     if !self.isEmpty {
-                        if let removedNode = self.removeTail() {
-                            self.cache.removeValue(forKey: removedNode.key)
-                        }
+                        self.storage.removeLeastRecent()
                     } else {
                         break
                     }

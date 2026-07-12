@@ -32,10 +32,9 @@ public final class LinkedLRU<Key: Hashable, Value> {
     private var head: Node?
     private var tail: Node?
 
-    /// - Parameter capacity: Maximum entry count. Must be positive.
+    /// - Parameter capacity: Maximum entry count, clamped to at least one.
     public init(capacity: Int) {
-        precondition(capacity > 0, "LinkedLRU capacity must be positive")
-        self.capacity = capacity
+        self.capacity = max(1, capacity)
     }
 
     /// Current entry count.
@@ -43,6 +42,22 @@ public final class LinkedLRU<Key: Hashable, Value> {
 
     /// True iff the cache has no entries.
     public var isEmpty: Bool { nodes.isEmpty }
+
+    /// True when an entry exists without changing its recency.
+    public func contains(_ key: Key) -> Bool {
+        nodes[key] != nil
+    }
+
+    /// Keys ordered from most to least recently used.
+    public var keysMostRecentFirst: [Key] {
+        var keys: [Key] = []
+        var current = head
+        while let node = current {
+            keys.append(node.key)
+            current = node.next
+        }
+        return keys
+    }
 
     /// Returns the value for `key`, promoting it to most-recently-used.
     /// Returns nil if the key is not present.
@@ -98,6 +113,15 @@ public final class LinkedLRU<Key: Hashable, Value> {
         nodes.removeAll()
         head = nil
         tail = nil
+    }
+
+    /// Removes and returns the least-recently-used entry.
+    @discardableResult
+    public func removeLeastRecent() -> (key: Key, value: Value)? {
+        guard let tail else { return nil }
+        detach(tail)
+        nodes.removeValue(forKey: tail.key)
+        return (tail.key, tail.value)
     }
 
     // MARK: - Linked-list bookkeeping
