@@ -31,14 +31,8 @@ Complete pipeline for language detection and syntax highlighting, including both
 ### 7. [Completion System Architecture](07-completion-system-architecture.md)
 Code completion system including `CompletionManager`, provider management, session management, caching, and UI components. Includes sequence diagram of completion flow.
 
-### 9. [Text Processing Pipeline](09-text-processing-pipeline.md)
-Text processing flow from input to rendering, including TextKit2 integration, line index management, batch processing, and performance optimizations. Shows incremental updates and viewport rendering.
-
 ### 10. [UI Component Hierarchy](10-ui-component-hierarchy.md)
 Visual component hierarchy showing CodeEditorContainerView and all child components including gutter, minimap, overlays, and status bar. Includes layout structure diagram.
-
-### 11. [Advanced Features Integration Architecture](11-advanced-features-integration.md)
-Comprehensive architecture for advanced features including search functionality, smart editing, and code folding. Shows feature coordination, state management, and UI integration.
 
 ### 12. [LSP System Complete Architecture](12-lsp-system-architecture.md)
 Complete Language Server Protocol implementation with transport layers, protocol integration, and multi-language support. Includes message routing, capability negotiation, error handling, and retry configuration with exponential backoff and jitter support.
@@ -55,9 +49,6 @@ Language provider ecosystem supporting 25 concrete languages plus plain text wit
 ### 16. [Annotation System Detailed Architecture](16-annotation-system-architecture.md)
 Comprehensive annotation system providing code annotations, diagnostics, and contextual information overlay capabilities. Includes multi-source annotation support, interactive features, and visual customization.
 
-### 17. [Advanced Text Processing & Validation Pipeline](17-advanced-text-processing-pipeline.md)
-Advanced text processing and validation system with multi-phase validation, range management, text versioning, and flexible styling. Includes performance optimization and comprehensive validation approaches.
-
 ### 18. [Data Models & Type System Architecture](18-data-models-type-system.md)
 Comprehensive data models and type system forming the foundation of CodeEditorPlugin's data structures. Includes rich text models, versioning system, type information, and performance optimization.
 
@@ -72,9 +63,6 @@ Advanced layout system and UI component architecture handling positioning, respo
 
 ### 23. [Multi-Language Support Matrix](23-multi-language-support-matrix.md)
 Matrix view of language support capabilities across 25 concrete supported languages plus plain text. Shows feature comparison, performance characteristics, and LSP integration notes.
-
-### 24. [Performance Optimization Pipeline](24-performance-optimization-pipeline.md)
-Comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance. Includes real-time monitoring, bottleneck detection, adaptive optimization strategies, and machine learning-based improvements.
 
 ### 25. [Package Dependencies](25-package-dependencies.md)
 Package dependency diagram showing the current library products, the single-file `CodeEditorPlugin` umbrella target, runtime dependencies, and test target dependencies.

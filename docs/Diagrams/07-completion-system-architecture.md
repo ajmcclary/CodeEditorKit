@@ -9,12 +9,10 @@ classDiagram
     %% Actor Coordination Layer (NEW)
     class ActorCoordinator {
         <<dependency injection>>
-        -textProcessor TextProcessingActor
         -cacheCoordinator CacheCoordinatorActor
         -performanceMetrics PerformanceMetricsActor
         -documentState DocumentStateActor
         -errorRecovery ErrorRecoveryCoordinator
-        +processText() async String
         +trackPerformance() async
         +createDocument() async UUID
         +handleError() async

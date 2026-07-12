@@ -12,12 +12,6 @@ import Foundation
 public final class ActorCoordinator {
     // MARK: - Actors
 
-    /// Text processing actor for text manipulation operations.
-    ///
-    /// Handles background text processing tasks like formatting, validation,
-    /// and other computationally intensive text operations.
-    public let textProcessor: TextProcessingActor
-
     /// Cache coordinator for managing all caches
     public let cacheCoordinator: CacheCoordinatorActor
 
@@ -42,14 +36,12 @@ public final class ActorCoordinator {
     ///
     /// ## Actors Created
     ///
-    /// - ``TextProcessingActor``: For text manipulation operations
     /// - ``CacheCoordinatorActor``: For managing all caches
     /// - ``FileSystemActor``: For file operations
     /// - ``PerformanceMetricsActor``: For tracking performance
     /// - ``DocumentStateActor``: For document lifecycle management
     /// - ``ErrorRecoveryCoordinator``: For error handling
     public init() {
-        self.textProcessor = TextProcessingActor()
         self.cacheCoordinator = CacheCoordinatorActor()
         self.fileSystem = FileSystemActor()
         self.performanceMetrics = PerformanceMetricsActor()
@@ -58,33 +50,6 @@ public final class ActorCoordinator {
     }
 
     // MARK: - Convenience Methods
-
-    /// Process text with automatic error recovery
-    public func processText(
-        _ text: String,
-        processorType: TextProcessingActor.TextProcessor.ProcessorType,
-        priority: TextProcessingActor.TextProcessingPriority = .high
-    ) async throws -> String {
-        do {
-            return try await textProcessor.process(
-                text: text,
-                with: processorType,
-                priority: priority
-            )
-        } catch {
-            // Convert to recoverable error if needed
-            if let recoverableError = error as? any RecoverableAsyncError {
-                return try await errorRecovery.recover(from: recoverableError) {
-                    try await self.textProcessor.process(
-                        text: text,
-                        with: processorType,
-                        priority: priority
-                    )
-                }
-            }
-            throw error
-        }
-    }
 
     /// Track performance metric with automatic aggregation
     public func trackPerformance(
@@ -141,30 +106,6 @@ extension CodeEditorView {
         runtime.dependencies.actorCoordinator
     }
 
-    /// Process text using the integrated actor system
-    public func processText(
-        with processorType: TextProcessingActor.TextProcessor.ProcessorType,
-        priority: TextProcessingActor.TextProcessingPriority = .high
-    ) async throws {
-        #if canImport(AppKit)
-        let currentText = string
-        #else
-        let currentText = text ?? ""
-        #endif
-
-        let processedText = try await actorCoordinator.processText(
-            currentText,
-            processorType: processorType,
-            priority: priority
-        )
-
-        // Update text on main actor
-        #if canImport(AppKit)
-        string = processedText
-        #else
-        text = processedText
-        #endif
-    }
 }
 
 // MARK: - Cache Integration

@@ -22,12 +22,10 @@ classDiagram
 
     class ActorCoordinator {
         <<@MainActor coordinator>>
-        +textProcessor TextProcessingActor
         +cacheCoordinator CacheCoordinatorActor
         +performanceMetrics PerformanceMetricsActor
         +documentState DocumentStateActor
         +errorRecovery ErrorRecoveryCoordinator
-        +processText(String, ProcessorType) async throws String
         +trackPerformance(String, Duration) async
         +createOrUpdateDocument(String, URL?, Language) async UUID
     }
@@ -120,17 +118,6 @@ classDiagram
     }
 
     %% Row 4 - Actor-Based Processing & LSP Integration
-
-    class TextProcessingActor {
-        <<actor>>
-        +activeProcessors [UUID: TextProcessor]
-        +textBuffers [UUID: String]
-        +errorRecovery ErrorRecoveryCoordinator
-        +process(text: String, with: ProcessorType, priority: TaskPriority) async throws String
-        +cancelAllProcessing()
-        -processIndentation(String) async throws String
-        -processBracketMatching(String) async throws String
-    }
 
     class CacheCoordinatorActor {
         <<actor>>
@@ -312,7 +299,6 @@ classDiagram
     CodeEditorView --> TextLayoutManager : manages layout
     CodeEditorView --> UnifiedEventSystem : emits events
 
-    ActorCoordinator --> TextProcessingActor : coordinates
     ActorCoordinator --> CacheCoordinatorActor : manages caches
     ActorCoordinator --> PerformanceMetricsActor : tracks performance
     ActorCoordinator --> DocumentStateActor : manages documents
@@ -354,7 +340,6 @@ classDiagram
 
     class CodeEditorView mainView
     class ActorCoordinator actor
-    class TextProcessingActor actor
     class CacheCoordinatorActor actor
     class PerformanceMetricsActor performance
     class DocumentStateActor actor
@@ -393,7 +378,6 @@ sequenceDiagram
     participant User as User Interaction
     participant Editor as CodeEditorView
     participant Coordinator as ActorCoordinator
-    participant TextActor as TextProcessingActor
     participant CacheActor as CacheCoordinatorActor
     participant DataSource as AnnotationsDataSource
     participant LSP as LSPDiagnosticProvider
@@ -404,11 +388,7 @@ sequenceDiagram
     Editor->>EventSystem: Emit textDidChange event
     EventSystem->>Coordinator: Process text change
     
-    par Background Processing
-        Coordinator->>TextActor: Process text async
-        TextActor->>TextActor: Analyze for annotations
-        TextActor-->>Coordinator: Processing complete
-    and LSP Integration
+    par LSP Integration
         Coordinator->>LSP: Request diagnostics
         LSP->>LSP: Parse LSP diagnostics
         LSP-->>Coordinator: Return MessageLineAnnotations
@@ -439,7 +419,6 @@ sequenceDiagram
 ## Enhanced Annotation System Features (2025)
 
 ### 1. Actor-Based Concurrent Processing
-- **TextProcessingActor**: Isolated text analysis with async/await
 - **CacheCoordinatorActor**: Thread-safe cache management with LRU eviction
 - **PerformanceMetricsActor**: Real-time performance tracking and optimization
 - **DocumentStateActor**: Document lifecycle management with version tracking

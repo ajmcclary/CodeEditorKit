@@ -214,19 +214,10 @@ final class CleanupCounter {
 
 Many internal components accept MemoryMonitor as a parameter:
 
-### TextProcessingActor
+### CompletionManager
 
 ```swift
-let processor = TextProcessingActor(
-    memoryMonitor: customMonitor,
-    maxConcurrentOperations: 4
-)
-```
-
-### SmartCompletionEngine
-
-```swift
-let completionEngine = SmartCompletionEngine(
+let completionManager = CompletionManager(
     memoryMonitor: customMonitor
 )
 ```

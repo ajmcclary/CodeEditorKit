@@ -9,29 +9,14 @@ classDiagram
     %% Row 1 - Swift 6 Actor Coordination System
     class ActorCoordinator {
         <<@MainActor final class>>
-        +textProcessor TextProcessingActor
         +cacheCoordinator CacheCoordinatorActor
         +fileSystem FileSystemActor
         +performanceMetrics PerformanceMetricsActor
         +documentState DocumentStateActor
         +errorRecovery ErrorRecoveryCoordinator
-        +processText() async throws
         +trackPerformance() async
         +createOrUpdateDocument() async
         +static create() ActorCoordinator
-    }
-
-    class TextProcessingActor {
-        <<actor>>
-        -activeProcessors [UUID: TextProcessor]
-        -textBuffers [UUID: String]
-        -errorRecovery ErrorRecoveryCoordinator
-        +process(text, processorType, priority) async throws
-        +cancelAllProcessing()
-        +processIndentation() async throws
-        +processBracketMatching() async throws
-        +processLineWrapping() async throws
-        +normalizeWhitespace() async throws
     }
 
     class CacheCoordinatorActor {
@@ -341,7 +326,6 @@ classDiagram
     }
 
     %% Key Relationships
-    ActorCoordinator --> TextProcessingActor : manages
     ActorCoordinator --> CacheCoordinatorActor : manages
     ActorCoordinator --> PerformanceMetricsActor : manages
     ActorCoordinator --> DocumentStateActor : manages
@@ -383,7 +367,6 @@ classDiagram
     classDef enum fill:#8E8E9325,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class ActorCoordinator actor
-    class TextProcessingActor actor
     class CacheCoordinatorActor actor
     class PerformanceMetricsActor actor
     class DocumentStateActor actor

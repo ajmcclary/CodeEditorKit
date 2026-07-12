@@ -78,7 +78,7 @@ The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https
 ### Internals
 
 - [Architecture overview](Internals/architecture-overview.md)
-- [Actor coordinator](Internals/actor-coordinator.md)
+- [Actor coordinator](Internals/actor-coordinator.md) — cache, file-system, metrics, and document actors; attach concrete text behavior through [Smart editing](Features/smart-editing.md).
 - [Unified drawing coordinator](Internals/unified-drawing.md)
 - [Optimized line index cache](Internals/line-index-cache.md)
 - [Advanced patterns](Internals/advanced-patterns.md)

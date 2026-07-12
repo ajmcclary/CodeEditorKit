@@ -9,13 +9,11 @@ classDiagram
     %% Row 1 - Core Actor-Based Utility System
     class ActorCoordinator {
         <<main coordinator>>
-        +textProcessor TextProcessingActor
         +cacheCoordinator CacheCoordinatorActor
         +fileSystem FileSystemActor
         +performanceMetrics PerformanceMetricsActor
         +documentState DocumentStateActor
         +errorRecovery ErrorRecoveryCoordinator
-        +processText() async
         +trackPerformance() async
         +createOrUpdateDocument() async
     }
@@ -46,18 +44,6 @@ classDiagram
     }
 
     %% Row 2 - Specialized Actors
-    class TextProcessingActor {
-        <<specialized actor>>
-        +activeProcessors [UUID: TextProcessor]
-        +textBuffers [UUID: String]
-        +errorRecovery ErrorRecoveryCoordinator
-        +process() async
-        +cancelAllProcessing()
-        +processIndentation() async
-        +processBracketMatching() async
-        +normalizeWhitespace() async
-    }
-
     class CacheCoordinatorActor {
         <<cache coordinator>>
         +caches [String: AnyCacheWrapper]
@@ -332,7 +318,6 @@ classDiagram
     }
 
     %% Key Relationships
-    ActorCoordinator --> TextProcessingActor : coordinates
     ActorCoordinator --> CacheCoordinatorActor : coordinates
     ActorCoordinator --> FileSystemActor : coordinates
     ActorCoordinator --> PerformanceMetricsActor : coordinates
@@ -380,7 +365,6 @@ classDiagram
     class ActorCoordinator coordinator
     class AsyncOperationManager coordinator
     class CrossPlatformLogger utility
-    class TextProcessingActor actor
     class CacheCoordinatorActor actor
     class FileSystemActor actor
     class PerformanceMetricsActor actor
@@ -421,7 +405,6 @@ flowchart TB
     
     subgraph "Core Actors"
         direction TB
-        TEXT_ACTOR[TextProcessingActor]
         CACHE_ACTOR[CacheCoordinatorActor]
         FILE_ACTOR[FileSystemActor]
         PERF_ACTOR[PerformanceMetricsActor]
@@ -445,7 +428,6 @@ flowchart TB
         PLATFORM_EXT[Platform Extensions]
     end
     
-    READY --> TEXT_ACTOR
     READY --> CACHE_ACTOR
     READY --> FILE_ACTOR
     READY --> PERF_ACTOR
@@ -459,8 +441,7 @@ flowchart TB
     
     READY --> EXT_PATTERN
     
-    TEXT_ACTOR --> PROVIDE[Provide Services to Framework]
-    CACHE_ACTOR --> PROVIDE
+    CACHE_ACTOR --> PROVIDE[Provide Services to Framework]
     FILE_ACTOR --> PROVIDE
     PERF_ACTOR --> PROVIDE
     DOC_ACTOR --> PROVIDE
@@ -484,7 +465,6 @@ flowchart TB
     class CREATE_COORD process
     class INIT_ACTORS process
     class SETUP_MEM process
-    class TEXT_ACTOR actor
     class CACHE_ACTOR actor
     class FILE_ACTOR actor
     class PERF_ACTOR actor
@@ -505,7 +485,6 @@ flowchart TB
 
 ### 1. Actor-Based Architecture (Swift 6 Concurrency)
 - **ActorCoordinator**: Central coordination of all specialized actors with dependency injection
-- **TextProcessingActor**: Isolated text manipulation operations with cancellation support
 - **CacheCoordinatorActor**: Thread-safe cache management with global eviction policies
 - **FileSystemActor**: Async file operations with integrated file watching capabilities
 - **PerformanceMetricsActor**: Real-time performance tracking with aggregated statistics
@@ -550,11 +529,9 @@ flowchart TB
 var config = EditorConfiguration()
 let setup = EditorSetup(runtimeDependencies: EditorRuntimeDependencies(actorCoordinator: ActorCoordinator.create()))
 
-// Use through CodeEditorView
-let processedText = try await editorView.processText(
-    with: .whitespaceNormalization,
-    priority: .high
-)
+// Attach concrete smart-editing behavior to the editor surface.
+let smartEditing = SmartEditingEngine()
+smartEditing.attach(to: editorView)
 
 // Direct actor usage
 let coordinator = ActorCoordinator()
