@@ -59,6 +59,14 @@ final class PublishEventFanOutTests: XCTestCase {
             "alpha\nbeta",
             "Setting `string` should fan out a textDidChange event into the customer-supplied UnifiedEventSystem."
         )
+        XCTAssertEqual(
+            view.runtime.dependencies.eventBus.recentEvents { event in
+                if case .textDidChange("alpha\nbeta") = event { return true }
+                return false
+            }.count,
+            1,
+            "A text change must enter the canonical bus exactly once."
+        )
     }
 
     func testSelectionDidChangeFansOutToEventSystem() throws {
@@ -83,6 +91,16 @@ final class PublishEventFanOutTests: XCTestCase {
             received.contains(NSRange(location: 0, length: 5)),
             "Setting selection should fan out a textSelectionDidChange event into the customer-supplied UnifiedEventSystem."
         )
+        XCTAssertEqual(
+            view.runtime.dependencies.eventBus.recentEvents { event in
+                if case .textSelectionDidChange(let range) = event {
+                    return range == NSRange(location: 0, length: 5)
+                }
+                return false
+            }.count,
+            1,
+            "A selection change must enter the canonical bus exactly once."
+        )
     }
 
     func testBecomeFirstResponderFansOutFocusEvent() throws {
@@ -106,6 +124,13 @@ final class PublishEventFanOutTests: XCTestCase {
         XCTAssertTrue(became, "Window must be able to make the editor view first responder for this test to be meaningful.")
 
         XCTAssertEqual(becameCount, 1, "becomeFirstResponder() should fan out exactly one didBecomeFirstResponder event.")
+        XCTAssertEqual(
+            view.runtime.dependencies.eventBus.recentEvents { event in
+                if case .didBecomeFirstResponder = event { return true }
+                return false
+            }.count,
+            1
+        )
     }
 
     func testResignFirstResponderFansOutFocusEvent() throws {

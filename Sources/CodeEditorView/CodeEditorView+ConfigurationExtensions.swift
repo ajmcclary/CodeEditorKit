@@ -132,11 +132,6 @@ extension CodeEditorView {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.updateSelectedLineHighlight()
-            let selectionNotification = Notification(
-                name: Self.codeEditorViewDidChangeSelectionNotification,
-                object: self
-            )
-            NotificationCenter.default.post(selectionNotification)
             self.publishEvent(.textSelectionDidChange(currentSelection))
         }
     }
