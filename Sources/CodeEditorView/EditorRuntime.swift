@@ -20,6 +20,9 @@ public struct EditorRuntimeDependencies {
     /// Event system used for opt-in editor event publication.
     public var eventSystem: UnifiedEventSystem?
 
+    /// Canonical ordered event publication bus.
+    public var eventBus: EditorEventBus
+
     /// Memory monitor shared by performance-sensitive runtime components.
     public var memoryMonitor: MemoryMonitor
 
@@ -51,6 +54,7 @@ public struct EditorRuntimeDependencies {
     public init(
         workspaceRoot: URL? = nil,
         eventSystem: UnifiedEventSystem? = nil,
+        eventBus: EditorEventBus? = nil,
         memoryMonitor: MemoryMonitor? = nil,
         actorCoordinator: ActorCoordinator? = nil,
         platformCapabilities: PlatformCapabilities? = nil,
@@ -63,6 +67,8 @@ public struct EditorRuntimeDependencies {
     ) {
         self.workspaceRoot = workspaceRoot
         self.eventSystem = eventSystem
+        self.eventBus = eventBus ?? eventSystem?.eventBus ?? EditorEventBus()
+        eventSystem?.attach(to: self.eventBus)
         self.memoryMonitor = memoryMonitor ?? CodeEditorDependencies.makeMemoryMonitor()
         self.actorCoordinator = actorCoordinator ?? ActorCoordinator.create()
         self.platformCapabilities = platformCapabilities ?? CodeEditorDependencies.makePlatformCapabilities()
@@ -124,6 +130,7 @@ public final class EditorRuntime {
 
     public func update(eventSystem: UnifiedEventSystem?) {
         dependencies.eventSystem = eventSystem
+        eventSystem?.attach(to: dependencies.eventBus)
     }
 
     public func update(memoryMonitor: MemoryMonitor) {

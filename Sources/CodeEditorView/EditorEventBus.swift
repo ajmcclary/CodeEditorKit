@@ -16,6 +16,7 @@ public struct SequencedEditorEvent: Sendable {
 public final class EditorEventBus {
     private var nextSequence: UInt64 = 1
     private var continuations: [UUID: AsyncStream<SequencedEditorEvent>.Continuation] = [:]
+    private var observers: [UUID: (SequencedEditorEvent) -> Void] = [:]
     private var history: [SequencedEditorEvent] = []
     private let historyLimit: Int
 
@@ -31,6 +32,7 @@ public final class EditorEventBus {
             history.removeFirst(history.count - historyLimit)
         }
         continuations.values.forEach { $0.yield(value) }
+        observers.values.forEach { $0(value) }
     }
 
     public func stream(
@@ -55,5 +57,41 @@ public final class EditorEventBus {
 
     var subscriberCount: Int {
         continuations.count
+    }
+
+    @discardableResult
+    func observe(
+        _ observer: @escaping (SequencedEditorEvent) -> Void
+    ) -> EditorEventObservation {
+        let identifier = UUID()
+        observers[identifier] = observer
+        return EditorEventObservation(bus: self, identifier: identifier)
+    }
+
+    fileprivate func removeObserver(_ identifier: UUID) {
+        observers.removeValue(forKey: identifier)
+    }
+}
+
+/// Lifetime token for a synchronous event-bus adapter.
+@MainActor
+final class EditorEventObservation {
+    private weak var bus: EditorEventBus?
+    private let identifier: UUID
+
+    init(bus: EditorEventBus, identifier: UUID) {
+        self.bus = bus
+        self.identifier = identifier
+    }
+
+    func cancel() {
+        bus?.removeObserver(identifier)
+        bus = nil
+    }
+
+    deinit {
+        MainActor.assumeIsolated {
+            bus?.removeObserver(identifier)
+        }
     }
 }

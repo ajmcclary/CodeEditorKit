@@ -15,6 +15,8 @@ public final class UnifiedEventSystem: ObservableObject {
 
     /// Main event publisher
     private let eventSubject = PassthroughSubject<EditorEvent, Never>()
+    private(set) var eventBus: EditorEventBus
+    private var busObservation: EditorEventObservation?
 
     /// Event publisher for external subscribers
     public var events: AnyPublisher<EditorEvent, Never> {
@@ -49,17 +51,35 @@ public final class UnifiedEventSystem: ObservableObject {
     /// - Parameters:
     ///   - enableDefaultFilters: Whether to setup default filters (default: true)
     ///   - capabilities: Platform capabilities for adaptive behavior (defaults to shared instance)
-    public init(enableDefaultFilters: Bool = true, capabilities: PlatformCapabilities? = nil) {
+    public init(
+        enableDefaultFilters: Bool = true,
+        capabilities: PlatformCapabilities? = nil,
+        eventBus: EditorEventBus? = nil
+    ) {
         self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
+        self.eventBus = eventBus ?? EditorEventBus()
         if enableDefaultFilters {
             setupDefaultFilters()
         }
+        attach(to: self.eventBus)
     }
 
     // MARK: - Event Publishing
 
     /// Publish an event to the system
     public func publish(_ event: EditorEvent) {
+        eventBus.publish(event)
+    }
+
+    func attach(to eventBus: EditorEventBus) {
+        busObservation?.cancel()
+        self.eventBus = eventBus
+        busObservation = eventBus.observe { [weak self] value in
+            self?.receive(value.event)
+        }
+    }
+
+    private func receive(_ event: EditorEvent) {
         // Apply filters
         let shouldPublish = eventFilters.allSatisfy { $0.shouldAllow(event) }
         guard shouldPublish else {
@@ -406,9 +426,18 @@ extension CircularBuffer: Sequence {
 extension CodeEditorView {
     /// Publish events through the unified event system
     public func publishEvent(_ event: EditorEvent) {
-        // Publish to the local event publisher
-        eventPublisher.publishSync(event)
-
-        runtime.dependencies.eventSystem?.publish(event)
+        let bus = runtime.dependencies.eventBus
+        if legacyEventBus !== bus {
+            legacyEventObservation?.cancel()
+            legacyEventBus = bus
+            legacyEventObservation = bus.observe { [weak self] value in
+                self?.eventPublisher.publishSync(value.event)
+            }
+            notificationCenterEventAdapter = NotificationCenterEventAdapter(
+                bus: bus,
+                editor: self
+            )
+        }
+        bus.publish(event)
     }
 }

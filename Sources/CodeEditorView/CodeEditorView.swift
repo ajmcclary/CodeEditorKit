@@ -190,6 +190,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Event publisher for unified event handling
     public let eventPublisher = EditorEventPublisher()
 
+    /// Compatibility adapters sourced from the runtime's canonical event bus.
+    internal var legacyEventBus: EditorEventBus?
+    internal var legacyEventObservation: EditorEventObservation?
+    internal var notificationCenterEventAdapter: NotificationCenterEventAdapter?
+
     /// Optional lifecycle injected by package tests or alternate hosts.
     private var sessionOverride: (any EditorSessionLifecycle)?
 
