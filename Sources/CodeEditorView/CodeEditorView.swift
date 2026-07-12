@@ -572,7 +572,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         memoryMonitor: MemoryMonitor? = nil
     ) {
         self.init(frame: frameRect)
-        runtime.update(featureDependencies: featureDependencies)
+        runtime.replace(featureDependencies: featureDependencies)
         if let memoryMonitor {
             self.memoryMonitor = memoryMonitor
         }
@@ -609,7 +609,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         memoryMonitor: MemoryMonitor? = nil
     ) {
         self.init(frame: frameRect)
-        runtime.update(featureDependencies: featureDependencies)
+        runtime.replace(featureDependencies: featureDependencies)
         if let memoryMonitor {
             self.memoryMonitor = memoryMonitor
         }

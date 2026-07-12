@@ -154,7 +154,7 @@ public final class CodeEditorContainerView: PlatformView {
     ///   - featureDependencies: Service registry for business logic dependencies
     public convenience init(frame: CGRect, featureDependencies: EditorFeatureRuntimeDependencies) {
         self.init(frame: frame)
-        textView.runtime.update(featureDependencies: featureDependencies)
+        textView.runtime.replace(featureDependencies: featureDependencies)
     }
 
     public required init?(coder: NSCoder) {

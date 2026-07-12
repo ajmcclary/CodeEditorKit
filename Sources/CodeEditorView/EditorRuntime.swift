@@ -102,11 +102,15 @@ public final class EditorRuntime {
 
     public func update(dependencies: EditorRuntimeDependencies) {
         self.dependencies = dependencies
-        self.featureDependencies = EditorFeatureRuntimeDependencies()
     }
 
-    public func update(featureDependencies: EditorFeatureRuntimeDependencies) {
+    public func replace(featureDependencies: EditorFeatureRuntimeDependencies) {
         self.featureDependencies = featureDependencies
+    }
+
+    @available(*, deprecated, renamed: "replace(featureDependencies:)")
+    public func update(featureDependencies: EditorFeatureRuntimeDependencies) {
+        replace(featureDependencies: featureDependencies)
     }
 
     public func update(workspaceRoot: URL?) {
