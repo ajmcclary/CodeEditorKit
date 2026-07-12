@@ -3,17 +3,6 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 import Foundation
 
-// MARK: - Frequency Entry
-
-/// In-memory frequency + recency record for a single label, scoped by
-/// `"\(language.identifier):\(label)"`. Lives only inside `CompletionManager`'s
-/// LRU; never published, never persisted in this round. See the spec's
-/// "Follow-ups (deliberately deferred)" section for persistence design.
-private struct FrequencyEntry: Sendable {
-    var usageCount: Int
-    var lastUsed: Date
-}
-
 // MARK: - Completion Manager
 
 /// Manages code completion requests across multiple providers.
@@ -64,29 +53,12 @@ private struct FrequencyEntry: Sendable {
 public final class CompletionManager {
     private let providerRegistry = CompletionProviderRegistry()
     private let requestCoordinator: CompletionRequestCoordinator
-    private let cache: LRUCache<CompletionCacheKey, CachedCompletionResult>
-    private let cacheExpirationTime: TimeInterval
-    private let enableCaching: Bool
+    private let responseCache: CompletionResponseCache
+    private let learningStore: CompletionLearningStore
+    private let ranker = CompletionRanker()
     private var memoryMonitor: MemoryMonitor
     private let cleanupIdentifier = "completion-manager-\(UUID().uuidString)"
     private let broadcaster: CompletionEventBroadcaster
-
-    /// In-memory frequency/recency cache. Keyed by
-    /// `"\(language.identifier):\(label)"`; capacity matches the legacy
-    /// SmartCompletionEngine setting (500). Cleared on
-    /// `clearLearnedPatterns()` and on the memory-monitor cleanup hook.
-    /// Never persisted in this round; see spec follow-ups.
-    private let frequencyCache: LRUCache<String, FrequencyEntry>
-
-    /// Captured at the top of `requestCompletions(for:)` so
-    /// `recordSelection(_:)` can scope the frequency key by language
-    /// without forcing callers to thread the context through.
-    private var lastContext: CompletionContextModel?
-
-    private let logger = CrossPlatformLogger.logger(
-        subsystem: "com.codeeditor.plugin",
-        category: "CompletionManager"
-    )
 
     /// Maximum items returned from `requestCompletions(for:)`. Default 50.
     /// Mutable so hosts can tune per editor without sub-classing or DI.
@@ -110,10 +82,16 @@ public final class CompletionManager {
         debouncer: CompletionDebouncer? = nil
     ) {
         self.memoryMonitor = memoryMonitor
-        self.cache = LRUCache(capacity: cacheSize, memoryMonitor: memoryMonitor)
-        self.frequencyCache = LRUCache(capacity: 500, memoryMonitor: memoryMonitor)
-        self.cacheExpirationTime = cacheExpirationTime
-        self.enableCaching = enableCaching
+        self.responseCache = CompletionResponseCache(
+            capacity: cacheSize,
+            expirationTime: cacheExpirationTime,
+            isEnabled: enableCaching,
+            memoryMonitor: memoryMonitor
+        )
+        self.learningStore = CompletionLearningStore(
+            capacity: 500,
+            memoryMonitor: memoryMonitor
+        )
         let broadcaster = CompletionEventBroadcaster()
         self.broadcaster = broadcaster
         self.requestCoordinator = CompletionRequestCoordinator(
@@ -186,13 +164,13 @@ public final class CompletionManager {
 
     /// Clear the completion cache
     public func clearCache() {
-        cache.removeAll()
+        responseCache.clear()
         statistics.resetCacheStats()
     }
 
     /// Get cache statistics
     public var cacheStatistics: CacheStatistics {
-        cache.statistics
+        responseCache.statistics
     }
 
     // MARK: - Completion Requests
@@ -200,7 +178,7 @@ public final class CompletionManager {
     /// Request completions for the given context
     public func requestCompletions(for context: CompletionContextModel) async throws -> CompletionResult {
         // Capture for recordSelection scoping; cleared on cancel.
-        lastContext = context
+        learningStore.noteContext(context)
 
         // Check cache first if enabled
         if let cachedResult = getCachedResult(for: context) {
@@ -231,12 +209,10 @@ public final class CompletionManager {
     // MARK: - Helper Methods
 
     private func getCachedResult(for context: CompletionContextModel) -> CompletionResult? {
-        guard enableCaching else { return nil }
-
-        let cacheKey = CompletionCacheKey(context: context)
-        if let cachedResult = cache.get(cacheKey), !cachedResult.isExpired {
+        guard responseCache.isEnabled else { return nil }
+        if let cachedResult = responseCache.result(for: context) {
             statistics.recordCacheHit()
-            return cachedResult.result
+            return cachedResult
         }
         statistics.recordCacheMiss()
         return nil
@@ -263,11 +239,7 @@ public final class CompletionManager {
         )
 
         // Cache the result if enabled and not incomplete
-        if enableCaching && !isIncomplete && !sortedItems.isEmpty {
-            let cacheKey = CompletionCacheKey(context: context)
-            let cachedResult = CachedCompletionResult(result: result, expirationTime: cacheExpirationTime)
-            cache.set(cachedResult, forKey: cacheKey)
-        }
+        responseCache.store(result, for: context)
 
         statistics.recordRequest(processingTime: processingTime)
         return result
@@ -292,7 +264,7 @@ public final class CompletionManager {
     /// Cancel any pending completion request
     public func cancelCurrentRequest() {
         requestCoordinator.cancelCurrentRequest()
-        lastContext = nil
+        learningStore.clearContext()
     }
 
     /// Access to the debouncer for configuration
@@ -310,15 +282,7 @@ public final class CompletionManager {
     ///   `lastContext`) or if it was cancelled via `cancelCurrentRequest()`.
     /// - SeeAlso: ``clearLearnedPatterns()``, ``maxCompletions``.
     public func recordSelection(_ item: CompletionItemModel) {
-        guard let language = lastContext?.language else {
-            logger.debug("recordSelection called with no lastContext; ignored")
-            return
-        }
-        let key = "\(language.identifier):\(item.label)"
-        var entry = frequencyCache.get(key) ?? FrequencyEntry(usageCount: 0, lastUsed: Date())
-        entry.usageCount += 1
-        entry.lastUsed = Date()
-        frequencyCache.set(entry, forKey: key)
+        learningStore.recordSelection(item)
     }
 
     /// Clear in-memory frequency + recency state.
@@ -327,7 +291,7 @@ public final class CompletionManager {
     /// ``clearCache()`` for the former and ``unregisterProvider(withId:)``
     /// for the latter.
     public func clearLearnedPatterns() {
-        frequencyCache.removeAll()
+        learningStore.clear()
     }
 
     // MARK: - Ranking
@@ -350,91 +314,12 @@ public final class CompletionManager {
         _ items: [CompletionItemModel],
         context: CompletionContextModel
     ) -> [CompletionItemModel] {
-        // Stage 1: dedup
-        var seen = Set<String>()
-        let unique = items.filter { item in
-            let key = "\(item.label):\(item.kind.rawValue)"
-            return seen.insert(key).inserted
-        }
-
-        // Stage 2: pre-compute the per-language frequency snapshot once.
-        // Build both maps in a single walk — `usageCount` for tier 3a and
-        // `lastUsed` for tier 3b (recency tiebreaker).
-        //
-        // Note: `LRUCache.get` promotes keys to MRU as a side effect. That's
-        // fine here because we never use LRU position for ordering — `lastUsed`
-        // captures recency explicitly. The promotion is harmless: it only
-        // affects which key gets evicted next when the cache hits capacity.
-        let prefix = "\(context.language.identifier):"
-        var freq: [String: Int] = [:]
-        var lastUsed: [String: Date] = [:]
-        for key in frequencyCache.allKeys where key.hasPrefix(prefix) {
-            guard let entry = frequencyCache.get(key) else { continue }
-            let label = String(key.dropFirst(prefix.count))
-            freq[label] = entry.usageCount
-            lastUsed[label] = entry.lastUsed
-        }
-
-        // Stage 3: sort
-        let sorted = unique.sorted { lhs, rhs in
-            // 1. sortText asc — mixed pair: item with sortText wins.
-            switch (lhs.sortText, rhs.sortText) {
-            case let (lhsText?, rhsText?) where lhsText != rhsText:
-                return lhsText < rhsText
-
-            case (.some, .none):
-                return true
-
-            case (.none, .some):
-                return false
-
-            default:
-                break
-            }
-
-            // 2. priority desc
-            if lhs.priority != rhs.priority {
-                return lhs.priority > rhs.priority
-            }
-
-            // 3a. frequency desc
-            let lhsFreq = freq[lhs.label] ?? 0
-            let rhsFreq = freq[rhs.label] ?? 0
-            if lhsFreq != rhsFreq {
-                return lhsFreq > rhsFreq
-            }
-
-            // 3b. recency desc when frequencies tie (and at least one item
-            // has been selected before). Items that have never been selected
-            // are equal at this sub-tier and fall through to relevance.
-            if let lhsDate = lastUsed[lhs.label], let rhsDate = lastUsed[rhs.label], lhsDate != rhsDate {
-                return lhsDate > rhsDate
-            }
-            if lastUsed[lhs.label] != nil && lastUsed[rhs.label] == nil {
-                return true
-            }
-            if lastUsed[lhs.label] == nil && lastUsed[rhs.label] != nil {
-                return false
-            }
-
-            // 4. relevance desc — single source of truth in CompletionRankingModel.
-            let lhsRelevance = CompletionRankingModel.calculateRelevance(item: lhs, context: context)
-            let rhsRelevance = CompletionRankingModel.calculateRelevance(item: rhs, context: context)
-            if lhsRelevance != rhsRelevance {
-                return lhsRelevance > rhsRelevance
-            }
-
-            // 5. kind.defaultPriority desc
-            if lhs.kind.defaultPriority != rhs.kind.defaultPriority {
-                return lhs.kind.defaultPriority > rhs.kind.defaultPriority
-            }
-
-            // 6. label asc
-            return lhs.label.localizedCaseInsensitiveCompare(rhs.label) == .orderedAscending
-        }
-
-        // Stage 4: cap
-        return Array(sorted.prefix(maxCompletions))
+        ranker.rank(
+            items,
+            context: context,
+            learning: learningStore.snapshot(for: context.language),
+            maxCount: maxCompletions
+        )
     }
 
     // MARK: - Test Hooks
@@ -453,7 +338,7 @@ public final class CompletionManager {
     /// `requestCompletions(for:)`. Lets learning tests drive the frequency
     /// cache deterministically.
     internal func testOnly_setLastContext(_ context: CompletionContextModel) {
-        lastContext = context
+        learningStore.noteContext(context)
     }
 
     // MARK: - Private Methods
@@ -469,8 +354,8 @@ public final class CompletionManager {
             }
 
             // Clear completion cache
-            let beforeCacheSize = self.cache.count
-            self.cache.removeAll()
+            let beforeCacheSize = self.responseCache.count
+            self.responseCache.clear()
 
             // Cancel pending requests
             self.cancelCurrentRequest()
@@ -495,8 +380,8 @@ extension CompletionManager: MemoryMonitorUsing {
 
         memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
         memoryMonitor = monitor
-        cache.setMemoryMonitor(monitor)
-        frequencyCache.setMemoryMonitor(monitor)
+        responseCache.setMemoryMonitor(monitor)
+        learningStore.setMemoryMonitor(monitor)
         registerWithMemoryMonitor()
     }
 }
