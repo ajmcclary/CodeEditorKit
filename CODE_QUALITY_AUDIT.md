@@ -4,11 +4,15 @@
 
 **Repository state:** `main` at `a958f96d`
 
+**Remediation state:** all 19 findings resolved on the `code-quality-remediation` branch; the original findings below are retained as the audit baseline and the closing evidence table records the implemented state.
+
 **Primary focus:** abstraction quality, pattern consistency, duplication, reuse, and maintainability
 
 ## Executive Summary
 
 CodeEditorPlugin has **moderate-to-good structural health**. The recent extraction of the former umbrella implementation into focused Swift Package Manager targets is directionally strong: configuration, theming, language metadata, text-model primitives, diagnostics, completion, LSP, layout, view integration, and SwiftUI hosting now have visible module boundaries. The codebase also enforces valuable low-level conventions—Swift 6 strict concurrency, `canImport` platform checks, dependency injection instead of custom singletons, a delegate multiplexer, and strict linting.
+
+The remediation completed after this baseline audit materially improves that assessment. Runtime feature ownership now flows through `EditorSession`; the SwiftUI, completion, and LSP façades delegate to focused components; infrastructure updates preserve feature identity; one ordered event bus feeds compatibility adapters; focused test targets enforce module seams; speculative public surface is removed; and package, metadata, lint, and logger rules are executable checks. The current exact-clone scan reports 132 pairs across 89 fully classified retained families, with no unclassified family.
 
 The main risk is that the package is **more modular in its directory and target structure than in its runtime ownership model**. `CodeEditorView` remains the composition root, state owner, feature façade, and platform view for most of the framework. It compiles with 38–40 type-level properties depending on platform and is extended across 29 files totaling approximately 5,618 lines. `CodeEditorBaseCoordinator`, `CompletionManager`, and `LSPClient` exhibit the same concentration at smaller scales. These types are not merely large; they combine lifecycle, caching, policy, state synchronization, transport, rendering, and diagnostics, which makes changes cross-cutting and increases regression risk.
 
@@ -690,8 +694,40 @@ Do not pursue a numeric duplication target. Refactor repeated *policy and algori
 
 **Expected impact:** Sustains the refactor by making architectural drift visible during review and CI.
 
+## Remediation Verification (2026-07-12)
+
+Every finding has both implementation evidence and an executable predicate in `Scripts/verify-architecture-remediation.py`. The original recommendations remain above to preserve the decision record; the detailed finding-by-finding evidence is recorded in the appendix below.
+
+The remediated clone baseline is **552 library files, 53,924 significant lines, 132 maximal clone pairs, and 89 classified clone families** using the same eight-line conservative window. Classification is intentionally not a waiver for future drift: an unknown or stale hash fails the architecture verifier.
+
 ## Closing Assessment
 
 The codebase has already completed the difficult first step: its major domains are visible and mostly separated at the package level. The next improvement should not be another broad directory carve-out. It should be a **runtime ownership refactor** that makes each feature own its state, tasks, observers, caches, and cleanup lifecycle. Once those boundaries exist, the current target graph will become meaningful rather than aspirational, and duplication cleanup can proceed through small, low-risk kernel extractions.
+
+## Remediation Evidence Appendix
+
+This appendix records the implementation and executable evidence produced by the approved remediation program. Each structural predicate is evaluated by `Scripts/verify-architecture-remediation.py`; this table is checked by `Scripts/verify-code-quality-audit.py`.
+
+| Finding | Implementation | Tests | Structural proof | Status |
+|---|---|---|---|---|
+| A1 | `Sources/CodeEditorView/EditorSession.swift`; `EditorFeatureController.swift` | `Tests/CodeEditorViewTests/Core/EditorSessionTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `A1` | Resolved |
+| A2 | `Sources/CodeEditorSwiftUI/EditorBindingSynchronizer.swift`; `EditorInteractionSynchronizer.swift`; `EditorRenderReconciler.swift`; `CompletionModifierRegistry.swift` | `Tests/CodeEditorSwiftUITests/SwiftUI/EditorBindingSynchronizerTests.swift` and collaborator suites | `Scripts/verify-architecture-remediation.py` predicate `A2` | Resolved |
+| A3 | `Sources/CodeEditorCompletion/CompletionProviderRegistry.swift`; `CompletionRequestCoordinator.swift`; `Sources/CodeEditorLSP/JSONRPCSession.swift`; `LSPDocumentSession.swift` | `CompletionFacadeIntegrationTests.swift`; `JSONRPCSessionTests.swift`; `LSPComponentTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `A3` | Resolved |
+| A4 | `Sources/CodeEditorView/EditorRuntime.swift`; state-preserving monitor rebinding | `EditorRuntimeStatePreservationTests.swift`; `MemoryMonitorDITests.swift` | `Scripts/verify-architecture-remediation.py` predicate `A4` | Resolved |
+| A5 | Placeholder processing and optimizer APIs removed; real metrics injected through diagnostics | `PlaceholderAPIRemovalTests.swift`; `PerformanceInsightsRealMetricsTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `A5` | Resolved |
+| A6 | Zero-consumer protocols, scales, and completion factory removed | `Tests/CodeEditorSampleTests/PublicAbstractionVerifierTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `A6`; `Scripts/verify-public-abstractions.py` | Resolved |
+| A7 | `MemoryManagementPolicy` replaces ambient test-process detection | `MemoryManagementPolicyTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `A7` | Resolved |
+| P1 | Exact dependencies in `Package.swift`; focused imports in `Sources/CodeEditorUI/` | `Tests/CodeEditorSampleTests/TargetImportVerifierTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `P1`; `Scripts/verify-target-imports.py` | Resolved |
+| P2 | Runtime identity participates in `EditorRenderReconciler` inputs and application | `EditorRenderReconcilerTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `P2` | Resolved |
+| P3 | `EditorEventBus` is canonical; Unified, legacy publisher, Combine, and notification APIs are adapters | `CanonicalEditorEventBusTests.swift`; `EditorEventAdapterTests.swift`; `PublishEventFanOutTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `P3` | Resolved |
+| P4 | Responsibility files plus shared UI and scroll policy | `CompletionCellThemeStateTests.swift`; `SelectionScrollPreservationTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `P4` | Resolved |
+| P5 | Six focused unit-test targets; umbrella target reduced to integration/snapshot coverage | `Scripts/test-target-manifest.json`; all focused suites | `Scripts/verify-architecture-remediation.py` predicate `P5`; `Scripts/classify-test-targets.py --check` | Resolved |
+| P6 | Current SwiftUI lint paths and package-derived product/test documentation | `ProjectMetadataVerifierTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `P6`; `Scripts/verify-project-metadata.py` | Resolved |
+| P7 | `CodeEditorLog` and canonical categories; high-volume selection diagnostics gated | `LoggerUsageVerifierTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `P7`; `Scripts/verify-logger-usage.py` | Resolved |
+| D1 | `LinkedLRU` is the sole linked-list kernel; monitored cache wraps it | `MonitoredLRUCacheTests.swift`; `LinkedLRUTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `D1` | Resolved |
+| D2 | `KeyedDebouncer` is the sole keyed task-replacement state machine | `KeyedDebouncerTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `D2` | Resolved |
+| D3 | Shared `StringOrInteger` wire kernel; TypeScript capture map derives from JavaScript | `StringOrIntegerTests.swift`; `QueryCaptureMapReuseTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `D3` | Resolved |
+| D4 | Shared completion theme state, toolbar catalog, and UIKit scroll-preservation helper | `CompletionCellThemeStateTests.swift`; `ToolbarCatalogTests.swift`; `SelectionScrollPreservationTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `D4` | Resolved |
+| D5 | Every normalized clone hash has an explicit retained-repetition rationale | `ArchitectureRemediationVerifierTests.swift` | `Scripts/verify-architecture-remediation.py` predicate `D5`; `Scripts/audit-swift-clones.py` | Resolved |
 
 The recommended roadmap intentionally preserves public façades and native platform implementations. Its goal is not maximal abstraction or minimal line count; it is to ensure that every abstraction corresponds to real substitutability, every owner has a coherent lifecycle, and repeated code remains only where explicit semantic or platform differences justify it.

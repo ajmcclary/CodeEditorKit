@@ -118,6 +118,10 @@ final class PublishEventFanOutTests: XCTestCase {
             }
             .store(in: &cancellables)
 
+        let priorBusEventCount = view.runtime.dependencies.eventBus.recentEvents { event in
+            if case .didBecomeFirstResponder = event { return true }
+            return false
+        }.count
         let became = window.makeFirstResponder(view)
         XCTAssertTrue(became, "Window must be able to make the editor view first responder for this test to be meaningful.")
 
@@ -127,7 +131,7 @@ final class PublishEventFanOutTests: XCTestCase {
                 if case .didBecomeFirstResponder = event { return true }
                 return false
             }.count,
-            1
+            priorBusEventCount + 1
         )
     }
 

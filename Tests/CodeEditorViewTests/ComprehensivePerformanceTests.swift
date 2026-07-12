@@ -328,18 +328,13 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
         measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Performance tracking")
             Task {
-                do {
-                    for index in 0..<100 {
-                        _ = try await performanceSystem.track(.syntaxHighlighting) {
-                            // Minimal work to prevent hanging
-                            index
-                        }
+                for index in 0..<100 {
+                    _ = await performanceSystem.track(.syntaxHighlighting) {
+                        // Minimal work to prevent hanging
+                        index
                     }
-                    expectation.fulfill()
-                } catch {
-                    XCTFail("Performance tracking failed: \(error)")
-                    expectation.fulfill()
                 }
+                expectation.fulfill()
             }
             wait(for: [expectation], timeout: 5.0)
         }

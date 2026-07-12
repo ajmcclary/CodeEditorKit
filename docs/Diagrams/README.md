@@ -14,28 +14,28 @@ Design-only diagrams covering features that are not yet implemented (the plugin 
 Overview of the entire CodeEditorPlugin framework showing main layers and their relationships. Includes SwiftUI integration, core components, services, configuration, platform abstraction, features, language support, and external integrations.
 
 ### 2. [Core Components Class Diagram](02-core-components-class.md)
-Detailed class diagram of the main components including CodeEditorView, CodeEditorAPI protocol, UnifiedEventSystem, EditorRuntime, and their relationships. Shows the protocol-oriented design and delegation patterns.
+Current editor ownership map: `CodeEditorView`, `EditorSession`, focused feature controllers, `EditorRuntime`, the event bus, and memory rebinding.
 
 ### 3. [Configuration System](03-configuration-system.md)
 Configuration architecture including EditorConfiguration structure with Display, Layout, Behavior, and Performance sections. Shows presets, validation, and SwiftUI environment integration.
 
 ### 4. [Service Architecture](04-service-architecture.md)
-Service-oriented architecture diagram showing EditorRuntime and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionManager, LineNumberCalculationService, GutterSizingService, CodeFoldingCoordinatorService, EditorLayoutService, MemoryManagementCoordinator).
+Runtime composition and state-preserving infrastructure rebinding across the editor session and monitor-aware feature owners.
 
 ### 5. [Event System Flow](05-event-system-flow.md)
-Unified event system flow diagram illustrating event sources (UI, text changes, system, service, configuration), built-in `EditorEvent` creation, filtering, history, Combine subscriptions, and handler-token execution. Adjacent debouncing and async utilities are shown as integration points rather than custom event-type support.
+Canonical `EditorEventBus` publication and its ordered Combine, legacy publisher, async-stream, weak-handler, and `NotificationCenter` adapters.
 
 ### 6. [Language Support & Syntax Highlighting Pipeline](06-language-syntax-highlighting-pipeline.md)
 Complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths. Shows caching, tokenization, rendering stages, and enhanced performance optimization with OptimizedSyntaxHighlightingCoordinator, performance tracking, chunking, and circuit breaker pattern.
 
 ### 7. [Completion System Architecture](07-completion-system-architecture.md)
-Code completion system including `CompletionManager`, provider management, session management, caching, and UI components. Includes sequence diagram of completion flow.
+The `CompletionManager` façade and its focused provider registry, request coordinator, response cache, learning store, ranker, broadcaster, and debouncer.
 
 ### 10. [UI Component Hierarchy](10-ui-component-hierarchy.md)
 Visual component hierarchy showing CodeEditorContainerView and all child components including gutter, minimap, overlays, and status bar. Includes layout structure diagram.
 
 ### 12. [LSP System Complete Architecture](12-lsp-system-architecture.md)
-Complete Language Server Protocol implementation with transport layers, protocol integration, and multi-language support. Includes message routing, capability negotiation, error handling, and retry configuration with exponential backoff and jitter support.
+The `LSPClient` façade over JSON-RPC, connection lifecycle, document session, language-feature client, registry, and transports.
 
 ### 13. [Performance Monitoring & Optimization System](13-performance-monitoring-system.md)
 Current performance monitoring implementation, including `PerformanceMonitor`, `UnifiedPerformanceSystem`, `PerformanceInsights`, memory monitoring, production metrics, adaptive performance mode, viewport tracking, iOS large-file optimization, and performance budget reporting.
@@ -53,7 +53,7 @@ Comprehensive annotation system providing code annotations, diagnostics, and con
 Comprehensive data models and type system forming the foundation of CodeEditorPlugin's data structures. Includes rich text models, versioning system, type information, and performance optimization.
 
 ### 19. [SwiftUI Integration Complete Ecosystem](19-swiftui-integration-ecosystem.md)
-Complete SwiftUI integration ecosystem providing seamless integration between CodeEditorPlugin and SwiftUI applications. Includes platform-specific representables, environment management, and animation coordination.
+SwiftUI hosting with a thin coordinator delegating binding, interaction, runtime/value rendering, and completion-modifier reconciliation.
 
 ### 21. [Utility Systems & Extensions Network](21-utility-systems-extensions.md)
 Utility systems and extensions network providing shared utilities, cross-platform helpers, and extensibility infrastructure. Includes async operation management, logging, caching, and extension management.

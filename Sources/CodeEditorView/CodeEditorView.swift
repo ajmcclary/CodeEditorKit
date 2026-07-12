@@ -194,6 +194,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal var legacyEventBus: EditorEventBus?
     internal var legacyEventObservation: EditorEventObservation?
     internal var notificationCenterEventAdapter: NotificationCenterEventAdapter?
+    internal var hasCompletedTextViewSetup = false
     internal var textChangeEventGeneration: UInt64 = 0
 
     /// Optional lifecycle injected by package tests or alternate hosts.
@@ -319,6 +320,18 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     )
     package var session: any EditorSessionLifecycle {
         sessionOverride ?? defaultSession
+    }
+
+    private func adoptSession(_ newSession: any EditorSessionLifecycle) {
+        if hasCompletedTextViewSetup {
+            session.detach()
+        }
+        sessionOverride = newSession
+        if hasCompletedTextViewSetup {
+            newSession.attach(to: self)
+        } else {
+            setupTextView()
+        }
     }
 
     /// Metrics captured from actual TextKit 2 layout passes.
@@ -591,8 +604,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     #if canImport(AppKit)
     package init(frame frameRect: NSRect, session: any EditorSessionLifecycle) {
         super.init(frame: frameRect)
-        sessionOverride = session
-        setupTextView()
+        adoptSession(session)
     }
 
     override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
@@ -642,8 +654,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     #else
     package init(frame frameRect: CGRect, session: any EditorSessionLifecycle) {
         super.init(frame: frameRect, textContainer: nil)
-        sessionOverride = session
-        setupTextView()
+        adoptSession(session)
     }
 
     override public init(frame frameRect: CGRect, textContainer container: NSTextContainer?) {

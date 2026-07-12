@@ -15,6 +15,9 @@ extension CodeEditorView {
     // MARK: - Setup Methods
 
     internal func setupTextView() {
+        guard !hasCompletedTextViewSetup else { return }
+        hasCompletedTextViewSetup = true
+
         // Use TextKitSetupHelper for centralized setup
         let setupResult = TextKitSetupHelper.setupTextKit(for: self)
         session.attach(to: self)

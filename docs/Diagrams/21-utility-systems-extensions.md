@@ -153,7 +153,8 @@ classDiagram
         +NSTextView+Extensions
         +NSTextLayoutManager+Extensions
         +NSTextRange+Extensions
-        +CodeEditorView+Extensions
+        +CodeEditorView+EditingActions
+        +CodeEditorView+SelectionScrolling
         +Bundle+Extensions
         +IndexSet+Extensions
         +EdgeInsets+Extensions

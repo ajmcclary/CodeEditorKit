@@ -39,14 +39,18 @@ def main() -> int:
     for target in description["targets"]:
         name = target["name"]
         path = ROOT / target["path"]
-        if not name.startswith("CodeEditor") or not path.is_dir() or target["path"].startswith("Tests/"):
+        if not name.startswith("CodeEditor") or not path.is_dir():
             continue
         dependencies = {value for value in target.get("target_dependencies", []) if value.startswith("CodeEditor")}
         imports: set[str] = set()
         for source in path.rglob("*.swift"):
             modules = set(IMPORT.findall(source.read_text()))
             imports.update(modules)
-            if name not in {"CodeEditorPlugin", "CodeEditorSample"} and "CodeEditorPlugin" in modules:
+            if (
+                not target["path"].startswith("Tests/")
+                and name not in {"CodeEditorPlugin", "CodeEditorSample"}
+                and "CodeEditorPlugin" in modules
+            ):
                 line = next(
                     index for index, value in enumerate(source.read_text().splitlines(), 1)
                     if "import CodeEditorPlugin" in value

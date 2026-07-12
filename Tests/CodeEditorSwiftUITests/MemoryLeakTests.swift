@@ -154,7 +154,7 @@ final class MemoryLeakTests: CleanupTestCase {
         let coordinator = SyntaxHighlightingCoordinator()
 
         // Call cancellation - this should not crash even if no tasks are running
-        await coordinator.cancelHighlighting()
+        coordinator.cancelHighlighting()
 
         // Verify the coordinator is still functional after cancellation
         let simpleText = "func test() {}"

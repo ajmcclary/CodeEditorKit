@@ -1,0 +1,365 @@
+{
+  "schema_version": 1,
+  "window": 8,
+  "excluded_targets": [
+    "CodeEditorSample"
+  ],
+  "families": {
+    "046f50eda59333a0": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorViewDelegate.swift:233 and Sources/CodeEditorView/TextViewDelegateParticipant.swift:73 remain explicit to preserve framework-specific types and call sites."
+    },
+    "060d9a1cd45f0495": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLSP/LSPProtocol.swift:222 and Sources/CodeEditorLSP/LSPProtocol.swift:301 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "07a4db1e4b36b4e0": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorAnnotations/AnnotationsContentView.swift:45 and Sources/CodeEditorLayout/InsertionPointView.swift:69 remain explicit to preserve framework-specific types and call sites."
+    },
+    "0fc68d3441638c4f": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTextModel/Text/LineGeometryTree.swift:330 and Sources/CodeEditorTextModel/Text/LineGeometryTree.swift:462 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "0fe59abf994e8258": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSwiftUI/CodeEditor+AppKitExtensions.swift:16 and Sources/CodeEditorSwiftUI/CodeEditor+UIKitExtensions.swift:13 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "10abf2acb558fed9": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorAnnotations/AnnotationsContentView.swift:46 and Sources/CodeEditorLayout/InsertionPointView.swift:20 remain explicit to preserve framework-specific types and call sites."
+    },
+    "1130d7dd70b5376c": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/ShellFoldingProvider.swift:91 and Sources/CodeEditorLanguages/ShellFoldingProvider.swift:107 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "153d0c6d0ee720e3": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LineBasedSymbolProvider.swift:144 and Sources/CodeEditorLanguages/LineBasedSymbolProvider.swift:178 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "15714728b1b91d51": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/XMLSymbolProvider.swift:8 and Sources/CodeEditorLanguages/YAMLSymbolProvider.swift:8 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "17bb4edbae93f5d9": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/CompletionCellComponents.swift:239 and Sources/CodeEditorLayout/CompletionCellComponents.swift:359 remain explicit to preserve framework-specific types and call sites."
+    },
+    "18dc3d116fa1dcaf": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/OptimizedSyntaxHighlightingCoordinator.swift:216 and Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:148 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "1b7662f25ec3a299": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/Data/CLanguageDescriptor.swift:10 and Sources/CodeEditorLanguages/Data/CppLanguageDescriptor.swift:10 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "1d22730fdd9ae8cc": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorTextModel/Text/TextSelectionRect.swift:26 and Sources/CodeEditorTextModel/Text/TextSelectionRect.swift:74 remain explicit to preserve framework-specific types and call sites."
+    },
+    "2155ab5c1b4a1741": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditorRepresentableHelper.swift:33 and Sources/CodeEditorSwiftUI/CodeEditorRepresentableHelper.swift:47 remain explicit to preserve framework-specific types and call sites."
+    },
+    "2204c404b17e7b6d": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditor+AppKitExtensions.swift:52 and Sources/CodeEditorSwiftUI/CodeEditor+UIKitExtensions.swift:49 remain explicit to preserve framework-specific types and call sites."
+    },
+    "2269e1f84661533e": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/BorderColors.swift:37 and Sources/CodeEditorTheming/ChromeColors.swift:80 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "22e8fbe228f800b3": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LanguageProviderFactory.swift:104 and Sources/CodeEditorLanguages/LanguageProviderFactory.swift:142 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "26511e0322c1537a": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/ChromeColors.swift:81 and Sources/CodeEditorTheming/ElementStates.swift:46 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "27770bb1773ccfb1": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorCompletion/CompletionViewController.swift:48 and Sources/CodeEditorCompletion/CompletionViewController.swift:266 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "28a2ed1c8c5aab3e": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Platform/UnifiedDrawingCoordinator.swift:303 and Sources/CodeEditorView/Platform/UnifiedDrawingCoordinator.swift:410 remain explicit to preserve framework-specific types and call sites."
+    },
+    "2fd2a12bded4339a": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditor+RepresentableParameters.swift:24 and Sources/CodeEditorSwiftUI/CodeEditor+RepresentableParameters.swift:43 remain explicit to preserve framework-specific types and call sites."
+    },
+    "38d39248474ee5b2": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/CodeEditorContainerView+AppKitExtensions.swift:147 and Sources/CodeEditorView/Layout/CodeEditorContainerView+AppKitExtensions.swift:214 remain explicit to preserve framework-specific types and call sites."
+    },
+    "3c2b8696c3fba1dc": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/Data/JavascriptLanguageDescriptor.swift:10 and Sources/CodeEditorLanguages/Data/TypescriptLanguageDescriptor.swift:10 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "4148b3949021d9f9": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorDiagnostics/MemoryMonitor.swift:295 and Sources/CodeEditorSyntaxHighlighting/BackgroundSyntaxHighlighter.swift:104 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "475393087a0d854f": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorDiagnostics/MemoryMonitor.swift:280 and Sources/CodeEditorSyntaxHighlighting/BackgroundSyntaxHighlighter.swift:88 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "47b4c862cccb1260": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/FastJSONTokenizer.swift:331 and Sources/CodeEditorSyntaxHighlighting/FastJSONTokenizer.swift:359 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "4e2052881d8b10cd": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLSP/LSPManagerTypes.swift:50 and Sources/CodeEditorLSP/LSPManagerTypes.swift:75 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "4ec4a23d397d8ec8": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/LayoutCoordinator.swift:114 and Sources/CodeEditorPlatform/PlatformAnimation.swift:115 remain explicit to preserve framework-specific types and call sites."
+    },
+    "5063d167dbb3aa7a": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorDiagnostics/PerformanceViews.swift:48 and Sources/CodeEditorDiagnostics/PerformanceViews.swift:202 remain explicit to preserve framework-specific types and call sites."
+    },
+    "53c1923c274a51ed": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/PHPSymbolProvider.swift:105 and Sources/CodeEditorLanguages/RubySymbolProvider.swift:71 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "54432f53e0c9d71d": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/RegexSyntaxHighlighter.swift:122 and Sources/CodeEditorSyntaxHighlighting/SwiftSyntaxHighlighter.swift:79 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "59136490d7795094": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorUI/TabStrip/EditorTabStripStyle.swift:91 and Sources/CodeEditorUI/TabStrip/EditorTabStripStyle.swift:119 remain explicit to preserve framework-specific types and call sites."
+    },
+    "5a7c2e4e33cc061b": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorPlatform/PlatformCapabilities.swift:332 and Sources/CodeEditorPlatform/PlatformCapabilities.swift:352 remain explicit to preserve framework-specific types and call sites."
+    },
+    "5e614380547672f2": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTextModel/Text/LineGeometryStore.swift:214 and Sources/CodeEditorTextModel/Text/LineGeometryStore.swift:230 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "6024ce7b11b68564": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorView+LayoutExtensions.swift:72 and Sources/CodeEditorView/CodeEditorView+LayoutExtensions.swift:155 remain explicit to preserve framework-specific types and call sites."
+    },
+    "622ec5b06d6fe232": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Completion/EditorCompletionController.swift:41 and Sources/CodeEditorView/LSP/LSPDocumentController.swift:22 remain explicit to preserve framework-specific types and call sites."
+    },
+    "705138b3cb93cb68": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/RegexSyntaxTokenType.swift:7 and Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:230 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "7286bca20241c554": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLSP/LSPTypes.swift:49 and Sources/CodeEditorLSP/LSPTypes.swift:550 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "72b963b85458c3e9": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditorEnvironment+Extensions.swift:96 and Sources/CodeEditorSwiftUI/CodeEditorEnvironment+Extensions.swift:273 remain explicit to preserve framework-specific types and call sites."
+    },
+    "72d2312ca76eb776": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/CSSSymbolProvider.swift:45 and Sources/CodeEditorLanguages/HTMLSymbolProvider.swift:56 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "7e00fc2e7b9c9351": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LuaFoldingProvider.swift:216 and Sources/CodeEditorLanguages/LuaFoldingProvider.swift:226 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "7fa12140b4a5c9b3": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/Glass/_GlassSurface.swift:40 and Sources/CodeEditorLayout/Glass/_GlassSurface.swift:96 remain explicit to preserve framework-specific types and call sites."
+    },
+    "855ad3f750c9823f": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/BackgroundSyntaxHighlighter.swift:95 and Sources/CodeEditorSyntaxHighlighting/BackgroundSyntaxHighlighter.swift:109 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "90a86bf11271aae2": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/CodeEditorContainerView+Minimap.swift:41 and Sources/CodeEditorView/Layout/CodeEditorContainerView+Minimap.swift:52 remain explicit to preserve framework-specific types and call sites."
+    },
+    "918b4caf4c32bd7d": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/ShellSymbolProvider.swift:44 and Sources/CodeEditorLanguages/ShellSymbolProvider.swift:64 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "95a371eb478a3383": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorDiagnostics/MemoryMonitor.swift:287 and Sources/CodeEditorDiagnostics/MemoryMonitor.swift:300 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "9655ccb59b9c8595": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTextModel/Text/SinglePhaseRangeValidator.swift:194 and Sources/CodeEditorTextModel/Text/SinglePhaseRangeValidator.swift:231 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "97eb8713d2a780df": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/EditorColors.swift:79 and Sources/CodeEditorTheming/ScrollbarColors.swift:33 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "98d74742fadea098": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorCompletion/CompletionViewController.swift:86 and Sources/CodeEditorCompletion/CompletionViewController.swift:301 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "9aa65e65431d1632": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/MinimapView.swift:419 and Sources/CodeEditorView/Layout/MinimapView.swift:560 remain explicit to preserve framework-specific types and call sites."
+    },
+    "9ee51ef1d73e6787": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/ContentView.swift:333 and Sources/CodeEditorView/Layout/ContentView.swift:350 remain explicit to preserve framework-specific types and call sites."
+    },
+    "a0873ed13a587e60": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorDiagnostics/UnifiedPerformanceSystem.swift:51 and Sources/CodeEditorDiagnostics/UnifiedPerformanceSystem.swift:99 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "a0f5dc3f5b6c2d1c": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/ThemeStyle.swift:77 and Sources/CodeEditorTheming/ThemeStyle.swift:182 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "a13ec3b057104f97": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorView.swift:633 and Sources/CodeEditorView/CodeEditorView.swift:676 remain explicit to preserve framework-specific types and call sites."
+    },
+    "a195fc4f9db647e4": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/CodeEditorContainerView.swift:121 and Sources/CodeEditorView/Layout/CodeEditorContainerView.swift:162 remain explicit to preserve framework-specific types and call sites."
+    },
+    "a283cec8e39d5a37": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/RegexQuery/QueryCaptureMap.swift:102 and Sources/CodeEditorSyntaxHighlighting/RegexQuery/QueryCaptureMap.swift:140 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "a6cda14508e5075b": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Platform/ContextMenuCoordinator.swift:284 and Sources/CodeEditorView/Platform/ContextMenuCoordinator.swift:319 remain explicit to preserve framework-specific types and call sites."
+    },
+    "a93be4de8e6fd50e": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorPlatform/PlatformServiceImplementations.swift:28 and Sources/CodeEditorPlatform/PlatformServiceImplementations.swift:124 remain explicit to preserve framework-specific types and call sites."
+    },
+    "a9a46cc76538dc78": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/InsertionPointView.swift:19 and Sources/CodeEditorLayout/LineHighlightView.swift:75 remain explicit to preserve framework-specific types and call sites."
+    },
+    "ac25b73766b0588e": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/StatusPalette.swift:10 and Sources/CodeEditorTheming/VCSPalette.swift:11 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "ad7e61d3b2e3dd04": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/StatusPalette.swift:56 and Sources/CodeEditorTheming/VCSPalette.swift:68 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "b18bfc74cdd8f440": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorDiagnostics/UnifiedPerformanceSystem.swift:330 and Sources/CodeEditorPlatform/PlatformMemoryProvider.swift:78 remain explicit to preserve framework-specific types and call sites."
+    },
+    "b8bdec055cf41ba2": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Platform/InputCoordinator.swift:151 and Sources/CodeEditorView/Platform/InputCoordinator.swift:233 remain explicit to preserve framework-specific types and call sites."
+    },
+    "befc0e3496ceaec2": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/RubyFoldingProvider.swift:32 and Sources/CodeEditorLanguages/ShellFoldingProvider.swift:37 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "bf2d6f8b178c83d9": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorPlatform/PlatformAnimation.swift:31 and Sources/CodeEditorPlatform/PlatformAnimation.swift:45 remain explicit to preserve framework-specific types and call sites."
+    },
+    "bfa0d3fb5a8741cc": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/RegexSyntaxTokenType.swift:7 and Sources/CodeEditorSyntaxHighlighting/SwiftSyntaxHighlighter.swift:18 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "bfe8615dce0e4d48": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorView/LineNumberCalculationService.swift:261 and Sources/CodeEditorView/LineNumberCalculationService.swift:291 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "c1d0b6f4c1415ad9": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/Parsing/TextParsingUtilities.swift:118 and Sources/CodeEditorSyntaxHighlighting/Parsing/TokenExtractor.swift:71 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "c3e4426fab33ceda": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/CompletionCellComponents.swift:299 and Sources/CodeEditorLayout/CompletionCellComponents.swift:417 remain explicit to preserve framework-specific types and call sites."
+    },
+    "c99ca32a2f5da99c": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/HintColors.swift:7 and Sources/CodeEditorTheming/PredictiveColors.swift:8 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "cba0230dad755714": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorView+Responder.swift:5 and Sources/CodeEditorView/CodeEditorView+Responder.swift:21 remain explicit to preserve framework-specific types and call sites."
+    },
+    "cc598cd307066387": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/MinimapView.swift:459 and Sources/CodeEditorView/Layout/MinimapView.swift:593 remain explicit to preserve framework-specific types and call sites."
+    },
+    "cee45310e351f79f": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/IconLevels.swift:8 and Sources/CodeEditorTheming/TextLevels.swift:9 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "d1464b6cffb22984": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:326 and Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:344 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "d3c2eeccf05b0e6f": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/CStyleSymbolProvider.swift:39 and Sources/CodeEditorLanguages/LineBasedSymbolProvider.swift:157 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "d6427ee0c17cb306": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditor+CoordinatorsExtensions.swift:204 and Sources/CodeEditorSwiftUI/CodeEditor+CoordinatorsExtensions.swift:235 remain explicit to preserve framework-specific types and call sites."
+    },
+    "d8b2560415d4fce5": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorCompletion/CompletionViewController.swift:101 and Sources/CodeEditorCompletion/CompletionViewController.swift:316 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "db138469977dc6f0": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/RubySymbolProvider.swift:227 and Sources/CodeEditorLanguages/ShellSymbolProvider.swift:163 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "df560ef7e1cf2829": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditorRepresentableHelper.swift:234 and Sources/CodeEditorSwiftUI/CodeEditorRepresentableHelper.swift:349 remain explicit to preserve framework-specific types and call sites."
+    },
+    "e0777e2fdaf69d35": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTextModel/Text/LineGeometryStore+GeometryHelpers.swift:43 and Sources/CodeEditorTextModel/Text/LineGeometryStore+GeometryHelpers.swift:69 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "e242e3085ff89b42": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLSP/LSPManager.swift:296 and Sources/CodeEditorLSP/LSPManager.swift:373 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "eb5984d30a98f911": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/InsertionPointView.swift:20 and Sources/CodeEditorLayout/InsertionPointView.swift:70 remain explicit to preserve framework-specific types and call sites."
+    },
+    "ed32ecfd3474fbcb": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorPlatform/PlatformInputTypes.swift:22 and Sources/CodeEditorPlatform/PlatformServiceLayer.swift:321 remain explicit to preserve framework-specific types and call sites."
+    },
+    "f15dbd5931b2f0f7": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTextModel/Text/SinglePhaseRangeValidator.swift:66 and Sources/CodeEditorTextModel/Text/ThreePhaseRangeValidator.swift:91 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "f33b6370e0bbc6ca": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorAnnotations/AnnotationsContentView.swift:135 and Sources/CodeEditorView/Layout/CodeEditorContainerView.swift:242 remain explicit to preserve framework-specific types and call sites."
+    },
+    "f35f17d44888254e": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorSyntaxHighlighting/OptimizedSyntaxHighlightingCoordinator.swift:283 and Sources/CodeEditorSyntaxHighlighting/OptimizedSyntaxHighlightingCoordinator.swift:366 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "f41ff063cb5eeff7": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Completion/EditorCompletionController.swift:38 and Sources/CodeEditorView/SyntaxHighlighting/HighlightingController.swift:28 remain explicit to preserve framework-specific types and call sites."
+    },
+    "f9cfd6cdcc01e0f2": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorDiagnostics/UnifiedPerformanceSystem.swift:35 and Sources/CodeEditorDiagnostics/UnifiedPerformanceSystem.swift:86 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "fffc7f302288c477": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/GutterView+AccessibilityExtensions.swift:43 and Sources/CodeEditorView/Layout/GutterView+AccessibilityExtensions.swift:94 remain explicit to preserve framework-specific types and call sites."
+    }
+  }
+}

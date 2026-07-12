@@ -378,10 +378,7 @@ public final class MemoryMonitor: ObservableObject {
             let result = await handler.handler()
             totalFreed += result.memoryFreedMB
 
-            // Only log in non-test environments
-            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-                logger.debug("Cleanup handler \(handler.identifier) freed \(result.memoryFreedMB)MB")
-            }
+            logger.debug("Cleanup handler \(handler.identifier) freed \(result.memoryFreedMB)MB")
 
             // Check if we've reached the target
             if let target = targetReduction, totalFreed >= target {
@@ -405,10 +402,7 @@ public final class MemoryMonitor: ObservableObject {
         recordCleanupOperation(operation)
         updateMemoryStats()
 
-        // Only log in non-test environments to avoid cluttering test output
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            logger.info("Cleanup completed. Memory freed: \(actualFreed)MB in \(duration)s")
-        }
+        logger.info("Cleanup completed. Memory freed: \(actualFreed)MB in \(duration)s")
 
         return actualFreed
     }
@@ -534,10 +528,7 @@ public final class MemoryMonitor: ObservableObject {
             trigger: .automatic
         )
 
-        // Only log in non-test environments
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            logger.info("Automatic cleanup freed \(freed)MB")
-        }
+        logger.info("Automatic cleanup freed \(freed)MB")
     }
 
     private func performPeriodicCleanup() async {
@@ -552,10 +543,7 @@ public final class MemoryMonitor: ObservableObject {
             trigger: .periodic
         )
 
-        // Only log in non-test environments
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            logger.info("Periodic cleanup freed \(freed)MB")
-        }
+        logger.info("Periodic cleanup freed \(freed)MB")
     }
 
     private func updateMemoryStats(currentUsage: Double? = nil) {
