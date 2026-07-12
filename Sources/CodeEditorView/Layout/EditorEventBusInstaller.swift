@@ -12,14 +12,14 @@ import CodeEditorLayout
 /// without going through the full AppKit event pipeline.
 @MainActor
 package final class EditorEventBusInstaller: NSObject {
-    private weak var bus: EditorEventBus?
+    private weak var bus: CodeEditorLayout.EditorEventBus?
     private weak var textView: NSTextView?
     private var trackingArea: NSTrackingArea?
     private var hoverWorkItem: DispatchWorkItem?
     private var eventMonitor: Any?
     private var idleDelay: TimeInterval = 0.5
 
-    package init(bus: EditorEventBus, textView: NSTextView) {
+    package init(bus: CodeEditorLayout.EditorEventBus, textView: NSTextView) {
         self.bus = bus
         self.textView = textView
         super.init()
