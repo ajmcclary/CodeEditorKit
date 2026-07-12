@@ -69,4 +69,12 @@ struct PlatformExtensionTests {
         let light = Theme.fallback(appearance: .light)
         #expect(light.platform.onAccent == Tokens.Color(hex: 0xFF_FF_FF))
     }
+
+    @Test("Theme exposes role accessors")
+    func themeRoleAccessors() {
+        let theme = Theme.fallback(appearance: .dark)
+        #expect(theme.onAccent == theme.platform.onAccent)
+        #expect(theme.onDanger == theme.platform.onDanger)
+        #expect(theme.glassTint == theme.platform.glass.tint)
+    }
 }
