@@ -90,6 +90,8 @@ extension Tokens {
         public enum Tracking {
             /// 0.5px — used for uppercase overlines and small caps.
             public static let caps: Double = 0.5
+            /// -0.01em — tight tracking for large/display text (CSS --tracking-tight).
+            public static let tight: Double = -0.01
         }
     }
 }

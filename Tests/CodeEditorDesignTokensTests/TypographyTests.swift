@@ -52,4 +52,10 @@ struct TypographyTests {
         #expect(Tokens.Typography.LineHeight.normal == 1.2)
         #expect(Tokens.Typography.LineHeight.relaxed == 1.5)
     }
+
+    @Test("tracking-tight matches CSS source")
+    func trackingTight() {
+        #expect(Tokens.Typography.Tracking.tight == -0.01)
+        #expect(Tokens.Typography.Tracking.caps == 0.5)
+    }
 }
