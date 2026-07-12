@@ -4,7 +4,7 @@ import CodeEditorTheming
 import Foundation
 
 /// Bundled-theme catalog for the sample app's theme picker. Reads the
-/// 20 `zed-trek` variants once at first access; lookup is O(1) by name.
+/// 22 `zed-trek` variants once at first access; lookup is O(1) by name.
 enum ThemeCatalog {
     static let all: [Theme] = {
         guard let family = ThemeFamily.bundled("zed-trek") else { return [] }

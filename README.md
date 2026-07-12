@@ -14,7 +14,7 @@ A powerful, production-ready code editor component for native macOS and iOS / iP
 - **Cross-Platform**: Native performance on macOS and iOS / iPadOS
 - **Swift 6 Concurrency**: Actor-based architecture for thread safety and performance
 - **Rich Editing**: Line numbers, code folding, annotations, smart indentation
-- **Themeable**: Bundled Zed Trek theme family (20 Star-Trek-inspired variants, default `LCARS Dark`) plus Zed-compatible JSON theme loading
+- **Themeable**: Bundled Zed Trek theme family (22 Star-Trek-inspired variants, default `LCARS Dark`) plus Zed-compatible JSON theme loading
 - **SwiftUI Native**: First-class SwiftUI integration with environment-based configuration
 - **Extensible**: Language Server Protocol support with local server management on macOS and remote WebSocket clients on all supported platforms
 
