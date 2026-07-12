@@ -50,30 +50,22 @@ public enum RequestId: Codable, Hashable, Sendable {
     case number(Int)
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let intValue = try? container.decode(Int.self) {
-            self = .number(intValue)
-        } else if let stringValue = try? container.decode(String.self) {
-            self = .string(stringValue)
-        } else {
-            throw DecodingError.typeMismatch(
-                Self.self,
-                DecodingError.Context(
-                    codingPath: decoder.codingPath,
-                    debugDescription: "Expected string or number"
-                )
-            )
+        switch try StringOrInteger(from: decoder) {
+        case .string(let value):
+            self = .string(value)
+
+        case .integer(let value):
+            self = .number(value)
         }
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
         switch self {
         case .string(let value):
-            try container.encode(value)
+            try StringOrInteger.string(value).encode(to: encoder)
 
         case .number(let value):
-            try container.encode(value)
+            try StringOrInteger.integer(value).encode(to: encoder)
         }
     }
 }
@@ -559,30 +551,22 @@ public enum DiagnosticCode: Codable, Sendable {
     case number(Int)
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let intValue = try? container.decode(Int.self) {
-            self = .number(intValue)
-        } else if let stringValue = try? container.decode(String.self) {
-            self = .string(stringValue)
-        } else {
-            throw DecodingError.typeMismatch(
-                Self.self,
-                DecodingError.Context(
-                    codingPath: decoder.codingPath,
-                    debugDescription: "Expected string or number"
-                )
-            )
+        switch try StringOrInteger(from: decoder) {
+        case .string(let value):
+            self = .string(value)
+
+        case .integer(let value):
+            self = .number(value)
         }
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
         switch self {
         case .string(let value):
-            try container.encode(value)
+            try StringOrInteger.string(value).encode(to: encoder)
 
         case .number(let value):
-            try container.encode(value)
+            try StringOrInteger.integer(value).encode(to: encoder)
         }
     }
 }
