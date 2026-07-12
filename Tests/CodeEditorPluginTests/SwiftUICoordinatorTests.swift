@@ -141,6 +141,58 @@ final class SwiftUICoordinatorTests: XCTestCase {
         XCTAssertEqual(container.textView.configuration, .minimal)
     }
 
+    @MainActor
+    func testRuntimeOnlyUpdateReplacesEventSystem() {
+        let coordinator = CodeEditorCoordinator(
+            text: .constant("let value = 1"),
+            onTextChange: nil,
+            onSelectionChange: nil
+        )
+        let container = CodeEditorContainerView(frame: .zero)
+        let first = UnifiedEventSystem()
+        let second = UnifiedEventSystem()
+        let memoryMonitor = MemoryMonitor()
+        let configuration = EditorConfiguration.default
+
+        coordinator.setupContainer(
+            container,
+            text: "let value = 1",
+            language: .swift,
+            theme: .default,
+            configuration: configuration,
+            runtimeDependencies: EditorRuntimeDependencies(
+                eventSystem: first,
+                memoryMonitor: memoryMonitor
+            )
+        )
+
+        coordinator.updateContainer(
+            container,
+            text: "let value = 1",
+            language: .swift,
+            theme: .default,
+            configuration: configuration,
+            runtimeDependencies: EditorRuntimeDependencies(
+                eventSystem: first,
+                memoryMonitor: memoryMonitor
+            )
+        )
+
+        coordinator.updateContainer(
+            container,
+            text: "let value = 1",
+            language: .swift,
+            theme: .default,
+            configuration: configuration,
+            runtimeDependencies: EditorRuntimeDependencies(
+                eventSystem: second,
+                memoryMonitor: memoryMonitor
+            )
+        )
+
+        XCTAssertIdentical(container.textView.runtime.dependencies.eventSystem, second)
+    }
+
     #if canImport(AppKit)
     @MainActor
     func testSizeCalculationPreservesTextKit2Stack() {

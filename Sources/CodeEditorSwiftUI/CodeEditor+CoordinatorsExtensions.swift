@@ -111,13 +111,24 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         let text: String
         let language: Language
         let configuration: EditorConfiguration
+        let runtime: EditorRuntimeSnapshot
     }
 
     private var lastUpdateState: UpdateState?
 
     /// Check if an update should proceed based on changed state
-    func shouldUpdate(text: String, language: Language, configuration: EditorConfiguration) -> Bool {
-        let newState = UpdateState(text: text, language: language, configuration: configuration)
+    func shouldUpdate(
+        text: String,
+        language: Language,
+        configuration: EditorConfiguration,
+        runtimeDependencies: EditorRuntimeDependencies
+    ) -> Bool {
+        let newState = UpdateState(
+            text: text,
+            language: language,
+            configuration: configuration,
+            runtime: EditorRuntimeSnapshot(runtimeDependencies)
+        )
 
         defer { lastUpdateState = newState }
 
@@ -125,7 +136,8 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
 
         return lastState.text != newState.text ||
                lastState.language != newState.language ||
-               lastState.configuration != newState.configuration
+               lastState.configuration != newState.configuration ||
+               lastState.runtime != newState.runtime
     }
 
     /// Update the coordinator's state
@@ -467,7 +479,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         runtimeDependencies: EditorRuntimeDependencies,
         swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])? = nil
     ) {
-        let needsUpdate = shouldUpdate(text: text, language: language, configuration: configuration)
+        let needsUpdate = shouldUpdate(
+            text: text,
+            language: language,
+            configuration: configuration,
+            runtimeDependencies: runtimeDependencies
+        )
         CodeEditorRenderingDiagnostics.logContainer(
             "coordinator.update.begin",
             container: container,
