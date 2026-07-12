@@ -63,14 +63,13 @@ private struct FrequencyEntry: Sendable {
 @MainActor
 public final class CompletionManager {
     private let providerRegistry = CompletionProviderRegistry()
-    private var currentRequest: Task<CompletionResult, Error>?
+    private let requestCoordinator: CompletionRequestCoordinator
     private let cache: LRUCache<CompletionCacheKey, CachedCompletionResult>
     private let cacheExpirationTime: TimeInterval
     private let enableCaching: Bool
-    private let debouncer: CompletionDebouncer
     private var memoryMonitor: MemoryMonitor
     private let cleanupIdentifier = "completion-manager-\(UUID().uuidString)"
-    private let broadcaster = CompletionEventBroadcaster()
+    private let broadcaster: CompletionEventBroadcaster
 
     /// In-memory frequency/recency cache. Keyed by
     /// `"\(language.identifier):\(label)"`; capacity matches the legacy
@@ -115,10 +114,14 @@ public final class CompletionManager {
         self.frequencyCache = LRUCache(capacity: 500, memoryMonitor: memoryMonitor)
         self.cacheExpirationTime = cacheExpirationTime
         self.enableCaching = enableCaching
-        self.debouncer = debouncer ?? CompletionDebouncer()
+        let broadcaster = CompletionEventBroadcaster()
+        self.broadcaster = broadcaster
+        self.requestCoordinator = CompletionRequestCoordinator(
+            debouncer: debouncer ?? CompletionDebouncer(),
+            eventSink: broadcaster
+        )
 
-        // Wire up the debouncer to use this manager's completion logic
-        self.debouncer.setCompletionHandler { [weak self] context in
+        requestCoordinator.setDebouncedRequestHandler { [weak self] context in
             guard let self else {
                 throw CompletionDebouncingError.cancelled
             }
@@ -196,9 +199,6 @@ public final class CompletionManager {
 
     /// Request completions for the given context
     public func requestCompletions(for context: CompletionContextModel) async throws -> CompletionResult {
-        // Cancel any existing request
-        currentRequest?.cancel()
-
         // Capture for recordSelection scoping; cleared on cancel.
         lastContext = context
 
@@ -207,22 +207,25 @@ public final class CompletionManager {
             return cachedResult
         }
 
-        // Create new request
-        currentRequest = Task {
-            let startTime = Date()
-
-            // Get results from providers
-            let results = await fetchResultsFromProviders(for: context, startTime: startTime)
-
-            // Process and cache the results
-
-            return processAndCacheResults(results, context: context, startTime: startTime)
+        let providers = providerRegistry.applicableProviders(for: context.language)
+        return try await requestCoordinator.request(
+            providers: providers,
+            context: context
+        ) { [weak self] results, capturedContext, startTime in
+            guard let self else {
+                return CompletionResult(
+                    items: [],
+                    context: capturedContext,
+                    isIncomplete: false,
+                    processingTime: 0
+                )
+            }
+            return self.processAndCacheResults(
+                results,
+                context: capturedContext,
+                startTime: startTime
+            )
         }
-
-        guard let request = currentRequest else {
-            throw CompletionRequestError.noActiveRequest
-        }
-        return try await request.value
     }
 
     // MARK: - Helper Methods
@@ -237,76 +240,6 @@ public final class CompletionManager {
         }
         statistics.recordCacheMiss()
         return nil
-    }
-
-    private func fetchResultsFromProviders(
-        for context: CompletionContextModel,
-        startTime _: Date
-    ) async -> [CompletionResult] {
-        // Find applicable providers
-        let applicableProviders = providerRegistry.applicableProviders(
-            for: context.language
-        )
-
-        guard !applicableProviders.isEmpty else {
-            let result = CompletionResult(
-                items: [],
-                context: context,
-                isIncomplete: false,
-                processingTime: 0
-            )
-            statistics.recordRequest(processingTime: 0)
-            return [result]
-        }
-
-        // Request from all applicable providers concurrently
-        return await collectResultsConcurrently(from: applicableProviders, context: context)
-    }
-
-    private func collectResultsConcurrently(
-        from providers: [any CompletionProvider],
-        context: CompletionContextModel
-    ) async -> [CompletionResult] {
-        await withTaskGroup(of: CompletionResult?.self) { group in
-            for provider in providers {
-                let providerID = provider.id
-                let broadcaster = self.broadcaster
-                let capturedContext = context
-                group.addTask {
-                    let start = Date()
-                    do {
-                        let result = try await provider.completions(for: capturedContext)
-                        broadcaster.publish(
-                            CompletionEvent(
-                                providerID: providerID,
-                                context: capturedContext,
-                                durationMilliseconds: Date().timeIntervalSince(start) * 1_000,
-                                outcome: .succeeded(itemCount: result.items.count)
-                            )
-                        )
-                        return result
-                    } catch {
-                        broadcaster.publish(
-                            CompletionEvent(
-                                providerID: providerID,
-                                context: capturedContext,
-                                durationMilliseconds: Date().timeIntervalSince(start) * 1_000,
-                                outcome: .failed(SendableError(error, domain: "CompletionProvider"))
-                            )
-                        )
-                        return nil   // existing per-provider failure isolation preserved
-                    }
-                }
-            }
-
-            var allResults: [CompletionResult] = []
-            for await result in group {
-                if let result {
-                    allResults.append(result)
-                }
-            }
-            return allResults
-        }
     }
 
     private func processAndCacheResults(
@@ -350,33 +283,21 @@ public final class CompletionManager {
         priority: CompletionPriority = .normal,
         completion: @escaping @Sendable (Result<CompletionResult, Error>) -> Void
     ) {
-        debouncer.requestCompletions(
+        requestCoordinator.requestDebounced(
             for: context,
             priority: priority
-        ) { result in
-            Task { @MainActor in
-                switch result {
-                case .success(let completionResult):
-                    completion(.success(completionResult))
-
-                case .failure(let error):
-                    completion(.failure(error))
-                }
-            }
-        }
+        ) { result in completion(result) }
     }
 
     /// Cancel any pending completion request
     public func cancelCurrentRequest() {
-        currentRequest?.cancel()
-        currentRequest = nil
-        debouncer.cancelAllRequests()
+        requestCoordinator.cancelCurrentRequest()
         lastContext = nil
     }
 
     /// Access to the debouncer for configuration
     public var debouncingConfiguration: CompletionDebouncer {
-        debouncer
+        requestCoordinator.debouncingConfiguration
     }
 
     // MARK: - Learning API
