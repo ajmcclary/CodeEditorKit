@@ -234,21 +234,7 @@ extension CodeEditorView {
     ///
     /// - SeeAlso: `requestCompletion(triggerKind:triggerCharacter:)`
     public func hideCompletionPopup() {
-        guard isCompletionActive else { return }
-
-        #if canImport(AppKit)
-        completionWindow?.close()
-        completionWindow = nil
-        #else
-        completionPopover?.dismiss(animated: true)
-        completionPopover = nil
-        #endif
-
-        completionViewController = nil
-        isCompletionActive = false
-
-        // Announce completion dismissal
-        announceChange("Code completion dismissed")
+        completionController.hidePresentation(announcesChange: true)
     }
 
     // MARK: - Keyboard Handling

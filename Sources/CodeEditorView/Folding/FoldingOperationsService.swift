@@ -28,6 +28,11 @@ internal final class FoldingOperationsService {
         self.textView = textView
     }
 
+    /// Releases the attached editor view.
+    internal func detach() {
+        textView = nil
+    }
+
     /// Toggle fold at line
     /// - Returns: `true` if fold state was changed, `false` if no foldable region exists
     internal func toggleFold(at line: Int, regions: [FoldableRegion], foldedRegions: inout Set<UUID>) -> Bool {

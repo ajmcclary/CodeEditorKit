@@ -5,6 +5,7 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorLayout
+import CodeEditorLSP
 import CodeEditorPlatform
 import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
@@ -189,6 +190,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Event publisher for unified event handling
     public let eventPublisher = EditorEventPublisher()
 
+    /// Optional lifecycle injected by package tests or alternate hosts.
+    private var sessionOverride: (any EditorSessionLifecycle)?
+
     /// Runtime composition root for services that are not configuration values.
     public var runtime = EditorRuntime() {
         didSet {
@@ -291,6 +295,26 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         cancellation: asyncHighlighter
     )
 
+    /// Feature controllers composed under the default editor session.
+    internal lazy var completionController = EditorCompletionController(
+        cancellation: completionManager
+    )
+    internal lazy var foldingController = EditorFoldingController(
+        lifecycle: codeFoldingEngine
+    )
+    internal lazy var lspDocumentController = LSPDocumentController()
+    private lazy var defaultSession = EditorSession(
+        features: [
+            highlightingController,
+            completionController,
+            foldingController,
+            lspDocumentController
+        ]
+    )
+    package var session: any EditorSessionLifecycle {
+        sessionOverride ?? defaultSession
+    }
+
     /// Metrics captured from actual TextKit 2 layout passes.
     public let renderingMetrics = TextKit2RenderingMetrics()
 
@@ -298,14 +322,16 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     #if canImport(AppKit)
     internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: runtime.dependencies.workspaceRoot)
 
-    /// LSP content coordinator — batches edit events into `textDocument/didChange`
-    /// notifications with ~250 ms debounce. Created by `setupLSPIntegration()`
-    /// when a document path and language are available.
-    internal var lspContentCoordinator: LSPContentCoordinator?
+    /// Document-scoped LSP synchronization owned by the session controller.
+    internal var lspContentCoordinator: LSPContentCoordinator? {
+        lspDocumentController.concreteContentCoordinator
+    }
 
     /// LSP semantic-token provider retained by the editor so it can be
     /// registered when the range-based highlighting controller is created.
-    internal var lspSemanticTokenProvider: LSPSemanticTokenProvider?
+    internal var lspSemanticTokenProvider: LSPSemanticTokenProvider? {
+        lspDocumentController.semanticTokenProvider
+    }
     #endif
 
     /// Code folding engine for managing foldable regions and fold states
@@ -476,23 +502,42 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Completion System
 
     /// Completion manager for handling multiple completion providers
-    package lazy var completionManager = memoryCoordinator.createCompletionManager()
+    package lazy var completionManager = memoryCoordinator.createCompletionManager() {
+        didSet {
+            completionController.replaceCancellation(with: completionManager)
+        }
+    }
 
     /// Current completion view controller
-    internal var completionViewController: (any CompletionViewControllerRepresentable)?
+    internal var completionViewController: (any CompletionViewControllerRepresentable)? {
+        get { completionController.viewController }
+        set { completionController.viewController = newValue }
+    }
 
     /// Completion popup window/container
     #if canImport(AppKit)
-    internal var completionWindow: NSWindow?
+    internal var completionWindow: NSWindow? {
+        get { completionController.window }
+        set { completionController.window = newValue }
+    }
     #else
-    internal var completionPopover: PlatformViewController?
+    internal var completionPopover: PlatformViewController? {
+        get { completionController.popover }
+        set { completionController.popover = newValue }
+    }
     #endif
 
     /// Whether completion is currently active
-    internal var isCompletionActive: Bool = false
+    internal var isCompletionActive: Bool {
+        get { completionController.isActive }
+        set { completionController.isActive = newValue }
+    }
 
     /// Completion trigger characters for the current language
-    internal var completionTriggerCharacters: Set<Character> = [".", "(", "[", "<", " "]
+    internal var completionTriggerCharacters: Set<Character> {
+        get { completionController.triggerCharacters }
+        set { completionController.triggerCharacters = newValue }
+    }
 
     /// Memory management coordinator
     internal lazy var memoryCoordinator = MemoryManagementCoordinator(
@@ -538,6 +583,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Initialization
 
     #if canImport(AppKit)
+    package init(frame frameRect: NSRect, session: any EditorSessionLifecycle) {
+        super.init(frame: frameRect)
+        sessionOverride = session
+        setupTextView()
+    }
+
     override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
         setupTextView()
@@ -583,6 +634,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
     }
     #else
+    package init(frame frameRect: CGRect, session: any EditorSessionLifecycle) {
+        super.init(frame: frameRect, textContainer: nil)
+        sessionOverride = session
+        setupTextView()
+    }
+
     override public init(frame frameRect: CGRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
         setupTextView()
@@ -628,20 +685,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     override public func removeFromSuperview() {
         // Perform synchronous cleanup before removing from superview
-        highlightingController.detach()
+        session.detach()
         unregisterFromMemoryMonitor()
 
         // Cancel any pending layout operations
         layoutCoordinator.cancelPendingLayout()
-
-        // Cancel any pending completion requests
-        completionManager.cancelCurrentRequest()
-
-        // Clean up code folding - no cleanup method available
-        #if canImport(AppKit)
-        lspContentCoordinator?.detach()
-        lspContentCoordinator = nil
-        #endif
 
         // Remove any gutter view
         #if canImport(AppKit)

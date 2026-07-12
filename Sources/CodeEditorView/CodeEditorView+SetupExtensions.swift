@@ -17,7 +17,7 @@ extension CodeEditorView {
     internal func setupTextView() {
         // Use TextKitSetupHelper for centralized setup
         let setupResult = TextKitSetupHelper.setupTextKit(for: self)
-        highlightingController.attach(to: self)
+        session.attach(to: self)
 
         #if DEBUG
         Self.logger.debug("Setting up CodeEditorView with TextKit2")
@@ -34,9 +34,6 @@ extension CodeEditorView {
 
         // Set up completion providers
         setupCompletionProviders()
-
-        // Set up code folding engine
-        setupCodeFoldingEngine()
 
         // Set up line geometry store edit handler
         setupLineGeometryStore()
@@ -87,11 +84,6 @@ extension CodeEditorView {
         completionManager.ensureBuiltInProvider(for: language)
     }
 
-    internal func setupCodeFoldingEngine() {
-        // Connect the code folding engine
-        codeFoldingEngine.attach(to: self)
-    }
-
     internal func setupLineGeometryStore() {
         rebuildLineGeometryStoreFromCurrentTextStorage()
 
@@ -134,37 +126,11 @@ extension CodeEditorView {
     ///   - languageId: LSP language identifier (e.g. `"swift"`).
     #if canImport(AppKit)
     internal func setupLSPIntegration(filePath: String, languageId: String) {
-        // Detach any previous coordinator first.
-        lspContentCoordinator?.detach()
-        if let lspSemanticTokenProvider {
-            rangeBasedHighlightingController?.unregisterSupplementalProvider(lspSemanticTokenProvider)
-            lspSemanticTokenProvider.onTokensUpdated = nil
-        }
-
-        let coordinator = LSPContentCoordinator(
-            textView: self,
-            lspManager: lspManager,
+        lspDocumentController.configure(
+            manager: lspManager,
             filePath: filePath,
             languageId: languageId
         )
-        lspContentCoordinator = coordinator
-
-        // Create semantic token provider and wire post-batch refresh.
-        let stp = LSPSemanticTokenProvider(
-            lspManager: lspManager,
-            filePath: filePath
-        )
-        lspSemanticTokenProvider = stp
-        stp.onTokensUpdated = { [weak self, weak stp] indices in
-            guard let self, let stp else { return }
-            self.rangeBasedHighlightingController?.invalidateSupplementalProvider(stp, indices: indices)
-        }
-        coordinator.onBatchFlushed = { [weak self] in
-            guard let self, let stp = self.lspSemanticTokenProvider else { return }
-            stp.refreshAfterBatch(textView: self)
-        }
-
-        registerSemanticTokenProviderIfAvailable()
     }
     #endif
 

@@ -113,6 +113,15 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         updateFoldableRegions()
     }
 
+    /// Cancels pending detection and releases edit observation for the view.
+    internal func detach() {
+        updateTask?.cancel()
+        updateTask = nil
+        textView?.textEditEventHub.removeObserver(self)
+        operationsService.detach()
+        textView = nil
+    }
+
     internal func textStorageDidApplyEdit(_ event: TextEditEvent) {
         guard event.editedCharacters else { return }
         syncFoldStorage(editedRange: event.editedRange, changeInLength: event.changeInLength)
