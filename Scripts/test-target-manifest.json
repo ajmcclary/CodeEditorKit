@@ -1,0 +1,2132 @@
+{
+  "source_count": 205,
+  "entries": [
+    {
+      "source": "Tests/CodeEditorPluginTests/AnnotationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Annotations/AnnotationThemeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorDesignTokens",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Architecture/PlaceholderAPIRemovalTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": []
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/AsyncSyntaxHighlighterCacheTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/AsyncSyntaxHighlighterInstrumentationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/AutoScrollTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/CodeEditorContainerViewTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/CodeEditorDependencyOverrideTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/CodeEditorSnapshotTests.swift",
+      "target": "CodeEditorPluginTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/CodeEditorViewTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Common/KeyedDebouncerTests.swift",
+      "target": "CodeEditorCommonTests",
+      "imports": [
+        "CodeEditorCommon"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CodeEditorModifierCompletionIntegrationTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionComponentTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionEventStreamTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionFacadeIntegrationTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionManagerBuiltInProviderTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionManagerLearningTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionManagerRankingTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionProviderRegistryTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorLanguages"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionRequestCoordinatorTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorLanguages"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionViewControllerTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/CompletionViewWiringTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorLanguages",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/LanguageKeywordCompletionProviderTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/SwiftUIClosureCompletionProviderTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Completion/SwiftUIClosureLifecycleTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/CompletionSystemTests.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ComprehensivePerformanceTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorCompletion",
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLSP",
+        "CodeEditorLanguages",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSmartEditing",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ConcurrencyTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ConfigurationBasicTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ConfigurationIntegrationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ContextMenuTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/CanonicalEditorEventBusTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/CodeEditorViewTextKit2InitTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/DirtyTrackerTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorEventAdapterTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorFeatureControllerTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorInteractionStateTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorRuntimeStatePreservationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlatform",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorSessionTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorStateBridgeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorStateConformanceTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSymbols",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorStateDirtyMirrorTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorStateHardwareMirrorTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/EditorStateTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSymbols",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/MemoryManagementPolicyTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/PublishEventFanOutTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/SelectionScrollPreservationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/SourcePositionTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Core/TextViewDelegateMultiplexerTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/CrossPlatformCoordinatorTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/DeviceTypeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Diagnostics/MonitoredLRUCacheTests.swift",
+      "target": "CodeEditorCommonTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorDiagnostics"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Documents/ActiveDocumentModifierTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Documents/EditorDocumentTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Documents/EditorDocumentsBindingTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Documents/EditorDocumentsTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/EdgeInsetsTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/EditorConfigurationBehaviorEncodingTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/EditorConfigurationPerformanceUnifiedSystemTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/EditorControllerAdaptiveModeTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/EditorControllerSelectRangeTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ErrorHandlingTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/FeatureBehaviorTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorFolding",
+        "CodeEditorLanguages",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSymbols",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Features/CodeFoldingEngineCacheEvictionTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Features/CodeFoldingEngineLineSpanTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Features/FoldingProviderOutputTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Features/LineFoldStorageTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorFolding",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Features/SmartEditingEngineMultiplexerTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSmartEditing",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/FrameRateMonitorTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/IOSAnnotationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/InputCoordinatorTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/IntegrationTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/IsolatedPerformanceTest.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/JSONRPCSessionTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPClientRegistryRemoteFlowTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPCompletionRangeConversionTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPComponentTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPConnectionManagerShutdownTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPErrorRecoveryTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorLSP"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPManagerIOSCoverageTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPMessageHandlerRecoveryTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LSPProcessManagerReaderTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/LanguageServerConfigFactoryTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/SecurityOptionsTLSVersionTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/StringOrIntegerTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSP/WebSocketTransportSecurityTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSPIntegrationTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorLSP",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSPRetryTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSPSemanticTokenStorageTests.swift",
+      "target": "CodeEditorLSPTests",
+      "imports": [
+        "CodeEditorLSP",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LSPTestHelpers.swift",
+      "target": "CodeEditorCompletionTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorLSP",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LanguageDetectionTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Languages/SwiftSyntaxHighlighterTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LargeFileHighlightingBenchmarkTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LargeFilePerformanceTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/ApplyThemePropagationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/CodeEditorContainerViewKeyboardObserverTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/CodeEditorContainerViewMinimapObserverTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/CodeEditorGutterViewLifecycleTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/CodeEditorGutterViewSnapshotTests.swift",
+      "target": "CodeEditorPluginTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/CodeEditorGutterViewTK2Tests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/CompletionCellGlassTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorLayout",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/CompletionCellThemeStateTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorLayout",
+        "CodeEditorTheming"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/EditorEventBusInstallerTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorLayout",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/EditorEventBusTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorLayout",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/FoldChevronTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDesignTokens",
+        "CodeEditorLayout",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/GutterViewRendererActiveLineTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/GutterViewThemeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/HoverAndClickModifierTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorLayout",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/IOSContainerMultiplexerTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/LineHighlightInsertionPointThemeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorLayout",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/MinimapStyleDataSourceTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorLayout",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/MinimapViewThemeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Layout/ThemeableUIComponentTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorLayout",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LineCountingTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LineGeometryStoreBenchmarkTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LineNumbersPlatformTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/LinkedLRUTests.swift",
+      "target": "CodeEditorCommonTests",
+      "imports": [
+        "CodeEditorCommon"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/MemoryLeakTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/MemoryMonitorDITests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/MemoryMonitorResetPeakTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/MinimapIntegrationTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ParagraphStyleCacheTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Performance/HardwareAccelerationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Performance/PerformanceObservationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PerformanceBenchmarkTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PerformanceConfigurationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PerformanceInsightsRealMetricsTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PerformanceRegressionTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorCompletion",
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PerformanceStressTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Platform/ToolbarCatalogTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PlatformAbstractionTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PlatformCapabilitiesTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PlatformConfigurationsLoggingTest.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/PlatformPresetsTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ProjectSearchProviderTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorSearch",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/RegexHighlighterPerformanceTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/RegexRangeHighlightProviderTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ReviewRemediationRegressionTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorAnnotations",
+        "CodeEditorCommon",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/ScrollPositionPreservationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SimpleMemoryTest.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/CodeEditorIntentTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorBindingSynchronizerTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorSwiftUI"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorControllerCompletionTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorControllerOnAttachTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorControllerTemporaryAttributesTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorControllerTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorInteractionStateBindingTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorInteractionSynchronizerTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorLanguages",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/EditorRenderReconcilerTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/IOSCoordinatorMultiplexerTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/IntentCoordinatorWiringTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/ModifierChainCompositionTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUI/PerformanceObserverModifierTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUICoordinatorTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUIEnvironmentConfigurationTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCompletion",
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUIEnvironmentTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUIIntegrationTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUIModifierTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SwiftUITests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlighting/HighlightingControllerTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlighting/QueryCaptureMapReuseTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorLanguages",
+        "CodeEditorSyntaxHighlighting"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlighting/RangeBasedHighlightingIntegrationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlighting/SmartTokenCacheCoverageTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlighting/SqlCaseInsensitiveKeywordTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlighting/SyntaxHighlightingRenderingAttributeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlightingPerformanceOptimizationTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlightingPerformanceTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/SyntaxHighlightingTests.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorLanguages",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/TestHelpers.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/TestIsolationHelper.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/TestMemoryOptimizer.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Text/IndentGuideTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Text/RangeStoreTests.swift",
+      "target": "CodeEditorTextModelTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Text/SyntaxColorAndSelectionTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorSyntaxHighlighting",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Text/TemporaryAttributesStoreTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Text/TextEditEventHubTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Text/TextKitBridgeEditingTransactionTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Text/TextRenderingVisibilityTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/TextKit2OptimizationTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/TextKit2RenderingMetricsTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/TextRangeUtilitiesRegressionTests.swift",
+      "target": "CodeEditorTextModelTests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTextModel",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/Bridges/AnimationBridgesTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/Bridges/ColorBridgesTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/FallbackThemeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/FoundationPrimitivesTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/LenientDecodeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/PlatformExtensionTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/SubStructFlatInitTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/SyntaxColorLookupTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/SyntaxStyleTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/TextLevelsTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/ThemeAppearanceFallbackTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/ThemeFamilyLoaderTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/ThemeRoundtripTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/ThemeStyleDecoderTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/ThemeStyleSnapshotTests.swift",
+      "target": "CodeEditorPluginTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/ThemingConformanceTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/Theming/ZedTrekDecodeTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDesignTokens",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorTheming",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/UmbrellaReExportTests.swift",
+      "target": "CodeEditorPluginTests",
+      "imports": [
+        "CodeEditorPlugin"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/UnifiedPerformanceSystemNonThrowingTrackTests.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/XCTestCase+Cleanup.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorConfiguration",
+        "CodeEditorPlatform",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/XCTestCase+MemoryLeakDetection.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/XCTestCase+Performance.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/XCTestCase+PerformanceBudget.swift",
+      "target": "CodeEditorSwiftUITests",
+      "imports": [
+        "CodeEditorCommon",
+        "CodeEditorDiagnostics",
+        "CodeEditorPlugin",
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    },
+    {
+      "source": "Tests/CodeEditorPluginTests/XCTestCase+Timeout.swift",
+      "target": "CodeEditorViewTests",
+      "imports": [
+        "CodeEditorSwiftUI",
+        "CodeEditorView"
+      ]
+    }
+  ]
+}

@@ -364,23 +364,10 @@ let package = Package(
         .testTarget(
             name: "CodeEditorPluginTests",
             dependencies: [
-                "CodeEditorAnnotations",
-                "CodeEditorCommon",
-                "CodeEditorCompletion",
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
-                "CodeEditorFolding",
-                "CodeEditorLSP",
-                "CodeEditorLanguages",
-                "CodeEditorLayout",
-                "CodeEditorPlatform",
                 "CodeEditorPlugin",
-                "CodeEditorSearch",
-                "CodeEditorSmartEditing",
                 "CodeEditorSwiftUI",
-                "CodeEditorSymbols",
-                "CodeEditorSyntaxHighlighting",
-                "CodeEditorTextModel",
                 "CodeEditorTheming",
                 "CodeEditorView",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
@@ -402,6 +389,58 @@ let package = Package(
             ],
             exclude: [
                 "__Snapshots__"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorCommonTests",
+            dependencies: ["CodeEditorCommon", "CodeEditorDiagnostics"],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorTextModelTests",
+            dependencies: ["CodeEditorCommon", "CodeEditorTextModel"],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorCompletionTests",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorCompletion",
+                "CodeEditorDiagnostics",
+                "CodeEditorLSP",
+                "CodeEditorLanguages",
+                "CodeEditorTextModel"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorLSPTests",
+            dependencies: ["CodeEditorCommon", "CodeEditorDiagnostics", "CodeEditorLSP"],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorViewTests",
+            dependencies: [
+                "CodeEditorAnnotations", "CodeEditorCommon", "CodeEditorCompletion",
+                "CodeEditorConfiguration", "CodeEditorDesignTokens", "CodeEditorDiagnostics",
+                "CodeEditorFolding", "CodeEditorLSP", "CodeEditorLanguages", "CodeEditorLayout",
+                "CodeEditorPlatform", "CodeEditorSearch", "CodeEditorSmartEditing",
+                "CodeEditorSymbols", "CodeEditorSyntaxHighlighting",
+                "CodeEditorTextModel", "CodeEditorTheming", "CodeEditorView",
+                .product(name: "CustomDump", package: "swift-custom-dump")
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorSwiftUITests",
+            dependencies: [
+                "CodeEditorAnnotations", "CodeEditorCommon", "CodeEditorCompletion",
+                "CodeEditorConfiguration", "CodeEditorDiagnostics", "CodeEditorFolding",
+                "CodeEditorLSP", "CodeEditorLanguages", "CodeEditorLayout", "CodeEditorPlatform",
+                "CodeEditorSwiftUI", "CodeEditorSymbols", "CodeEditorSyntaxHighlighting",
+                "CodeEditorTextModel", "CodeEditorTheming", "CodeEditorView",
+                .product(name: "CustomDump", package: "swift-custom-dump")
             ],
             swiftSettings: swiftSettings
         ),
