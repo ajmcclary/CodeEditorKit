@@ -284,21 +284,24 @@ extension PlatformExtension {
     public static func derived(from style: ThemeStyle, appearance: Theme.Appearance) -> PlatformExtension {
         let bg = style.editor.background
         let glassTint = Tokens.Color(red: bg.red, green: bg.green, blue: bg.blue, alpha: 0.12)
-        let shadowColor: Tokens.Color = appearance == .dark
-            ? Tokens.Color(hex: 0x00_00_00, alpha: 0.55)
-            : Tokens.Color(hex: 0x00_00_00, alpha: 0.18)
+        let scheme: Tokens.Elevation.Scheme = appearance == .dark ? .dark : .light
+        let elevation = Tokens.Elevation.popover(scheme)
         let popover = PlatformExtension.Shadow(
-            color: shadowColor, blur: 24, xOffset: 0, yOffset: 12
+            color: elevation.color, blur: elevation.blur, xOffset: elevation.x, yOffset: elevation.y
         )
         let field = PlatformExtension.Field(
             fill: style.elements.element.background,
             border: style.borders.base,
             focusedBorder: style.borders.focused
         )
+        let onRole = appearance == .light
+            ? Tokens.Color(hex: 0xFF_FF_FF) : Tokens.Color(hex: 0x05_06_0A)
         return PlatformExtension(
             glass: PlatformExtension.Glass(tint: glassTint, opacity: 0.12),
             shadows: PlatformExtension.Shadows(popover: popover),
-            field: field
+            field: field,
+            onAccent: onRole,
+            onDanger: onRole
         )
     }
 }

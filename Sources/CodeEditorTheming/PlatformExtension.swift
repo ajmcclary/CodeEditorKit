@@ -128,21 +128,33 @@ public struct PlatformExtension: Hashable, Sendable, Codable {
     public let shadows: Shadows
     /// Text-field styling.
     public let field: Field
+    /// Text/icon color on an `accent-1` fill (primary button). CSS `--on-accent`.
+    public let onAccent: Tokens.Color
+    /// Text/icon color on a `diag-error` fill (destructive button). CSS `--on-danger`.
+    public let onDanger: Tokens.Color
     /// Unknown `platform.*` keys preserved for forward-compat. Each is a
     /// `Tokens.Color` since most Zed-style extension values are colors;
     /// non-color values aren't preserved by this overflow bag.
     public let extras: [String: Tokens.Color]
 
     /// Memberwise builder.
-    public init(glass: Glass, shadows: Shadows, field: Field, extras: [String: Tokens.Color] = [:]) {
+    public init(
+        glass: Glass, shadows: Shadows, field: Field,
+        onAccent: Tokens.Color, onDanger: Tokens.Color,
+        extras: [String: Tokens.Color] = [:]
+    ) {
         self.glass = glass
         self.shadows = shadows
         self.field = field
+        self.onAccent = onAccent
+        self.onDanger = onDanger
         self.extras = extras
     }
 
     private enum CodingKeys: String, CodingKey {
         case glass, shadows, field
+        case onAccent = "on_accent"
+        case onDanger = "on_danger"
     }
 
     public init(from decoder: Decoder) throws {
@@ -158,11 +170,30 @@ public struct PlatformExtension: Hashable, Sendable, Codable {
         self.shadows = try container.decode(Shadows.self, forKey: .shadows)
         self.field = try container.decode(Field.self, forKey: .field)
 
+        // On-fill roles: dark themes place near-black text/icons on accent
+        // fills, light themes place white. Fall back accordingly when absent.
+        let appearance = (decoder.userInfo[.themeAppearance] as? AppearanceHolder)?.appearance
+            ?? .dark
+        let onFallback = appearance == .light
+            ? Tokens.Color(hex: 0xFF_FF_FF) : Tokens.Color(hex: 0x05_06_0A)
+        if let hex = try container.decodeIfPresent(String.self, forKey: .onAccent),
+           let color = ZedColorBridge.parse(hex, path: "platform.on_accent", warnings: warnings) {
+            self.onAccent = color
+        } else {
+            self.onAccent = onFallback
+        }
+        if let hex = try container.decodeIfPresent(String.self, forKey: .onDanger),
+           let color = ZedColorBridge.parse(hex, path: "platform.on_danger", warnings: warnings) {
+            self.onDanger = color
+        } else {
+            self.onDanger = onFallback
+        }
+
         // Pass 2: walk all top-level keys, anything not in `known` lands in
         // `extras` and emits an `.unknownPlatformKey` warning.
         let dynContainer = try decoder.container(keyedBy: DynamicCodingKey.self)
         var extras: [String: Tokens.Color] = [:]
-        let known: Set<String> = ["glass", "shadows", "field"]
+        let known: Set<String> = ["glass", "shadows", "field", "on_accent", "on_danger"]
         for key in dynContainer.allKeys where !known.contains(key.stringValue) {
             if let hex = try? dynContainer.decode(String.self, forKey: key),
                let color = ZedColorBridge.parse(hex, path: "platform.\(key.stringValue)", warnings: warnings) {
@@ -182,6 +213,8 @@ public struct PlatformExtension: Hashable, Sendable, Codable {
         try container.encode(glass, forKey: .glass)
         try container.encode(shadows, forKey: .shadows)
         try container.encode(field, forKey: .field)
+        try container.encode(ZedColorBridge.encode(onAccent), forKey: .onAccent)
+        try container.encode(ZedColorBridge.encode(onDanger), forKey: .onDanger)
         if !extras.isEmpty {
             var dyn = encoder.container(keyedBy: DynamicCodingKey.self)
             for (key, value) in extras {

@@ -43,4 +43,30 @@ struct PlatformExtensionTests {
         #expect(platform.extras["weird_key"] == Tokens.Color(hex: 0xFF_00_00))
         #expect(collector.warnings.contains { $0.kind == .unknownPlatformKey })
     }
+
+    @Test("explicit platform.on_accent / on_danger decode")
+    func decodesOnRoles() throws {
+        let json = ##"""
+        {
+          "glass": { "tint": "#FF9933", "opacity": 0.12 },
+          "shadows": { "popover": { "color": "#0000004D", "blur": 36, "x": 0, "y": 10 } },
+          "field": { "fill": "#151A24", "border": "#2A2030", "focused_border": "#FF9933" },
+          "on_accent": "#05060A", "on_danger": "#05060A"
+        }
+        """##
+        let decoder = JSONDecoder()
+        decoder.userInfo[.themeWarnings] = WarningCollector()
+        let platform = try decoder.decode(PlatformExtension.self, from: Data(json.utf8))
+        #expect(platform.onAccent == Tokens.Color(hex: 0x05_06_0A))
+        #expect(platform.onDanger == Tokens.Color(hex: 0x05_06_0A))
+        #expect(platform.glass.tint == Tokens.Color(hex: 0xFF_99_33))
+    }
+
+    @Test("derived() supplies on-role fallbacks per appearance")
+    func derivedFallback() {
+        let dark = Theme.fallback(appearance: .dark)
+        #expect(dark.platform.onAccent == Tokens.Color(hex: 0x05_06_0A))
+        let light = Theme.fallback(appearance: .light)
+        #expect(light.platform.onAccent == Tokens.Color(hex: 0xFF_FF_FF))
+    }
 }
