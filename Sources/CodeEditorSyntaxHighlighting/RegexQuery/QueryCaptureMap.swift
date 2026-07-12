@@ -22,6 +22,13 @@ package struct QueryCaptureMap: Sendable {
         return map[base] ?? map[captureName] ?? .unknown
     }
 
+    /// Returns this map with explicit language-specific replacements applied.
+    package func merging(_ overrides: [String: TokenType]) -> Self {
+        Self(
+            mappings: map.merging(overrides) { _, replacement in replacement }
+        )
+    }
+
     // MARK: - Presets
 
     /// Default capture map covering the most common capture names.
@@ -85,24 +92,9 @@ package struct QueryCaptureMap: Sendable {
     ])
 
     /// Standard capture map for the TypeScript grammar.
-    package static let typescript = Self(mappings: [
-        "keyword": .keyword,
-        "constant": .keyword,
-        "number": .number,
-        "string": .string,
-        "escape": .string,
-        "comment": .comment,
-        "function": .function,
-        "method": .function,
-        "property": .property,
-        "type": .type,
-        "operator": .operator,
-        "punctuation": .punctuation,
-        "variable": .identifier,
-        "parameter": .identifier,
-        "label": .identifier,
-        "tag": .keyword,
-        "attribute": .property
+    package static let typescript = javascript.merging([
+        "interface": .type,
+        "type.alias": .type
     ])
 
     /// Standard capture map for the Python grammar.
