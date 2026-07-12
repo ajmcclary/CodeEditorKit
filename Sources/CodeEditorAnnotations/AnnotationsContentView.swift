@@ -12,21 +12,11 @@ import AppKit
 import UIKit
 #endif
 
-// MARK: - AnnotationsContentView Protocol
-
-/// Protocol defining the common interface for annotations content view functionality
-@MainActor
-public protocol AnnotationsContentViewProtocol: AnyObject {
-    var annotations: [Annotation] { get set }
-
-    func setNeedsDisplayAnnotations()
-}
-
 // MARK: - Unified AnnotationsContentView Implementation
 
 /// Cross-platform view for displaying annotation content
 @MainActor
-public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtocol {
+public class AnnotationsContentView: PlatformView {
     // MARK: - Properties
 
     public var annotations: [Annotation] = [] {

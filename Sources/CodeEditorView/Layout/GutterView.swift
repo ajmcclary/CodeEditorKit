@@ -66,21 +66,11 @@ private final class GutterDisplayLinkHandle: @unchecked Sendable {
 }
 #endif
 
-// MARK: - GutterView Protocol
-
-/// Protocol defining the common interface for gutter view functionality
-@MainActor
-public protocol GutterViewProtocol: AnyObject {
-    var textView: CodeEditorView? { get set }
-
-    func setNeedsDisplayLineNumbers()
-}
-
 // MARK: - Unified GutterView Implementation
 
 /// Cross-platform view for displaying line numbers
 @MainActor
-public class GutterView: PlatformView, GutterViewProtocol {
+public class GutterView: PlatformView {
     // MARK: - Properties
 
     public weak var textView: CodeEditorView? {

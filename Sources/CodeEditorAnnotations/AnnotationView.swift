@@ -12,22 +12,11 @@ import AppKit
 import UIKit
 #endif
 
-// MARK: - AnnotationView Protocol
-
-/// Protocol defining the common interface for annotation view functionality
-@MainActor
-public protocol AnnotationViewProtocol: AnyObject {
-    var annotation: LineAnnotation { get }
-
-    func showPopup(detachable: Bool)
-    func hidePopup()
-}
-
 // MARK: - Unified AnnotationView Implementation
 
 /// Cross-platform view for displaying annotation badges with hover/tap popups
 @MainActor
-public class AnnotationView: PlatformView, AnnotationViewProtocol {
+public class AnnotationView: PlatformView {
     // MARK: - Properties
 
     public let annotation: LineAnnotation

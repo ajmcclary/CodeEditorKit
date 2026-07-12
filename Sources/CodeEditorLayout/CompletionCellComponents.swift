@@ -89,39 +89,6 @@ public struct CompletionCellTheme: @unchecked Sendable {
     )
 }
 
-/// Protocol for platform-agnostic completion cell components
-/// Protocol for creating platform-specific completion cell components
-@MainActor
-public protocol CompletionCellComponentProvider {
-    #if canImport(AppKit)
-    /// Platform-specific label type for NSTextField on AppKit
-    associatedtype LabelType = NSTextField
-    #elseif canImport(UIKit)
-    /// Platform-specific label type for UILabel on UIKit
-    associatedtype LabelType = UILabel
-    #endif
-
-    /// Creates an icon label with the specified theme
-    /// - Parameter theme: Theme configuration for the label
-    /// - Returns: Configured label for displaying icons
-    static func createIconLabel(theme: CompletionCellTheme) -> LabelType
-    /// Creates a title label with the specified theme
-    /// - Parameter theme: Theme configuration for the label
-    /// - Returns: Configured label for displaying titles
-    static func createTitleLabel(theme: CompletionCellTheme) -> LabelType
-    /// Creates a detail label with the specified theme
-    /// - Parameter theme: Theme configuration for the label
-    /// - Returns: Configured label for displaying details
-    static func createDetailLabel(theme: CompletionCellTheme) -> LabelType
-    /// Configures a label with text and theme
-    /// - Parameters:
-    ///   - label: The label to configure
-    ///   - text: Text to display in the label
-    ///   - theme: Theme configuration
-    ///   - isDeprecated: Whether to apply deprecated styling
-    static func configureLabel(_ label: LabelType, with text: String, theme: CompletionCellTheme, isDeprecated: Bool)
-}
-
 /// Shared completion cell layout calculator
 public enum CompletionCellLayout {
     /// Calculates optimal cell height for given theme and content
@@ -229,10 +196,8 @@ public enum CompletionCellLayout {
 
 /// AppKit completion cell component provider
 @MainActor
-public struct AppKitCompletionCellComponents: CompletionCellComponentProvider {
-    public typealias LabelType = NSTextField
-
-    public static func createIconLabel(theme: CompletionCellTheme) -> NSTextField {
+private enum AppKitCompletionCellComponents {
+    static func createIconLabel(theme: CompletionCellTheme) -> NSTextField {
         let label = NSTextField(labelWithString: "")
         label.font = theme.iconFont
         label.textColor = theme.iconColor
@@ -241,7 +206,7 @@ public struct AppKitCompletionCellComponents: CompletionCellComponentProvider {
         return label
     }
 
-    public static func createTitleLabel(theme: CompletionCellTheme) -> NSTextField {
+    static func createTitleLabel(theme: CompletionCellTheme) -> NSTextField {
         let label = NSTextField(labelWithString: "")
         label.font = theme.titleFont
         label.textColor = theme.titleColor
@@ -249,7 +214,7 @@ public struct AppKitCompletionCellComponents: CompletionCellComponentProvider {
         return label
     }
 
-    public static func createDetailLabel(theme: CompletionCellTheme) -> NSTextField {
+    static func createDetailLabel(theme: CompletionCellTheme) -> NSTextField {
         let label = NSTextField(labelWithString: "")
         label.font = theme.detailFont
         label.textColor = theme.detailColor
@@ -258,7 +223,7 @@ public struct AppKitCompletionCellComponents: CompletionCellComponentProvider {
         return label
     }
 
-    @MainActor public static func configureLabel(_ label: NSTextField, with text: String, theme: CompletionCellTheme, isDeprecated: Bool) {
+    static func configureLabel(_ label: NSTextField, with text: String, theme: CompletionCellTheme, isDeprecated: Bool) {
         label.stringValue = text
         if isDeprecated {
             CompletionCellLayout.updateDeprecatedAppearance(label: label, isDeprecated: true, theme: theme)
@@ -351,10 +316,8 @@ public final class UnifiedCompletionCellView: NSTableCellView {
 
 /// UIKit completion cell component provider
 @MainActor
-public struct UIKitCompletionCellComponents: CompletionCellComponentProvider {
-    public typealias LabelType = UILabel
-
-    public static func createIconLabel(theme: CompletionCellTheme) -> UILabel {
+private enum UIKitCompletionCellComponents {
+    static func createIconLabel(theme: CompletionCellTheme) -> UILabel {
         let label = UILabel()
         label.font = theme.iconFont
         label.textColor = theme.iconColor
@@ -363,7 +326,7 @@ public struct UIKitCompletionCellComponents: CompletionCellComponentProvider {
         return label
     }
 
-    public static func createTitleLabel(theme: CompletionCellTheme) -> UILabel {
+    static func createTitleLabel(theme: CompletionCellTheme) -> UILabel {
         let label = UILabel()
         label.font = theme.titleFont
         label.textColor = theme.titleColor
@@ -371,7 +334,7 @@ public struct UIKitCompletionCellComponents: CompletionCellComponentProvider {
         return label
     }
 
-    public static func createDetailLabel(theme: CompletionCellTheme) -> UILabel {
+    static func createDetailLabel(theme: CompletionCellTheme) -> UILabel {
         let label = UILabel()
         label.font = theme.detailFont
         label.textColor = theme.detailColor
@@ -380,7 +343,7 @@ public struct UIKitCompletionCellComponents: CompletionCellComponentProvider {
         return label
     }
 
-    @MainActor public static func configureLabel(_ label: UILabel, with text: String, theme: CompletionCellTheme, isDeprecated: Bool) {
+    static func configureLabel(_ label: UILabel, with text: String, theme: CompletionCellTheme, isDeprecated: Bool) {
         label.text = text
         if isDeprecated {
             CompletionCellLayout.updateDeprecatedAppearance(label: label, isDeprecated: true, theme: theme)
@@ -468,31 +431,3 @@ public final class UnifiedCompletionTableViewCell: UITableViewCell {
 }
 
 #endif
-
-// MARK: - Completion Cell Factory
-
-/// Factory for creating completion cells across platforms
-public enum CompletionCellFactory {
-    #if canImport(AppKit)
-    /// Creates a completion cell view for AppKit
-    /// - Parameter theme: Theme configuration for the cell
-    /// - Returns: Configured completion cell view
-    @MainActor public static func createCellView(theme: CompletionCellTheme = .default) -> UnifiedCompletionCellView {
-        UnifiedCompletionCellView(theme: theme)
-    }
-    #elseif canImport(UIKit)
-    /// Creates a completion table view cell for UIKit
-    /// - Parameters:
-    ///   - reuseIdentifier: Reuse identifier for the cell
-    ///   - theme: Theme configuration for the cell
-    /// - Returns: Configured completion table view cell
-    @MainActor public static func createTableViewCell(reuseIdentifier: String?, theme: CompletionCellTheme = .default) -> UnifiedCompletionTableViewCell {
-        UnifiedCompletionTableViewCell(reuseIdentifier: reuseIdentifier, theme: theme)
-    }
-    #endif
-
-    /// Calculates standard cell height for theme
-    public static func standardCellHeight(theme: CompletionCellTheme = .default) -> CGFloat {
-        CompletionCellLayout.cellHeight(for: theme, hasDetail: true)
-    }
-}
