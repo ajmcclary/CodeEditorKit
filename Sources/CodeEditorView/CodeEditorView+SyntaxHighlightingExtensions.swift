@@ -124,90 +124,11 @@ extension CodeEditorView {
 
     // MARK: - Apply Highlighting
 
-    /// `true` when the range-store pipeline is the primary text-styling
-    /// path and the legacy highlighter should yield to it.
-    private var isRangeStorePrimary: Bool {
-        configuration.display.useRangeStoreHighlighting
-            && rangeBasedHighlightingController != nil
-    }
-
     internal func applySyntaxHighlighting() {
-        updateRangeBasedHighlightingConfiguration()
-        let syntaxService = featureDependencies.syntaxHighlightingService
-        let textLength = textKitBridge.documentLength
-
-        // Update adaptive performance mode based on file size
-        adaptivePerformanceMode.updateMode(for: textLength, language: language)
-
-        // Apply adaptive performance configuration, but preserve explicit user settings
-        var updatedConfig = configuration
-
-        // Store user preferences before adaptive mode overwrites them
-        let userLineNumbersSetting = configuration.display.isLineNumbersEnabled
-        let userCodeFoldingSetting = configuration.display.isCodeFoldingEnabled
-        let userSyntaxHighlightingSetting = configuration.display.isSyntaxHighlightingEnabled
-
-        adaptivePerformanceMode.applyConfiguration(to: &updatedConfig)
-
-        // Restore user-specified settings - adaptive mode should not override explicit user choices
-        // Only apply adaptive performance to performance-related settings, not UI preferences
-        updatedConfig.display.isLineNumbersEnabled = userLineNumbersSetting
-        updatedConfig.display.isCodeFoldingEnabled = userCodeFoldingSetting
-        updatedConfig.display.isSyntaxHighlightingEnabled = userSyntaxHighlightingSetting
-
-        // Only update configuration if it actually changed to prevent feedback loops
-        if configuration != updatedConfig {
-            configuration = updatedConfig
-        }
-
-        guard syntaxService.shouldApplySyntaxHighlighting(
-            isEnabled: isSyntaxHighlightingEnabled,
-            textLength: textLength,
-            maxLength: configuration.performance.maxSyntaxHighlightingLength
-        ) else {
-            syntaxService.cancelHighlighting(asyncHighlighter: asyncHighlighter)
-            return
-        }
-
-        // When the range-store pipeline is primary, the attribute applier
-        // handles text styling — skip the legacy full-document schedule.
-        // The range-based configuration was already updated above.
-        if isRangeStorePrimary { return }
-
-        syntaxService.scheduleHighlighting(
-            asyncHighlighter: asyncHighlighter,
-            textView: self,
-            language: language,
-            visibleRange: nil
-        )
+        highlightingController.applyFullDocument()
     }
 
     internal func applySyntaxHighlighting(in range: NSRange) {
-        // When the range-store pipeline is primary, character-edit
-        // highlighting is handled by the range attribute applier.
-        // Skip the legacy scheduling entirely.
-        if isRangeStorePrimary { return }
-
-        let syntaxService = featureDependencies.syntaxHighlightingService
-        let textLength = textKitBridge.documentLength
-
-        guard syntaxService.isValidHighlightingRange(range, textLength: textLength) else {
-            return
-        }
-
-        guard syntaxService.shouldApplySyntaxHighlighting(
-            isEnabled: isSyntaxHighlightingEnabled,
-            textLength: textLength,
-            maxLength: configuration.performance.maxSyntaxHighlightingLength
-        ) else {
-            return
-        }
-
-        syntaxService.scheduleHighlighting(
-            asyncHighlighter: asyncHighlighter,
-            textView: self,
-            language: language,
-            visibleRange: range
-        )
+        highlightingController.apply(in: range)
     }
 }

@@ -279,17 +279,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
     }
 
-    /// The syntax highlighting coordinator.
-    ///
-    /// `nonisolated` so `deinit` can call `cancelHighlighting()` to shut down
-    /// any in-flight highlighting task that outlived the view's
-    /// `removeFromSuperview` (or never went through it). The coordinator is
-    /// itself `Sendable` and this is an immutable `let`, so no `(unsafe)` is
-    /// needed.
-    nonisolated internal let syntaxHighlighter = SyntaxHighlightingCoordinator()
+    /// Async syntax highlighter with debouncing.
+    internal lazy var asyncHighlighter = memoryCoordinator.createAsyncHighlighter() {
+        didSet {
+            highlightingController.replaceCancellation(with: asyncHighlighter)
+        }
+    }
 
-    /// Async syntax highlighter with debouncing
-    internal lazy var asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
+    /// Feature controller that owns highlighting attachment and teardown.
+    internal lazy var highlightingController = HighlightingController(
+        cancellation: asyncHighlighter
+    )
 
     /// Metrics captured from actual TextKit 2 layout passes.
     public let renderingMetrics = TextKit2RenderingMetrics()
@@ -352,10 +352,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     /// Range-store-backed highlighting pipeline used by opt-in visible-range
     /// invalidation and minimap style data.
-    internal var rangeBasedHighlightingController: RangeBasedHighlightingController?
+    internal var rangeBasedHighlightingController: RangeBasedHighlightingController? {
+        get { highlightingController.rangeBasedController }
+        set { highlightingController.rangeBasedController = newValue }
+    }
 
     internal var rangeBasedHighlightingStyleDataSourceForTesting: (any MinimapStyleDataSource)? {
-        rangeBasedHighlightingController?.styleDataSource
+        highlightingController.styleDataSource
     }
 
     /// Memory monitor for tracking and managing memory usage
@@ -625,8 +628,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     override public func removeFromSuperview() {
         // Perform synchronous cleanup before removing from superview
-        // The async highlighter will handle its own cleanup in deinit if needed
-        asyncHighlighter.cleanup()
+        highlightingController.detach()
         unregisterFromMemoryMonitor()
 
         // Cancel any pending layout operations
@@ -636,19 +638,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         completionManager.cancelCurrentRequest()
 
         // Clean up code folding - no cleanup method available
-        rangeBasedHighlightingController?.detach()
-        rangeBasedHighlightingController = nil
-
         #if canImport(AppKit)
         lspContentCoordinator?.detach()
         lspContentCoordinator = nil
         #endif
-
-        // Clean up syntax highlighting synchronously so the cancellation is
-        // visible before the next view (or the next teardown phase) wires up.
-        // The previous fire-and-forget `Task { ... }` could arrive after a
-        // replacement editor had already started highlighting.
-        syntaxHighlighter.cancelHighlighting()
 
         // Remove any gutter view
         #if canImport(AppKit)
@@ -665,15 +658,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Remove notification observers
         NotificationCenter.default.removeObserver(self)
 
-        // Cancel highlighting in case the view was dropped without going
-        // through `removeFromSuperview` (e.g., escape from a test harness or
-        // a host that bypasses the standard teardown). Idempotent with the
-        // sync cancel in `removeFromSuperview` because `cancelCurrent()`
-        // simply nils out a (possibly already-nil) task reference.
-        syntaxHighlighter.cancelHighlighting()
-
-        // Note: Memory monitor cleanup is now handled in removeFromSuperview
-        // to avoid creating tasks in deinit
+        // Highlighting tasks cancel when their owning highlighter deinitializes.
+        // Memory monitor cleanup is handled in removeFromSuperview to avoid
+        // creating tasks from deinit.
     }
 
     // MARK: - Private Methods

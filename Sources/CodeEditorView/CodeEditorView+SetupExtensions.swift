@@ -17,6 +17,7 @@ extension CodeEditorView {
     internal func setupTextView() {
         // Use TextKitSetupHelper for centralized setup
         let setupResult = TextKitSetupHelper.setupTextKit(for: self)
+        highlightingController.attach(to: self)
 
         #if DEBUG
         Self.logger.debug("Setting up CodeEditorView with TextKit2")

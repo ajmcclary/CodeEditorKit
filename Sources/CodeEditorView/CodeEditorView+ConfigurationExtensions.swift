@@ -229,7 +229,7 @@ extension CodeEditorView {
 
     internal func removeSyntaxHighlighting() {
         // Cancel any in-progress highlighting first
-        asyncHighlighter.cancelAllHighlighting()
+        highlightingController.cancelActiveWork()
 
         // Syntax highlighting now lives in NSTextLayoutManager rendering
         // attributes (see RangeAttributeApplier + AsyncSyntaxHighlighter).
