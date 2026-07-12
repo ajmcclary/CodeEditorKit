@@ -139,8 +139,11 @@ public struct PlatformExtension: Hashable, Sendable, Codable {
 
     /// Memberwise builder.
     public init(
-        glass: Glass, shadows: Shadows, field: Field,
-        onAccent: Tokens.Color, onDanger: Tokens.Color,
+        glass: Glass,
+        shadows: Shadows,
+        field: Field,
+        onAccent: Tokens.Color,
+        onDanger: Tokens.Color,
         extras: [String: Tokens.Color] = [:]
     ) {
         self.glass = glass

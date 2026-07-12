@@ -105,7 +105,6 @@ extension CodeEditorView {
     public var actorCoordinator: ActorCoordinator {
         runtime.dependencies.actorCoordinator
     }
-
 }
 
 // MARK: - Cache Integration

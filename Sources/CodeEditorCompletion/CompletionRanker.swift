@@ -3,7 +3,7 @@ import Foundation
 
 /// Applies deterministic completion deduplication and six-tier ranking.
 @MainActor
-struct CompletionRanker: Sendable {
+struct CompletionRanker {
     func rank(
         _ items: [CompletionItemModel],
         context: CompletionContextModel,

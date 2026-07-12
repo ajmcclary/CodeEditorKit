@@ -30,20 +30,27 @@ swift build --target CodeEditorDesignTokens
 
 ## Package Structure
 
-**Swift 6.3** with `StrictConcurrency` enabled. 4 products defined in `Package.swift`:
+**Swift 6.3** with `StrictConcurrency` enabled. 11 products defined in `Package.swift`:
 
 | Product | Type | Purpose |
 |---|---|---|
-| `CodeEditorPlugin` | library | Main editor framework |
-| `CodeEditorUI` | library | Optional SwiftUI components |
 | `CodeEditorDesignTokens` | library | Design tokens (colors, spacing, typography) |
+| `CodeEditorDiagnostics` | library | Opt-in performance and memory diagnostics |
+| `CodeEditorLSP` | library | Language Server Protocol client and transports |
+| `CodeEditorLayout` | library | Editor presentation and layout primitives |
+| `CodeEditorPlugin` | library | Umbrella editor framework |
+| `CodeEditorSearch` | library | Opt-in project-wide search interfaces |
+| `CodeEditorSwiftUI` | library | SwiftUI editor host and controller bridge |
+| `CodeEditorUI` | library | Optional SwiftUI chrome and components |
+| `CodeEditorView` | library | Native editor surface and runtime services |
+| `CodeEditorWorkspace` | library | Opt-in workspace file-tree interfaces |
 | `CodeEditorSample` | executable | Demo app |
 
 Key dependencies: `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
 
 The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
 
-Tests mix both XCTest and Swift Testing frameworks across 4 test targets (`CodeEditorPluginTests`, `CodeEditorDesignTokensTests`, `CodeEditorUITests`, `CodeEditorSampleTests`).
+Tests mix both XCTest and Swift Testing frameworks across 10 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorDesignTokensTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSampleTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
 
 Tree-sitter work is internal scaffolding only. There is no public configuration flag and no bundled C grammar libraries wired into `Package.swift`; normal syntax highlighting uses the descriptor-backed regex path.
 
@@ -108,7 +115,7 @@ Never use `!`. Always safe-unwrap. Enforced by SwiftLint `force_unwrapping` rule
 ### Extension Files
 Two naming patterns are in active use; both are accepted:
 
-- **Catch-all type extensions** use the `+Extensions` suffix and live in `Sources/CodeEditorPlugin/Extensions/`: `String+Extensions.swift`, `NSParagraphStyle+Extensions.swift`, etc.
+- **Catch-all type extensions** use the `+Extensions` suffix and live in the owning module, commonly `Sources/CodeEditorCommon/Extensions/`: `String+Extensions.swift`, `NSParagraphStyle+Extensions.swift`, etc.
 - **Domain-scoped extensions** use a `+<Topic>` suffix that names the slice they implement, and live in the domain's own directory: `CodeEditorView+Theme.swift`, `EditorController+Completion.swift`, `LSPClient+Transport.swift`, `CodeEditorContainerView+Minimap.swift`. These are partial-file extensions that decompose a single owning type's API surface by feature rather than acting as a generic type extension.
 
 When in doubt, prefer the domain-scoped form for files that extend one specific framework type with a feature-scoped slice, and the `+Extensions` form for type extensions that don't belong to a single domain.

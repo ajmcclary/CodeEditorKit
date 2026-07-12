@@ -691,7 +691,7 @@ extension MemoryMonitor {
         usageHistory: [Double] = [],
         isUnderPressure: Bool = false
     ) -> MemoryMonitor {
-        let monitor = MemoryMonitor.mock(
+        let monitor = Self.mock(
             memoryUsage: currentUsageMB,
             memoryPressure: isUnderPressure ? .critical : .normal
         )

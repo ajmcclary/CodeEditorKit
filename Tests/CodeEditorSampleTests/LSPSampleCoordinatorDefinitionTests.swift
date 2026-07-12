@@ -25,7 +25,7 @@ struct LSPSampleCoordinatorDefinitionTests {
             workspaceRoot: workspace
         )
 
-        if case .openInWorkspace(let url, let line) = target {
+        if case let .openInWorkspace(url, line) = target {
             #expect(url.path == "/Users/me/proj/Foo.swift")
             #expect(line == 3)
         } else {

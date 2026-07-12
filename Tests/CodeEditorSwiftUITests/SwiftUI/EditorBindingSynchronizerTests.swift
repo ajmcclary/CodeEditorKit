@@ -8,9 +8,8 @@ struct EditorBindingSynchronizerTests {
     func debouncedBindingUpdate() async {
         var writes: [String] = []
         let synchronizer = EditorBindingSynchronizer(
-            debounce: .milliseconds(1),
-            write: { writes.append($0) }
-        )
+            debounce: .milliseconds(1)
+        ) { writes.append($0) }
 
         synchronizer.receiveEditorText("a")
         synchronizer.receiveEditorText("ab")
@@ -27,9 +26,8 @@ struct EditorBindingSynchronizerTests {
     func hostEchoIsIgnored() async {
         var writes: [String] = []
         let synchronizer = EditorBindingSynchronizer(
-            debounce: .milliseconds(1),
-            write: { writes.append($0) }
-        )
+            debounce: .milliseconds(1)
+        ) { writes.append($0) }
 
         synchronizer.installHostText("host")
         synchronizer.receiveEditorText("host")
@@ -42,9 +40,8 @@ struct EditorBindingSynchronizerTests {
     func cancellation() async {
         var writes: [String] = []
         let synchronizer = EditorBindingSynchronizer(
-            debounce: .milliseconds(20),
-            write: { writes.append($0) }
-        )
+            debounce: .milliseconds(20)
+        ) { writes.append($0) }
 
         synchronizer.receiveEditorText("pending")
         synchronizer.cancel()

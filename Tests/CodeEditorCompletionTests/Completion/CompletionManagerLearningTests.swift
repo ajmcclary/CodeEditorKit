@@ -4,7 +4,6 @@ import CodeEditorLanguages
 import Foundation
 import XCTest
 
-
 /// Tests for `CompletionManager.recordSelection(_:)` and
 /// `clearLearnedPatterns()`. The behavioral cases that verify frequency
 /// actually affects ranking land alongside the `rankCombined` wiring in a

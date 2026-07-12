@@ -286,10 +286,10 @@ extension PlatformExtension {
         let glassTint = Tokens.Color(red: bg.red, green: bg.green, blue: bg.blue, alpha: 0.12)
         let scheme: Tokens.Elevation.Scheme = appearance == .dark ? .dark : .light
         let elevation = Tokens.Elevation.popover(scheme)
-        let popover = PlatformExtension.Shadow(
+        let popover = Self.Shadow(
             color: elevation.color, blur: elevation.blur, xOffset: elevation.x, yOffset: elevation.y
         )
-        let field = PlatformExtension.Field(
+        let field = Self.Field(
             fill: style.elements.element.background,
             border: style.borders.base,
             focusedBorder: style.borders.focused
@@ -297,8 +297,8 @@ extension PlatformExtension {
         let onRole = appearance == .light
             ? Tokens.Color(hex: 0xFF_FF_FF) : Tokens.Color(hex: 0x05_06_0A)
         return PlatformExtension(
-            glass: PlatformExtension.Glass(tint: glassTint, opacity: 0.12),
-            shadows: PlatformExtension.Shadows(popover: popover),
+            glass: Self.Glass(tint: glassTint, opacity: 0.12),
+            shadows: Self.Shadows(popover: popover),
             field: field,
             onAccent: onRole,
             onDanger: onRole

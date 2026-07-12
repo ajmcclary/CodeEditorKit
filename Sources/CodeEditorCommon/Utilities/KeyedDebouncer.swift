@@ -9,8 +9,10 @@ public actor KeyedDebouncer<Key: Hashable & Sendable, Value: Sendable> {
 
     private var tasks: [Key: Entry] = [:]
 
+    /// Creates an empty keyed operation registry.
     public init() {}
 
+    /// Runs an operation after `delay`, cancelling any prior operation for `key`.
     public func run(
         key: Key,
         delay: Duration,
@@ -32,6 +34,7 @@ public actor KeyedDebouncer<Key: Hashable & Sendable, Value: Sendable> {
         return try await task.value
     }
 
+    /// Keys whose delayed operations have not yet completed or been cancelled.
     public var activeKeys: Set<Key> {
         Set(tasks.keys)
     }

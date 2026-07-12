@@ -5,7 +5,6 @@ import CodeEditorDiagnostics
 import SwiftUI
 import XCTest
 
-
 @available(macOS 12.0, iOS 16.0, *)
 final class SwiftUIEnvironmentTests: XCTestCase {
     // MARK: - CodeEditorEnvironment Tests

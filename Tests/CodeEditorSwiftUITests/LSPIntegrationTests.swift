@@ -8,7 +8,6 @@ import CodeEditorLanguages
 @testable import CodeEditorView
 import XCTest
 
-
 @available(macOS 12.0, *)
 final class LSPIntegrationTests: XCTestCase {
     // MARK: - Test Properties

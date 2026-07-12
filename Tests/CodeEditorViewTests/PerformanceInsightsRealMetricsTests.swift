@@ -56,6 +56,7 @@ struct PerformanceInsightsInjectedMetricsTests {
             switch issue {
             case .slowTextLayout, .lowCacheHitRate:
                 return true
+
             default:
                 return false
             }

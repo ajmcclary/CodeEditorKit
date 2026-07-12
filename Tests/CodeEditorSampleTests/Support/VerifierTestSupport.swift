@@ -25,7 +25,7 @@ enum VerifierTestSupport {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         return ProcessResult(
             status: process.terminationStatus,
-            output: String(decoding: data, as: UTF8.self)
+            output: String(bytes: data, encoding: .utf8) ?? ""
         )
     }
 }

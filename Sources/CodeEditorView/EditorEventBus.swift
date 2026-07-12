@@ -20,10 +20,12 @@ public final class EditorEventBus {
     private var history: [SequencedEditorEvent] = []
     private let historyLimit: Int
 
+    /// Creates a bus retaining at most `historyLimit` recent events.
     public init(historyLimit: Int = 100) {
         self.historyLimit = max(1, historyLimit)
     }
 
+    /// Publishes an event synchronously to every registered adapter and stream.
     public func publish(_ event: EditorEvent) {
         let value = SequencedEditorEvent(sequence: nextSequence, event: event)
         nextSequence &+= 1
@@ -35,6 +37,7 @@ public final class EditorEventBus {
         observers.values.forEach { $0(value) }
     }
 
+    /// Returns an asynchronous stream that observes the bus's global ordering.
     public func stream(
         bufferingPolicy: AsyncStream<SequencedEditorEvent>.Continuation.BufferingPolicy = .bufferingNewest(100)
     ) -> AsyncStream<SequencedEditorEvent> {
@@ -49,6 +52,7 @@ public final class EditorEventBus {
         }
     }
 
+    /// Returns retained events whose payload satisfies `predicate`.
     public func recentEvents(
         matching predicate: (EditorEvent) -> Bool = { _ in true }
     ) -> [SequencedEditorEvent] {
@@ -68,7 +72,7 @@ public final class EditorEventBus {
         return EditorEventObservation(bus: self, identifier: identifier)
     }
 
-    fileprivate func removeObserver(_ identifier: UUID) {
+    func removeObserver(_ identifier: UUID) {
         observers.removeValue(forKey: identifier)
     }
 }

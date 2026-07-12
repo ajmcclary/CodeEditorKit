@@ -47,6 +47,7 @@ public final class MemoryManagementCoordinator {
 
     // MARK: - Initialization
 
+    // swiftlint:disable function_default_parameter_at_end
     /// Creates a new memory management coordinator
     /// - Parameters:
     ///   - memoryMonitor: The memory monitor to use
@@ -61,6 +62,7 @@ public final class MemoryManagementCoordinator {
         self.editorView = editorView
         setupMemoryMonitoring()
     }
+    // swiftlint:enable function_default_parameter_at_end
 
     package var hasRegisteredCleanupHandler: Bool {
         cleanupIdentifier != nil

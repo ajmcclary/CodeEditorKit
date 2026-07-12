@@ -8,7 +8,6 @@ import AppKit
 import UIKit
 #endif
 
-
 /// Verifies that syntax highlighting writes go through
 /// `NSTextLayoutManager.setRenderingAttributes(_:for:)` and do not mutate
 /// the underlying `NSAttributedString`. Migration spec at

@@ -203,15 +203,14 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         renderReconciler.mount(
             state,
             in: container,
-            completion: swiftUICompletionProvider,
-            onStateUpdate: { [weak self] text, language, configuration in
-                self?.updatePublishedState(
-                    text: text,
-                    language: language,
-                    configuration: configuration
-                )
-            }
-        )
+            completion: swiftUICompletionProvider
+        ) { [weak self] text, language, configuration in
+            self?.updatePublishedState(
+                text: text,
+                language: language,
+                configuration: configuration
+            )
+        }
         setupTextChangeObservers(for: textView)
     }
 
@@ -235,15 +234,14 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         renderReconciler.update(
             state,
             in: container,
-            completion: swiftUICompletionProvider,
-            onStateUpdate: { [weak self] text, language, configuration in
-                self?.updatePublishedState(
-                    text: text,
-                    language: language,
-                    configuration: configuration
-                )
-            }
-        )
+            completion: swiftUICompletionProvider
+        ) { [weak self] text, language, configuration in
+            self?.updatePublishedState(
+                text: text,
+                language: language,
+                configuration: configuration
+            )
+        }
     }
 }
 
@@ -258,7 +256,6 @@ extension CodeEditorBaseCoordinator {
             _ = textView.becomeFirstResponder()
         }
     }
-
 }
 #endif
 

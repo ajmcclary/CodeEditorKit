@@ -5,7 +5,6 @@ import CodeEditorTextModel
 import Foundation
 import XCTest
 
-
 /// Tests for `CompletionManager.rankCombined(_:context:)` — the canonical
 /// six-tier sort (sortText asc -> priority desc -> frequency desc -> relevance
 /// desc -> kind.defaultPriority desc -> label asc) plus dedup by

@@ -20,7 +20,7 @@ final class JSONRPCSessionTests: XCTestCase {
         case partialWrite
     }
 
-    private nonisolated static func requestID(from data: Data) throws -> RequestId {
+    nonisolated private static func requestID(from data: Data) throws -> RequestId {
         guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw LSPError.invalidResponse("Expected JSON object")
         }
@@ -33,7 +33,7 @@ final class JSONRPCSessionTests: XCTestCase {
         return .string(value)
     }
 
-    private nonisolated static func response(for id: RequestId) throws -> LSPResponse {
+    nonisolated private static func response(for id: RequestId) throws -> LSPResponse {
         let identifier: Any
         switch id {
         case .number(let value):
@@ -83,7 +83,7 @@ final class JSONRPCSessionTests: XCTestCase {
     }
 
     func testFailAllPendingCompletesDisconnectedRequest() async {
-        let session = JSONRPCSession(send: { _ in })
+        let session = JSONRPCSession { _ in }
         let request = Task { @MainActor in
             try await session.request(method: "test", params: EmptyParams())
         }

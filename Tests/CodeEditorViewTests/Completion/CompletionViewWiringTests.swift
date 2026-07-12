@@ -6,7 +6,6 @@ import CodeEditorPlatform
 import Foundation
 import XCTest
 
-
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)

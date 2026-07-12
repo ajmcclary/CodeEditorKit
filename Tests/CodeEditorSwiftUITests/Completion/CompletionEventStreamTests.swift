@@ -5,7 +5,6 @@ import CodeEditorLanguages
 import Foundation
 import XCTest
 
-
 /// Tests for `CompletionManager.events()` and `CompletionEventBroadcaster`.
 ///
 /// Spec: docs/superpowers/specs/2026-05-14-completion-event-stream-design.md.

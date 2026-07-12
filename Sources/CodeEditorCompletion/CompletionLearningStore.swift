@@ -7,7 +7,7 @@ struct CompletionLearningSnapshot: Sendable {
     let usageCounts: [String: Int]
     let lastUsed: [String: Date]
 
-    static let empty = CompletionLearningSnapshot(
+    static let empty = Self(
         usageCounts: [:],
         lastUsed: [:]
     )

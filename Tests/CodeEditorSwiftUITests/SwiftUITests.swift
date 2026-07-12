@@ -1,11 +1,10 @@
 import CodeEditorConfiguration
 import CodeEditorLanguages
-import CodeEditorTheming
 @testable import CodeEditorSwiftUI
+import CodeEditorTheming
 @testable import CodeEditorView
 import SwiftUI
 import XCTest
-
 
 @available(macOS 12.0, iOS 16.0, *)
 final class SwiftUITests: XCTestCase {

@@ -19,6 +19,6 @@ struct TextKit2RenderingMetricsTests {
         #expect(metrics.layoutPassCount == 1)
         #expect(metrics.visibleFragmentCount == 8)
         #expect(metrics.latestLayoutDuration == .milliseconds(3))
-        #expect(abs(metrics.averageLayoutTime - 0.003) < 0.000_001)
+        #expect(abs(metrics.averageLayoutTime - 0.003) < 0.000001)
     }
 }

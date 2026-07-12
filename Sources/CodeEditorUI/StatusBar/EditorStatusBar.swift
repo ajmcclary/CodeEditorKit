@@ -1,5 +1,5 @@
-import CodeEditorDesignTokens
 import CodeEditorConfiguration
+import CodeEditorDesignTokens
 import CodeEditorSwiftUI
 import CodeEditorTheming
 import CodeEditorView

@@ -24,8 +24,8 @@ final class CompletionRequestCoordinator {
     private let eventSink: any CompletionEventSink
 
     init(
-        debouncer: CompletionDebouncer = CompletionDebouncer(),
-        eventSink: any CompletionEventSink
+        eventSink: any CompletionEventSink,
+        debouncer: CompletionDebouncer = CompletionDebouncer()
     ) {
         self.debouncer = debouncer
         self.eventSink = eventSink

@@ -6,7 +6,6 @@ import CodeEditorDiagnostics
 import SwiftUI
 import XCTest
 
-
 @available(macOS 13.0, iOS 16.0, *)
 final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
     // MARK: - Test Setup

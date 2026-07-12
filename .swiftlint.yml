@@ -291,8 +291,8 @@ custom_rules:
     severity: error
 
   forbidden_swiftui_extension_codeeditor:
-    included: 'Sources/CodeEditorPlugin/SwiftUI/.*\.swift'
-    excluded: 'Sources/CodeEditorPlugin/SwiftUI/CodeEditor\+FactoryExtensions\.swift'
+    included: 'Sources/CodeEditorSwiftUI/.*\.swift'
+    excluded: 'Sources/CodeEditorSwiftUI/CodeEditor\+FactoryExtensions\.swift'
     name: "Forbidden extension CodeEditor"
     # Public modifiers on CodeEditor must declare 'extension View' to keep
     # chain composition order-independent. See
@@ -308,4 +308,4 @@ custom_rules:
 
 reporter: "xcode"
 strict: true
-swiftlint_version: 0.63.2
+swiftlint_version: 0.65.0

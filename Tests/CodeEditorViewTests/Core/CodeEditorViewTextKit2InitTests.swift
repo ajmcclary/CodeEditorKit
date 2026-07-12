@@ -8,7 +8,6 @@ import AppKit
 import UIKit
 #endif
 
-
 /// Verifies that `CodeEditorView` initialization produces a TextKit 2
 /// stack. Apple's `NSTextView` / `UITextView` automatically stand up a
 /// TK2 network in `super.init(frame:)`. Reading the legacy `textStorage`

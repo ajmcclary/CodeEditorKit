@@ -3,7 +3,6 @@
 import Combine
 import XCTest
 
-
 /// Unit tests for `EditorController.onAttach(_:)`.
 ///
 /// Verifies the lifecycle hook fires only on real view transitions

@@ -7,7 +7,6 @@ import CodeEditorTheming
 import SwiftUI
 import XCTest
 
-
 @available(macOS 12.0, iOS 16.0, *)
 final class SwiftUIModifierTests: XCTestCase {
     private func assertTypeName<V: View>(

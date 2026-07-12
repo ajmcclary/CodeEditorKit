@@ -1,5 +1,5 @@
-import CodeEditorConfiguration
 @testable import CodeEditorCompletion
+import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform

@@ -96,8 +96,8 @@ public final class CompletionManager {
             memoryMonitor: memoryMonitor,
             providerRegistry: CompletionProviderRegistry(),
             requestCoordinator: CompletionRequestCoordinator(
-                debouncer: debouncer ?? CompletionDebouncer(),
-                eventSink: broadcaster
+                eventSink: broadcaster,
+                debouncer: debouncer ?? CompletionDebouncer()
             ),
             responseCache: responseCache,
             learningStore: learningStore,
