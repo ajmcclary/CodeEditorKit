@@ -15,6 +15,11 @@ public final class TextKit2RenderingMetrics: ObservableObject {
     /// Duration of the latest observed layout pass.
     @Published public private(set) var latestLayoutDuration = Duration.zero
 
+    /// Average duration in seconds across observed layout passes.
+    @Published public private(set) var averageLayoutTime: TimeInterval = 0
+
+    private var totalLayoutTime: TimeInterval = 0
+
     /// Records a completed, observed layout pass.
     /// - Parameters:
     ///   - duration: Measured wall-clock duration of the pass.
@@ -26,5 +31,10 @@ public final class TextKit2RenderingMetrics: ObservableObject {
         layoutPassCount += 1
         self.visibleFragmentCount = max(0, visibleFragmentCount)
         latestLayoutDuration = duration
+        let components = duration.components
+        let seconds = Double(components.seconds)
+            + Double(components.attoseconds) / 1_000_000_000_000_000_000
+        totalLayoutTime += seconds
+        averageLayoutTime = totalLayoutTime / Double(layoutPassCount)
     }
 }

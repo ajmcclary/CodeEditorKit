@@ -33,9 +33,10 @@ public final class PerformanceInsights: ObservableObject {
 
     /// Monitoring components
     private let performanceMonitor: PerformanceMonitor
-    private let textKit2Monitor = InsightsTextKit2Monitor()
     private let memoryMonitor: MemoryMonitor
     private let frameRateMonitor: FrameRateMonitor
+    private let documentMetrics: any DocumentMetricsProviding
+    private let textLayoutMetrics: any TextLayoutMetricsProviding
 
     /// Update timer
     private var updateTimer: Timer?
@@ -55,16 +56,22 @@ public final class PerformanceInsights: ObservableObject {
     /// - Parameters:
     ///   - memoryMonitor: Memory monitor for tracking memory usage
     ///   - frameRateMonitor: Frame-rate monitor for real FPS measurement
+    ///   - documentMetrics: Provider for the active document's real size
+    ///   - textLayoutMetrics: Provider for observed text-layout measurements
     ///   - performanceMonitor: Performance monitor (defaults to new instance)
     ///   - capabilities: Platform capabilities (defaults to shared instance)
     public init(
         memoryMonitor: MemoryMonitor,
         frameRateMonitor: FrameRateMonitor,
+        documentMetrics: any DocumentMetricsProviding = UnavailableDocumentMetricsProvider(),
+        textLayoutMetrics: any TextLayoutMetricsProviding = UnavailableTextLayoutMetricsProvider(),
         performanceMonitor: PerformanceMonitor? = nil,
         capabilities: PlatformCapabilities? = nil
     ) {
         self.memoryMonitor = memoryMonitor
         self.frameRateMonitor = frameRateMonitor
+        self.documentMetrics = documentMetrics
+        self.textLayoutMetrics = textLayoutMetrics
         self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
         self.capabilities = capabilities ?? PlatformCapabilities()
         startMonitoring()
@@ -111,7 +118,19 @@ public final class PerformanceInsights: ObservableObject {
     /// Get detailed performance report
     public func generateDetailedReport() async -> DetailedPerformanceReport {
         let performanceReport = await performanceMonitor.generateReport()
-        let textKitSummary = textKit2Monitor.performanceSummary
+        let averageLayoutTime = textLayoutMetrics.averageLayoutTime
+        let cacheHitRate = textLayoutMetrics.cacheHitRate
+        let textKitSummary: PerformanceSummary? = if averageLayoutTime == nil, cacheHitRate == nil {
+            nil
+        } else {
+            PerformanceSummary(
+                averageProcessingTime: averageLayoutTime,
+                peakProcessingTime: nil,
+                totalOperations: nil,
+                cacheHitRate: cacheHitRate,
+                errorCount: nil
+            )
+        }
         let memoryStatus = memoryMonitor.getMemoryStatistics()
 
         return DetailedPerformanceReport(
@@ -131,7 +150,6 @@ public final class PerformanceInsights: ObservableObject {
         Task {
             await performanceMonitor.clearMetrics()
         }
-        textKit2Monitor.reset()
         issues.removeAll()
         recommendations.removeAll()
         metrics = RealTimeMetrics()
@@ -202,12 +220,10 @@ public final class PerformanceInsights: ObservableObject {
     }
 
     private func analyzePerformance() {
-        // Analyze TextKit2 performance
-        _ = textKit2Monitor.performanceSummary
-
         // Check layout performance
-        if textKit2Monitor.averageLayoutTime > thresholds.maxLayoutTime {
-            addIssue(.slowTextLayout(averageTime: textKit2Monitor.averageLayoutTime))
+        if let averageLayoutTime = textLayoutMetrics.averageLayoutTime,
+           averageLayoutTime > thresholds.maxLayoutTime {
+            addIssue(.slowTextLayout(averageTime: averageLayoutTime))
         }
 
         // Check memory usage
@@ -216,8 +232,9 @@ public final class PerformanceInsights: ObservableObject {
         }
 
         // Check cache performance
-        if textKit2Monitor.cacheHitRate < thresholds.minCacheHitRate {
-            addIssue(.lowCacheHitRate(current: textKit2Monitor.cacheHitRate, threshold: thresholds.minCacheHitRate))
+        if let cacheHitRate = textLayoutMetrics.cacheHitRate,
+           cacheHitRate < thresholds.minCacheHitRate {
+            addIssue(.lowCacheHitRate(current: cacheHitRate, threshold: thresholds.minCacheHitRate))
         }
     }
 
@@ -226,13 +243,13 @@ public final class PerformanceInsights: ObservableObject {
         issues.removeAll { issue in
             switch issue {
             case .slowTextLayout:
-                return textKit2Monitor.averageLayoutTime <= thresholds.maxLayoutTime
+                return textLayoutMetrics.averageLayoutTime.map { $0 <= thresholds.maxLayoutTime } ?? true
 
             case .highMemoryUsage:
                 return metrics.memoryUsage <= thresholds.maxMemoryUsageGB
 
             case .lowCacheHitRate:
-                return textKit2Monitor.cacheHitRate >= thresholds.minCacheHitRate
+                return textLayoutMetrics.cacheHitRate.map { $0 >= thresholds.minCacheHitRate } ?? true
 
             default:
                 return false
@@ -281,7 +298,7 @@ public final class PerformanceInsights: ObservableObject {
 
         // Check if file size exceeds platform recommendations
         let recommendedMaxFileSize = perfCapabilities.maxRecommendedFileSize
-        if let currentFileSize = getCurrentFileSize(),
+        if let currentFileSize = documentMetrics.fileSizeBytes,
            currentFileSize > recommendedMaxFileSize {
             recommendations.append(.splitLargeFile(currentSize: currentFileSize, recommendedSize: recommendedMaxFileSize))
         }
@@ -317,12 +334,6 @@ public final class PerformanceInsights: ObservableObject {
         if !issues.contains(where: { $0.id == issue.id }) {
             issues.append(issue)
         }
-    }
-
-    private func getCurrentFileSize() -> Int? {
-        // This would get the actual file size from the editor
-        // For now, return a placeholder
-        nil
     }
 
     // MARK: - CPU Sampling
@@ -392,15 +403,15 @@ private final class PerformanceAlertManager {
 /// Performance summary data
 public struct PerformanceSummary {
     /// Average time taken for processing operations.
-    public let averageProcessingTime: TimeInterval
+    public let averageProcessingTime: TimeInterval?
     /// Peak processing time recorded.
-    public let peakProcessingTime: TimeInterval
+    public let peakProcessingTime: TimeInterval?
     /// Total number of operations performed.
-    public let totalOperations: Int
+    public let totalOperations: Int?
     /// Cache hit rate as a percentage (0-1).
-    public let cacheHitRate: Double
+    public let cacheHitRate: Double?
     /// Total number of errors encountered.
-    public let errorCount: Int
+    public let errorCount: Int?
 }
 
 /// Detailed performance report
@@ -412,7 +423,7 @@ public struct DetailedPerformanceReport {
     /// Detailed performance metrics.
     public let performanceMetrics: PerformanceReport
     /// TextKit-specific performance metrics.
-    public let textKitMetrics: PerformanceSummary
+    public let textKitMetrics: PerformanceSummary?
     /// Current memory usage statistics.
     public let memoryStatus: MemoryStatistics
     /// List of currently active performance issues.
@@ -428,25 +439,5 @@ extension PerformanceHistory {
     func getTrends() -> [PerformanceTrend] {
         let metrics = ["cpu", "memory", "fps", "response"]
         return metrics.compactMap { analyzeTrend(for: $0) }
-    }
-}
-
-/// TextKit2 performance monitor placeholder
-private class InsightsTextKit2Monitor {
-    var averageLayoutTime: TimeInterval = 0.01
-    var cacheHitRate: Double = 0.85
-    var performanceSummary: PerformanceSummary {
-        PerformanceSummary(
-            averageProcessingTime: averageLayoutTime,
-            peakProcessingTime: averageLayoutTime * 2,
-            totalOperations: 100,
-            cacheHitRate: cacheHitRate,
-            errorCount: 0
-        )
-    }
-
-    func reset() {
-        averageLayoutTime = 0.01
-        cacheHitRate = 0.85
     }
 }

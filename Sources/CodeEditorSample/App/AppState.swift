@@ -155,7 +155,11 @@ final class AppState {
         // Performance Inspector wiring. Cross-platform.
         let perfCoordinator = PerformanceSampleCoordinator(
             memoryMonitor: memoryMonitor,
-            performanceObservation: performanceObservation
+            performanceObservation: performanceObservation,
+            documentMetrics: ActiveDocumentMetricsProvider(documents: documents.store),
+            textLayoutMetrics: EditorTextLayoutMetricsProvider(
+                controller: documents.editorController
+            )
         )
         perfCoordinator.attach(controller: documents.editorController)
         self.performance = perfCoordinator

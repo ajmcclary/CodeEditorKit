@@ -10,6 +10,36 @@ import CodeEditorPlugin
 import Foundation
 import Observation
 
+@MainActor
+final class ActiveDocumentMetricsProvider: DocumentMetricsProviding {
+    private weak var documents: EditorDocuments?
+
+    init(documents: EditorDocuments) {
+        self.documents = documents
+    }
+
+    var fileSizeBytes: Int? {
+        documents?.active?.text.lengthOfBytes(using: .utf8)
+    }
+}
+
+@MainActor
+final class EditorTextLayoutMetricsProvider: TextLayoutMetricsProviding {
+    private weak var controller: EditorController?
+
+    init(controller: EditorController) {
+        self.controller = controller
+    }
+
+    var averageLayoutTime: TimeInterval? {
+        guard let metrics = controller?.renderingMetrics,
+              metrics.layoutPassCount > 0 else { return nil }
+        return metrics.averageLayoutTime
+    }
+
+    var cacheHitRate: Double? { nil }
+}
+
 /// Owns the sample's Performance Inspector lifecycle. Holds the framework
 /// monitors and snapshots them on a 1Hz timer into a single `@Observable`
 /// surface for `PerformanceInspectorPanel`.
@@ -70,7 +100,9 @@ final class PerformanceSampleCoordinator {
 
     init(
         memoryMonitor: MemoryMonitor,
-        performanceObservation: PerformanceObservation
+        performanceObservation: PerformanceObservation,
+        documentMetrics: any DocumentMetricsProviding = UnavailableDocumentMetricsProvider(),
+        textLayoutMetrics: any TextLayoutMetricsProviding = UnavailableTextLayoutMetricsProvider()
     ) {
         let frames = FrameRateMonitor()
         self.memoryMonitor = memoryMonitor
@@ -78,7 +110,9 @@ final class PerformanceSampleCoordinator {
         self.performanceObservation = performanceObservation
         self.performanceInsights = PerformanceInsights(
             memoryMonitor: memoryMonitor,
-            frameRateMonitor: frames
+            frameRateMonitor: frames,
+            documentMetrics: documentMetrics,
+            textLayoutMetrics: textLayoutMetrics
         )
         self.memoryStats = memoryMonitor.memoryStats
         self.targetFPS = Self.screenMaxFPS()

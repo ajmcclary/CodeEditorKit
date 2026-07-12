@@ -449,6 +449,11 @@ public final class EditorController {
         codeEditorView?.adaptivePerformanceMode
     }
 
+    /// Metrics captured from actual layout passes of the attached editor.
+    public var renderingMetrics: TextKit2RenderingMetrics? {
+        codeEditorView?.renderingMetrics
+    }
+
     /// Build an `NSTextRange` covering line `lineNumber` (1-based).
     /// Useful for constructing `Annotation` values from line numbers,
     /// either to pass to `addAnnotation(_:)` or to vend from an
