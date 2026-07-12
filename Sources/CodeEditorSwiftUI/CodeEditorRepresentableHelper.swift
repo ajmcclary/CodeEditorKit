@@ -151,17 +151,6 @@ enum CodeEditorRepresentableHelper {
             theme: parameters.theme
         )
 
-        // Apply theme after coordinator mutations so setText/configuration
-        // changes cannot wipe the text view's storage foreground stamp.
-        // CodeEditorContainerView forwards same-theme applies to the text
-        // view even when the rest of the theme fan-out is equality-gated.
-        container.apply(theme: parameters.theme)
-        CodeEditorRenderingDiagnostics.logContainer(
-            "representable.update.afterThemeApply",
-            container: container,
-            theme: parameters.theme
-        )
-
         // Re-attach controller on update so that SwiftUI re-creating the
         // representable does not leave the controller pointing at a stale
         // view. If the host swapped controllers (rare), update the

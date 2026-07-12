@@ -1,7 +1,6 @@
 import CodeEditorCommon
 import CodeEditorCompletion
 import CodeEditorConfiguration
-import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
 import CodeEditorTheming
@@ -75,6 +74,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// Owns `.codeCompletion` provider identity across SwiftUI renders.
     let completionModifierRegistry = CompletionModifierRegistry()
 
+    /// Owns ordered mount/update reconciliation for the represented editor.
+    lazy var renderReconciler = EditorRenderReconciler(
+        interactionSynchronizer: interactionSynchronizer,
+        completionRegistry: completionModifierRegistry
+    )
+
     /// Request focus for the text view
     func requestFocusIfNeeded(for view: PlatformView, shouldBecomeFirstResponder: Bool) {
         guard shouldBecomeFirstResponder, !hasFocusBeenRequested else { return }
@@ -88,44 +93,21 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         hasFocusBeenRequested = false
     }
 
-    // MARK: - Update Management
-
-    /// Tracks the last update to prevent unnecessary updates
-    private struct UpdateState {
-        let text: String
-        let language: Language
-        let configuration: EditorConfiguration
-        let runtime: EditorRuntimeSnapshot
-    }
-
-    private var lastUpdateState: UpdateState?
-
-    /// Check if an update should proceed based on changed state
-    func shouldUpdate(
-        text: String,
-        language: Language,
-        configuration: EditorConfiguration,
-        runtimeDependencies: EditorRuntimeDependencies
-    ) -> Bool {
-        let newState = UpdateState(
-            text: text,
-            language: language,
-            configuration: configuration,
-            runtime: EditorRuntimeSnapshot(runtimeDependencies)
-        )
-
-        defer { lastUpdateState = newState }
-
-        guard let lastState = lastUpdateState else { return true }
-
-        return lastState.text != newState.text ||
-               lastState.language != newState.language ||
-               lastState.configuration != newState.configuration ||
-               lastState.runtime != newState.runtime
-    }
-
     /// Update the coordinator's state
     func updateState(text: String, language: Language, configuration: EditorConfiguration) {
+        updatePublishedState(
+            text: text,
+            language: language,
+            configuration: configuration
+        )
+        interactionSynchronizer.receiveText(text, language: language)
+    }
+
+    private func updatePublishedState(
+        text: String,
+        language: Language,
+        configuration: EditorConfiguration
+    ) {
         if currentText != text {
             currentText = text
         }
@@ -138,8 +120,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
             currentConfiguration = configuration
         }
         bindingSynchronizer.installHostText(text)
-
-        interactionSynchronizer.receiveText(text, language: language)
     }
 
     /// Reset the dirty baseline to the view's current content. Called by
@@ -195,43 +175,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         notificationObservers.removeAll()
     }
 
-    /// Cleanup method to be called when the coordinator is no longer needed
-    /// This should be called before the coordinator is deallocated
-    func cleanup() {
-        // Notification observers are removed automatically in deinit
-    }
-
-    deinit {
-        // Cannot access MainActor isolated properties in deinit with Swift 6
-        // cleanup() should be called explicitly when view disappears
-        // NotificationCenter automatically removes observers when object is deallocated
-    }
-
-    // MARK: - Common Update Logic
-
-    /// Apply common updates to a text view
-    func updateTextView(
-        _ textView: CodeEditorView,
-        text: String,
-        language: Language,
-        configuration: EditorConfiguration
-    ) {
-        // Update text if changed
-        platformAdapter.setText(text, in: textView, preserveSelection: false)
-
-        // Update language if changed
-        if textView.language != language {
-            textView.language = language
-        }
-
-        // Apply configuration
-        do {
-            try textView.apply(configuration: configuration)
-        } catch {
-            CrossPlatformLogger.logger().error("Rejected SwiftUI editor configuration: \(error)")
-        }
-    }
-
     // MARK: - Container Setup and Update
 
     /// Set up a container view with initial values
@@ -246,97 +189,30 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         onSelectionChange: ((NSRange) -> Void)? = nil,
         swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])? = nil
     ) {
-        CodeEditorRenderingDiagnostics.logContainer(
-            "coordinator.setup.begin",
-            container: container,
-            theme: theme,
-            note: "language=\(language.rawValue) incomingTextLength=\(text.count)"
-        )
-        // Store callbacks
         bindingSynchronizer.onEditorText = onTextChange
         self.onSelectionChange = onSelectionChange
-
-        // Get the text view
         let textView = container.textView
-
-        textView.apply(runtimeDependencies: runtimeDependencies)
-
-        // Set initial text
-        platformAdapter.setText(text, in: textView, preserveSelection: false)
-        CodeEditorRenderingDiagnostics.log(
-            "coordinator.setup.afterSetText",
-            textView: textView,
-            theme: theme,
-            note: "incomingTextLength=\(text.count)"
-        )
-
-        // Seed the dirty tracker against the initial content. Coordinator
-        // owns the tracker; the view holds a weak back-pointer so
-        // `EditorController.markClean()` can route through.
-        interactionSynchronizer.installBaseline(text)
         textView.coordinator = self
-
-        // Set language
-        textView.language = language
-
-        // Editor background + foreground default to system-adaptive colors
-        // until `apply(theme:)` lands, which owns the colour state from
-        // then on. Re-asserting system colours after a theme is applied
-        // would clobber `editor.foreground` and (under TK2) leave glyphs
-        // transparent on any later update.
-        if textView.appliedTheme == nil {
-            platformAdapter.applySystemEditorColors(to: textView)
-            CodeEditorRenderingDiagnostics.log(
-                "coordinator.setup.afterSystemColors",
-                textView: textView,
-                theme: theme,
-                note: "appliedTheme=nil"
-            )
-        }
-
-        // Apply initial configuration
-        container.configuration = configuration
-        CodeEditorRenderingDiagnostics.logContainer(
-            "coordinator.setup.afterConfiguration",
-            container: container,
+        let state = EditorRenderState(
+            text: text,
+            language: language,
+            configuration: configuration,
             theme: theme,
-            note: "wrapLines=\(configuration.layout.wrapLines) editable=\(configuration.behavior.isEditable)"
+            runtimeDependencies: runtimeDependencies
         )
-
-        // Set up observers
+        renderReconciler.mount(
+            state,
+            in: container,
+            completion: swiftUICompletionProvider,
+            onStateUpdate: { [weak self] text, language, configuration in
+                self?.updatePublishedState(
+                    text: text,
+                    language: language,
+                    configuration: configuration
+                )
+            }
+        )
         setupTextChangeObservers(for: textView)
-
-        // Update internal state
-        updateState(text: text, language: language, configuration: configuration)
-
-        // Mirror the effective hardware-acceleration state once at mount.
-        // Sticky — live config changes do not toggle this field. UIKit
-        // views are always layer-backed by definition; AppKit reflects
-        // the knob.
-        #if canImport(AppKit)
-        let hardwareAccelerationActive = configuration.performance.useHardwareAcceleration
-        #else
-        let hardwareAccelerationActive = true
-        #endif
-        interactionSynchronizer.setHardwareAccelerationActive(
-            hardwareAccelerationActive
-        )
-
-        // Reconcile the .codeCompletion modifier closure against the
-        // text view's completion manager. First-call path; subsequent
-        // updates flow through `updateContainer`.
-        completionModifierRegistry.reconcile(
-            on: textView.completionManager,
-            closure: swiftUICompletionProvider
-        )
-
-        // Force initial layout
-        platformAdapter.invalidateLayoutAndDisplay(for: textView)
-        CodeEditorRenderingDiagnostics.logContainer(
-            "coordinator.setup.afterInvalidate",
-            container: container,
-            theme: theme
-        )
     }
 
     /// Update a container view with new values
@@ -349,126 +225,31 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         runtimeDependencies: EditorRuntimeDependencies,
         swiftUICompletionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])? = nil
     ) {
-        let needsUpdate = shouldUpdate(
+        let state = EditorRenderState(
             text: text,
             language: language,
             configuration: configuration,
+            theme: theme,
             runtimeDependencies: runtimeDependencies
         )
-        CodeEditorRenderingDiagnostics.logContainer(
-            "coordinator.update.begin",
-            container: container,
-            theme: theme,
-            note: "needsUpdate=\(needsUpdate) language=\(language.rawValue) incomingTextLength=\(text.count)"
-        )
-
-        // Reconcile the modifier closure *before* the shouldUpdate guard:
-        // a host may swap the closure without changing text/language/config,
-        // and we still need the new closure to land in the adapter slot.
-        completionModifierRegistry.reconcile(
-            on: container.textView.completionManager,
-            closure: swiftUICompletionProvider
-        )
-
-        // Check if we need to update
-        guard needsUpdate else {
-            CodeEditorRenderingDiagnostics.logContainer(
-                "coordinator.update.skipped",
-                container: container,
-                theme: theme
-            )
-            return
-        }
-
-        let textView = container.textView
-        textView.apply(runtimeDependencies: runtimeDependencies)
-
-        // Detect host-driven binding swap: when the binding's text differs
-        // from the view's current storage, the host has installed new
-        // content (e.g., tab switch, file load). User edits write to
-        // storage via the delegate before they propagate back here, so
-        // storage already matches `text` on the edit re-render path.
-        let storageText = platformAdapter.text(from: textView)
-        let isHostBindingSwap = (storageText != text)
-
-        // Update text if changed
-        platformAdapter.setText(text, in: textView, preserveSelection: true)
-        CodeEditorRenderingDiagnostics.log(
-            "coordinator.update.afterSetText",
-            textView: textView,
-            theme: theme,
-            note: "hostBindingSwap=\(isHostBindingSwap) previousTextLength=\(storageText.count) incomingTextLength=\(text.count)"
-        )
-
-        if isHostBindingSwap {
-            interactionSynchronizer.installBaseline(text)
-            // `setText` replaces the text storage and drops per-range
-            // attributes; the syntax pass re-applies token colours
-            // asynchronously, but untokenized characters need the theme
-            // foreground stamped synchronously or TK2 renders them with
-            // no glyph colour at all.
-            textView.stampThemeForeground()
-            CodeEditorRenderingDiagnostics.log(
-                "coordinator.update.afterHostSwapStamp",
-                textView: textView,
-                theme: theme
-            )
-        }
-
-        // Update language if changed
-        if textView.language != language {
-            textView.language = language
-        }
-
-        // System colours only matter until `apply(theme:)` lands; once a
-        // theme is applied it owns `textColor`/`backgroundColor`. Skipping
-        // the re-assert here is what allows the theme's foreground to
-        // survive between updateContainer cycles.
-        if textView.appliedTheme == nil {
-            platformAdapter.applySystemEditorColors(to: textView)
-            CodeEditorRenderingDiagnostics.log(
-                "coordinator.update.afterSystemColors",
-                textView: textView,
-                theme: theme,
-                note: "appliedTheme=nil"
-            )
-        }
-
-        // Update configuration if changed
-        if container.configuration != configuration {
-            container.configuration = configuration
-            CodeEditorRenderingDiagnostics.logContainer(
-                "coordinator.update.afterConfiguration",
-                container: container,
-                theme: theme,
-                note: "wrapLines=\(configuration.layout.wrapLines) editable=\(configuration.behavior.isEditable)"
-            )
-        }
-
-        // Update internal state
-        updateState(text: text, language: language, configuration: configuration)
-        CodeEditorRenderingDiagnostics.logContainer(
-            "coordinator.update.end",
-            container: container,
-            theme: theme
+        renderReconciler.update(
+            state,
+            in: container,
+            completion: swiftUICompletionProvider,
+            onStateUpdate: { [weak self] text, language, configuration in
+                self?.updatePublishedState(
+                    text: text,
+                    language: language,
+                    configuration: configuration
+                )
+            }
         )
     }
 }
 
 // MARK: - Platform-Specific Extensions
 
-#if canImport(AppKit)
-
-extension CodeEditorBaseCoordinator {
-    /// Handle minimap setup for macOS
-    func setupMinimap(in _: NSView, with _: CodeEditorView) {
-        // Implementation for macOS minimap setup
-        // This can be implemented when minimap support is added to the base coordinator
-    }
-}
-
-#elseif canImport(UIKit)
-
+#if canImport(UIKit)
 extension CodeEditorBaseCoordinator {
     /// Handle tap gesture for iOS
     @objc func handleTap(_ gesture: UITapGestureRecognizer) {
@@ -478,13 +259,7 @@ extension CodeEditorBaseCoordinator {
         }
     }
 
-    /// Handle done button tap in iOS toolbar
-    @objc func doneButtonTapped() {
-        // Find the text view and resign first responder
-        // This would need to be implemented based on the specific view hierarchy
-    }
 }
-
 #endif
 
 // MARK: - Platform-Specific Coordinators

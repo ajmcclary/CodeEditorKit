@@ -1,7 +1,6 @@
 import CodeEditorView
 import Foundation
 
-@MainActor
 struct EditorRuntimeSnapshot: Equatable {
     let workspaceRoot: URL?
     let eventSystem: ObjectIdentifier?
@@ -15,6 +14,7 @@ struct EditorRuntimeSnapshot: Equatable {
     let platformDeviceService: ObjectIdentifier
     let memoryManagementPolicy: MemoryManagementPolicy
 
+    @MainActor
     init(_ dependencies: EditorRuntimeDependencies) {
         workspaceRoot = dependencies.workspaceRoot
         eventSystem = dependencies.eventSystem.map(ObjectIdentifier.init)
