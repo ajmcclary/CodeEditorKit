@@ -233,7 +233,7 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
 
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
-        Task { @MainActor in
+        Task { @MainActor [self] in
             self.memoryMonitor.registerCleanupHandler(
                 identifier: "viewport-syntax-coordinator",
                 priority: .normal
