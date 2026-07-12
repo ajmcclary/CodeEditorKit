@@ -113,20 +113,11 @@ public final class LSPClient: ObservableObject {
     /// Process manager for local server processes (macOS only)
     private lazy var processManager = LSPProcessManager(messageHandler: messageHandler)
 
-    /// Request/response tracking. Keyed by the JSON-RPC `RequestId` so
-    /// string-typed IDs (UUID-style or otherwise) route back to their
-    /// pending continuation; the prior `[Int: ...]` map silently dropped
-    /// non-numeric IDs at the message-handler layer.
-    private var pendingRequests: [RequestId: LSPRequestCompletion] = [:]
-
-    /// Monotonic counter for outgoing request IDs.
-    ///
-    /// MainActor isolation (inherited from `LSPClient`'s class declaration)
-    /// is the sole synchronization mechanism — `allocateRequestId()` reads
-    /// and increments this from MainActor-bound contexts only, so no lock
-    /// is needed. Overflow is handled by wrapping to 1 at `Int.max`; see
-    /// the helper for the rationale.
-    private var nextRequestId: Int = 1
+    /// JSON-RPC request allocation, encoding, and continuation routing.
+    private lazy var jsonRPCSession = JSONRPCSession { [weak self] data in
+        guard let self else { throw LSPError.notConnected }
+        try await self.sendEncodedMessage(data)
+    }
 
     /// In-flight disconnect Task, if any. Used to serialize transport teardown
     /// so two concurrent `disconnect()` calls cannot each spawn a Task that
@@ -267,8 +258,7 @@ public final class LSPClient: ObservableObject {
         // closures would leave awaiters hanging forever (in production) or
         // trap (in DEBUG with strict-concurrency checks). Failing them with
         // `.notConnected` lets callers observe the disconnect deterministically.
-        let pendingToFail = pendingRequests
-        pendingRequests.removeAll()
+        jsonRPCSession.failAllPending(with: .notConnected)
         serverCapabilities = nil
         diagnostics.removeAll()
 
@@ -277,7 +267,6 @@ public final class LSPClient: ObservableObject {
 
             disconnectTask = Task { [weak self] in
                 guard let self else {
-                    Self.failPending(pendingToFail)
                     return
                 }
 
@@ -300,8 +289,7 @@ public final class LSPClient: ObservableObject {
                 // shutdown Task inside sendShutdownRequest stays
                 // suspended on that continuation; failing it here
                 // releases it so the task can complete on its own.
-                let postShutdownPending = self.pendingRequests
-                self.pendingRequests.removeAll()
+                self.jsonRPCSession.failAllPending(with: .notConnected)
 
                 if let transport = self.transport {
                     await transport.disconnect()
@@ -310,8 +298,6 @@ public final class LSPClient: ObservableObject {
                 }
 
                 self.connectionState = .disconnected
-                Self.failPending(pendingToFail)
-                Self.failPending(postShutdownPending)
                 self.disconnectTask = nil
             }
         } else {
@@ -321,13 +307,11 @@ public final class LSPClient: ObservableObject {
                 disconnectTask = Task { [weak self] in
                     await transport.disconnect()
                     self?.connectionState = .disconnected
-                    Self.failPending(pendingToFail)
                     self?.disconnectTask = nil
                 }
             } else {
                 processManager.terminateServerProcess()
                 connectionState = .disconnected
-                Self.failPending(pendingToFail)
             }
         }
     }
@@ -340,15 +324,6 @@ public final class LSPClient: ObservableObject {
     /// not need to await the async transport drain.
     public func shutdown() {
         disconnect()
-    }
-
-    /// Fail any captured pending request continuations. Called after transport
-    /// teardown so awaiters do not observe a `.notConnected` failure while the
-    /// transport is still draining.
-    private static func failPending(_ pending: [RequestId: LSPRequestCompletion]) {
-        for completion in pending.values {
-            completion(.failure(.notConnected))
-        }
     }
 
     // MARK: - Document Management
@@ -573,47 +548,7 @@ public final class LSPClient: ObservableObject {
     // MARK: - Private Methods
 
     private func sendRequest(method: String, params: any Codable & Sendable) async throws -> LSPResponse {
-        let key = allocateRequestId()
-
-        let request = LSPRequest(
-            id: key,
-            method: method,
-            params: params
-        )
-
-        return try await withCheckedThrowingContinuation { continuation in
-            // Store completion handler
-            pendingRequests[key] = { result in
-                continuation.resume(with: result)
-            }
-
-            // Send request
-            Task {
-                do {
-                    try await self.sendMessage(request)
-                } catch {
-                    _ = await MainActor.run {
-                        self.pendingRequests.removeValue(forKey: key)
-                    }
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    /// Allocate the next outgoing request ID.
-    ///
-    /// Reads-then-increments `nextRequestId`. Wraps to 1 when the counter
-    /// would otherwise overflow at `Int.max`. The realistic risk of
-    /// reaching that ceiling is zero (`Int64.max` requests would take ~2.9
-    /// trillion years at 100K req/s), but the explicit guard prevents trap
-    /// behavior on pathological long-lived sessions; any `pendingRequests`
-    /// entries from before the wrap will have completed long ago by
-    /// definition. Called only from MainActor-isolated contexts.
-    private func allocateRequestId() -> RequestId {
-        let value = nextRequestId
-        nextRequestId = (value == Int.max) ? 1 : value + 1
-        return .number(value)
+        try await jsonRPCSession.request(method: method, params: params)
     }
 
     private func sendNotification(method: String, params: any Codable & Sendable) async throws {
@@ -622,18 +557,15 @@ public final class LSPClient: ObservableObject {
     }
 
     private func sendMessage(_ message: any Codable) async throws {
-        // Use transport if available
-        if let transport {
-            let encoder = JSONEncoder()
-            let jsonData = try encoder.encode(message)
-            try await transport.send(jsonData)
-            return
-        }
+        try await sendEncodedMessage(JSONEncoder().encode(message))
+    }
 
-        // Fall back to process-based implementation
-        let encoder = JSONEncoder()
-        let jsonData = try encoder.encode(message)
-        try processManager.sendMessage(jsonData)
+    private func sendEncodedMessage(_ data: Data) async throws {
+        if let transport {
+            try await transport.send(data)
+        } else {
+            try processManager.sendMessage(data)
+        }
     }
 
     private func handleNotification(method: String, params: Data) async {
@@ -653,9 +585,7 @@ public final class LSPClient: ObservableObject {
     }
 
     private func handleResponse(id: RequestId, result: Result<LSPResponse, LSPError>) async {
-        if let completion = pendingRequests.removeValue(forKey: id) {
-            completion(result)
-        }
+        jsonRPCSession.handleResponse(id: id, result: result)
     }
 
     private func handleDiagnosticsNotification(params: Data) async {
