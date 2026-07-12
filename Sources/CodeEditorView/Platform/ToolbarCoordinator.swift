@@ -250,102 +250,15 @@ public final class ToolbarCoordinator: ObservableObject {
     // MARK: - Private Methods
 
     private func createMacOSToolbar() -> [ToolbarItem] {
-        var items: [ToolbarItem] = []
-
-        // Full toolbar on macOS
-        items.append(ToolbarItem(
-            title: "Find",
-            icon: "magnifyingglass",
-            action: .find,
-            id: "find"
-        ))
-
-        items.append(ToolbarItem(
-            title: "Replace",
-            icon: "arrow.left.arrow.right",
-            action: .replace,
-            id: "replace"
-        ))
-
-        items.append(ToolbarItem(
-            title: "Symbols",
-            icon: "list.bullet.indent",
-            action: .showSymbols,
-            id: "symbol"
-        ))
-
-        items.append(ToolbarItem(
-            title: "Format",
-            icon: "text.alignleft",
-            action: .format,
-            id: "format"
-        ))
-
-        // Additional macOS-specific items
-        items.append(ToolbarItem(
-            title: "Minimap",
-            icon: "map",
-            action: .custom(id: "minimap"),
-            id: "minimap"
-        ))
-
-        items.append(ToolbarItem(
-            title: "Navigator",
-            icon: "sidebar.left",
-            action: .custom(id: "navigator"),
-            id: "navigator"
-        ))
-
-        return items
+        ToolbarCatalog.items(for: .macOS)
     }
 
     #if canImport(UIKit)
     private func createIOSToolbar() -> [ToolbarItem] {
-        var items: [ToolbarItem] = []
-
-        // Essential items for all iOS devices
-        items.append(ToolbarItem(
-            title: "Find",
-            icon: "magnifyingglass",
-            action: .find,
-            id: "find"
-        ))
-
-        // iPad gets more items
         if UIDevice.current.userInterfaceIdiom == .pad {
-            items.append(ToolbarItem(
-                title: "Replace",
-                icon: "arrow.left.arrow.right",
-                action: .replace,
-                id: "replace"
-            ))
-
-            items.append(ToolbarItem(
-                title: "Symbols",
-                icon: "list.bullet.indent",
-                action: .showSymbols,
-                id: "symbol"
-            ))
-
-            items.append(ToolbarItem(
-                title: "Format",
-                icon: "text.alignleft",
-                action: .format,
-                id: "format"
-            ))
+            return ToolbarCatalog.items(for: .iPad)
         }
-
-        // iPhone gets compact toolbar
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            items.append(ToolbarItem(
-                title: "Share",
-                icon: "square.and.arrow.up",
-                action: .custom(id: "share"),
-                id: "share"
-            ))
-        }
-
-        return items
+        return ToolbarCatalog.items(for: .iPhone)
     }
     #endif
 
