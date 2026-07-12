@@ -36,6 +36,37 @@ extension Tokens {
             public static let large: Double = 56
         }
 
+        /// Control / chrome heights that recur verbatim across surfaces built
+        /// on this system. Mirror the control-sizing section of the CSS source.
+        public enum Control {
+            /// 32pt — default button / control height.
+            public static let height: Double = 32
+            /// 27pt — compact button / inline control.
+            public static let heightCompact: Double = 27
+            /// 24pt — chip-height control.
+            public static let heightSmall: Double = 24
+            /// 34pt — settings / list row.
+            public static let row: Double = 34
+            /// 28pt — dense list row.
+            public static let rowCompact: Double = 28
+            /// 26pt — chip / badge pill.
+            public static let chip: Double = 26
+            /// 38pt — toggle track width.
+            public static let switchWidth: Double = 38
+            /// 22pt — toggle track height.
+            public static let switchHeight: Double = 22
+            /// 18pt — toggle knob diameter.
+            public static let switchKnob: Double = 18
+            /// 2pt — active tab / active row accent bar.
+            public static let accentBar: Double = 2
+            /// 38pt — macOS title bar.
+            public static let titleBar: Double = 38
+            /// 36pt — tab strip (28pt compact).
+            public static let tabStrip: Double = 36
+            /// 28pt — status bar.
+            public static let statusBar: Double = 28
+        }
+
         /// Avatar / profile circle sizes.
         public enum Avatar {
             /// 24pt — extra-small avatar.

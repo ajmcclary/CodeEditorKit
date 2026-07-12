@@ -32,4 +32,21 @@ struct SizeTests {
         #expect(Tokens.Size.Avatar.lg == 48)
         #expect(Tokens.Size.Avatar.xl == 64)
     }
+
+    @Test("control sizing matches CSS source")
+    func controlSizes() {
+        #expect(Tokens.Size.Control.height == 32)
+        #expect(Tokens.Size.Control.heightCompact == 27)
+        #expect(Tokens.Size.Control.heightSmall == 24)
+        #expect(Tokens.Size.Control.row == 34)
+        #expect(Tokens.Size.Control.rowCompact == 28)
+        #expect(Tokens.Size.Control.chip == 26)
+        #expect(Tokens.Size.Control.switchWidth == 38)
+        #expect(Tokens.Size.Control.switchHeight == 22)
+        #expect(Tokens.Size.Control.switchKnob == 18)
+        #expect(Tokens.Size.Control.accentBar == 2)
+        #expect(Tokens.Size.Control.titleBar == 38)
+        #expect(Tokens.Size.Control.tabStrip == 36)
+        #expect(Tokens.Size.Control.statusBar == 28)
+    }
 }
