@@ -59,7 +59,8 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     private let logger = CrossPlatformLogger.logger()
 
     /// Memory monitor for managing cache memory
-    private let memoryMonitor: MemoryMonitor
+    private var memoryMonitor: MemoryMonitor
+    private let cleanupIdentifier = "background-syntax-highlighter-\(UUID().uuidString)"
 
     /// Observer for app termination to ensure cleanup
     private var terminationObserver: NSObjectProtocol?
@@ -451,37 +452,45 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
 
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
-        Task { @MainActor in
-            self.memoryMonitor.registerCleanupHandler(
-                identifier: "background-syntax-highlighter",
-                priority: .normal
-            ) { @MainActor [weak self] in
-                guard let self else {
-                    return CleanupResult(memoryFreedMB: 0, description: "BackgroundSyntaxHighlighter deallocated")
-                }
-
-                // Cancel all operations
-                self.cancelAllRequests()
-
-                // Clear cache
-                let beforeCacheSize = self.resultCache.count
-                self.resultCache.removeAll()
-
-                // Clear pending requests
-                let beforePendingCount = self.pendingRequests.count
-                self.pendingRequests.removeAll()
-
-                // Reset statistics
-                self.statistics.reset()
-
-                // Estimate memory freed
-                let estimatedMemoryMB = Double(beforeCacheSize + beforePendingCount) * 0.01 // 10KB per item estimate
-
-                return CleanupResult(
-                    memoryFreedMB: estimatedMemoryMB,
-                    description: "Cleared \(beforeCacheSize) cached results and \(beforePendingCount) pending requests"
-                )
+        memoryMonitor.registerCleanupHandler(
+            identifier: cleanupIdentifier,
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else {
+                return CleanupResult(memoryFreedMB: 0, description: "BackgroundSyntaxHighlighter deallocated")
             }
+
+            // Cancel all operations
+            self.cancelAllRequests()
+
+            // Clear cache
+            let beforeCacheSize = self.resultCache.count
+            self.resultCache.removeAll()
+
+            // Clear pending requests
+            let beforePendingCount = self.pendingRequests.count
+            self.pendingRequests.removeAll()
+
+            // Reset statistics
+            self.statistics.reset()
+
+            // Estimate memory freed
+            let estimatedMemoryMB = Double(beforeCacheSize + beforePendingCount) * 0.01 // 10KB per item estimate
+
+            return CleanupResult(
+                memoryFreedMB: estimatedMemoryMB,
+                description: "Cleared \(beforeCacheSize) cached results and \(beforePendingCount) pending requests"
+            )
         }
+    }
+}
+
+extension BackgroundSyntaxHighlighter: MemoryMonitorUsing {
+    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+        guard monitor !== memoryMonitor else { return }
+
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
+        memoryMonitor = monitor
+        registerWithMemoryMonitor()
     }
 }

@@ -173,37 +173,12 @@ public final class MemoryManagementCoordinator {
 
     /// Updates memory monitor for all managed components
     private func updateComponentsMemoryMonitor() {
-        // AsyncSyntaxHighlighter
-        if components.asyncHighlighter != nil {
-            // Note: AsyncSyntaxHighlighter would need a method to update its memory monitor
-            // For now, we'd need to recreate it
-            if let editorView {
-                editorView.asyncHighlighter = createAsyncHighlighter()
-            }
-        }
-
-        // TextKit2RenderingOptimizer
-        if components.renderingOptimizer != nil {
-            // Similar pattern for other components
-            if let editorView {
-                editorView.renderingOptimizer = createRenderingOptimizer()
-            }
-        }
-
-        // CompletionManager
-        if components.completionManager != nil {
-            if let editorView {
-                editorView.completionManager = createCompletionManager()
-            }
-        }
+        components.asyncHighlighter?.setMemoryMonitor(memoryMonitor)
+        components.renderingOptimizer?.setMemoryMonitor(memoryMonitor)
+        components.completionManager?.setMemoryMonitor(memoryMonitor)
 
         #if canImport(AppKit)
-        // LSPManager
-        if components.lspManager != nil {
-            if let editorView {
-                editorView.lspManager = createLSPManager(workspaceRoot: editorView.runtime.dependencies.workspaceRoot)
-            }
-        }
+        components.lspManager?.setMemoryMonitor(memoryMonitor)
         #endif
     }
 

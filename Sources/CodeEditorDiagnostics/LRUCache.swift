@@ -21,7 +21,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     private var head: Node?
     private var tail: Node?
     private let cacheId = UUID().uuidString
-    private let memoryMonitor: MemoryMonitor
+    private var memoryMonitor: MemoryMonitor
 
     /// Total number of items currently in cache
     public var count: Int { cache.count }
@@ -203,13 +203,21 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
                 )
         }
 
-        Task { @MainActor in
-            self.memoryMonitor.registerCleanupHandler(
-                identifier: "lru-cache-\(id)",
-                priority: .normal,
-                handler: handler
-            )
-        }
+        memoryMonitor.registerCleanupHandler(
+            identifier: "lru-cache-\(id)",
+            priority: .normal,
+            handler: handler
+        )
+    }
+}
+
+extension LRUCache: MemoryMonitorUsing {
+    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+        guard monitor !== memoryMonitor else { return }
+
+        memoryMonitor.unregisterCleanupHandler(identifier: "lru-cache-\(cacheId)")
+        memoryMonitor = monitor
+        registerWithMemoryMonitor()
     }
 }
 

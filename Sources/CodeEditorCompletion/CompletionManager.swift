@@ -68,7 +68,8 @@ public final class CompletionManager {
     private let cacheExpirationTime: TimeInterval
     private let enableCaching: Bool
     private let debouncer: CompletionDebouncer
-    private let memoryMonitor: MemoryMonitor
+    private var memoryMonitor: MemoryMonitor
+    private let cleanupIdentifier = "completion-manager-\(UUID().uuidString)"
     private let broadcaster = CompletionEventBroadcaster()
 
     /// In-memory frequency/recency cache. Keyed by
@@ -552,34 +553,44 @@ public final class CompletionManager {
 
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
-        Task { @MainActor in
-            self.memoryMonitor.registerCleanupHandler(
-                identifier: "completion-manager",
-                priority: .normal
-            ) { @MainActor [weak self] in
-                guard let self else {
-                    return CleanupResult(memoryFreedMB: 0, description: "CompletionManager deallocated")
-                }
-
-                // Clear completion cache
-                let beforeCacheSize = self.cache.count
-                self.cache.removeAll()
-
-                // Cancel pending requests
-                self.cancelCurrentRequest()
-
-                // Reset statistics
-                self.statistics.reset()
-
-                // Estimate memory freed
-                let estimatedMemoryMB = Double(beforeCacheSize) * 0.005 // 5KB per cached item estimate
-
-                return CleanupResult(
-                    memoryFreedMB: estimatedMemoryMB,
-                    description: "Cleared \(beforeCacheSize) completion cache items"
-                )
+        memoryMonitor.registerCleanupHandler(
+            identifier: cleanupIdentifier,
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else {
+                return CleanupResult(memoryFreedMB: 0, description: "CompletionManager deallocated")
             }
+
+            // Clear completion cache
+            let beforeCacheSize = self.cache.count
+            self.cache.removeAll()
+
+            // Cancel pending requests
+            self.cancelCurrentRequest()
+
+            // Reset statistics
+            self.statistics.reset()
+
+            // Estimate memory freed
+            let estimatedMemoryMB = Double(beforeCacheSize) * 0.005 // 5KB per cached item estimate
+
+            return CleanupResult(
+                memoryFreedMB: estimatedMemoryMB,
+                description: "Cleared \(beforeCacheSize) completion cache items"
+            )
         }
+    }
+}
+
+extension CompletionManager: MemoryMonitorUsing {
+    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+        guard monitor !== memoryMonitor else { return }
+
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
+        memoryMonitor = monitor
+        cache.setMemoryMonitor(monitor)
+        frequencyCache.setMemoryMonitor(monitor)
+        registerWithMemoryMonitor()
     }
 }
 

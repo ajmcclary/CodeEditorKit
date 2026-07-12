@@ -63,7 +63,8 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     private let maxLayoutTimeSamples = 50
 
     /// Memory monitor for managing cache memory
-    private let memoryMonitor: MemoryMonitor
+    private var memoryMonitor: MemoryMonitor
+    private let cleanupIdentifier = "textkit2-rendering-optimizer-\(UUID().uuidString)"
 
     // MARK: - Initialization
 
@@ -356,35 +357,33 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
 
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
-        Task { @MainActor in
-            self.memoryMonitor.registerCleanupHandler(
-                identifier: "textkit2-rendering-optimizer",
-                priority: .normal
-            ) { @MainActor [weak self] in
-                guard let self else {
-                    return CleanupResult(memoryFreedMB: 0, description: "TextKit2RenderingOptimizer deallocated")
-                }
-
-                // Clear fragment cache
-                let beforeCacheSize = self.fragmentCache.count
-                self.fragmentCache.removeAll()
-
-                // Clear recycled fragments
-                let beforeRecycledCount = self.recycledFragments.count
-                self.recycledFragments.removeAll()
-
-                // Reset statistics
-                self.renderingStats.reset()
-                self.layoutTimes.removeAll()
-
-                // Estimate memory freed
-                let estimatedMemoryMB = Double(beforeCacheSize + beforeRecycledCount) * 0.02 // 20KB per fragment estimate
-
-                return CleanupResult(
-                    memoryFreedMB: estimatedMemoryMB,
-                    description: "Cleared \(beforeCacheSize) cached fragments and \(beforeRecycledCount) recycled fragments"
-                )
+        memoryMonitor.registerCleanupHandler(
+            identifier: cleanupIdentifier,
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else {
+                return CleanupResult(memoryFreedMB: 0, description: "TextKit2RenderingOptimizer deallocated")
             }
+
+            // Clear fragment cache
+            let beforeCacheSize = self.fragmentCache.count
+            self.fragmentCache.removeAll()
+
+            // Clear recycled fragments
+            let beforeRecycledCount = self.recycledFragments.count
+            self.recycledFragments.removeAll()
+
+            // Reset statistics
+            self.renderingStats.reset()
+            self.layoutTimes.removeAll()
+
+            // Estimate memory freed
+            let estimatedMemoryMB = Double(beforeCacheSize + beforeRecycledCount) * 0.02 // 20KB per fragment estimate
+
+            return CleanupResult(
+                memoryFreedMB: estimatedMemoryMB,
+                description: "Cleared \(beforeCacheSize) cached fragments and \(beforeRecycledCount) recycled fragments"
+            )
         }
     }
 
@@ -423,6 +422,16 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
         - Large File Optimizations: \(stats.largeFileOptimizationsEnabled)
         - Fragment Recycling: \(stats.fragmentRecyclingEnabled)
         """
+    }
+}
+
+extension TextKit2RenderingOptimizer: MemoryMonitorUsing {
+    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+        guard monitor !== memoryMonitor else { return }
+
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
+        memoryMonitor = monitor
+        registerWithMemoryMonitor()
     }
 }
 

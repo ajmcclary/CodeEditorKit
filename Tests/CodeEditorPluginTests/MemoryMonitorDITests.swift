@@ -1,4 +1,5 @@
 import CodeEditorConfiguration
+@testable import CodeEditorCompletion
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
@@ -157,6 +158,38 @@ final class MemoryMonitorDITests: XCTestCase {
 
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 175.0, "Second monitor should replace the first")
     }
+
+    @MainActor
+    func testMonitorSwapPreservesCompletionManagerAndProviders() {
+        let editor = CodeEditorView(frame: .zero)
+        let manager = editor.completionManager
+        let provider = LanguageKeywordCompletionProvider(language: .swift)
+        manager.registerProvider(provider)
+
+        editor.memoryMonitor = MemoryMonitor()
+
+        XCTAssertIdentical(editor.completionManager, manager)
+        XCTAssertTrue(
+            editor.completionManager.registeredProviders.contains { $0.id == provider.id }
+        )
+    }
+
+    #if canImport(AppKit)
+    @MainActor
+    func testMonitorSwapPreservesLSPManagerAndWorkspaceRoot() {
+        let workspaceRoot = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("CodeEditorMemoryMonitorSwap")
+        let editor = CodeEditorView(frame: .zero)
+        editor.runtime.update(workspaceRoot: workspaceRoot)
+        let manager = editor.lspManager
+        manager.workspaceRoot = workspaceRoot
+
+        editor.memoryMonitor = MemoryMonitor()
+
+        XCTAssertIdentical(editor.lspManager, manager)
+        XCTAssertEqual(editor.lspManager.workspaceRoot, workspaceRoot)
+    }
+    #endif
 
     // MARK: - Cleanup Handler Tests
 

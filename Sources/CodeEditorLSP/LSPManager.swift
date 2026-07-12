@@ -113,7 +113,8 @@ public final class LSPManager: ObservableObject {
 
     // MARK: - Initialization
 
-    private let memoryMonitor: MemoryMonitor
+    private var memoryMonitor: MemoryMonitor
+    private let cleanupIdentifier = "lsp-manager-\(UUID().uuidString)"
 
     public init(memoryMonitor: MemoryMonitor, workspaceRoot: URL? = nil) {
         self.clientRegistry = LSPClientRegistry()
@@ -127,36 +128,36 @@ public final class LSPManager: ObservableObject {
         // Sync published properties with client registry
         syncPublishedProperties()
 
-        // Register with memory monitor after initialization
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            self.memoryMonitor.registerCleanupHandler(
-                identifier: "lsp-manager",
-                priority: .normal
-            ) { @MainActor [weak self] in
-                guard let self else {
-                    return CleanupResult(memoryFreedMB: 0, description: "LSPManager deallocated")
-                }
+        registerWithMemoryMonitor()
+    }
 
-                let beforeClientCount = self.activeClients.count
-                let beforeDocumentCount = self.documentManager.getAllDocuments().count
-
-                // Cleanup through components
-                self.clientRegistry.cleanup()
-                self.documentManager.cleanup()
-
-                // Clear published state
-                self.activeClients.removeAll()
-                self.serverConfigurations.removeAll()
-
-                // Estimate memory freed (rough estimate)
-                let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1
-
-                return CleanupResult(
-                    memoryFreedMB: estimatedMemoryMB,
-                    description: "Disconnected \(beforeClientCount) LSP clients and cleared \(beforeDocumentCount) documents"
-                )
+    private func registerWithMemoryMonitor() {
+        memoryMonitor.registerCleanupHandler(
+            identifier: cleanupIdentifier,
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else {
+                return CleanupResult(memoryFreedMB: 0, description: "LSPManager deallocated")
             }
+
+            let beforeClientCount = self.activeClients.count
+            let beforeDocumentCount = self.documentManager.getAllDocuments().count
+
+            // Cleanup through components
+            self.clientRegistry.cleanup()
+            self.documentManager.cleanup()
+
+            // Clear published state
+            self.activeClients.removeAll()
+            self.serverConfigurations.removeAll()
+
+            // Estimate memory freed (rough estimate)
+            let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1
+
+            return CleanupResult(
+                memoryFreedMB: estimatedMemoryMB,
+                description: "Disconnected \(beforeClientCount) LSP clients and cleared \(beforeDocumentCount) documents"
+            )
         }
     }
 
@@ -435,5 +436,15 @@ public final class LSPManager: ObservableObject {
     private func syncPublishedProperties() {
         activeClients = clientRegistry.activeClients
         serverConfigurations = clientRegistry.serverConfigurations
+    }
+}
+
+extension LSPManager: MemoryMonitorUsing {
+    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+        guard monitor !== memoryMonitor else { return }
+
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
+        memoryMonitor = monitor
+        registerWithMemoryMonitor()
     }
 }

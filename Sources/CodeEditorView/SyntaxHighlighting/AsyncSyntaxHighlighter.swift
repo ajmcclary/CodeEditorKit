@@ -35,7 +35,8 @@ public final class AsyncSyntaxHighlighter {
     public var backgroundHighlightingThreshold: Int = 10_000
 
     // Memory monitor for managing cache memory
-    private let memoryMonitor: MemoryMonitor
+    private var memoryMonitor: MemoryMonitor
+    private let cleanupIdentifier = "async-syntax-highlighter-cache-\(UUID().uuidString)"
 
     // Performance metrics for production monitoring
     private let performanceMetrics: ProductionPerformanceMetrics
@@ -558,28 +559,37 @@ public final class AsyncSyntaxHighlighter {
     }
 
     private func registerCacheWithMemoryMonitor() {
-        Task { @MainActor in
-            self.memoryMonitor.registerCleanupHandler(
-                identifier: "async-syntax-highlighter-cache",
-                priority: .normal
-            ) { @MainActor [weak self] in
-                guard let self else {
-                    return CleanupResult(memoryFreedMB: 0, description: "AsyncSyntaxHighlighter deallocated")
-                }
-
-                // Get cache stats before cleanup
-                let stats = await self.tokenCache.getStatistics()
-                let beforeMemoryMB = stats.estimatedMemoryMB
-
-                // Clear the cache
-                await self.tokenCache.clearCache()
-
-                return CleanupResult(
-                    memoryFreedMB: beforeMemoryMB,
-                    description: "Cleared syntax highlighting cache: \\(stats.cacheSize) entries"
-                )
+        memoryMonitor.registerCleanupHandler(
+            identifier: cleanupIdentifier,
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else {
+                return CleanupResult(memoryFreedMB: 0, description: "AsyncSyntaxHighlighter deallocated")
             }
+
+            // Get cache stats before cleanup
+            let stats = await self.tokenCache.getStatistics()
+            let beforeMemoryMB = stats.estimatedMemoryMB
+
+            // Clear the cache
+            await self.tokenCache.clearCache()
+
+            return CleanupResult(
+                memoryFreedMB: beforeMemoryMB,
+                description: "Cleared syntax highlighting cache: \\(stats.cacheSize) entries"
+            )
         }
+    }
+}
+
+extension AsyncSyntaxHighlighter: MemoryMonitorUsing {
+    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+        guard monitor !== memoryMonitor else { return }
+
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
+        memoryMonitor = monitor
+        backgroundHighlighter.setMemoryMonitor(monitor)
+        registerCacheWithMemoryMonitor()
     }
 }
 
