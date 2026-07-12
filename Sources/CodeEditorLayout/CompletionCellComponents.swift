@@ -274,35 +274,33 @@ public final class UnifiedCompletionCellView: NSTableCellView {
     private let theme: CompletionCellTheme
 
     /// Theme last applied via `apply(theme:)`. nil before first apply.
-    public private(set) var appliedTheme: Theme?
+    public var appliedTheme: Theme? { themeState.appliedTheme }
 
     /// Theme-derived primary label color. Mirrors the cell's title color
     /// after the next `apply(theme:)`; falls back to the legacy
     /// `CompletionCellTheme.titleColor` until then.
-    public private(set) var themedPrimaryTextColor: PlatformColor
+    public var themedPrimaryTextColor: PlatformColor { themeState.primaryTextColor }
 
     /// Theme-derived secondary label color (item detail).
-    public private(set) var themedSecondaryTextColor: PlatformColor
+    public var themedSecondaryTextColor: PlatformColor { themeState.secondaryTextColor }
 
     /// Theme-derived border color.
-    public private(set) var themedBorderColor: PlatformColor
+    public var themedBorderColor: PlatformColor { themeState.borderColor }
 
     /// Theme-derived border width in points.
-    public private(set) var themedBorderWidth: CGFloat
+    public var themedBorderWidth: CGFloat { themeState.borderWidth }
 
     /// Theme-derived corner radius in points.
-    public private(set) var themedCornerRadius: CGFloat
+    public var themedCornerRadius: CGFloat { themeState.cornerRadius }
+
+    private var themeState: CompletionCellThemeState
 
     public init(theme: CompletionCellTheme = .default) {
         self.theme = theme
         self.iconLabel = AppKitCompletionCellComponents.createIconLabel(theme: theme)
         self.titleLabel = AppKitCompletionCellComponents.createTitleLabel(theme: theme)
         self.detailLabel = AppKitCompletionCellComponents.createDetailLabel(theme: theme)
-        self.themedPrimaryTextColor = theme.titleColor
-        self.themedSecondaryTextColor = theme.detailColor
-        self.themedBorderColor = PlatformColors.separator
-        self.themedBorderWidth = CGFloat(Tokens.Shape.strokeHairline)
-        self.themedCornerRadius = CGFloat(Tokens.Shape.radiusMD)
+        self.themeState = CompletionCellThemeState(fallback: theme)
 
         super.init(frame: .zero)
         setupUI()
@@ -342,14 +340,7 @@ public final class UnifiedCompletionCellView: NSTableCellView {
     /// Apply a theme to this cell. Equality-gated; refreshes the cell's
     /// label colors and outline metrics from the theme.
     public func apply(theme: Theme) {
-        if appliedTheme == theme { return }
-        appliedTheme = theme
-        let metrics = CompletionPopoverThemeMetrics(theme: theme)
-        themedPrimaryTextColor = metrics.primaryTextColor
-        themedSecondaryTextColor = metrics.secondaryTextColor
-        themedBorderColor = metrics.borderColor
-        themedBorderWidth = metrics.borderWidth
-        themedCornerRadius = metrics.cornerRadius
+        guard themeState.apply(theme: theme) else { return }
         titleLabel.textColor = themedPrimaryTextColor
         iconLabel.textColor = themedPrimaryTextColor
         detailLabel.textColor = themedSecondaryTextColor
@@ -405,33 +396,31 @@ public final class UnifiedCompletionTableViewCell: UITableViewCell {
     private let theme: CompletionCellTheme
 
     /// Theme last applied via `apply(theme:)`. nil before first apply.
-    public private(set) var appliedTheme: Theme?
+    public var appliedTheme: Theme? { themeState.appliedTheme }
 
     /// Theme-derived primary label color (item title).
-    public private(set) var themedPrimaryTextColor: PlatformColor
+    public var themedPrimaryTextColor: PlatformColor { themeState.primaryTextColor }
 
     /// Theme-derived secondary label color (item detail).
-    public private(set) var themedSecondaryTextColor: PlatformColor
+    public var themedSecondaryTextColor: PlatformColor { themeState.secondaryTextColor }
 
     /// Theme-derived border color.
-    public private(set) var themedBorderColor: PlatformColor
+    public var themedBorderColor: PlatformColor { themeState.borderColor }
 
     /// Theme-derived border width in points.
-    public private(set) var themedBorderWidth: CGFloat
+    public var themedBorderWidth: CGFloat { themeState.borderWidth }
 
     /// Theme-derived corner radius in points.
-    public private(set) var themedCornerRadius: CGFloat
+    public var themedCornerRadius: CGFloat { themeState.cornerRadius }
+
+    private var themeState: CompletionCellThemeState
 
     public init(reuseIdentifier: String?, theme: CompletionCellTheme = .default) {
         self.theme = theme
         self.iconLabel = UIKitCompletionCellComponents.createIconLabel(theme: theme)
         self.titleLabel = UIKitCompletionCellComponents.createTitleLabel(theme: theme)
         self.detailLabel = UIKitCompletionCellComponents.createDetailLabel(theme: theme)
-        self.themedPrimaryTextColor = theme.titleColor
-        self.themedSecondaryTextColor = theme.detailColor
-        self.themedBorderColor = PlatformColors.separator
-        self.themedBorderWidth = CGFloat(Tokens.Shape.strokeHairline)
-        self.themedCornerRadius = CGFloat(Tokens.Shape.radiusMD)
+        self.themeState = CompletionCellThemeState(fallback: theme)
 
         super.init(style: .default, reuseIdentifier: reuseIdentifier)
         setupUI()
@@ -471,14 +460,7 @@ public final class UnifiedCompletionTableViewCell: UITableViewCell {
     /// Apply a theme to this cell. Equality-gated; refreshes the cell's
     /// label colors and outline metrics from the theme.
     public func apply(theme: Theme) {
-        if appliedTheme == theme { return }
-        appliedTheme = theme
-        let metrics = CompletionPopoverThemeMetrics(theme: theme)
-        themedPrimaryTextColor = metrics.primaryTextColor
-        themedSecondaryTextColor = metrics.secondaryTextColor
-        themedBorderColor = metrics.borderColor
-        themedBorderWidth = metrics.borderWidth
-        themedCornerRadius = metrics.cornerRadius
+        guard themeState.apply(theme: theme) else { return }
         titleLabel.textColor = themedPrimaryTextColor
         iconLabel.textColor = themedPrimaryTextColor
         detailLabel.textColor = themedSecondaryTextColor
