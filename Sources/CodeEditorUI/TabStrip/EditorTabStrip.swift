@@ -1,5 +1,4 @@
 import CodeEditorLanguages
-import CodeEditorPlugin
 import CodeEditorSwiftUI
 import SwiftUI
 

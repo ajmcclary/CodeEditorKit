@@ -1,7 +1,8 @@
 #if canImport(AppKit)
 import CodeEditorDesignTokens
-import CodeEditorPlugin
 import CodeEditorSwiftUI
+import CodeEditorTheming
+import CodeEditorView
 import SwiftUI
 
 /// Tahoe-styled title bar with traffic lights, centered title, and a

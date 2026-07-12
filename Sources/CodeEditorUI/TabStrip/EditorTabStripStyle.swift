@@ -1,7 +1,7 @@
 import CodeEditorDesignTokens
 import CodeEditorLanguages
-import CodeEditorPlugin
 import CodeEditorSwiftUI
+import CodeEditorTheming
 import SwiftUI
 
 /// Style protocol for `EditorTabStrip`, à la `ButtonStyle`.

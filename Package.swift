@@ -307,26 +307,12 @@ let package = Package(
         .target(
             name: "CodeEditorPlugin",
             dependencies: [
-                "CodeEditorAnnotations",
                 "CodeEditorCommon",
-                "CodeEditorCompletion",
                 "CodeEditorConfiguration",
-                "CodeEditorDesignTokens",
-                "CodeEditorDiagnostics",
-                "CodeEditorFolding",
-                "CodeEditorLSP",
                 "CodeEditorLanguages",
-                "CodeEditorLayout",
-                "CodeEditorPlatform",
-                "CodeEditorSmartEditing",
                 "CodeEditorSwiftUI",
-                "CodeEditorSymbols",
-                "CodeEditorSyntaxHighlighting",
-                "CodeEditorTextModel",
                 "CodeEditorTheming",
-                "CodeEditorView",
-                .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
+                "CodeEditorView"
             ],
             exclude: [
                 "Info.plist"
@@ -336,9 +322,9 @@ let package = Package(
         .target(
             name: "CodeEditorUI",
             dependencies: [
+                "CodeEditorConfiguration",
                 "CodeEditorDesignTokens",
                 "CodeEditorLanguages",
-                "CodeEditorPlugin",
                 "CodeEditorSwiftUI",
                 "CodeEditorSymbols",
                 "CodeEditorTheming",
