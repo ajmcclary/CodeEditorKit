@@ -4,7 +4,6 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
-import CodeEditorTextModel
 import CodeEditorTheming
 import CodeEditorView
 import Foundation
@@ -37,8 +36,13 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// Owns editor-to-host text propagation and debounce state.
     let bindingSynchronizer = EditorBindingSynchronizer()
 
-    /// Optional interaction-state binding for cursor persistence/restoration.
-    var interactionStateBinding: Binding<EditorInteractionState>?
+    /// Owns dirty, selection, and cursor-state synchronization.
+    let interactionSynchronizer = EditorInteractionSynchronizer()
+
+    var interactionStateBinding: Binding<EditorInteractionState>? {
+        get { interactionSynchronizer.interactionState }
+        set { interactionSynchronizer.interactionState = newValue }
+    }
 
     /// Optional host-supplied controller. Held weakly to avoid extending
     /// the lifetime of an external object beyond what the host intends.
@@ -55,7 +59,10 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// `EditorState` deallocates cleanly when the host drops it). Writes
     /// to the shared sentinel are inert — no chrome view reads it unless
     /// a host explicitly wires one via `.environment(\.editorState, _:)`.
-    weak var hostEditorState: EditorState?
+    var hostEditorState: EditorState? {
+        get { interactionSynchronizer.hostState }
+        set { interactionSynchronizer.hostState = newValue }
+    }
 
     /// Additional callback for extended selection functionality.
     var onSelectionChangeCallback: ((NSRange) -> Void)?
@@ -71,13 +78,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// re-renders only swap the closure slot. Manager-side identity is
     /// stable.
     var modifierProviderAdapter: SwiftUIClosureCompletionProvider?
-
-    /// Tracks the view's content against its baseline. Coordinator writes
-    /// the baseline on initial text install (`setupContainer`) and on
-    /// host-driven binding swaps (`updateContainer`); reads in
-    /// `updateState` to write `EditorState.isDirty`. `markClean(view:)`
-    /// resets the baseline to the current text.
-    private var dirtyTracker = DirtyTracker()
 
     /// Request focus for the text view
     func requestFocusIfNeeded(for view: PlatformView, shouldBecomeFirstResponder: Bool) {
@@ -143,31 +143,14 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         }
         bindingSynchronizer.installHostText(text)
 
-        // Mirror into the host's shared `EditorState`, if any. Status bar
-        // and other chrome read these fields out of the SwiftUI environment.
-        if let hostEditorState {
-            if hostEditorState.language != language {
-                hostEditorState.language = language
-            }
-            let lineCount = EditorStateBridge.lineCount(of: text)
-            if hostEditorState.lineCount != lineCount {
-                hostEditorState.lineCount = lineCount
-            }
-            let dirty = dirtyTracker.isDirty(currentText: text)
-            if hostEditorState.isDirty != dirty {
-                hostEditorState.isDirty = dirty
-            }
-        }
+        interactionSynchronizer.receiveText(text, language: language)
     }
 
     /// Reset the dirty baseline to the view's current content. Called by
     /// `EditorController.markClean()` via `CodeEditorView.applyMarkClean()`.
     package func markClean(view: CodeEditorView) {
         let currentText = platformAdapter.text(from: view)
-        dirtyTracker.markClean(currentText: currentText)
-        if let hostEditorState, hostEditorState.isDirty != false {
-            hostEditorState.isDirty = false
-        }
+        interactionSynchronizer.markClean(currentText: currentText)
     }
 
     // MARK: - Text Change Handling
@@ -186,74 +169,15 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         onSelectionChange?(range)
         onSelectionChangeCallback?(range)
 
-        // Derive only when someone consumes it — deriveSelection walks the
-        // UTF-16 view from the start, so we skip the work for hosts with
-        // neither chrome nor interaction-state restore.
-        guard hostEditorState != nil || interactionStateBinding != nil else { return }
-
-        let selection = EditorStateBridge.deriveSelection(from: range, in: currentText)
-
-        if let hostEditorState, hostEditorState.selection != selection {
-            hostEditorState.selection = selection
-        }
-
-        updateInteractionStateCursor(from: selection)
+        interactionSynchronizer.receiveSelection(range, text: currentText)
     }
 
     func updateInteractionStateBinding(_ binding: Binding<EditorInteractionState>) {
-        interactionStateBinding = binding
+        interactionSynchronizer.interactionState = binding
     }
 
     func applyInteractionState(to textView: CodeEditorView) {
-        guard let cursor = interactionStateBinding?.wrappedValue.cursorPositions?.first else {
-            return
-        }
-
-        let editorText = text(from: textView)
-        let offset = Self.utf16Offset(for: cursor, in: editorText)
-        let targetRange = NSRange(location: offset, length: 0)
-        guard textView.selectedRange != targetRange else { return }
-        textView.setSelectedRangeWithoutScrolling(targetRange)
-    }
-
-    private func updateInteractionStateCursor(from selection: SelectionState) {
-        guard var state = interactionStateBinding?.wrappedValue else { return }
-        let cursor = EditorCursorPosition(line: selection.line, column: selection.column)
-        guard state.cursorPositions != [cursor] else { return }
-        state.cursorPositions = [cursor]
-        interactionStateBinding?.wrappedValue = state
-    }
-
-    private func text(from textView: CodeEditorView) -> String {
-        platformAdapter.text(from: textView)
-    }
-
-    private static func utf16Offset(for cursor: EditorCursorPosition, in text: String) -> Int {
-        let targetLine = max(1, cursor.line)
-        let targetColumn = max(1, cursor.column)
-        var line = 1
-        var column = 1
-        var offset = 0
-
-        for character in text {
-            if line == targetLine && column == targetColumn {
-                return offset
-            }
-
-            if character == "\n" {
-                if line == targetLine {
-                    return offset
-                }
-                line += 1
-                column = 1
-            } else {
-                column += 1
-            }
-
-            offset += String(character).utf16.count
-        }
-
-        return TextRangeUtilities.utf16Length(of: text)
+        interactionSynchronizer.applyInteractionState(to: textView)
     }
 
     // MARK: - Notification Management
@@ -353,7 +277,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         // Seed the dirty tracker against the initial content. Coordinator
         // owns the tracker; the view holds a weak back-pointer so
         // `EditorController.markClean()` can route through.
-        dirtyTracker.setBaseline(text)
+        interactionSynchronizer.installBaseline(text)
         textView.coordinator = self
 
         // Set language
@@ -393,16 +317,14 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         // Sticky — live config changes do not toggle this field. UIKit
         // views are always layer-backed by definition; AppKit reflects
         // the knob.
-        if let hostEditorState {
-            #if canImport(AppKit)
-            let effective = configuration.performance.useHardwareAcceleration
-            #else
-            let effective = true
-            #endif
-            if hostEditorState.hardwareAccelerationActive != effective {
-                hostEditorState.hardwareAccelerationActive = effective
-            }
-        }
+        #if canImport(AppKit)
+        let hardwareAccelerationActive = configuration.performance.useHardwareAcceleration
+        #else
+        let hardwareAccelerationActive = true
+        #endif
+        interactionSynchronizer.setHardwareAccelerationActive(
+            hardwareAccelerationActive
+        )
 
         // Reconcile the .codeCompletion modifier closure against the
         // text view's completion manager. First-call path; subsequent
@@ -477,7 +399,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         )
 
         if isHostBindingSwap {
-            dirtyTracker.setBaseline(text)
+            interactionSynchronizer.installBaseline(text)
             // `setText` replaces the text storage and drops per-range
             // attributes; the syntax pass re-applies token colours
             // asynchronously, but untokenized characters need the theme
