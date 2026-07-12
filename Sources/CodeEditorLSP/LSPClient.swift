@@ -123,7 +123,12 @@ public final class LSPClient: ObservableObject {
     /// so two concurrent `disconnect()` calls cannot each spawn a Task that
     /// races on `transport.disconnect()` and `connectionState`. Accessed only
     /// from the `@MainActor`-isolated client.
-    private var disconnectTask: Task<Void, Never>?
+    private let connectionLifecycle = LSPConnectionLifecycle()
+    private let documentSession = LSPDocumentSession()
+    private lazy var languageFeatureClient = LSPLanguageFeatureClient { [weak self] method, params in
+        guard let self else { throw LSPError.notConnected }
+        return try await self.sendRequest(method: method, params: params)
+    }
 
     /// True while the client holds connection resources that need an explicit
     /// `disconnect()`/`shutdown()` before deallocation. Set true on `connect`,
@@ -241,7 +246,7 @@ public final class LSPClient: ObservableObject {
         // spawn a second Task that races on the transport and on
         // `connectionState`. Skipping is safe because the in-flight Task will
         // drive state to `.disconnected` on its own.
-        if disconnectTask != nil {
+        if connectionLifecycle.isDisconnecting {
             return
         }
 
@@ -260,12 +265,13 @@ public final class LSPClient: ObservableObject {
         // `.notConnected` lets callers observe the disconnect deterministically.
         jsonRPCSession.failAllPending(with: .notConnected)
         serverCapabilities = nil
-        diagnostics.removeAll()
+        documentSession.removeAll()
+        diagnostics = documentSession.diagnostics
 
         if wasInitialized {
             connectionState = .shuttingDown
 
-            disconnectTask = Task { [weak self] in
+            connectionLifecycle.beginDisconnect { [weak self] in
                 guard let self else {
                     return
                 }
@@ -298,16 +304,14 @@ public final class LSPClient: ObservableObject {
                 }
 
                 self.connectionState = .disconnected
-                self.disconnectTask = nil
             }
         } else {
             // Not initialized (e.g. `.connecting`, `.initializing`, `.error`):
             // skip the shutdown request and tear the transport down directly.
             if let transport {
-                disconnectTask = Task { [weak self] in
+                connectionLifecycle.beginDisconnect { [weak self] in
                     await transport.disconnect()
                     self?.connectionState = .disconnected
-                    self?.disconnectTask = nil
                 }
             } else {
                 processManager.terminateServerProcess()
@@ -341,13 +345,11 @@ public final class LSPClient: ObservableObject {
     ) async throws {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = DidOpenTextDocumentParams(
-            textDocument: TextDocumentItem(
-                uri: uri,
-                languageId: languageId,
-                version: version,
-                text: text
-            )
+        let params = documentSession.openParameters(
+            uri: uri,
+            languageID: languageId,
+            version: version,
+            text: text
         )
 
         try await sendNotification(method: "textDocument/didOpen", params: params)
@@ -365,9 +367,10 @@ public final class LSPClient: ObservableObject {
     ) async throws {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = DidChangeTextDocumentParams(
-            textDocument: VersionedTextDocumentIdentifier(uri: uri, version: version),
-            contentChanges: changes
+        let params = documentSession.changeParameters(
+            uri: uri,
+            version: version,
+            changes: changes
         )
 
         try await sendNotification(method: "textDocument/didChange", params: params)
@@ -381,14 +384,12 @@ public final class LSPClient: ObservableObject {
     public func closeDocument(uri: String) async throws {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = DidCloseTextDocumentParams(
-            textDocument: TextDocumentIdentifier(uri: uri)
-        )
+        let params = documentSession.closeParameters(uri: uri)
 
         try await sendNotification(method: "textDocument/didClose", params: params)
 
         // Remove diagnostics for closed document
-        diagnostics.removeValue(forKey: uri)
+        diagnostics = documentSession.diagnostics
 
         logger.debug("Closed document: \(uri)")
     }
@@ -406,9 +407,7 @@ public final class LSPClient: ObservableObject {
     ) async throws -> CompletionList {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = LSPLanguageFeatures.createCompletionParams(uri: uri, position: position)
-        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.completion, params: params)
-        return try LSPLanguageFeatures.parseCompletionResponse(response)
+        return try await languageFeatureClient.completion(uri: uri, position: position)
     }
 
     /// Request hover information
@@ -421,9 +420,7 @@ public final class LSPClient: ObservableObject {
     ) async throws -> Hover? {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = LSPLanguageFeatures.createHoverParams(uri: uri, position: position)
-        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.hover, params: params)
-        return LSPLanguageFeatures.parseHoverResponse(response)
+        return try await languageFeatureClient.hover(uri: uri, position: position)
     }
 
     /// Request symbol definition
@@ -436,9 +433,7 @@ public final class LSPClient: ObservableObject {
     ) async throws -> [Location] {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = LSPLanguageFeatures.createDefinitionParams(uri: uri, position: position)
-        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.definition, params: params)
-        return try LSPLanguageFeatures.parseDefinitionResponse(response)
+        return try await languageFeatureClient.definition(uri: uri, position: position)
     }
 
     /// Request document symbols
@@ -448,9 +443,7 @@ public final class LSPClient: ObservableObject {
     public func requestDocumentSymbols(uri: String) async throws -> [LSPDocumentSymbol] {
         try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = LSPLanguageFeatures.createDocumentSymbolParams(uri: uri)
-        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.documentSymbol, params: params)
-        return try LSPLanguageFeatures.parseDocumentSymbolResponse(response)
+        return try await languageFeatureClient.documentSymbols(uri: uri)
     }
 
     // MARK: - Semantic Tokens
@@ -467,14 +460,7 @@ public final class LSPClient: ObservableObject {
     public func requestSemanticTokens(uri: String) async throws -> SemanticTokens? {
         guard connectionState == .initialized else { return nil }
 
-        let params = SemanticTokensParams(
-            textDocument: TextDocumentIdentifier(uri: uri)
-        )
-        let response = try await sendRequest(
-            method: "textDocument/semanticTokens/full",
-            params: params
-        )
-        return try response.decode(as: SemanticTokens.self)
+        return try await languageFeatureClient.semanticTokens(uri: uri)
     }
 
     /// Request semantic-token delta since a previous result.
@@ -491,15 +477,10 @@ public final class LSPClient: ObservableObject {
     ) async throws -> SemanticTokensDelta? {
         guard connectionState == .initialized else { return nil }
 
-        let params = SemanticTokensDeltaParams(
-            textDocument: TextDocumentIdentifier(uri: uri),
-            previousResultId: previousResultId
+        return try await languageFeatureClient.semanticTokenDelta(
+            uri: uri,
+            previousResultID: previousResultId
         )
-        let response = try await sendRequest(
-            method: "textDocument/semanticTokens/full/delta",
-            params: params
-        )
-        return try response.decode(as: SemanticTokensDelta.self)
     }
 
     /// Request semantic tokens for a specific range.
@@ -516,15 +497,7 @@ public final class LSPClient: ObservableObject {
     ) async throws -> SemanticTokens? {
         guard connectionState == .initialized else { return nil }
 
-        let params = SemanticTokensRangeParams(
-            textDocument: TextDocumentIdentifier(uri: uri),
-            range: range
-        )
-        let response = try await sendRequest(
-            method: "textDocument/semanticTokens/range",
-            params: params
-        )
-        return try response.decode(as: SemanticTokens.self)
+        return try await languageFeatureClient.semanticTokens(uri: uri, range: range)
     }
 
     // MARK: - Message Handler Setup
@@ -591,7 +564,11 @@ public final class LSPClient: ObservableObject {
     private func handleDiagnosticsNotification(params: Data) async {
         do {
             let publishDiagnostics = try JSONDecoder().decode(PublishDiagnosticsParams.self, from: params)
-            diagnostics[publishDiagnostics.uri] = publishDiagnostics.diagnostics
+            documentSession.updateDiagnostics(
+                publishDiagnostics.diagnostics,
+                for: publishDiagnostics.uri
+            )
+            diagnostics = documentSession.diagnostics
             logger.debug("Received diagnostics for \(publishDiagnostics.uri): \(publishDiagnostics.diagnostics.count) items")
         } catch {
             logger.error("Failed to decode diagnostics: \(error.localizedDescription)")
