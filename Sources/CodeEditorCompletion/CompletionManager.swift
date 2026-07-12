@@ -62,7 +62,7 @@ private struct FrequencyEntry: Sendable {
 /// - SeeAlso: ``CompletionProvider``, ``CompletionDebouncer``, ``CompletionStatistics``
 @MainActor
 public final class CompletionManager {
-    private var providers: [String: any CompletionProvider] = [:]
+    private let providerRegistry = CompletionProviderRegistry()
     private var currentRequest: Task<CompletionResult, Error>?
     private let cache: LRUCache<CompletionCacheKey, CachedCompletionResult>
     private let cacheExpirationTime: TimeInterval
@@ -158,12 +158,12 @@ public final class CompletionManager {
 
     /// Register a completion provider
     public func registerProvider(_ provider: any CompletionProvider) {
-        providers[provider.id] = provider
+        providerRegistry.register(provider)
     }
 
     /// Unregister a completion provider
     public func unregisterProvider(withId id: String) {
-        providers.removeValue(forKey: id)
+        providerRegistry.unregister(withId: id)
     }
 
     /// Ensures a `LanguageKeywordCompletionProvider` is registered for
@@ -173,25 +173,12 @@ public final class CompletionManager {
     /// `CodeEditorView` on language change; safe to call from hosts
     /// using `CompletionManager` standalone.
     public func ensureBuiltInProvider(for language: Language) {
-        let newId = "builtin.keywords.\(language.identifier)"
-
-        // Already installed (built-in or host-supplied at this id).
-        if providers[newId] != nil { return }
-
-        // Sweep any prior built-in providers for other languages.
-        let staleIds = providers.keys.filter {
-            $0.hasPrefix("builtin.keywords.") && $0 != newId
-        }
-        for staleId in staleIds {
-            providers.removeValue(forKey: staleId)
-        }
-
-        registerProvider(LanguageKeywordCompletionProvider(language: language))
+        providerRegistry.ensureBuiltInProvider(for: language)
     }
 
     /// Get all registered providers
     public var registeredProviders: [any CompletionProvider] {
-        Array(providers.values)
+        providerRegistry.registeredProviders
     }
 
     /// Clear the completion cache
@@ -257,10 +244,9 @@ public final class CompletionManager {
         startTime _: Date
     ) async -> [CompletionResult] {
         // Find applicable providers
-        let applicableProviders = providers.values.filter { provider in
-            provider.supportedLanguages.contains(context.language) ||
-            provider.supportedLanguages.isEmpty
-        }
+        let applicableProviders = providerRegistry.applicableProviders(
+            for: context.language
+        )
 
         guard !applicableProviders.isEmpty else {
             let result = CompletionResult(
