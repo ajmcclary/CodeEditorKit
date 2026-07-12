@@ -269,7 +269,7 @@ Existing optimization points include:
 | `RangeAttributeApplier` | Skip-equal attribute writes and batched attribute transactions. |
 | `HighlightProviderState` | Chunked asynchronous highlighting. |
 | `RangeBasedHighlightingController` | Primary range-based styling path. |
-| `TextKit2RenderingOptimizer` | Large-file and fragment-cache optimization scaffolding. |
+| `TextKit2RenderingMetrics` | Observed layout duration and visible-fragment counts recorded by real view layout passes. |
 | `ViewportManager` | Visible and prefetch range caching. |
 | `AdaptivePerformanceMode` | File-size-based performance tier switching. |
 | `TextLayoutFragmentView` | Per-fragment custom drawing escape hatch. |

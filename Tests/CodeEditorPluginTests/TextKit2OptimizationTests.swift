@@ -11,108 +11,12 @@ import UIKit
 import XCTest
 
 final class TextKit2OptimizationTests: IsolatedTestCase {
-    @MainActor
-    private func withOptimizer<T>(_ body: (TextKit2RenderingOptimizer) async throws -> T) async throws -> T {
-        let optimizer = TextKit2RenderingOptimizer(memoryMonitor: MemoryMonitor())
-        return try await body(optimizer)
-    }
-
     deinit {}
 
     @MainActor
     private func withMonitor<T>(_ body: (TextKit2PerformanceMonitor) async throws -> T) async throws -> T {
         let monitor = TextKit2PerformanceMonitor()
         return try await body(monitor)
-    }
-
-    // MARK: - TextKit2RenderingOptimizer Tests
-
-    @MainActor
-    func testRenderingOptimizerInitialization() async throws {
-        try await withOptimizer { renderingOptimizer in
-            XCTAssertNotNil(renderingOptimizer)
-        XCTAssertEqual(renderingOptimizer.maxCachedFragments, 500)
-        XCTAssertEqual(renderingOptimizer.largeFileThreshold, 50_000)
-        XCTAssertTrue(renderingOptimizer.enableViewportOptimization)
-        XCTAssertEqual(renderingOptimizer.prefetchMultiplier, 1.5)
-            XCTAssertTrue(renderingOptimizer.enableFragmentRecycling)
-        }
-    }
-
-    @MainActor
-    func testRenderingOptimizerConfiguration() async throws {
-        try await withOptimizer { renderingOptimizer in
-            // Test configuration with different settings
-            renderingOptimizer.maxCachedFragments = 1_000
-        renderingOptimizer.largeFileThreshold = 100_000
-        renderingOptimizer.enableViewportOptimization = false
-        renderingOptimizer.prefetchMultiplier = 2.0
-        renderingOptimizer.enableFragmentRecycling = false
-
-        XCTAssertEqual(renderingOptimizer.maxCachedFragments, 1_000)
-        XCTAssertEqual(renderingOptimizer.largeFileThreshold, 100_000)
-        XCTAssertFalse(renderingOptimizer.enableViewportOptimization)
-        XCTAssertEqual(renderingOptimizer.prefetchMultiplier, 2.0)
-            XCTAssertFalse(renderingOptimizer.enableFragmentRecycling)
-        }
-    }
-
-    @MainActor
-    func testVisibleRangeUpdates() async throws {
-        try await withOptimizer { renderingOptimizer in
-            let initialRange = NSRange(location: 0, length: 100)
-            renderingOptimizer.updateVisibleRange(initialRange)
-
-            // Should not crash and should handle the range update
-            XCTAssertNoThrow(renderingOptimizer.updateVisibleRange(initialRange))
-
-            // Test with different range
-            let newRange = NSRange(location: 50, length: 200)
-            XCTAssertNoThrow(renderingOptimizer.updateVisibleRange(newRange))
-        }
-    }
-
-    @MainActor
-    func testFragmentCleanup() async throws {
-        try await withOptimizer { renderingOptimizer in
-            // Enable viewport optimization for this test
-            renderingOptimizer.enableViewportOptimization = true
-
-            // Update visible range to create some cached state
-            renderingOptimizer.updateVisibleRange(NSRange(location: 0, length: 100))
-
-            // Cleanup should not crash
-            XCTAssertNoThrow(renderingOptimizer.cleanupNonVisibleFragments())
-        }
-    }
-
-    @MainActor
-    func testPrefetchLayout() async throws {
-        try await withOptimizer { renderingOptimizer in
-            // Test prefetch in both directions
-            renderingOptimizer.updateVisibleRange(NSRange(location: 1_000, length: 500))
-
-            XCTAssertNoThrow(renderingOptimizer.prefetchLayout(direction: .up, distance: 1_000))
-            XCTAssertNoThrow(renderingOptimizer.prefetchLayout(direction: .down, distance: 1_000))
-        }
-    }
-
-    @MainActor
-    func testReset() async throws {
-        try await withOptimizer { renderingOptimizer in
-            // Set up some state
-            renderingOptimizer.updateVisibleRange(NSRange(location: 100, length: 200))
-            renderingOptimizer.cleanupNonVisibleFragments()
-
-            // Reset should clear all state
-            renderingOptimizer.reset()
-
-            // Verify reset worked
-            let stats = renderingOptimizer.renderingStats
-            XCTAssertEqual(stats.totalOptimizations, 0)
-            XCTAssertEqual(stats.fragmentsCached, 0)
-            XCTAssertEqual(stats.fragmentsCleaned, 0)
-        }
     }
 
     // MARK: - TextKit2PerformanceHelper Tests
@@ -285,27 +189,6 @@ final class TextKit2OptimizationTests: IsolatedTestCase {
         }
     }
 
-    // MARK: - RenderingStatistics Tests
-
-    @MainActor
-    func testRenderingStatisticsInitialization() async throws {
-        try await withOptimizer { renderingOptimizer in
-            let stats = renderingOptimizer.renderingStats
-
-            XCTAssertEqual(stats.totalOptimizations, 0)
-            XCTAssertEqual(stats.averageOptimizationTime, 0)
-            XCTAssertEqual(stats.fragmentsCached, 0)
-            XCTAssertEqual(stats.fragmentsCleaned, 0)
-            XCTAssertEqual(stats.prefetchOperations, 0)
-            XCTAssertEqual(stats.averagePrefetchTime, 0)
-            XCTAssertEqual(stats.largeFileOptimizationsEnabled, 0)
-            XCTAssertEqual(stats.viewportOptimizationsEnabled, 0)
-            XCTAssertEqual(stats.fragmentRecyclingEnabled, 0)
-            XCTAssertEqual(stats.containerOptimizations, 0)
-            XCTAssertNil(stats.lastOptimizationTime)
-        }
-    }
-
     // MARK: - Integration Tests
 
     @MainActor
@@ -350,18 +233,6 @@ final class TextKit2OptimizationTests: IsolatedTestCase {
     }
 
     // MARK: - Performance Tests
-
-    @MainActor
-    func testRenderingOptimizerPerformance() async throws {
-        let renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: MemoryMonitor())
-        measure(options: Self.standardMeasureOptions) {
-            // Test performance of updating visible range multiple times
-            for index in 0..<100 {
-                let range = NSRange(location: index * 100, length: 500)
-                renderingOptimizer.updateVisibleRange(range)
-            }
-        }
-    }
 
     @MainActor
     func testPerformanceMonitorOverhead() async throws {

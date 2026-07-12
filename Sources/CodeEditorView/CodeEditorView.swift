@@ -291,11 +291,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Async syntax highlighter with debouncing
     internal lazy var asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
 
-    /// TextKit2 rendering optimizer for large files
-    internal lazy var renderingOptimizer = memoryCoordinator.createRenderingOptimizer()
-
-    /// TextKit2 performance monitor
-    internal let performanceMonitor = TextKit2PerformanceMonitor()
+    /// Metrics captured from actual TextKit 2 layout passes.
+    public let renderingMetrics = TextKit2RenderingMetrics()
 
     /// LSP manager for language server integration
     #if canImport(AppKit)

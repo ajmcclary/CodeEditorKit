@@ -57,6 +57,9 @@ extension CodeEditorView {
     override public func layout() {
         // Ensure we're on the main thread for layout operations
         if Thread.isMainThread {
+            let clock = ContinuousClock()
+            let layoutStart = clock.now
+
             // Save scroll position before layout
             let savedScrollPosition = enclosingScrollView?.contentView.bounds.origin
 
@@ -74,6 +77,11 @@ extension CodeEditorView {
                 scrollView.contentView.bounds.origin = savedPosition
                 CATransaction.commit()
             }
+
+            renderingMetrics.recordLayoutPass(
+                duration: layoutStart.duration(to: clock.now),
+                visibleFragmentCount: observedVisibleTextLayoutFragmentCount()
+            )
         } else {
             // Use Swift concurrency to dispatch to main actor
             Task { @MainActor [weak self] in
@@ -83,16 +91,50 @@ extension CodeEditorView {
     }
     #else
     override public func layoutSubviews() {
+        let clock = ContinuousClock()
+        let layoutStart = clock.now
+
         super.layoutSubviews()
         updateGutterFrame()
         updateLineHighlightFrame()
         updateAnnotationViews()
+
+        renderingMetrics.recordLayoutPass(
+            duration: layoutStart.duration(to: clock.now),
+            visibleFragmentCount: observedVisibleTextLayoutFragmentCount()
+        )
 
         // Don't update text container size here to prevent configuration loops
         // Text container size is managed by configuration updates
 
     }
     #endif
+
+    private func observedVisibleTextLayoutFragmentCount() -> Int {
+        guard let textLayoutManager else { return 0 }
+
+        #if canImport(AppKit)
+        let viewport = visibleRect
+        #else
+        let viewport = bounds
+        #endif
+        let start = textLayoutManager.textViewportLayoutController.viewportRange?.location
+            ?? textLayoutManager.documentRange.location
+        var count = 0
+
+        textLayoutManager.enumerateTextLayoutFragments(from: start) { fragment in
+            let frame = fragment.layoutFragmentFrame
+            if frame.minY > viewport.maxY {
+                return false
+            }
+            if frame.intersects(viewport) {
+                count += 1
+            }
+            return true
+        }
+
+        return count
+    }
 
     #if canImport(AppKit)
     override public func viewDidEndLiveResize() {

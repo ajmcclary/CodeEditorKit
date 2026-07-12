@@ -33,7 +33,6 @@ public final class MemoryManagementCoordinator {
     /// Managed components that use memory monitoring
     private struct ManagedComponents {
         var asyncHighlighter: AsyncSyntaxHighlighter?
-        var renderingOptimizer: TextKit2RenderingOptimizer?
         var completionManager: CompletionManager?
 
         #if canImport(AppKit)
@@ -86,13 +85,6 @@ public final class MemoryManagementCoordinator {
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
         components.asyncHighlighter = highlighter
         return highlighter
-    }
-
-    /// Creates and returns a TextKit2RenderingOptimizer with proper memory monitoring
-    public func createRenderingOptimizer() -> TextKit2RenderingOptimizer {
-        let optimizer = TextKit2RenderingOptimizer(memoryMonitor: memoryMonitor)
-        components.renderingOptimizer = optimizer
-        return optimizer
     }
 
     /// Creates and returns a CompletionManager with proper memory monitoring
@@ -174,7 +166,6 @@ public final class MemoryManagementCoordinator {
     /// Updates memory monitor for all managed components
     private func updateComponentsMemoryMonitor() {
         components.asyncHighlighter?.setMemoryMonitor(memoryMonitor)
-        components.renderingOptimizer?.setMemoryMonitor(memoryMonitor)
         components.completionManager?.setMemoryMonitor(memoryMonitor)
 
         #if canImport(AppKit)
@@ -246,7 +237,6 @@ extension CodeEditorView {
     internal func setupMemoryManagement() {
         memoryCoordinator.updateMemoryMonitor(memoryMonitor)
         self.asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
-        self.renderingOptimizer = memoryCoordinator.createRenderingOptimizer()
         self.completionManager = memoryCoordinator.createCompletionManager()
 
         #if canImport(AppKit)
