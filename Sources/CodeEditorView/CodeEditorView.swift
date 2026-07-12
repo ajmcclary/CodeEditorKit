@@ -194,6 +194,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         didSet {
             guard runtime !== oldValue else { return }
             memoryCoordinator.updateMemoryMonitor(runtime.dependencies.memoryMonitor)
+            memoryCoordinator.updatePolicy(runtime.dependencies.memoryManagementPolicy)
             #if canImport(AppKit)
             lspManager.workspaceRoot = runtime.dependencies.workspaceRoot
             #endif
@@ -494,7 +495,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal var completionTriggerCharacters: Set<Character> = [".", "(", "[", "<", " "]
 
     /// Memory management coordinator
-    internal lazy var memoryCoordinator = MemoryManagementCoordinator(memoryMonitor: memoryMonitor, editorView: self)
+    internal lazy var memoryCoordinator = MemoryManagementCoordinator(
+        memoryMonitor: memoryMonitor,
+        policy: runtime.dependencies.memoryManagementPolicy,
+        editorView: self
+    )
 
     #if canImport(AppKit)
     override public var string: String {

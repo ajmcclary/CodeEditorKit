@@ -27,6 +27,9 @@ public final class MemoryManagementCoordinator {
     /// Weak reference to the editor view
     private weak var editorView: CodeEditorView?
 
+    /// Policy controlling cleanup registration side effects.
+    private var policy: MemoryManagementPolicy
+
     /// Managed components that use memory monitoring
     private struct ManagedComponents {
         var asyncHighlighter: AsyncSyntaxHighlighter?
@@ -49,10 +52,19 @@ public final class MemoryManagementCoordinator {
     /// - Parameters:
     ///   - memoryMonitor: The memory monitor to use
     ///   - editorView: The editor view to manage
-    public init(memoryMonitor: MemoryMonitor, editorView: CodeEditorView) {
+    public init(
+        memoryMonitor: MemoryMonitor,
+        policy: MemoryManagementPolicy = .live,
+        editorView: CodeEditorView
+    ) {
         self.memoryMonitor = memoryMonitor
+        self.policy = policy
         self.editorView = editorView
         setupMemoryMonitoring()
+    }
+
+    package var hasRegisteredCleanupHandler: Bool {
+        cleanupIdentifier != nil
     }
 
     deinit {
@@ -110,6 +122,7 @@ public final class MemoryManagementCoordinator {
         // Unregister from old monitor
         if let identifier = cleanupIdentifier {
             memoryMonitor.unregisterCleanupHandler(identifier: identifier)
+            cleanupIdentifier = nil
         }
 
         // Update monitor
@@ -122,14 +135,24 @@ public final class MemoryManagementCoordinator {
         updateComponentsMemoryMonitor()
     }
 
+    /// Updates cleanup registration without consulting ambient process state.
+    public func updatePolicy(_ newPolicy: MemoryManagementPolicy) {
+        guard newPolicy != policy else { return }
+
+        policy = newPolicy
+        if newPolicy.registersCleanupHandlers {
+            setupMemoryMonitoring()
+        } else if let identifier = cleanupIdentifier {
+            memoryMonitor.unregisterCleanupHandler(identifier: identifier)
+            cleanupIdentifier = nil
+        }
+    }
+
     // MARK: - Private Methods
 
     /// Sets up memory monitoring and cleanup handlers
     private func setupMemoryMonitoring() {
-        // Skip in test environment
-        if TestEnvironmentDetector.isRunningInTests {
-            return
-        }
+        guard policy.registersCleanupHandlers, cleanupIdentifier == nil else { return }
 
         // Generate unique identifier
         var hasher = Hasher()

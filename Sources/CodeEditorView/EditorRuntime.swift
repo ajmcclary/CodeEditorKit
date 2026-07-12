@@ -45,6 +45,9 @@ public struct EditorRuntimeDependencies {
     /// Platform device service.
     public var platformDeviceService: PlatformDeviceService
 
+    /// Policy controlling optional memory cleanup registration.
+    public var memoryManagementPolicy: MemoryManagementPolicy
+
     public init(
         workspaceRoot: URL? = nil,
         eventSystem: UnifiedEventSystem? = nil,
@@ -55,7 +58,8 @@ public struct EditorRuntimeDependencies {
         paragraphStyleCache: ParagraphStyleCache? = nil,
         languageMetadataRegistry: LanguageMetadataRegistry? = nil,
         platformServiceLayer: PlatformServiceLayer? = nil,
-        platformDeviceService: PlatformDeviceService? = nil
+        platformDeviceService: PlatformDeviceService? = nil,
+        memoryManagementPolicy: MemoryManagementPolicy = .live
     ) {
         self.workspaceRoot = workspaceRoot
         self.eventSystem = eventSystem
@@ -67,6 +71,7 @@ public struct EditorRuntimeDependencies {
         self.languageMetadataRegistry = languageMetadataRegistry ?? CodeEditorDependencies.makeLanguageMetadataRegistry()
         self.platformServiceLayer = platformServiceLayer ?? CodeEditorDependencies.makePlatformServiceLayer()
         self.platformDeviceService = platformDeviceService ?? CodeEditorDependencies.makePlatformDeviceService()
+        self.memoryManagementPolicy = memoryManagementPolicy
     }
 
     public static func live(workspaceRoot: URL? = nil, eventSystem: UnifiedEventSystem? = nil) -> Self {
@@ -145,6 +150,8 @@ extension CodeEditorView {
         if runtimeDependencies.memoryMonitor !== oldMemoryMonitor {
             memoryCoordinator.updateMemoryMonitor(runtimeDependencies.memoryMonitor)
         }
+
+        memoryCoordinator.updatePolicy(runtimeDependencies.memoryManagementPolicy)
 
         #if canImport(AppKit)
         if lspManager.workspaceRoot != runtimeDependencies.workspaceRoot {

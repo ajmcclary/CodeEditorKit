@@ -13,6 +13,7 @@ struct EditorRuntimeSnapshot: Equatable {
     let languageMetadataRegistry: ObjectIdentifier
     let platformServiceLayer: ObjectIdentifier
     let platformDeviceService: ObjectIdentifier
+    let memoryManagementPolicy: MemoryManagementPolicy
 
     init(_ dependencies: EditorRuntimeDependencies) {
         workspaceRoot = dependencies.workspaceRoot
@@ -25,5 +26,6 @@ struct EditorRuntimeSnapshot: Equatable {
         languageMetadataRegistry = ObjectIdentifier(dependencies.languageMetadataRegistry)
         platformServiceLayer = ObjectIdentifier(dependencies.platformServiceLayer)
         platformDeviceService = ObjectIdentifier(dependencies.platformDeviceService)
+        memoryManagementPolicy = dependencies.memoryManagementPolicy
     }
 }
