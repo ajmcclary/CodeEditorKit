@@ -20,9 +20,9 @@ final class CodeEditorModifierCompletionIntegrationTests: XCTestCase {
         // on language change; we exercise the registry surface directly here.
         manager.ensureBuiltInProvider(for: .swift)
 
-        // Modifier-supplied closure plumbed via the coordinator.
-        let coordinator = IntegrationCoordinator()
-        coordinator.syncModifierProvider(on: manager) { _ in
+        // Modifier-supplied closure plumbed via the modifier registry.
+        let registry = CompletionModifierRegistry()
+        registry.reconcile(on: manager) { _ in
             [SwiftUICompletionItem(label: "myCustomSnippet", kind: .snippet)]
         }
 
@@ -54,10 +54,4 @@ final class CodeEditorModifierCompletionIntegrationTests: XCTestCase {
     }
 }
 
-@MainActor
-private final class IntegrationCoordinator: CodeEditorBaseCoordinator {
-    override init() {
-        super.init()
-    }
-}
 #endif

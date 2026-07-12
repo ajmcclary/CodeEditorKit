@@ -15,8 +15,8 @@ final class SwiftUIClosureLifecycleTests: XCTestCase {
 
     func testFirstNonNilClosureRegistersAdapter() {
         let manager = makeManager()
-        let coordinator = TestCoordinator()
-        coordinator.syncModifierProvider(on: manager) { _ in [] }
+        let registry = CompletionModifierRegistry()
+        registry.reconcile(on: manager) { _ in [] }
 
         let ids = manager.registeredProviders.map(\.id)
         XCTAssertEqual(ids, ["swiftui-modifier"])
@@ -24,28 +24,28 @@ final class SwiftUIClosureLifecycleTests: XCTestCase {
 
     func testReRenderWithSameClosureKeepsSingleRegistration() {
         let manager = makeManager()
-        let coordinator = TestCoordinator()
+        let registry = CompletionModifierRegistry()
         let closure: @Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem] = { _ in [] }
 
-        coordinator.syncModifierProvider(on: manager, closure: closure)
-        coordinator.syncModifierProvider(on: manager, closure: closure)
-        coordinator.syncModifierProvider(on: manager, closure: closure)
+        registry.reconcile(on: manager, closure: closure)
+        registry.reconcile(on: manager, closure: closure)
+        registry.reconcile(on: manager, closure: closure)
 
         XCTAssertEqual(manager.registeredProviders.count, 1)
     }
 
     func testReRenderWithDifferentClosureSwapsSlotNotProvider() async throws {
         let manager = makeManager()
-        let coordinator = TestCoordinator()
+        let registry = CompletionModifierRegistry()
 
-        coordinator.syncModifierProvider(on: manager) { _ in
+        registry.reconcile(on: manager) { _ in
             [SwiftUICompletionItem(label: "A", kind: .keyword)]
         }
 
         let firstAdapter = manager.registeredProviders.first as? SwiftUIClosureCompletionProvider
         XCTAssertNotNil(firstAdapter)
 
-        coordinator.syncModifierProvider(on: manager) { _ in
+        registry.reconcile(on: manager) { _ in
             [SwiftUICompletionItem(label: "B", kind: .keyword)]
         }
 
@@ -59,18 +59,12 @@ final class SwiftUIClosureLifecycleTests: XCTestCase {
 
     func testTransitionToNilUnregistersAdapter() {
         let manager = makeManager()
-        let coordinator = TestCoordinator()
-        coordinator.syncModifierProvider(on: manager) { _ in [] }
-        coordinator.syncModifierProvider(on: manager, closure: nil)
+        let registry = CompletionModifierRegistry()
+        registry.reconcile(on: manager) { _ in [] }
+        registry.reconcile(on: manager, closure: nil)
 
         XCTAssertTrue(manager.registeredProviders.isEmpty)
     }
 }
 
-@MainActor
-private final class TestCoordinator: CodeEditorBaseCoordinator {
-    override init() {
-        super.init()
-    }
-}
 #endif

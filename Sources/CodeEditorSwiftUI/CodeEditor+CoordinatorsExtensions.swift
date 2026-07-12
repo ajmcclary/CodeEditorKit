@@ -72,12 +72,8 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
 
     private let platformAdapter = CodeEditorPlatformAdapterFactory.make()
 
-    /// Adapter that wraps the host's `.codeCompletion { … }` modifier
-    /// closure as a `CompletionProvider`. Lazy: allocated on the first
-    /// non-nil closure, kept alive for the coordinator's lifetime so
-    /// re-renders only swap the closure slot. Manager-side identity is
-    /// stable.
-    var modifierProviderAdapter: SwiftUIClosureCompletionProvider?
+    /// Owns `.codeCompletion` provider identity across SwiftUI renders.
+    let completionModifierRegistry = CompletionModifierRegistry()
 
     /// Request focus for the text view
     func requestFocusIfNeeded(for view: PlatformView, shouldBecomeFirstResponder: Bool) {
@@ -329,7 +325,10 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         // Reconcile the .codeCompletion modifier closure against the
         // text view's completion manager. First-call path; subsequent
         // updates flow through `updateContainer`.
-        syncModifierProvider(on: textView.completionManager, closure: swiftUICompletionProvider)
+        completionModifierRegistry.reconcile(
+            on: textView.completionManager,
+            closure: swiftUICompletionProvider
+        )
 
         // Force initial layout
         platformAdapter.invalidateLayoutAndDisplay(for: textView)
@@ -366,7 +365,10 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         // Reconcile the modifier closure *before* the shouldUpdate guard:
         // a host may swap the closure without changing text/language/config,
         // and we still need the new closure to land in the adapter slot.
-        syncModifierProvider(on: container.textView.completionManager, closure: swiftUICompletionProvider)
+        completionModifierRegistry.reconcile(
+            on: container.textView.completionManager,
+            closure: swiftUICompletionProvider
+        )
 
         // Check if we need to update
         guard needsUpdate else {
@@ -554,36 +556,3 @@ extension CodeEditorCoordinator: TextViewDelegateParticipant {
 }
 
 #endif
-
-// MARK: - Modifier Provider Reconciliation
-
-extension CodeEditorBaseCoordinator {
-    /// Reconciles the host's `.codeCompletion { … }` closure with the
-    /// manager's provider registry. Idempotent across renders:
-    /// - `(closure, nil)`     → allocate adapter, set slot, register.
-    /// - `(closure, adapter)` → swap slot (manager untouched).
-    /// - `(nil, adapter)`     → unregister, drop adapter.
-    /// - `(nil, nil)`         → no-op.
-    func syncModifierProvider(
-        on manager: CompletionManager,
-        closure: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
-    ) {
-        switch (closure, modifierProviderAdapter) {
-        case let (.some(new), .some(adapter)):
-            adapter.closure = new
-
-        case let (.some(new), .none):
-            let adapter = SwiftUIClosureCompletionProvider()
-            adapter.closure = new
-            modifierProviderAdapter = adapter
-            manager.registerProvider(adapter)
-
-        case (.none, .some):
-            manager.unregisterProvider(withId: "swiftui-modifier")
-            modifierProviderAdapter = nil
-
-        case (.none, .none):
-            break
-        }
-    }
-}
