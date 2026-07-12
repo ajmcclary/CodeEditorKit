@@ -19,7 +19,7 @@ public final class SyntaxHighlightingService {
     // MARK: - Properties
 
     private let syntaxHighlighter: SyntaxHighlightingCoordinator
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "SyntaxHighlightingService")
+    private let logger = CodeEditorLog.logger(category: "SyntaxHighlightingService")
 
     // MARK: - Initialization
 

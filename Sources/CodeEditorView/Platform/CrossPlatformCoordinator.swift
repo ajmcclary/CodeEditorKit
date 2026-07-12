@@ -43,7 +43,7 @@ import Combine
 public final class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Properties
 
-    internal let logger = CrossPlatformLogger.logger()
+    internal let logger = CodeEditorLog.logger(category: "CrossPlatformCoordinator")
     internal let capabilities: PlatformCapabilities
 
     /// Specialized coordinators for focused responsibilities

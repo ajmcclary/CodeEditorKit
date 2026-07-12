@@ -18,7 +18,7 @@ public final class MultiCursorEditor {
         !cursors.isEmpty && cursors.count > 1
     }
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "MultiCursorEditor")
+    private let logger = CodeEditorLog.logger(category: "MultiCursorEditor")
 
     // MARK: - Initialization
 

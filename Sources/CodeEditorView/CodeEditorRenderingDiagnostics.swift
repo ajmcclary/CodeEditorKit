@@ -14,14 +14,8 @@ import UIKit
 
 @MainActor
 package enum CodeEditorRenderingDiagnostics {
-    private static let logger = CrossPlatformLogger.logger(
-        subsystem: "com.codeeditor.plugin",
-        category: "RenderingDiagnostics"
-    )
-    private static let dispatchLogger = CrossPlatformLogger.logger(
-        subsystem: "com.codeeditor.plugin",
-        category: "DispatchDiagnostics"
-    )
+    private static let logger = CodeEditorLog.logger(category: "RenderingDiagnostics")
+    private static let dispatchLogger = CodeEditorLog.logger(category: "DispatchDiagnostics")
 
     package static func log(
         _ event: String,

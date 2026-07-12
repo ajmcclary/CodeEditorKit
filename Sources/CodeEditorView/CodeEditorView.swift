@@ -129,7 +129,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Static Properties
 
     /// Logger instance for CodeEditorView
-    internal static let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
+    internal static let logger = CodeEditorLog.logger(category: "CodeEditorView")
 
     // This file contains the core class definition with all stored properties.
     // All methods have been moved to focused extension files:

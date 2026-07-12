@@ -67,7 +67,7 @@ extension CodeEditorContainerView {
         do {
             try textView.apply(configuration: configuration)
         } catch {
-            CrossPlatformLogger.logger().error("Rejected UIKit container configuration: \(error)")
+            Self.logger.error("Rejected UIKit container configuration: \(error)")
         }
 
         // Register as a behavior-phase participant in the delegate

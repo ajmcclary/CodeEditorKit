@@ -14,7 +14,7 @@ import Combine
 public final class PerformanceInsights: ObservableObject {
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "PerformanceInsights")
+    private let logger = CodeEditorLog.logger(category: "PerformanceInsights")
 
     /// Current performance status
     @Published public private(set) var status: InsightsPerformanceStatus = .optimal

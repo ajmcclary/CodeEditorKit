@@ -28,7 +28,7 @@ internal final class HighlightProviderState {
     private weak var container: StyledRangeContainer?
     private weak var textView: CodeEditorView?
     private let maxChunk: Int
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "HighlightProviderState")
+    private let logger = CodeEditorLog.logger(category: "HighlightProviderState")
 
     private var chunkTask: Task<Void, Never>?
 

@@ -3,6 +3,7 @@ import Foundation
 /// Coordinates error recovery strategies across the application
 @available(macOS 13.0, iOS 16.0, *)
 public actor ErrorRecoveryCoordinator {
+    private static let logger = CodeEditorLog.logger(category: "ErrorRecovery")
     private var activeRecoveries: [UUID: RecoveryTask] = [:]
 
     /// Creates a new error-recovery coordinator with an empty in-flight queue.
@@ -78,7 +79,7 @@ public actor ErrorRecoveryCoordinator {
 
         case .reportToUser:
             // Log and continue
-            CrossPlatformLogger.logger().error("Error reported to user: \(error.userDescription)")
+            Self.logger.error("Error reported to user: \(error.userDescription)")
             throw error
 
         case .clearCacheAndRetry:

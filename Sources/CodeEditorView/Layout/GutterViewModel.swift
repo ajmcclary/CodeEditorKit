@@ -146,7 +146,7 @@ public final class GutterViewModel {
     // MARK: - Private Properties
 
     private let featureDependencies: EditorFeatureRuntimeDependencies
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "GutterViewModel")
+    private let logger = CodeEditorLog.logger(category: "GutterViewModel")
 
     // Debugging and diagnostic support (delegated to GutterDebugSupport)
     private let debugSupport = GutterDebugSupport()

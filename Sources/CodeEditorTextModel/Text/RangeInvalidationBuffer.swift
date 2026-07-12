@@ -6,6 +6,7 @@ import Foundation
 /// A buffer that manages range invalidation events with support for nested buffering operations.
 /// This class allows efficient batching of invalidation operations to avoid excessive handler calls.
 public final class RangeInvalidationBuffer {
+    private static let logger = CodeEditorLog.logger(category: "RangeInvalidationBuffer")
     /// Handler type that processes range invalidation targets.
     public typealias Handler = (RangeTarget) -> Void
 
@@ -49,7 +50,7 @@ public final class RangeInvalidationBuffer {
     public func endBuffering() {
         switch state {
         case .idle:
-            CrossPlatformLogger.logger().error(
+            Self.logger.error(
                 "RangeInvalidationBuffer.endBuffering called while idle; ignoring unbalanced call"
             )
 
@@ -61,7 +62,7 @@ public final class RangeInvalidationBuffer {
             state = .buffering(set, count - 1)
 
         case let .buffering(set, count):
-            CrossPlatformLogger.logger().fault(
+            Self.logger.fault(
                 "RangeInvalidationBuffer in invalid buffering state count=\(count); resetting to idle"
             )
             invalidationHandler(set)

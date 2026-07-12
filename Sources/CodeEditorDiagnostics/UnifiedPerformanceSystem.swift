@@ -4,7 +4,7 @@ import Foundation
 /// Unified performance monitoring and insights system
 @MainActor
 public final class UnifiedPerformanceSystem: UnifiedPerformanceTracking {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "UnifiedPerformanceSystem")
+    private let logger = CodeEditorLog.logger(category: "UnifiedPerformanceSystem")
 
     /// Public initializer for dependency injection
     public init() {}

@@ -96,7 +96,7 @@ public final class GutterSizingService {
 
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "GutterSizingService")
+    private let logger = CodeEditorLog.logger(category: "GutterSizingService")
     private let lineNumberCalculationService: LineNumberCalculationService
 
     // Cache for expensive font metrics

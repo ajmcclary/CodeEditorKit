@@ -23,10 +23,7 @@ internal final class RegexRangeHighlightProvider: RangeHighlightProviding {
     private var preEditSnapshots: [PreEditSnapshot] = []
     private var cachedSource: String?
     private var cachedResult: RangeQueryParseResult?
-    private let logger = CrossPlatformLogger.logger(
-        subsystem: "CodeEditorPlugin",
-        category: "RegexRangeProvider"
-    )
+    private let logger = CodeEditorLog.logger(category: "RegexRangeProvider")
 
     init(parser: any RangeQueryParserProtocol, captureMap: QueryCaptureMap) {
         self.parser = parser

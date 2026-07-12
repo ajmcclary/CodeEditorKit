@@ -192,7 +192,7 @@ public enum PlatformConfigurations {
 
                 default:
                 // Keep platform default
-                let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.platform", category: "PlatformConfigurations")
+                let logger = CodeEditorLog.logger(category: "PlatformConfigurations")
                 logger.warning("Unknown device type '\(String(describing: deviceType))' detected, using platform default configuration")
             }
         }
@@ -241,7 +241,7 @@ public enum PlatformConfigurations {
             return EditorConfiguration.minimal
 
         case .unspecified, .unknown:
-            let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.platform", category: "PlatformConfigurations")
+            let logger = CodeEditorLog.logger(category: "PlatformConfigurations")
             logger.warning("Device type '\(deviceType)' is unspecified or unknown, returning default configuration")
             return EditorConfiguration.default
         }

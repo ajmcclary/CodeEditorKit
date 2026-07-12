@@ -97,7 +97,7 @@ public enum AsyncOperationError: LocalizedError {
 /// - SeeAlso: ``OperationStatus``
 /// - SeeAlso: ``Priority``
 public actor AsyncOperationManager {
-    let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "AsyncOperationManager")
+    let logger = CodeEditorLog.logger(category: "AsyncOperationManager")
 
     // MARK: - Types
 
@@ -187,7 +187,7 @@ public actor AsyncOperationManager {
     /// ## Example
     ///
     /// ```swift
-    /// let logger = CrossPlatformLogger.logger()
+    /// let logger = CodeEditorLog.logger(category: "AsyncOperation")
     /// let status = await manager.getStatus()
     /// logger.debug("Scheduled: \(status.scheduledCount)")
     /// logger.debug("Active: \(status.activeCount)")
@@ -277,7 +277,7 @@ public struct OperationStatus: Sendable {
 /// ## Example
 ///
 /// ```swift
-/// let logger = CrossPlatformLogger.logger()
+/// let logger = CodeEditorLog.logger(category: "AsyncOperation")
 /// let debouncedLog = debouncedAsync(
 ///     delay: 0.5,
 ///     maxConcurrentOperations: 1

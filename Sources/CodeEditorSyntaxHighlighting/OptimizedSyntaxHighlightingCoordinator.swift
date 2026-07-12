@@ -12,6 +12,7 @@ import AppKit
 /// Optimized syntax highlighting coordinator with performance improvements
 @MainActor
 public final class OptimizedSyntaxHighlightingCoordinator {
+    private static let logger = CodeEditorLog.logger(category: "OptimizedSyntaxHighlighting")
     // MARK: - Types
 
     private struct PerformanceData {
@@ -390,7 +391,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
     private func tripCircuitBreaker() {
         circuitBreakerTrips += 1
-        CrossPlatformLogger.logger().warning("Syntax highlighting circuit breaker tripped (\(circuitBreakerTrips) trips)")
+        Self.logger.warning("Syntax highlighting circuit breaker tripped (\(circuitBreakerTrips) trips)")
     }
 
     private func textSlice(from text: String, range: NSRange) -> (text: String, range: NSRange)? {
@@ -445,8 +446,8 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
         // Log slow operations
         if totalTime > 0.1 {
-            CrossPlatformLogger.logger().warning(
-                "⚠️ Slow SyntaxHighlighting: \(String(format: "%.3f", totalTime))s (\(data.language.name))"
+            Self.logger.warning(
+                "Slow syntax highlighting: \(String(format: "%.3f", totalTime))s (\(data.language.name))"
             )
         }
     }

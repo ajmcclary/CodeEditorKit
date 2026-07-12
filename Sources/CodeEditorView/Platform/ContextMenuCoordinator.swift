@@ -53,7 +53,7 @@ import AppKit
 /// - SeeAlso: ``ContextMenuAction`` for menu action definitions
 @MainActor
 public final class ContextMenuCoordinator: ObservableObject {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ContextMenuCoordinator")
+    private let logger = CodeEditorLog.logger(category: "ContextMenuCoordinator")
     private let capabilities: PlatformCapabilities
 
     /// Context types for menu customization

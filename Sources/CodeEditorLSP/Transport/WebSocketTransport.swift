@@ -44,7 +44,7 @@ public actor WebSocketTransport: LSPTransport {
     private var reconnectAttempts = 0
     private var isReconnecting = false
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "WebSocketTransport")
+    private let logger = CodeEditorLog.lsp(category: "WebSocketTransport")
 
     // MARK: - Initialization
 

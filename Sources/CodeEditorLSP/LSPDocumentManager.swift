@@ -11,7 +11,7 @@ final class LSPDocumentManager {
     private var openDocuments: [String: OpenDocument] = [:]
 
     /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPDocumentManager")
+    private let logger = CodeEditorLog.lsp(category: "LSPDocumentManager")
 
     /// Reference to client registry for accessing clients
     private weak var clientRegistry: LSPClientRegistry?

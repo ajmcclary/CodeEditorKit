@@ -29,7 +29,7 @@ public final class LSPCompletionProvider: CompletionProvider {
     private var pendingDocumentSync: Task<Void, Never>?
 
     /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPCompletionProvider")
+    private let logger = CodeEditorLog.lsp(category: "LSPCompletionProvider")
 
     // MARK: - Initialization
 

@@ -16,6 +16,7 @@ import UIKit
 public final class CodeEditorContainerView: PlatformView {
     // MARK: - Properties
 
+    package static let logger = CodeEditorLog.logger(category: "CodeEditorContainerView")
     public let textView: CodeEditorView
     public let gutterView: GutterView
     public let minimapView: MinimapView
@@ -128,16 +129,14 @@ public final class CodeEditorContainerView: PlatformView {
         if let contentView = components.contentView {
             self.contentView = contentView
         } else {
-            let logger = CrossPlatformLogger.logger()
-            logger.error("Failed to create content view for iOS platform, using fallback")
+            Self.logger.error("Failed to create content view for iOS platform, using fallback")
             self.contentView = EditorContentView()
         }
         #else
         if let scrollView = components.scrollView {
             self.scrollView = scrollView
         } else {
-            let logger = CrossPlatformLogger.logger()
-            logger.error("Failed to create scroll view for macOS platform, using fallback")
+            Self.logger.error("Failed to create scroll view for macOS platform, using fallback")
             self.scrollView = NSScrollView(frame: parameters.initialFrame)
         }
         #endif
@@ -171,16 +170,14 @@ public final class CodeEditorContainerView: PlatformView {
         if let contentView = components.contentView {
             self.contentView = contentView
         } else {
-            let logger = CrossPlatformLogger.logger()
-            logger.error("Failed to create content view for iOS platform, using fallback")
+            Self.logger.error("Failed to create content view for iOS platform, using fallback")
             self.contentView = EditorContentView()
         }
         #else
         if let scrollView = components.scrollView {
             self.scrollView = scrollView
         } else {
-            let logger = CrossPlatformLogger.logger()
-            logger.error("Failed to create scroll view for macOS platform, using fallback")
+            Self.logger.error("Failed to create scroll view for macOS platform, using fallback")
             self.scrollView = NSScrollView(frame: .zero)
         }
         #endif

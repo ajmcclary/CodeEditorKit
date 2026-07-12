@@ -9,7 +9,7 @@ import Foundation
 public final class LayoutCache {
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "LayoutCache")
+    private let logger = CodeEditorLog.logger(category: "LayoutCache")
 
     /// LRU-backed cache of computed component frames. Synchronization is
     /// provided by this type's `@MainActor` isolation; the underlying helper

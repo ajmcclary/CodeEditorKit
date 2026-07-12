@@ -302,7 +302,7 @@ extension AsyncSyntaxHighlighter {
             }
         } catch {
             // Task was cancelled or error occurred
-            CrossPlatformLogger.logger().debug("Streaming highlighting cancelled or failed: \(error)")
+            Self.logger.debug("Streaming highlighting cancelled or failed: \(error)")
         }
     }
 

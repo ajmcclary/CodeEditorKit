@@ -29,6 +29,8 @@ public enum RangeFillMode: Sendable, Hashable {
 /// caller's actor isolation is the synchronization mechanism. Direct
 /// concurrent access from non-isolated contexts is not part of the contract.
 public final class RangeProcessor: @unchecked Sendable {
+    private static let logger = CodeEditorLog.logger(category: "RangeProcessor")
+
     private typealias VersionedMutation = Versioned<Int, RangeMutation>
 
     /// Function to apply changes.
@@ -258,20 +260,20 @@ public final class RangeProcessor: @unchecked Sendable {
         processedVersion += 1
 
         guard let first = pendingEventQueue.next() else {
-            CrossPlatformLogger.logger().fault(
+            Self.logger.fault(
                 "RangeProcessor.completeContentChanged: pending event queue empty; skipping mutation \(String(describing: mutation))"
             )
             return
         }
 
         guard first.version == processedVersion else {
-            CrossPlatformLogger.logger().fault(
+            Self.logger.fault(
                 "RangeProcessor: out-of-order completion (queued v\(first.version), expected v\(processedVersion)); skipping"
             )
             return
         }
         guard first.value == mutation else {
-            CrossPlatformLogger.logger().fault(
+            Self.logger.fault(
                 "RangeProcessor: completed mutation does not match queued; skipping"
             )
             return

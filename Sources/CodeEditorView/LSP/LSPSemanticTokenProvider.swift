@@ -96,10 +96,7 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
                 }
             } catch {
                 // Non-fatal — server may not support semantic tokens.
-                let logger = CrossPlatformLogger.logger(
-                    subsystem: "com.codeeditor.lsp",
-                    category: "SemanticTokens"
-                )
+                let logger = CodeEditorLog.lsp(category: "SemanticTokens")
                 logger.debug("Semantic tokens unavailable: \(error.localizedDescription)")
             }
         }

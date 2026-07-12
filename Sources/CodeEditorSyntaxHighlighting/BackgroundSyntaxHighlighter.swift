@@ -56,7 +56,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     private var debounceTask: Task<Void, Never>?
 
     /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger()
+    private let logger = CodeEditorLog.logger(category: "BackgroundSyntaxHighlighter")
 
     /// Memory monitor for managing cache memory
     private var memoryMonitor: MemoryMonitor

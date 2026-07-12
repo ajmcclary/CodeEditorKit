@@ -185,7 +185,7 @@ public final class MinimapViewModel {
     // MARK: - Private Properties
 
     private let featureDependencies: EditorFeatureRuntimeDependencies
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "MinimapViewModel")
+    private let logger = CodeEditorLog.logger(category: "MinimapViewModel")
 
     // Services
     private var lineNumberService: LineNumberCalculationService {

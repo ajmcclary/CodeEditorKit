@@ -8,7 +8,7 @@ import Foundation
 /// Service responsible for extracting completion context from text
 @MainActor
 internal final class CompletionContextExtractor {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "CompletionContextExtractor")
+    private let logger = CodeEditorLog.logger(category: "CompletionContextExtractor")
 
     // MARK: - Public Methods
 

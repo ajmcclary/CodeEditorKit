@@ -9,6 +9,7 @@ import Foundation
 /// to coalesce rapid keystroke updates before they leave the editor.
 @MainActor
 final class DocumentMirror {
+    private static let logger = CodeEditorLog.sample(category: "DocumentMirror")
     private let shadowDirectory: URL
     private let debounceInterval: TimeInterval
     private var shadowURLs: [UUID: URL] = [:]
@@ -44,7 +45,7 @@ final class DocumentMirror {
             do {
                 try data.write(to: url, options: .atomic)
             } catch {
-                CrossPlatformLogger.logger().error("DocumentMirror write failed: \(error)")
+                Self.logger.error("Document mirror write failed: \(error)")
             }
             self.pendingWork[id] = nil
         }

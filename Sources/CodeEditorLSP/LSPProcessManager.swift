@@ -23,7 +23,7 @@ final class LSPProcessManager {
     #endif
 
     /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPProcessManager")
+    private let logger = CodeEditorLog.lsp(category: "LSPProcessManager")
 
     /// Message handler for processing incoming data
     private let messageHandler: LSPMessageHandler

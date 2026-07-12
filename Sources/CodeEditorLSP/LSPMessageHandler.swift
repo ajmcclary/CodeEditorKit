@@ -24,7 +24,7 @@ actor LSPMessageHandler {
     private var messageBuffer = Data()
 
     /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPMessageHandler")
+    private let logger = CodeEditorLog.lsp(category: "LSPMessageHandler")
 
     // MARK: - Configuration
 

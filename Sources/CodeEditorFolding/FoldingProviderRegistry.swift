@@ -8,7 +8,7 @@ import Foundation
 /// Registry for managing language-specific code folding providers
 @MainActor
 package final class FoldingProviderRegistry {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "FoldingProviderRegistry")
+    private let logger = CodeEditorLog.logger(category: "FoldingProviderRegistry")
 
     // MARK: - Properties
 

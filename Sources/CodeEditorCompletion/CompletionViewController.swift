@@ -13,7 +13,7 @@ public final class CompletionViewController: CompletionViewControllerBase, Compl
 
     // MARK: - Private Properties
 
-    private static let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "CompletionViewController")
+    private static let logger = CodeEditorLog.logger(category: "CompletionViewController")
 
     private lazy var scrollView: NSScrollView = {
         let scrollView = NSScrollView()
@@ -337,7 +337,7 @@ extension CompletionViewController: UITableViewDataSource {
 
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "CompletionCell", for: indexPath) as? CompletionTableViewCell else {
-            CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "CompletionViewController").error("Failed to dequeue CompletionTableViewCell at indexPath: \(indexPath)")
+            Self.logger.error("Failed to dequeue CompletionTableViewCell at indexPath: \(indexPath)")
             // Return a fallback cell to prevent crash
             let fallbackCell = UITableViewCell(style: .default, reuseIdentifier: nil)
             if indexPath.row < completionItems.count {

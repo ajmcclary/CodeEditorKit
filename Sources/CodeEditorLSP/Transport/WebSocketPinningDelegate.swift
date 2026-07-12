@@ -32,9 +32,7 @@ import Security
 final class WebSocketPinningDelegate: NSObject, URLSessionDelegate, @unchecked Sendable {
     private let pinning: CertificatePinning?
     private let validateSSLCertificates: Bool
-    private let logger = CrossPlatformLogger.logger(
-        subsystem: "com.codeeditor.lsp", category: "WebSocketPinning"
-    )
+    private let logger = CodeEditorLog.lsp(category: "WebSocketPinning")
 
     init(pinning: CertificatePinning?, validateSSLCertificates: Bool) {
         self.pinning = pinning

@@ -208,10 +208,7 @@ public struct BudgetViolation: Sendable {
 /// Performance budget reporter
 public actor PerformanceBudgetReporter {
     private var measurements: [String: [TimeInterval]] = [:]
-    private let logger = CrossPlatformLogger.logger(
-        subsystem: "com.codeeditor.performance",
-        category: "Budget"
-    )
+    private let logger = CodeEditorLog.logger(category: "PerformanceBudget")
 
     /// Creates a new performance budget instance.
     public init() {}
@@ -229,13 +226,13 @@ public actor PerformanceBudgetReporter {
 
             switch status {
             case .withinBudget:
-                logger.debug("\(operation): \(String(format: "%.3f", duration))s ✅")
+                logger.debug("\(operation): \(String(format: "%.3f", duration))s within budget")
 
             case .warning:
-                logger.warning("\(operation): \(String(format: "%.3f", duration))s ⚠️ (budget: \(String(format: "%.3f", budget.targetTime))s)")
+                logger.warning("\(operation): \(String(format: "%.3f", duration))s exceeds warning budget \(String(format: "%.3f", budget.targetTime))s")
 
             case .critical:
-                logger.error("\(operation): \(String(format: "%.3f", duration))s ❌ (budget: \(String(format: "%.3f", budget.targetTime))s)")
+                logger.error("\(operation): \(String(format: "%.3f", duration))s exceeds critical budget \(String(format: "%.3f", budget.targetTime))s")
 
             case .exceeded:
                 logger.error("\(operation): \(String(format: "%.3f", duration))s 🚨 (budget: \(String(format: "%.3f", budget.targetTime))s)")

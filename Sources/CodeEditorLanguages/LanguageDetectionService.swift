@@ -9,7 +9,7 @@ import Foundation
 public final class LanguageDetectionService {
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "LanguageDetectionService")
+    private let logger = CodeEditorLog.logger(category: "LanguageDetectionService")
 
     // Cache for language detection results
     private var extensionCache: [String: Language] = [:]

@@ -40,7 +40,7 @@ public actor ProcessTransport: LSPTransport {
     private var dataHandler: (@Sendable (Data) async -> Void)?
     private var stdoutReading: Bool = false
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "ProcessTransport")
+    private let logger = CodeEditorLog.lsp(category: "ProcessTransport")
 
     // MARK: - Initialization
 

@@ -227,7 +227,7 @@ public final class MemoryMonitor: ObservableObject {
     private var cleanupTask: Task<Void, Never>?
 
     /// Logger
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")
+    private let logger = CodeEditorLog.logger(category: "MemoryMonitor")
 
     /// Whether we're under memory pressure
     @Published public private(set) var isUnderPressure: Bool = false

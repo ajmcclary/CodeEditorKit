@@ -20,10 +20,7 @@ import UIKit
 package final class TextKitBridge {
     // MARK: - Properties
 
-    private static let logger = CrossPlatformLogger.logger(
-        subsystem: "com.codeeditor.plugin",
-        category: "TextKitBridge"
-    )
+    private static let logger = CodeEditorLog.logger(category: "TextKitBridge")
 
     private weak var textView: PlatformTextView?
     private let capabilities: PlatformCapabilities

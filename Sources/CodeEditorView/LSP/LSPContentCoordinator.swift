@@ -180,10 +180,7 @@ final class LSPContentCoordinator {
             )
             onBatchFlushed?()
         } catch {
-            let log = CrossPlatformLogger.logger(
-                subsystem: "com.codeeditor.lsp",
-                category: "LSPContentCoordinator"
-            )
+            let log = CodeEditorLog.lsp(category: "LSPContentCoordinator")
             log.error("Batch flush failed: \(error.localizedDescription)")
         }
     }

@@ -101,7 +101,7 @@ public final class LineNumberCalculationService {
 
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "LineNumberCalculationService")
+    private let logger = CodeEditorLog.logger(category: "LineNumberCalculationService")
 
     // Cache for expensive calculations
     private var linePositionCache: [String: [LinePosition]] = [:]

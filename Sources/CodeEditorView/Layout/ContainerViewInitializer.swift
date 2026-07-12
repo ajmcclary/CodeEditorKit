@@ -12,6 +12,7 @@ import UIKit
 /// Unified container view initialization logic to eliminate platform-specific duplication
 @MainActor
 enum ContainerViewInitializer {
+    private static let logger = CodeEditorLog.logger(category: "ContainerViewInitializer")
     /// Common initialization parameters
     struct InitializationParameters {
         let initialFrame: CGRect
@@ -74,7 +75,7 @@ enum ContainerViewInitializer {
         do {
             try components.textView.apply(configuration: container.configuration)
         } catch {
-            CrossPlatformLogger.logger().error("Rejected container configuration: \(error)")
+            Self.logger.error("Rejected container configuration: \(error)")
         }
 
         // Setup minimap (this needs to be called on container directly due to stored property)

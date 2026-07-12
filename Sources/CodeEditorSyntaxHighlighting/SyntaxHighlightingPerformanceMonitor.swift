@@ -5,6 +5,8 @@ import Foundation
 /// Simple performance monitoring for syntax highlighting
 @MainActor
 package final class SyntaxHighlightingPerformanceMonitor {
+    private static let logger = CodeEditorLog.logger(category: "SyntaxHighlightingPerformance")
+
     package enum Category: String {
         case syntaxHighlighting = "SyntaxHighlighting"
         case tokenApplication = "TokenApplication"
@@ -41,7 +43,9 @@ package final class SyntaxHighlightingPerformanceMonitor {
 
         // Log slow operations
         if duration > .milliseconds(100) {
-            CrossPlatformLogger.logger().debug("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration.timeInterval))s")
+            Self.logger.debug(
+                "Slow \(category.rawValue): \(String(format: "%.3f", duration.timeInterval))s"
+            )
         }
     }
 

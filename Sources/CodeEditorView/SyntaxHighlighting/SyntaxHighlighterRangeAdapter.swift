@@ -10,7 +10,7 @@ import Foundation
 @MainActor
 internal final class SyntaxHighlighterRangeAdapter: RangeHighlightProviding {
     private let highlighter: any SyntaxHighlighter
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "RangeAdapter")
+    private let logger = CodeEditorLog.logger(category: "RangeAdapter")
 
     init(highlighter: any SyntaxHighlighter) {
         self.highlighter = highlighter

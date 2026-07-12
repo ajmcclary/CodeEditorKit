@@ -139,7 +139,7 @@ public final class LSPClient: ObservableObject {
     private let needsTeardownFlag = OSAllocatedUnfairLock<Bool>(initialState: false)
 
     /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClient")
+    private let logger = CodeEditorLog.lsp(category: "LSPClient")
 
     // MARK: - Initialization
 

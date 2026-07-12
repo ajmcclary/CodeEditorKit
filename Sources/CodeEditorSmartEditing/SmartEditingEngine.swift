@@ -23,7 +23,7 @@ public final class SmartEditingEngine: NSObject, ObservableObject {
     public typealias PlatformTextViewDelegate = UITextViewDelegate
     #endif
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "SmartEditingEngine")
+    private let logger = CodeEditorLog.logger(category: "SmartEditingEngine")
 
     // MARK: - Published Properties
 

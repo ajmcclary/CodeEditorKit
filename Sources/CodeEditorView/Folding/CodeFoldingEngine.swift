@@ -13,7 +13,7 @@ import UIKit
 /// Engine for managing code folding in the editor
 @MainActor
 internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "CodeFoldingEngine")
+    private let logger = CodeEditorLog.logger(category: "CodeFoldingEngine")
 
     // MARK: - Published Properties
 

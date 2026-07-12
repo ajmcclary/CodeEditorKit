@@ -8,6 +8,7 @@ import Foundation
 /// System for automatically adjusting performance settings based on file size and system conditions
 @MainActor
 public final class AdaptivePerformanceMode: ObservableObject {
+    private static let logger = CodeEditorLog.logger(category: "AdaptivePerformanceMode")
     // MARK: - Properties
 
     /// Current performance mode
@@ -96,7 +97,7 @@ public final class AdaptivePerformanceMode: ObservableObject {
         configuration = PerformanceModeConfiguration(mode: newMode)
 
         // Log mode change
-        CrossPlatformLogger.logger().info("Performance mode changed to: \(newMode.rawValue)")
+        Self.logger.info("Performance mode changed to: \(newMode.rawValue)")
     }
 }
 

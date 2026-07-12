@@ -67,10 +67,7 @@ final class DocumentsModel {
     /// Logs the result of a `EditorDocuments.save(_:)` call so the user
     /// sees feedback when ⌘S fires from the menu.
     func handleSaveOutcome(_ outcome: EditorDocuments.SaveOutcome) {
-        let logger = CrossPlatformLogger.logger(
-            subsystem: "CodeEditorSample",
-            category: "DocumentStore"
-        )
+        let logger = CodeEditorLog.sample(category: "DocumentStore")
         switch outcome {
         case let .saved(url):
             logger.info("Saved \(url.path)")

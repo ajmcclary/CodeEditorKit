@@ -55,7 +55,7 @@ public actor PerformanceMonitor {
 
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "Performance")
+    private let logger = CodeEditorLog.logger(category: "Performance")
     private var metrics: [UUID: MonitoringPerformanceMetric] = [:]
     private var cleanupTask: Task<Void, Never>?
 

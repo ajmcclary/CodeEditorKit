@@ -16,7 +16,7 @@ import AppKit
 public final class TextEditingService {
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "TextEditingService")
+    private let logger = CodeEditorLog.logger(category: "TextEditingService")
 
     // MARK: - Initialization
 

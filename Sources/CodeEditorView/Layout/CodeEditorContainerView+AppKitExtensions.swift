@@ -36,7 +36,7 @@ extension CodeEditorContainerView {
         do {
             try textView.apply(configuration: configuration)
         } catch {
-            CrossPlatformLogger.logger().error("Rejected AppKit container configuration: \(error)")
+            Self.logger.error("Rejected AppKit container configuration: \(error)")
         }
     }
 

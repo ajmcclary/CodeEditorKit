@@ -48,7 +48,7 @@ public typealias ToolbarItem = CodeEditorPlatform.ToolbarItem
 /// - SeeAlso: ``ToolbarItem`` for toolbar item structure
 @MainActor
 public final class ToolbarCoordinator: ObservableObject {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ToolbarCoordinator")
+    private let logger = CodeEditorLog.logger(category: "ToolbarCoordinator")
     private let capabilities: PlatformCapabilities
 
     // MARK: - Initialization

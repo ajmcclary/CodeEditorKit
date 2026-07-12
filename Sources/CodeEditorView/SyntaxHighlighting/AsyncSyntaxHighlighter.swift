@@ -15,6 +15,7 @@ import UIKit
 /// Asynchronous syntax highlighter with debouncing and cancellation support
 @MainActor
 public final class AsyncSyntaxHighlighter {
+    package static let logger = CodeEditorLog.logger(category: "AsyncSyntaxHighlighter")
     // MARK: - Properties
 
     private let coordinator: SyntaxHighlightingCoordinator
@@ -212,7 +213,7 @@ public final class AsyncSyntaxHighlighter {
                 clearHighlighting(for: textView)
                 return
             } catch {
-                CrossPlatformLogger.logger().error(
+                Self.logger.error(
                     "AsyncSyntaxHighlighter recovery path failed: \(error.localizedDescription); clearing highlighting"
                 )
                 clearHighlighting(for: textView)
@@ -298,7 +299,7 @@ public final class AsyncSyntaxHighlighter {
                 }
             } catch {
                 // Log error and clear highlighting on failure
-                CrossPlatformLogger.logger().error("Highlighting failed: \(error)")
+                Self.logger.error("Highlighting failed: \(error)")
                 await MainActor.run {
                     self.clearHighlighting(for: textView)
                 }
@@ -395,7 +396,7 @@ public final class AsyncSyntaxHighlighter {
         // Validate range
         guard rangeToHighlight.location >= 0,
               rangeToHighlight.location + rangeToHighlight.length <= documentLength else {
-            CrossPlatformLogger.logger().warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(documentLength)")
+            Self.logger.warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(documentLength)")
             return
         }
 
@@ -549,7 +550,7 @@ public final class AsyncSyntaxHighlighter {
                 } catch is CancellationError {
                     break
                 } catch {
-                    CrossPlatformLogger.logger().error(
+                    Self.logger.error(
                         "AsyncSyntaxHighlighter periodic cache optimisation: \(error.localizedDescription); continuing"
                     )
                     continue

@@ -74,7 +74,7 @@ public final class SyntaxHighlightingPerformanceTracker {
 
     private var recentMetrics: [PerformanceMetrics] = []
     private let maxMetricsCount = 1_000
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "SyntaxHighlightingPerformance")
+    private let logger = CodeEditorLog.logger(category: "SyntaxHighlightingPerformance")
 
     // Real-time monitoring
     private var warningThreshold: TimeInterval = 0.1

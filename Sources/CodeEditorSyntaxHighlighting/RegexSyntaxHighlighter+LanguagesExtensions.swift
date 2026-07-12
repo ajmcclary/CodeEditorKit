@@ -19,7 +19,7 @@ extension RegexSyntaxHighlighter {
         do {
             return try RegexHighlightRule(pattern: pattern, tokenType: tokenType, priority: priority)
         } catch {
-            CrossPlatformLogger.logger().fault(
+            Self.logger.fault(
                 "RegexSyntaxHighlighter: failed to compile pattern \"\(pattern)\": \(error.localizedDescription)"
             )
             assertionFailure(

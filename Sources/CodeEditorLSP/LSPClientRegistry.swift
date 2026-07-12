@@ -20,7 +20,7 @@ final class LSPClientRegistry {
     var workspaceRoot: URL?
 
     /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClientRegistry")
+    private let logger = CodeEditorLog.lsp(category: "LSPClientRegistry")
 
     /// Path resolver for finding language server executables (macOS only — iOS apps are sandboxed).
     #if canImport(AppKit)

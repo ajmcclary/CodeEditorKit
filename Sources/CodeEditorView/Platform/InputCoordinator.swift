@@ -45,7 +45,7 @@ import AppKit
 /// - SeeAlso: ``PlatformInputEvent`` for input event types
 @MainActor
 public final class InputCoordinator: ObservableObject {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "InputCoordinator")
+    private let logger = CodeEditorLog.logger(category: "InputCoordinator")
     private let capabilities: PlatformCapabilities
 
     // MARK: - Initialization

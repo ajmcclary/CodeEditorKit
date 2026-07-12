@@ -1,6 +1,10 @@
 import CodeEditorCommon
 import Foundation
 
+private enum SinglePhaseRangeValidatorLog {
+    static let logger = CodeEditorLog.logger(category: "SinglePhaseRangeValidator")
+}
+
 /// An actor that manages single-phase range validation operations for versioned content.
 /// This validator handles both synchronous and asynchronous validation workflows.
 public actor SinglePhaseRangeValidator<Content: VersionedContent> {
@@ -144,7 +148,7 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
 
     private func validateRangeOnActor() async {
         guard let operation = eventQueue.next() else {
-            CrossPlatformLogger.logger().error(
+            SinglePhaseRangeValidatorLog.logger.error(
                 "SinglePhaseRangeValidator.validateRangeOnActor called with empty event queue; skipping"
             )
             return
@@ -160,7 +164,7 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
         let operation = await getNextOperation()
 
         guard let operation else {
-            CrossPlatformLogger.logger().error(
+            SinglePhaseRangeValidatorLog.logger.error(
                 "SinglePhaseRangeValidator.performValidateRangeAsync called with empty event queue; skipping"
             )
             return

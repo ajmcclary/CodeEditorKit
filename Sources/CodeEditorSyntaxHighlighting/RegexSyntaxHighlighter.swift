@@ -1,3 +1,4 @@
+import CodeEditorCommon
 import CodeEditorLanguages
 import Foundation
 
@@ -11,6 +12,8 @@ import UIKit
 
 /// A pure Swift regex-based syntax highlighter for various programming languages
 public final class RegexSyntaxHighlighter: Sendable {
+    package static let logger = CodeEditorLog.logger(category: "RegexSyntaxHighlighter")
+
     // MARK: - Performance Constants
 
     /// Optimized token type mapping for O(1) conversion

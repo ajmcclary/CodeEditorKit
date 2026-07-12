@@ -14,7 +14,7 @@ import UIKit
 /// Service for managing fold/unfold operations
 @MainActor
 internal final class FoldingOperationsService {
-    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "FoldingOperationsService")
+    private let logger = CodeEditorLog.logger(category: "FoldingOperationsService")
 
     // MARK: - Properties
 

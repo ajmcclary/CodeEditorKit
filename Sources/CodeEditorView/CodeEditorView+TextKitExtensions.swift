@@ -148,7 +148,11 @@ extension CodeEditorView {
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #else
-            Self.logger.debug("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(self.configuration.behavior.autoScrollToCursor)")
+            CodeEditorRenderingDiagnostics.log(
+                "selection.set",
+                textView: self,
+                note: "requested=\(newValue) autoScroll=\(configuration.behavior.autoScrollToCursor)"
+            )
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #endif
