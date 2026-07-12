@@ -194,6 +194,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal var legacyEventBus: EditorEventBus?
     internal var legacyEventObservation: EditorEventObservation?
     internal var notificationCenterEventAdapter: NotificationCenterEventAdapter?
+    internal var textChangeEventGeneration: UInt64 = 0
 
     /// Optional lifecycle injected by package tests or alternate hosts.
     private var sessionOverride: (any EditorSessionLifecycle)?

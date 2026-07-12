@@ -106,10 +106,17 @@ extension CodeEditorView {
             documentLength: documentLength,
             editedCharacters: editedMask.contains(.editedCharacters)
         )
+        if event.editedCharacters {
+            textChangeEventGeneration &+= 1
+        }
+        let eventGeneration = textChangeEventGeneration
         let shouldCheckCompletion = isCodeCompletionEnabled
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.textEditEventHub.publish(event)
+            guard event.editedCharacters,
+                  eventGeneration == self.textChangeEventGeneration
+            else { return }
             #if canImport(AppKit)
             self.publishEvent(.textDidChange(self.string))
             #else

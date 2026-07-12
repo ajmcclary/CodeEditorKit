@@ -150,6 +150,13 @@ final class PublishEventFanOutTests: XCTestCase {
         _ = window.makeFirstResponder(window.contentView)
 
         XCTAssertEqual(resignedCount, 1, "Losing first-responder status should fan out exactly one didResignFirstResponder event.")
+        XCTAssertEqual(
+            view.runtime.dependencies.eventBus.recentEvents { event in
+                if case .didResignFirstResponder = event { return true }
+                return false
+            }.count,
+            1
+        )
     }
 }
 #endif
