@@ -51,11 +51,11 @@ import Foundation
 /// - SeeAlso: ``CompletionProvider``, ``CompletionDebouncer``, ``CompletionStatistics``
 @MainActor
 public final class CompletionManager {
-    private let providerRegistry = CompletionProviderRegistry()
+    private let providerRegistry: CompletionProviderRegistry
     private let requestCoordinator: CompletionRequestCoordinator
     private let responseCache: CompletionResponseCache
     private let learningStore: CompletionLearningStore
-    private let ranker = CompletionRanker()
+    private let ranker: CompletionRanker
     private var memoryMonitor: MemoryMonitor
     private let cleanupIdentifier = "completion-manager-\(UUID().uuidString)"
     private let broadcaster: CompletionEventBroadcaster
@@ -74,30 +74,54 @@ public final class CompletionManager {
     ///   - cacheExpirationTime: Time before cached results expire (seconds)
     ///   - enableCaching: Whether to enable result caching
     ///   - debouncer: Optional debouncer for throttling completion requests
-    public init(
+    public convenience init(
         memoryMonitor: MemoryMonitor,
         cacheSize: Int = 100,
         cacheExpirationTime: TimeInterval = 300, // 5 minutes
         enableCaching: Bool = true,
         debouncer: CompletionDebouncer? = nil
     ) {
-        self.memoryMonitor = memoryMonitor
-        self.responseCache = CompletionResponseCache(
+        let responseCache = CompletionResponseCache(
             capacity: cacheSize,
             expirationTime: cacheExpirationTime,
             isEnabled: enableCaching,
             memoryMonitor: memoryMonitor
         )
-        self.learningStore = CompletionLearningStore(
+        let learningStore = CompletionLearningStore(
             capacity: 500,
             memoryMonitor: memoryMonitor
         )
         let broadcaster = CompletionEventBroadcaster()
-        self.broadcaster = broadcaster
-        self.requestCoordinator = CompletionRequestCoordinator(
-            debouncer: debouncer ?? CompletionDebouncer(),
-            eventSink: broadcaster
+        self.init(
+            memoryMonitor: memoryMonitor,
+            providerRegistry: CompletionProviderRegistry(),
+            requestCoordinator: CompletionRequestCoordinator(
+                debouncer: debouncer ?? CompletionDebouncer(),
+                eventSink: broadcaster
+            ),
+            responseCache: responseCache,
+            learningStore: learningStore,
+            ranker: CompletionRanker(),
+            broadcaster: broadcaster
         )
+    }
+
+    init(
+        memoryMonitor: MemoryMonitor,
+        providerRegistry: CompletionProviderRegistry,
+        requestCoordinator: CompletionRequestCoordinator,
+        responseCache: CompletionResponseCache,
+        learningStore: CompletionLearningStore,
+        ranker: CompletionRanker,
+        broadcaster: CompletionEventBroadcaster
+    ) {
+        self.memoryMonitor = memoryMonitor
+        self.providerRegistry = providerRegistry
+        self.responseCache = responseCache
+        self.learningStore = learningStore
+        self.ranker = ranker
+        self.broadcaster = broadcaster
+        self.requestCoordinator = requestCoordinator
 
         requestCoordinator.setDebouncedRequestHandler { [weak self] context in
             guard let self else {
