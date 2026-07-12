@@ -232,7 +232,7 @@ One generic state machine owns keyed task replacement. It uses `Duration`, propa
 - Remove `CodeEditorPlugin` imports and dependency from `CodeEditorUI`.
 - Import exact modules in every target.
 - Trim umbrella dependencies to modules it re-exports or directly needs.
-- Add `Scripts/verify-target-imports.sh` to compare internal imports with declared target dependencies and reject umbrella imports from focused targets.
+- Add `Scripts/verify-target-imports.py` to compare internal imports with declared target dependencies and reject umbrella imports from focused targets.
 
 ### Test targets
 
