@@ -1,5 +1,5 @@
 ▿ ThemeStyle
-  ▿ accents: 7 elements
+  ▿ accents: 5 elements
     ▿ Color
       - alpha: 1.0
       - blue: 51
@@ -22,19 +22,9 @@
       - red: 126
     ▿ Color
       - alpha: 1.0
-      - blue: 167
-      - green: 126
-      - red: 37
-    ▿ Color
-      - alpha: 1.0
       - blue: 255
       - green: 153
       - red: 204
-    ▿ Color
-      - alpha: 1.0
-      - blue: 90
-      - green: 90
-      - red: 239
   ▿ background: Color
     - alpha: 1.0
     - blue: 10
@@ -77,9 +67,9 @@
   ▿ chrome: ChromeColors
     ▿ elevatedSurfaceBackground: Color
       - alpha: 1.0
-      - blue: 39
-      - green: 24
-      - red: 17
+      - blue: 67
+      - green: 42
+      - red: 29
     - extras: 0 key/value pairs
     ▿ paneFocusedBorder: Color
       - alpha: 1.0
@@ -93,9 +83,9 @@
       - red: 27
     ▿ panelBackground: Color
       - alpha: 1.0
-      - blue: 24
-      - green: 16
-      - red: 13
+      - blue: 27
+      - green: 17
+      - red: 12
     ▿ panelFocusedBorder: Color
       - alpha: 1.0
       - blue: 51
@@ -118,19 +108,19 @@
       - red: 255
     ▿ statusBarBackground: Color
       - alpha: 1.0
-      - blue: 29
-      - green: 20
-      - red: 16
+      - blue: 24
+      - green: 16
+      - red: 13
     ▿ surfaceBackground: Color
+      - alpha: 1.0
+      - blue: 51
+      - green: 31
+      - red: 22
+    ▿ tabActiveBackground: Color
       - alpha: 1.0
       - blue: 39
       - green: 24
       - red: 17
-    ▿ tabActiveBackground: Color
-      - alpha: 1.0
-      - blue: 15
-      - green: 10
-      - red: 8
     ▿ tabBarBackground: Color
       - alpha: 1.0
       - blue: 10
@@ -138,14 +128,14 @@
       - red: 5
     ▿ tabInactiveBackground: Color
       - alpha: 1.0
-      - blue: 39
-      - green: 24
-      - red: 17
+      - blue: 24
+      - green: 16
+      - red: 13
     ▿ titleBarBackground: Color
       - alpha: 1.0
-      - blue: 10
-      - green: 6
-      - red: 5
+      - blue: 24
+      - green: 16
+      - red: 13
     ▿ titleBarInactiveBackground: Color
       - alpha: 1.0
       - blue: 24
@@ -230,9 +220,9 @@
       - red: 59
     ▿ lineNumber: Color
       - alpha: 1.0
-      - blue: 136
-      - green: 120
-      - red: 111
+      - blue: 170
+      - green: 158
+      - red: 151
     ▿ subheaderBackground: Color
       - alpha: 1.0
       - blue: 39
@@ -694,9 +684,9 @@
         - red: 239
       ▿ base: Color
         - alpha: 1.0
-        - blue: 122
-        - green: 122
-        - red: 255
+        - blue: 126
+        - green: 126
+        - red: 242
       ▿ border: Color
         - alpha: 1.0
         - blue: 90
@@ -726,9 +716,9 @@
         - red: 126
       ▿ base: Color
         - alpha: 1.0
-        - blue: 222
-        - green: 200
-        - red: 126
+        - blue: 166
+        - green: 230
+        - red: 78
       ▿ border: Color
         - alpha: 1.0
         - blue: 167
@@ -758,9 +748,9 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 222
-            - green: 200
-            - red: 126
+            - blue: 255
+            - green: 153
+            - red: 204
         - fontStyle: Optional<FontStyle>.none
         - fontWeight: Optional<Int>.none
     ▿ (2 elements)
@@ -783,9 +773,9 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 161
-            - green: 147
-            - red: 139
+            - blue: 169
+            - green: 155
+            - red: 147
         ▿ fontStyle: Optional<FontStyle>
           - some: FontStyle.italic
         - fontWeight: Optional<Int>.none
@@ -796,8 +786,8 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 102
-            - green: 204
+            - blue: 176
+            - green: 216
             - red: 255
         - fontStyle: Optional<FontStyle>.none
         ▿ fontWeight: Optional<Int>
@@ -906,8 +896,8 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 107
-            - green: 182
+            - blue: 176
+            - green: 216
             - red: 255
         - fontStyle: Optional<FontStyle>.none
         ▿ fontWeight: Optional<Int>
@@ -945,9 +935,9 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 222
-            - green: 200
-            - red: 126
+            - blue: 232
+            - green: 222
+            - red: 216
         - fontStyle: Optional<FontStyle>.none
         ▿ fontWeight: Optional<Int>
           - some: 600
@@ -958,9 +948,9 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 194
-            - green: 182
-            - red: 174
+            - blue: 168
+            - green: 155
+            - red: 147
         - fontStyle: Optional<FontStyle>.none
         - fontWeight: Optional<Int>.none
     ▿ (2 elements)
@@ -995,9 +985,9 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 247
-            - green: 234
-            - red: 156
+            - blue: 102
+            - green: 204
+            - red: 255
         - fontStyle: Optional<FontStyle>.none
         - fontWeight: Optional<Int>.none
     ▿ (2 elements)
@@ -1028,8 +1018,8 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 51
-            - green: 153
+            - blue: 102
+            - green: 204
             - red: 255
         - fontStyle: Optional<FontStyle>.none
         ▿ fontWeight: Optional<Int>
@@ -1066,9 +1056,9 @@
         ▿ color: Optional<Color>
           ▿ some: Color
             - alpha: 1.0
-            - blue: 255
-            - green: 153
-            - red: 204
+            - blue: 222
+            - green: 200
+            - red: 126
         - fontStyle: Optional<FontStyle>.none
         ▿ fontWeight: Optional<Int>
           - some: 700
@@ -1114,8 +1104,8 @@
   ▿ text: TextLevels
     ▿ accent: Color
       - alpha: 1.0
-      - blue: 51
-      - green: 153
+      - blue: 102
+      - green: 204
       - red: 255
     ▿ base: Color
       - alpha: 1.0
@@ -1124,20 +1114,20 @@
       - red: 242
     ▿ disabled: Color
       - alpha: 1.0
-      - blue: 112
-      - green: 96
-      - red: 86
+      - blue: 104
+      - green: 88
+      - red: 79
     - extras: 0 key/value pairs
     ▿ muted: Color
       - alpha: 1.0
-      - blue: 194
-      - green: 182
-      - red: 174
+      - blue: 173
+      - green: 161
+      - red: 154
     ▿ placeholder: Color
       - alpha: 1.0
-      - blue: 130
-      - green: 114
-      - red: 104
+      - blue: 173
+      - green: 161
+      - red: 153
   ▿ vcs: VCSPalette
     ▿ created: VCS
       ▿ background: Color

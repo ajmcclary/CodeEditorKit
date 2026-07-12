@@ -35,9 +35,11 @@ FLAT = {
     "ghost-selected": "ghost_element.selected",
     "active-line": "editor.active_line.background", "highlighted-line": "editor.highlighted_line.background",
     "line-num": "editor.line_number", "active-line-num": "editor.active_line_number",
-    "diag-error": "status.error.base", "diag-warning": "status.warning.base",
-    "diag-info": "status.info.base", "diag-success": "status.success.base",
-    "diag-modified": "vcs.modified.base",
+    # Status/VCS base colors are TOP-LEVEL Zed keys (no `status.`/`vcs.`
+    # prefix): StatusPalette/VCSPalette read `flat["error"]`, `flat["modified"]`.
+    "diag-error": "error", "diag-warning": "warning",
+    "diag-info": "info", "diag-success": "success",
+    "diag-modified": "modified",
 }
 SYN = {"syn-keyword": "keyword", "syn-string": "string", "syn-comment": "comment",
        "syn-function": "function", "syn-type": "type", "syn-number": "number",
@@ -122,7 +124,7 @@ def main():
     lc = by_name["LCARS Dark"]["style"]
     assert lc["surface.background"] == "#161F33" and lc["tab.active_background"] == "#111827"
     assert lc["platform"]["on_accent"] == "#05060A"
-    assert by_name["LCARS High Contrast Dark"]["style"]["status.error.base"] == "#F37F7F"
+    assert by_name["LCARS High Contrast Dark"]["style"]["error"] == "#F37F7F"
     assert len(data["themes"]) == 22, len(data["themes"])
     print("OK: 22 themes emitted")
 
