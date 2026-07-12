@@ -44,45 +44,15 @@ extension AsyncOperationManager {
         delay: TimeInterval,
         operation: @escaping @Sendable () async throws -> T
     ) async throws -> T {
-        // Cancel existing task
-        debounceTasks[key]?.cancel()
-
-        // Clear previous results/errors
-        debounceResults.removeValue(forKey: key)
-        debounceErrors.removeValue(forKey: key)
-
-        // Create new debounce task
-        let task = Task { [weak self] in
-            do {
-                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-
-                guard !Task.isCancelled else { return }
-
-                let result = try await operation()
-                await self?.storeDebounceResult(key: key, result: result)
-            } catch {
-                if !Task.isCancelled {
-                    await self?.storeDebounceError(key: key, error: error)
-                }
-            }
-
-            await self?.cleanupDebounceTask(key: key)
+        let boxed = try await debounceKernel.run(
+            key: key,
+            delay: .seconds(max(0, delay))
+        ) {
+            AnySendableValue(value: try await operation())
         }
-
-        debounceTasks[key] = task
-
-        // Wait for task completion
-        _ = await task.value
-
-        // Return result or throw error
-        if let error = debounceErrors[key] {
-            throw error
-        }
-
-        guard let result = debounceResults[key] as? T else {
+        guard let result = boxed.value as? T else {
             throw AsyncOperationError.noResult
         }
-
         return result
     }
 
@@ -123,18 +93,48 @@ extension AsyncOperationManager {
         }
     }
 
-    // MARK: - Private Helpers
-
-    public func cleanupDebounceTask(key: String) {
-        debounceTasks.removeValue(forKey: key)
+    @available(*, deprecated, renamed: "debounce(key:delay:operation:)")
+    public func debounceOptimized<T: Sendable>(
+        key: String,
+        delay: TimeInterval,
+        operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T {
+        try await debounce(key: key, delay: delay, operation: operation)
     }
 
-    public func storeDebounceResult(key: String, result: Any) {
-        debounceResults[key] = result
+    public func debounceFireAndForget(
+        key: String,
+        delay: TimeInterval,
+        operation: @escaping @Sendable () async -> Void
+    ) async {
+        await fireAndForgetDebouncer.schedule(
+            key: key,
+            delay: .seconds(max(0, delay)),
+            operation: operation
+        )
     }
 
-    public func storeDebounceError(key: String, error: Error) {
-        debounceErrors[key] = error
+    public func batchDebounce<T: Sendable>(
+        operations: [String: @Sendable () async throws -> T],
+        delay: TimeInterval
+    ) async throws -> [String: T] {
+        await withTaskGroup(of: (String, T?).self) { group in
+            for (key, operation) in operations {
+                group.addTask {
+                    let value = try? await self.debounce(
+                        key: key,
+                        delay: delay,
+                        operation: operation
+                    )
+                    return (key, value)
+                }
+            }
+            var results: [String: T] = [:]
+            for await (key, value) in group {
+                results[key] = value
+            }
+            return results
+        }
     }
 }
 

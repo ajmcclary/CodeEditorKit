@@ -49,7 +49,7 @@ extension AsyncOperationManager {
         if let lastRun = throttleInfo[key],
            now.timeIntervalSince(lastRun) < interval {
             // Return cached result if available
-            if let cached = debounceResults[key] as? T {
+            if let cached = throttleResults[key] as? T {
                 return cached
             }
         }
@@ -58,10 +58,10 @@ extension AsyncOperationManager {
 
         do {
             let result = try await operation()
-            debounceResults[key] = result
+            throttleResults[key] = result
             return result
         } catch {
-            debounceErrors[key] = error
+            throttleErrors[key] = error
             throw error
         }
     }

@@ -156,9 +156,10 @@ public actor AsyncOperationManager {
     // MARK: - Properties
 
     var scheduledOperations: [UUID: ScheduledOperation] = [:]
-    var debounceTasks: [String: Task<Void, Never>] = [:]
-    var debounceResults: [String: Any] = [:]
-    var debounceErrors: [String: Error] = [:]
+    let debounceKernel = KeyedDebouncer<String, AnySendableValue>()
+    let fireAndForgetDebouncer = KeyedDebouncer<String, Void>()
+    var throttleResults: [String: Any] = [:]
+    var throttleErrors: [String: Error] = [:]
     var throttleInfo: [String: Date] = [:]
     var activeOperations: Set<UUID> = []
     let maxConcurrentOperations: Int
@@ -196,12 +197,12 @@ public actor AsyncOperationManager {
     /// - Returns: Current operation status information.
     ///
     /// - SeeAlso: ``OperationStatus``
-    public func getStatus() -> OperationStatus {
+    public func getStatus() async -> OperationStatus {
         OperationStatus(
             scheduledCount: scheduledOperations.count,
             activeCount: activeOperations.count,
             throttledKeys: Set(throttleInfo.keys),
-            debouncedKeys: Set(debounceTasks.keys),
+            debouncedKeys: await debounceKernel.activeKeys,
             maxConcurrentOperations: maxConcurrentOperations
         )
     }
@@ -228,10 +229,8 @@ public actor AsyncOperationManager {
         // Clean throttle info
         throttleInfo = throttleInfo.filter { $0.value > cutoff }
 
-        // Clear old debounce data
-        let activeKeys = Set(debounceTasks.keys)
-        debounceResults = debounceResults.filter { activeKeys.contains($0.key) }
-        debounceErrors = debounceErrors.filter { activeKeys.contains($0.key) }
+        throttleResults = throttleResults.filter { throttleInfo[$0.key] != nil }
+        throttleErrors = throttleErrors.filter { throttleInfo[$0.key] != nil }
     }
 }
 
