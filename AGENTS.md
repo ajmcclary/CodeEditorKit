@@ -24,7 +24,7 @@ swift build --target CodeEditorUI
 
 ## Package Structure
 
-**Swift 6.3** with `StrictConcurrency` enabled. 16 products defined in `Package.swift`:
+**Swift 6.3** with `StrictConcurrency` enabled. 18 products defined in `Package.swift`:
 
 | Product | Type | Purpose |
 |---|---|---|
@@ -33,7 +33,9 @@ swift build --target CodeEditorUI
 | `CodeEditorCompletion` | library | Completion subsystem (manager, ranking, providers) |
 | `CodeEditorConfiguration` | library | Settings, presets, validation |
 | `CodeEditorDiagnostics` | library | Opt-in performance and memory diagnostics |
+| `CodeEditorHighlightingCore` | library | View-free value contracts for highlight providers |
 | `CodeEditorLSP` | library | Language Server Protocol client and transports |
+| `CodeEditorLSPIntegration` | library | Opt-in LSP-to-editor bridge (semantic tokens, sync) |
 | `CodeEditorLanguages` | library | Language descriptors and detection |
 | `CodeEditorLayout` | library | Editor presentation and layout primitives |
 | `CodeEditorPlatform` | library | Cross-platform color/font/view abstractions |
@@ -49,7 +51,7 @@ Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `Design
 
 The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
 
-Tests mix both XCTest and Swift Testing frameworks across 9 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorHygieneTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
+Tests mix both XCTest and Swift Testing frameworks across 11 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorHighlightingCoreTests`, `CodeEditorHygieneTests`, `CodeEditorLSPIntegrationTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
 
 Tree-sitter work is internal scaffolding only. There is no public configuration flag and no bundled C grammar libraries wired into `Package.swift`; normal syntax highlighting uses the descriptor-backed regex path.
 
@@ -70,6 +72,7 @@ No top-level directories left in the umbrella target source tree (`Resources/` h
 Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra, `SendablePerformanceMetric`, `FileChangeNotification`, `SelectionState`, `EditorInteractionState`+`EditorCursorPosition`, `DirtyTracker`, `ErrorRecoveryCoordinator`.
 - `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds).
+- `Sources/CodeEditorHighlightingCore/` — view-free value contracts for highlight providers: `HighlightRange`, `HighlightToken`, `HighlightDocumentSnapshot`, `HighlightTextEdit`, `HighlightInvalidation`, and the `HighlightRangeProviding` protocol. Zero CodeEditor dependencies (Foundation only) so an external adapter can conform without the editor.
 - `Sources/CodeEditorFolding/` — fold-storage primitives (`FoldStoreElement`, `LineFoldStorage`, `FoldInfo`), `FoldRegionAdapter`, and `FoldingProviderRegistry`. The umbrella-coupled fold engine, operations service, and presentation strategy live in `Sources/CodeEditorView/Folding/`.
 - `Sources/CodeEditorSymbols/` — symbol-navigation surface: `BreadcrumbItem`, `SymbolNavigationConfiguration`, `SymbolProviderCatalog`, and generic `SymbolRangeIndex` storage. The view-coupled `SymbolNavigator` lives in `Sources/CodeEditorView/Symbols/`.
 - `Sources/CodeEditorLanguages/` — language descriptors + folding/symbol/completion-model interfaces; `TabModel` + `LanguageDetectionService`.
@@ -84,7 +87,8 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
 - `Sources/CodeEditorWorkspace/` — workspace file-tree protocols + macOS `MacOSWorkspaceFileManager` adapter. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; AppKit-conditional manager.
 - `Sources/CodeEditorCompletion/` — completion subsystem: `CompletionManager`, ranking model, fuzzy matcher, built-in providers, view controllers + adapter, event broadcaster, SwiftUI bridge types.
-- `Sources/CodeEditorLSP/` — Language Server Protocol subsystem: `LSPClient`, `LSPManager`, transport (process + WebSocket with cert pinning), document/path/process/connection managers, message handler, wire types, completion + semantic-token storage, retry config. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` depends on it. The two `CodeEditorView`-coupled files (`LSPSemanticTokenProvider`, `LSPContentCoordinator`) live in `Sources/CodeEditorView/LSP/`.
+- `Sources/CodeEditorLSP/` — Language Server Protocol subsystem: `LSPClient`, `LSPManager`, transport (process + WebSocket with cert pinning), document/path/process/connection managers, message handler, wire types, completion + semantic-token storage, retry config. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` depends on it. The editor-coupled bridge lives in `Sources/CodeEditorLSPIntegration/`, not `CodeEditorView` (see next entry).
+- `Sources/CodeEditorLSPIntegration/` — opt-in LSP-to-editor bridge (depends on `CodeEditorView` + `CodeEditorLSP`): `LSPEditorBridge` (public entry, owns the `LSPManager`), `LSPDocumentController`, `LSPContentCoordinator`, and `LSPSemanticTokenProvider` (a value-oriented `HighlightRangeProviding`). `CodeEditorView` no longer depends on `CodeEditorLSP`; LSP hosts consume this product.
 - `Sources/CodeEditorLayout/` — presentation primitives: layout caches/coordinator/optimizer, fold chevrons, `_GlassSurface`, insertion-point/line-highlight views, layout providers, event bus, completion popover chrome, `ThemeableUIComponent` protocol + `LayoutConformances`, `MinimapStyleDataSource`. Productized as a `.library`; umbrella depends on it.
 - `Sources/CodeEditorView/` — editor-surface target: `CodeEditorView` class + 24 `CodeEditorView+*Extensions` slices + delegate companions (`CodeEditorViewDelegate`, `CodeEditorViewDelegateProxy`, `CodeEditorViewProtocol`) + standalone services (`ActorCoordinator`, `CodeEditorAPI`, `EditorEvent`/`EditorEventHandler`/`EditorEventPublisher`, `EditorLayoutService`, `EditorRuntime`, `EditorState`/`EditorStateBridge`, `MemoryManagementCoordinator`, `SyntaxHighlightingService`, `TextEditingService`, `TextKitSetupHelper`, `UnifiedEventSystem`, etc.) + carve-out residues from `Annotations/`, `Configuration/`, `Documents/`, `Folding/`, `Layout/`, `LSP/`, `Platform/`, `Search/`, `Symbols/`, `SyntaxHighlighting/`, `Text/`, `Actors/` + `CodeEditorCoordinating.swift` (package-visible marker protocol that breaks the would-be circular dep with `CodeEditorSwiftUI`). Productized as a `.library`; umbrella depends on it.
 - `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; not currently an SPM target.

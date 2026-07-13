@@ -143,10 +143,6 @@
       "classification": "semantic-schema",
       "rationale": "Per-language LanguageDescriptor entries (Dart/Kotlin) share the descriptor tail schema (functions/literals/snippets/detection fields); each file stays a standalone per-language catalog entry by design, matching the existing descriptor-cohort layout."
     },
-    "622ec5b06d6fe232": {
-      "classification": "platform-contract",
-      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Completion/EditorCompletionController.swift:41 and Sources/CodeEditorView/LSP/LSPDocumentController.swift:22 remain explicit to preserve framework-specific types and call sites."
-    },
     "705138b3cb93cb68": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/RegexSyntaxTokenType.swift:7 and Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:230 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
