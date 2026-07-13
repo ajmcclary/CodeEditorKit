@@ -64,7 +64,6 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
     private let storage = LSPSemanticTokenStorage()
     private let lspManager: LSPManager
     private let filePath: String
-    private var languageID = ""
     private var lastDocumentLength = 0
     private var isSetup = false
 
@@ -82,7 +81,6 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
     // MARK: - HighlightRangeProviding
 
     func prepare(for document: HighlightDocumentSnapshot) async {
-        languageID = document.languageID
         lastDocumentLength = document.utf16Length
         isSetup = true
 
@@ -185,7 +183,7 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
 
         let uri = "file://\(filePath)"
         let fileExtension = URL(fileURLWithPath: filePath).pathExtension
-        let langId = lspManager.languageId(for: fileExtension) ?? languageID
+        let langId = lspManager.languageId(for: fileExtension) ?? ""
 
         Task { [weak self] in
             guard let self else { return }
