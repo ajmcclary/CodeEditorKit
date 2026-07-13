@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── SQL ────────────────────────────────────────────────────────
     static let sqlDescriptor = Self(
             language: .sql,
-            fileExtensions: ["sql"],
             usesRegexHighlighter: true,
             lineComment: "--",
             blockCommentStart: "/*",
@@ -34,8 +33,6 @@ extension LanguageDescriptor {
             triggerCharacters: [" ", "(", ","],
             snippets: DescriptorSnippetData.sql,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

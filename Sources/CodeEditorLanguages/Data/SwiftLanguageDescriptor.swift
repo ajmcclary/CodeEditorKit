@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Swift ──────────────────────────────────────────────────────
     static let swiftDescriptor = Self(
             language: .swift,
-            fileExtensions: ["swift"],
             usesRegexHighlighter: false,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -41,8 +40,6 @@ extension LanguageDescriptor {
             commonModules: [
                 "Foundation", "UIKit", "AppKit", "SwiftUI", "Combine", "CoreData", "CoreGraphics",
                 "QuartzCore", "AVFoundation", "NetworkExtension", "UserNotifications", "StoreKit"
-            ],
-            shebangIdentifiers: [],
-            scriptAliases: ["swift"]
+            ]
         )
 }

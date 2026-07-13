@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Plain Text ─────────────────────────────────────────────────
     static let plainTextDescriptor = Self(
             language: .plainText,
-            fileExtensions: ["txt", "text", "log"],
             usesRegexHighlighter: false,
             lineComment: nil,
             blockCommentStart: nil,
@@ -18,8 +17,6 @@ extension LanguageDescriptor {
             triggerCharacters: [],
             snippets: [],
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Markdown ───────────────────────────────────────────────────
     static let markdownDescriptor = Self(
             language: .markdown,
-            fileExtensions: ["md", "markdown", "mdown", "mkd"],
             usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: nil,
@@ -28,8 +27,6 @@ extension LanguageDescriptor {
             triggerCharacters: ["[", "(", " "],
             snippets: MarkdownCompletionData.snippets,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

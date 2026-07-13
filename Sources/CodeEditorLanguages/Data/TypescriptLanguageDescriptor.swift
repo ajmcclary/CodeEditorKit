@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── TypeScript ─────────────────────────────────────────────────
     static let typescriptDescriptor = Self(
             language: .typescript,
-            fileExtensions: ["ts", "tsx"],
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -40,8 +39,6 @@ extension LanguageDescriptor {
             commonModules: [
                 "react", "vue", "angular", "express", "lodash", "axios", "typescript", "webpack",
                 "jest", "mocha", "eslint", "prettier", "nodemon", "dotenv", "cors", "bcrypt"
-            ],
-            shebangIdentifiers: ["deno", "ts-node"],
-            scriptAliases: ["deno", "ts-node"]
+            ]
         )
 }

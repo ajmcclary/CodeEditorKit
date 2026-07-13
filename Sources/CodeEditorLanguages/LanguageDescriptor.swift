@@ -13,45 +13,51 @@ import LanguageKit
 ///
 /// ## Identity vs. behavior (LanguageKit adoption, workspace-reorg Task 7)
 ///
-/// The scalar identity fields `displayName`, `lspIdentifier`, and `parserName`
-/// (the tree-sitter grammar identifier) are no longer stored here; they are
-/// computed by looking the `language` up in `LanguageKit.LanguageCatalog` (an
-/// identity mapping, because `LanguageID.rawValue == Language.rawValue` for
-/// every CEP language). Deleting those 92 literal duplications was a true no-op
-/// for the pinned characterization behavior, save one documented divergence:
+/// The identity + detection metadata (`displayName`, `lspIdentifier`,
+/// `parserName`, `fileExtensions`, plus the shebang interpreter aliases and
+/// special-filename rules) is no longer mirrored here. It is sourced from
+/// ``registry`` — a CEP-specific ``LanguageKit/LanguageRegistry`` derived from
+/// ``LanguageKit/LanguageRegistry/standard`` with CodeEditorPlugin's two
+/// deliberate divergences layered on as registry data:
 ///
-/// - **swift `parserName`**: `LanguageCatalog` records grammar id `"swift"`, but
-///   CEP highlights Swift via SwiftSyntax and pins `parserName == nil`. Swift is
-///   listed in ``grammarIdentifierSuppressed`` so the local behavior is
-///   preserved. See `LanguageCatalogCharacterizationTests`.
+/// - **tsx → typescript**: CEP folds the `tsx` extension into TypeScript
+///   (ordered `["ts", "tsx"]`) and does not model `tsx` as a distinct language,
+///   whereas LanguageKit's standard catalog makes `tsx` first-class. The CEP
+///   registry restricts the standard catalog to CEP's 31 languages (dropping
+///   `tsx`) and merges a TypeScript override reclaiming the `tsx` extension.
+/// - **swift grammar suppression**: `LanguageCatalog` records grammar id
+///   `"swift"`, but CEP highlights Swift via SwiftSyntax and pins
+///   `parserName == nil`. The CEP registry merges a Swift override whose
+///   `treeSitterGrammarIdentifier` is `nil`.
 ///
-/// Fields that remain stored/local because they encode information LanguageKit
-/// cannot round-trip or deliberately does not reproduce:
+/// The registry also carries CEP's richer shebang interpreter aliases (a
+/// superset of LanguageKit's intentionally-minimal `interpreters`) and the
+/// special-filename rules that drive `LanguageDetectionService`. The one thing
+/// that stays a local heuristic is the `dockerfile.`-prefix quirk that
+/// LanguageKit deliberately did not reproduce (see `LanguageDetectionService`).
 ///
-/// - **`fileExtensions`**: `LanguageCatalog` stores extensions as an *unordered*
-///   `Set`, but CEP's public `Language.fileExtensions` (and its characterization)
-///   are order-sensitive arrays, and CEP folds the `tsx` extension into
-///   `typescript` (`["ts", "tsx"]`) whereas LanguageKit models `tsx` as its own
-///   language. Ordering + that mapping are CEP-owned, so the arrays stay here.
-/// - **`shebangIdentifiers` / `scriptAliases`**: richer than LanguageKit's
-///   intentionally-minimal `interpreters`, and they drive live shebang detection.
-/// - **Special filenames** (Dockerfile / Makefile / Rakefile ...): handled by
-///   `LanguageDetectionService`, whose `dockerfile.`-prefix quirk LanguageKit
-///   deliberately dropped; kept local to preserve pinned behavior.
+/// Ordering is preserved by ``LanguageKit/LanguageMetadata/fileExtensions``
+/// (an ordered array). All of this is pinned by
+/// `LanguageCatalogCharacterizationTests` and `CEPLanguageRegistryTests`.
 package struct LanguageDescriptor: Sendable {
     // MARK: - Identity (sourced from LanguageKit)
 
     package let language: Language
-    package let fileExtensions: [String]
 
-    /// Human-readable display name, sourced from `LanguageKit.LanguageCatalog`.
-    package var displayName: String {
-        Self.catalogMetadata(for: language)?.displayName ?? language.rawValue.capitalized
+    /// File extensions for this language, in priority order (first = primary),
+    /// sourced from ``registry``.
+    package var fileExtensions: [String] {
+        Self.metadata(for: language)?.fileExtensions ?? []
     }
 
-    /// LSP language identifier, sourced from `LanguageKit.LanguageCatalog`.
+    /// Human-readable display name, sourced from ``registry``.
+    package var displayName: String {
+        Self.metadata(for: language)?.displayName ?? language.rawValue.capitalized
+    }
+
+    /// LSP language identifier, sourced from ``registry``.
     package var lspIdentifier: String {
-        Self.catalogMetadata(for: language)?.lspIdentifier ?? language.rawValue
+        Self.metadata(for: language)?.lspIdentifier ?? language.rawValue
     }
 
     // MARK: - Highlighting
@@ -95,21 +101,16 @@ package struct LanguageDescriptor: Sendable {
 
     // MARK: - Parser / detection
 
-    /// Tree-sitter grammar identifier, sourced from
-    /// `LanguageKit.LanguageCatalog`'s `treeSitterGrammarIdentifier`, except for
-    /// languages in ``grammarIdentifierSuppressed`` (currently only Swift, which
-    /// is highlighted via SwiftSyntax and pins `nil`).
+    /// Tree-sitter grammar identifier, sourced from ``registry``'s
+    /// `treeSitterGrammarIdentifier`. `nil` for Swift (suppressed in the CEP
+    /// registry because Swift is highlighted via SwiftSyntax), the diagram DSLs,
+    /// and plain text.
     package var parserName: String? {
-        if Self.grammarIdentifierSuppressed.contains(language) { return nil }
-        return Self.catalogMetadata(for: language)?.treeSitterGrammarIdentifier
+        Self.metadata(for: language)?.treeSitterGrammarIdentifier
     }
-
-    package let shebangIdentifiers: Set<String>
-    package let scriptAliases: Set<String>
 
     init(
         language: Language,
-        fileExtensions: [String],
         usesRegexHighlighter: Bool,
         lineComment: String?,
         blockCommentStart: String?,
@@ -125,12 +126,9 @@ package struct LanguageDescriptor: Sendable {
         triggerCharacters: [String],
         snippets: [SnippetTemplate],
         memberCompletions: (any LanguageMemberCompletions)?,
-        commonModules: [String],
-        shebangIdentifiers: Set<String>,
-        scriptAliases: Set<String>
+        commonModules: [String]
     ) {
         self.language = language
-        self.fileExtensions = fileExtensions
         self.usesRegexHighlighter = usesRegexHighlighter
         self.lineComment = lineComment
         self.blockCommentStart = blockCommentStart
@@ -147,8 +145,6 @@ package struct LanguageDescriptor: Sendable {
         self.snippets = snippets
         self.memberCompletions = memberCompletions
         self.commonModules = commonModules
-        self.shebangIdentifiers = shebangIdentifiers
-        self.scriptAliases = scriptAliases
     }
 
     // MARK: - All Descriptors
@@ -222,22 +218,105 @@ package struct LanguageDescriptor: Sendable {
         .plainText: plainTextDescriptor
     ]
 
-    // MARK: - LanguageKit adapter
+    // MARK: - LanguageKit registry
 
-    /// CEP-side divergences from `LanguageKit.LanguageCatalog`: languages whose
-    /// tree-sitter grammar identifier the catalog records but CEP intentionally
-    /// suppresses because the editor highlights them by another strategy.
+    /// The CEP-specific ``LanguageKit/LanguageRegistry``: the standard catalog
+    /// restricted to CodeEditorPlugin's 31 languages (dropping first-class `tsx`)
+    /// with CEP's two deliberate divergences and its richer shebang interpreter
+    /// aliases layered on as registry data.
     ///
-    /// - `swift`: highlighted via SwiftSyntax, so `parserName` stays `nil` even
-    ///   though `LanguageCatalog` lists grammar `"swift"`. Pinned by
-    ///   `LanguageCatalogCharacterizationTests` (swift `parserName == nil`).
-    private static let grammarIdentifierSuppressed: Set<Language> = [.swift]
+    /// This is the single source of truth for CEP's language identity and
+    /// detection metadata; the descriptor's identity properties and
+    /// `LanguageDetectionService` read from it. See ``CEPLanguageRegistryTests``.
+    package static let registry: LanguageRegistry = Self.makeRegistry()
 
-    /// Looks a CEP `Language` up in `LanguageKit.LanguageCatalog`. The mapping is
-    /// the identity on raw values: every CEP `Language.rawValue` is a registered
+    private static func makeRegistry() -> LanguageRegistry {
+        let cepIDs = Set(Language.allCases.map { LanguageID(rawValue: $0.rawValue) })
+        let base = LanguageRegistry.standard.restricted(to: cepIDs)
+        do {
+            return try base.merging(Self.cepOverrides(base: base))
+        } catch {
+            preconditionFailure("CEP LanguageRegistry overrides are inconsistent: \(error)")
+        }
+    }
+
+    /// CEP's divergences from the standard catalog, expressed as full-metadata
+    /// overrides (``LanguageKit/LanguageRegistry/merging(_:)`` replaces the whole
+    /// entry for a matching id):
+    ///
+    /// - **typescript**: reclaims the `tsx` extension (ordered `["ts", "tsx"]`,
+    ///   the standard catalog gives `tsx` its own language) and carries CEP's
+    ///   `deno` / `ts-node` interpreter aliases.
+    /// - **swift**: `treeSitterGrammarIdentifier` suppressed to `nil` (SwiftSyntax
+    ///   highlighting) plus the `swift` interpreter alias.
+    /// - **javascript / python / ruby**: richer interpreter aliases than the
+    ///   standard catalog's minimal set.
+    private static func cepOverrides(base: LanguageRegistry) -> [LanguageMetadata] {
+        var overrides: [LanguageMetadata] = []
+
+        // Appends a copy of `base`'s metadata for `id` after `transform` edits it,
+        // skipping ids not present in `base`.
+        func override(_ id: LanguageID, _ transform: (LanguageMetadata) -> LanguageMetadata) {
+            guard let metadata = base.metadata(for: id) else { return }
+            overrides.append(transform(metadata))
+        }
+
+        // Divergence #1: tsx folds into typescript (ordered ["ts", "tsx"]); also
+        // carries CEP's richer TypeScript interpreter aliases.
+        override(.typescript) { metadata in
+            LanguageMetadata(
+                id: metadata.id,
+                displayName: metadata.displayName,
+                fileExtensions: ["ts", "tsx"],
+                filenames: metadata.filenames,
+                interpreters: ["deno", "ts-node"],
+                lspIdentifier: metadata.lspIdentifier,
+                treeSitterGrammarIdentifier: metadata.treeSitterGrammarIdentifier
+            )
+        }
+
+        // Divergence #2: swift grammar suppression (highlighted via SwiftSyntax).
+        override(.swift) { metadata in
+            LanguageMetadata(
+                id: metadata.id,
+                displayName: metadata.displayName,
+                fileExtensions: metadata.fileExtensions,
+                filenames: metadata.filenames,
+                interpreters: ["swift"],
+                lspIdentifier: metadata.lspIdentifier,
+                treeSitterGrammarIdentifier: nil
+            )
+        }
+
+        // Richer interpreter aliases (supersets of LanguageKit's minimal set).
+        override(.javascript) { withInterpreters($0, ["node", "javascript", "js"]) }
+        override(.python) { withInterpreters($0, ["python", "python2", "python3"]) }
+        override(.ruby) { withInterpreters($0, ["ruby", "rb"]) }
+
+        return overrides
+    }
+
+    /// A copy of `metadata` with only its interpreter aliases replaced.
+    private static func withInterpreters(
+        _ metadata: LanguageMetadata,
+        _ interpreters: Set<String>
+    ) -> LanguageMetadata {
+        LanguageMetadata(
+            id: metadata.id,
+            displayName: metadata.displayName,
+            fileExtensions: metadata.fileExtensions,
+            filenames: metadata.filenames,
+            interpreters: interpreters,
+            lspIdentifier: metadata.lspIdentifier,
+            treeSitterGrammarIdentifier: metadata.treeSitterGrammarIdentifier
+        )
+    }
+
+    /// Looks a CEP `Language` up in ``registry``. The mapping is the identity on
+    /// raw values: every CEP `Language.rawValue` is a registered
     /// `LanguageID.rawValue`.
-    private static func catalogMetadata(for language: Language) -> LanguageMetadata? {
-        LanguageCatalog.metadata(for: LanguageID(rawValue: language.rawValue))
+    package static func metadata(for language: Language) -> LanguageMetadata? {
+        registry.metadata(for: LanguageID(rawValue: language.rawValue))
     }
 
     // MARK: - Lookup

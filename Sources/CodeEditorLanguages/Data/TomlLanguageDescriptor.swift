@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── TOML ───────────────────────────────────────────────────────
     static let tomlDescriptor = Self(
             language: .toml,
-            fileExtensions: ["toml"],
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
@@ -22,8 +21,6 @@ extension LanguageDescriptor {
             triggerCharacters: ["=", " ", "[", "\"", "'"],
             snippets: [],
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

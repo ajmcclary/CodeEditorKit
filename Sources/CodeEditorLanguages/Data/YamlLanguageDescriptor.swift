@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── YAML ───────────────────────────────────────────────────────
     static let yamlDescriptor = Self(
             language: .yaml,
-            fileExtensions: ["yaml", "yml"],
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
@@ -22,8 +21,6 @@ extension LanguageDescriptor {
             triggerCharacters: [":", " "],
             snippets: YAMLCompletionData.snippets,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

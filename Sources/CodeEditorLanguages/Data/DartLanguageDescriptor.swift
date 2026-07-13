@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Dart ───────────────────────────────────────────────────────
     static let dartDescriptor = Self(
             language: .dart,
-            fileExtensions: ["dart"],
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -37,8 +36,6 @@ extension LanguageDescriptor {
             triggerCharacters: [".", "(", "[", "<", " ", ":"],
             snippets: [],
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

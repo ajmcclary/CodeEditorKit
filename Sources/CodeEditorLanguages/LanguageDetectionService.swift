@@ -1,5 +1,6 @@
 import CodeEditorCommon
 import Foundation
+import LanguageKit
 
 // MARK: - LanguageDetectionService
 
@@ -65,41 +66,26 @@ public final class LanguageDetectionService {
         return detectLanguage(fromExtension: fileExtension)
     }
 
-    /// Detects language from filename (for special cases like Dockerfile, Makefile)
+    /// Detects language from filename (for special cases like Dockerfile, Makefile).
+    ///
+    /// The whole-filename rules (Dockerfile / Makefile / Rakefile / package.json /
+    /// readme ...) are sourced from CEP's ``LanguageDescriptor/registry``. The one
+    /// product-specific heuristic layered on top is the `dockerfile.`-prefix quirk
+    /// (`Dockerfile.dev` → Dockerfile), which LanguageKit deliberately does not
+    /// reproduce.
     public func detectLanguage(fromFilename filename: String) -> Language {
         let lowercasedFilename = filename.lowercased()
 
-        switch lowercasedFilename {
-        case let name where name == "dockerfile" || name.hasPrefix("dockerfile."):
+        // Product-specific quirk: any `dockerfile.<variant>` name is a Dockerfile.
+        if lowercasedFilename.hasPrefix("dockerfile.") {
             return .dockerfile
-
-        case "makefile", "gnumakefile":
-            return .shell
-
-        case "rakefile":
-            return .ruby
-
-        case "gemfile":
-            return .ruby
-
-        case "podfile":
-            return .ruby
-
-        case "package.json":
-            return .json
-
-        case "tsconfig.json":
-            return .json
-
-        case ".gitignore", ".dockerignore":
-            return .plainText
-
-        case "readme", "license", "changelog":
-            return .markdown
-
-        default:
-            return .plainText
         }
+
+        if let metadata = LanguageDescriptor.registry.language(forFilename: lowercasedFilename) {
+            return Language(rawValue: metadata.id.rawValue) ?? .plainText
+        }
+
+        return .plainText
     }
 
     /// Detects language from content analysis (heuristic)
@@ -212,10 +198,11 @@ public final class LanguageDetectionService {
         }
     }
 
-    /// Structurally parses a shebang line to extract the interpreter name,
-    /// resolves `/usr/bin/env` indirection (including `-S` flags), and looks
-    /// up the result in ``LanguageDescriptor``'s `shebangIdentifiers` and
-    /// `scriptAliases` sets.
+    /// Resolves a shebang line to a `Language` via
+    /// ``LanguageKit/LanguageRegistry/language(forShebangLine:)`` on CEP's
+    /// registry, which parses the interpreter (env indirection, `-S` flags,
+    /// path stripping, version-suffix fallback) and looks it up against CEP's
+    /// interpreter aliases.
     ///
     /// Examples handled:
     /// - `#!/bin/bash`                  → .shell
@@ -227,49 +214,9 @@ public final class LanguageDetectionService {
     private func detectLanguageFromShebang(_ content: String) -> Language? {
         guard content.hasPrefix("#!") else { return nil }
 
-        let firstLine = content.split(separator: "\n", maxSplits: 1).first ?? ""
-        let shebang = String(firstLine).dropFirst(2) // Remove "#!"
-            .trimmingCharacters(in: .whitespaces)
-
-        let words = shebang.split(separator: " ", omittingEmptySubsequences: true)
-        guard let firstWord = words.first else { return nil }
-
-        let interpreter: String
-
-        // Resolve /usr/bin/env indirection
-        if firstWord.hasSuffix("/env") || firstWord == "env" {
-            guard words.count >= 2 else { return nil }
-            let secondWord = String(words[1])
-
-            // Handle `env -S python3 -u` → extract "python3" from the -S argument
-            if secondWord == "-S", words.count >= 3 {
-                let splitArgs = words[2...].joined(separator: " ").split(separator: " ")
-                guard let resolved = splitArgs.first else { return nil }
-                interpreter = String(resolved)
-            } else {
-                interpreter = secondWord
-            }
-        } else {
-            // Strip path prefix: /usr/bin/python3 → python3
-            interpreter = String(firstWord.split(separator: "/").last ?? firstWord)
-        }
-
-        let name = interpreter.lowercased()
-        return resolveScriptAlias(name)
-    }
-
-    /// Looks up a shebang interpreter / script alias in ``LanguageDescriptor``.
-    ///
-    /// Checks `shebangIdentifiers` first (canonical interpreter names like
-    /// `python3`, `node`), then `scriptAliases` (convenience names like `js`).
-    private func resolveScriptAlias(_ name: String) -> Language? {
-        for (language, descriptor) in LanguageDescriptor.all where descriptor.shebangIdentifiers.contains(name) {
-            return language
-        }
-        for (language, descriptor) in LanguageDescriptor.all where descriptor.scriptAliases.contains(name) {
-            return language
-        }
-        return nil
+        let firstLine = String(content.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false).first ?? "")
+        guard let metadata = LanguageDescriptor.registry.language(forShebangLine: firstLine) else { return nil }
+        return Language(rawValue: metadata.id.rawValue)
     }
 
     /// Scans the first and last few lines of content for Vim or Emacs
@@ -340,7 +287,7 @@ public final class LanguageDetectionService {
     /// Resolves a modeline filetype string to a `Language`.
     ///
     /// First checks `parserName`, then tries matching the `Language`
-    /// raw value, then falls back to `shebangIdentifiers`.
+    /// raw value, then falls back to the registry's interpreter aliases.
     private func resolveModelineFiletype(_ filetype: String) -> Language? {
         // Check parser aliases first (most common modeline values)
         for (language, descriptor) in LanguageDescriptor.all where descriptor.parserName == filetype {
@@ -348,9 +295,9 @@ public final class LanguageDetectionService {
         }
         // Try raw value match
         if let language = Language(rawValue: filetype) { return language }
-        // Check shebang identifiers
-        for (language, descriptor) in LanguageDescriptor.all where descriptor.shebangIdentifiers.contains(filetype) {
-            return language
+        // Check interpreter aliases
+        if let metadata = LanguageDescriptor.registry.language(forInterpreter: filetype) {
+            return Language(rawValue: metadata.id.rawValue)
         }
         return nil
     }

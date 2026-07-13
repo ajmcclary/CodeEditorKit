@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── C ──────────────────────────────────────────────────────────
     static let cDescriptor = Self(
             language: .c,
-            fileExtensions: ["c", "h"],
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -39,8 +38,6 @@ extension LanguageDescriptor {
             triggerCharacters: [".", "->", "(", " "],
             snippets: DescriptorSnippetData.cLanguage,
             memberCompletions: CMemberCompletions(),
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Structurizr DSL ────────────────────────────────────────────
     static let structurizrDescriptor = Self(
             language: .structurizr,
-            fileExtensions: ["dsl"],
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -29,8 +28,6 @@ extension LanguageDescriptor {
             triggerCharacters: [" "],
             snippets: [],
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

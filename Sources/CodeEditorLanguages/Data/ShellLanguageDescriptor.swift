@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Shell ──────────────────────────────────────────────────────
     static let shellDescriptor = Self(
             language: .shell,
-            fileExtensions: ["sh", "bash", "zsh", "fish"],
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
@@ -31,8 +30,6 @@ extension LanguageDescriptor {
             triggerCharacters: [" ", "$", "-"],
             snippets: DescriptorSnippetData.shell,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: ["bash", "sh", "zsh", "fish"],
-            scriptAliases: ["bash", "sh", "zsh", "fish"]
+            commonModules: []
         )
 }

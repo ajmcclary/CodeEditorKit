@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Ruby ───────────────────────────────────────────────────────
     static let rubyDescriptor = Self(
             language: .ruby,
-            fileExtensions: ["rb", "rbw"],
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: "=begin",
@@ -31,8 +30,6 @@ extension LanguageDescriptor {
             triggerCharacters: [".", "(", " ", ":"],
             snippets: DescriptorSnippetData.ruby,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: ["ruby"],
-            scriptAliases: ["ruby", "rb"]
+            commonModules: []
         )
 }

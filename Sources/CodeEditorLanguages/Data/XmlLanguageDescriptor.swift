@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── XML ────────────────────────────────────────────────────────
     static let xmlDescriptor = Self(
             language: .xml,
-            fileExtensions: ["xml", "xsl", "xslt", "svg"],
             usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: "<!--",
@@ -24,8 +23,6 @@ extension LanguageDescriptor {
             triggerCharacters: ["<", " ", "=", "\"", "'"],
             snippets: DescriptorSnippetData.xml,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

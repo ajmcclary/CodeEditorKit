@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Kotlin ─────────────────────────────────────────────────────
     static let kotlinDescriptor = Self(
             language: .kotlin,
-            fileExtensions: ["kt", "kts"],
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -39,8 +38,6 @@ extension LanguageDescriptor {
             triggerCharacters: [".", "(", "[", "<", " ", ":"],
             snippets: [],
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

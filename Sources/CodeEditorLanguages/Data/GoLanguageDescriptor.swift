@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Go ─────────────────────────────────────────────────────────
     static let goDescriptor = Self(
             language: .go,
-            fileExtensions: ["go"],
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -34,8 +33,6 @@ extension LanguageDescriptor {
             commonModules: [
                 "fmt", "os", "io", "net/http", "encoding/json", "time", "strings", "strconv",
                 "context", "sync", "log", "errors", "bufio", "path/filepath", "regexp"
-            ],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            ]
         )
 }

@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── PHP ────────────────────────────────────────────────────────
     static let phpDescriptor = Self(
             language: .php,
-            fileExtensions: ["php", "phtml", "php3", "php4", "php5"],
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -36,8 +35,6 @@ extension LanguageDescriptor {
             triggerCharacters: [".", "->", "::", "$", " "],
             snippets: DescriptorSnippetData.php,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: ["php"],
-            scriptAliases: ["php"]
+            commonModules: []
         )
 }

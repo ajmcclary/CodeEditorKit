@@ -39,7 +39,7 @@
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/XMLSymbolProvider.swift:8 and Sources/CodeEditorLanguages/YAMLSymbolProvider.swift:8 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
-    "15748f60a620609a": {
+    "27c11ac17813d004": {
       "classification": "semantic-schema",
       "rationale": "Diagram-DSL language descriptors (Mermaid/Structurizr) share the LanguageDescriptor tail schema (functions/literals/snippets/detection fields); each file stays a standalone per-language catalog entry by design, matching the existing descriptor-cohort layout."
     },
@@ -139,7 +139,7 @@
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorView+LayoutExtensions.swift:72 and Sources/CodeEditorView/CodeEditorView+LayoutExtensions.swift:155 remain explicit to preserve framework-specific types and call sites."
     },
-    "60bedb0c67d44458": {
+    "614d80e515e3f892": {
       "classification": "semantic-schema",
       "rationale": "Per-language LanguageDescriptor entries (Dart/Kotlin) share the descriptor tail schema (functions/literals/snippets/detection fields); each file stays a standalone per-language catalog entry by design, matching the existing descriptor-cohort layout."
     },

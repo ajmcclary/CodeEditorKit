@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── Dockerfile ─────────────────────────────────────────────────
     static let dockerfileDescriptor = Self(
             language: .dockerfile,
-            fileExtensions: ["dockerfile"],
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
@@ -29,8 +28,6 @@ extension LanguageDescriptor {
             triggerCharacters: [" ", "$"],
             snippets: DescriptorSnippetData.dockerfile,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }

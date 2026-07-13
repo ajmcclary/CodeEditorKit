@@ -4,7 +4,6 @@ extension LanguageDescriptor {
     // ── JSON ───────────────────────────────────────────────────────
     static let jsonDescriptor = Self(
             language: .json,
-            fileExtensions: ["json", "jsonc"],
             // JSON is routed to `FastJSONTokenizer` by `HighlightingStrategyExecutor`
             // and the regex pipeline never sees it. Mirrors Swift, which has
             // its own SwiftSyntax-backed strategy.
@@ -21,8 +20,6 @@ extension LanguageDescriptor {
             triggerCharacters: [":", " ", "\""],
             snippets: JSONCompletionData.snippets,
             memberCompletions: nil,
-            commonModules: [],
-            shebangIdentifiers: [],
-            scriptAliases: []
+            commonModules: []
         )
 }
