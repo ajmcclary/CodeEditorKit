@@ -103,4 +103,4 @@ PY
 - Markdown links resolve locally.
 - Active docs do not describe Mac Catalyst as supported.
 - Sample-app commands use the `CodeEditorSample` target from the package root.
-- Archived `docs/superpowers/` notes are clearly marked as historical when referenced.
+- Archived superpowers notes (now in the workspace superproject under `docs/archive/package/CodeEditorPlugin/superpowers/`) are clearly marked as historical when referenced.

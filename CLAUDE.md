@@ -174,7 +174,7 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 - **Scripts are intentionally narrow**: `Scripts/generate-dependency-diagrams.sh` uses `swift package describe`, and `Scripts/run-parallel-tests.sh` delegates to SwiftPM. Do not reintroduce stale plugin, Pandoc, or sample-directory assumptions.
 
-- **`docs/superpowers/` is archived working notes**: don't link it as authoritative project documentation.
+- **Historical superpowers plans/specs were archived out of this repo**: they now live in the CodeEditor workspace superproject under `docs/archive/package/CodeEditorPlugin/superpowers/`. Don't recreate a local `docs/superpowers/`; don't link the archived notes as authoritative project documentation. Source comments and the `.swiftlint.yml` rule message that still cite `docs/superpowers/...` paths are historical breadcrumbs pointing at that archive.
 
 - **`TextSystem` protocol and its styler classes were deleted in §6.2.12c.** `TextSystem`, `TextSystemStyler<Interface>`, `ThreePhaseTextSystemStyler<Interface>`, and `TokenSystemValidator<Interface>` were earlier TextKit2 styling-experiment scaffolding with zero in-tree consumers — deleted, not extracted. External consumers depending on these need to remove the dependency.
 
