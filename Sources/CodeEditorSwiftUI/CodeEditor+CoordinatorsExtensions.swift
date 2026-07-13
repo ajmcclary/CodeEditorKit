@@ -3,8 +3,8 @@ import CodeEditorCompletion
 import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorPlatform
-import DesignKitThemes
 import CodeEditorView
+import DesignKitThemes
 import Foundation
 import SwiftUI
 #if canImport(AppKit)

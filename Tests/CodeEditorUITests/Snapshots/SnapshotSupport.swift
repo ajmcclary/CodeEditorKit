@@ -2,9 +2,9 @@
 import DesignKitThemes
 #if canImport(AppKit)
 import AppKit
-import DesignKitTokens
 @testable import CodeEditorPlugin
 @testable import CodeEditorUI
+import DesignKitTokens
 import SnapshotTesting
 import SwiftUI
 import XCTest
@@ -29,18 +29,7 @@ enum SnapshotSupport {
 
     /// Themes used for parity snapshots.
     static let darkTheme: Theme = .lcarsDark
-    static let lightTheme: Theme = pickLightTheme()
-
-    private static func pickLightTheme() -> Theme {
-        let family = ThemeFamily.bundled("zed-trek")
-        if let light = family?.themes.first(where: { $0.name == "LCARS Light" }) {
-            return light
-        }
-        if let firstLight = family?.themes.first(where: { $0.appearance == .light }) {
-            return firstLight
-        }
-        return Theme.fallback(appearance: .light)
-    }
+    static let lightTheme: Theme = .lcarsLight
 
     /// Wrap a SwiftUI view in an NSHostingView at the given size, ready
     /// for `assertSnapshot(of:as: .image(size:))`.
@@ -57,7 +46,7 @@ enum SnapshotSupport {
     @ViewBuilder
     static func framed<V: View>(_ view: V, theme: Theme) -> some View {
         view
-            .environment(\.codeEditorTheme, theme)
+            .environment(\.designTheme, theme)
             .environment(\.colorScheme, theme.appearance == .dark ? .dark : .light)
             .background(Color(tokens: theme.style.editor.background))
     }

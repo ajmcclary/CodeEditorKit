@@ -8,8 +8,8 @@
 @_exported import CodeEditorConfiguration
 @_exported import CodeEditorLanguages
 @_exported import CodeEditorSwiftUI
-@_exported import DesignKitThemes
 @_exported import CodeEditorView
+@_exported import DesignKitThemes
 
 #if canImport(AppKit)
 import AppKit

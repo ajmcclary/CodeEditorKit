@@ -1,6 +1,6 @@
-import DesignKitTokens
 import CodeEditorPlugin
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// Stateless view backing the EventLog inspector. Takes the coordinator's
@@ -192,7 +192,7 @@ private struct EventLogRow: View {
 
 extension EventLogPanel {
     /// Per-category accent. The Text swatch comes from `Tokens.Palette.Accent.dark`
-    /// so the panel exercises a `CodeEditorDesignTokens` swatch in passing —
+    /// so the panel exercises a `DesignKitTokens` swatch in passing —
     /// the rest are SwiftUI semantic colors.
     static func color(for category: EventLogSampleCoordinator.EventCategory) -> Color {
         switch category {

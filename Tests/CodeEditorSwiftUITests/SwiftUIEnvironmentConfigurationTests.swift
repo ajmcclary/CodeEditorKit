@@ -31,7 +31,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         // Create environment
         let environment = CodeEditorEnvironment(
             language: .python,
-            theme: .dark,
+            theme: .lcarsDark,
             configuration: customConfig,
             becomeFirstResponder: true
         )
@@ -120,7 +120,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
             .onSelectionChange { _ in }
             // Then apply View modifiers (these return some View)
             .codeLanguage(.swift)
-            .codeTheme(.dark)
+            .designTheme(.lcarsDark)
             .lineNumbers(true)
             .becomeFirstResponder()
 
@@ -161,16 +161,16 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         // Test that modifier order doesn't matter
         let editor1 = CodeEditor(text: binding)
             .codeLanguage(.javascript)
-            .codeTheme(.default)
+            .designTheme(.default)
             .lineNumbers(false)
 
         let editor2 = CodeEditor(text: binding)
             .lineNumbers(false)
-            .codeTheme(.default)
+            .designTheme(.default)
             .codeLanguage(.javascript)
 
         let editor3 = CodeEditor(text: binding)
-            .codeTheme(.default)
+            .designTheme(.default)
             .lineNumbers(false)
             .codeLanguage(.javascript)
 
@@ -192,7 +192,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         // Create environment with specific settings
         let environment = CodeEditorEnvironment(
             language: .python,
-            theme: .dark,
+            theme: .lcarsDark,
             configuration: EditorConfiguration.minimal
         )
 
@@ -200,7 +200,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         let editor = CodeEditor(text: binding)
             .codeEditorEnvironment(environment)
             .codeLanguage(.rust) // Override language
-            .codeTheme(.default) // Override theme
+            .designTheme(.default) // Override theme
             .lineNumbers(true) // Override configuration
 
         XCTAssertNotNil(editor)
@@ -221,7 +221,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         // Create environment at parent level
         let environment = CodeEditorEnvironment(
             language: .swift,
-            theme: .dark,
+            theme: .lcarsDark,
             configuration: .presentation
         )
 
@@ -307,7 +307,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
             .codeEditorEnvironment {
                 CodeEditorEnvironment(
                     language: .typescript,
-                    theme: .dark,
+                    theme: .lcarsDark,
                     configuration: .minimal,
                     becomeFirstResponder: true
                 )
@@ -412,7 +412,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         )
 
         // Test initializer with language and theme
-        let editor1 = CodeEditor(text: binding, language: .swift, theme: .dark)
+        let editor1 = CodeEditor(text: binding, language: .swift, theme: .lcarsDark)
         XCTAssertNotNil(editor1)
 
         // Test that initial values override environment
@@ -421,7 +421,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
             theme: .default
         )
 
-        let editor2 = CodeEditor(text: binding, language: .javascript, theme: .dark)
+        let editor2 = CodeEditor(text: binding, language: .javascript, theme: .lcarsDark)
             .codeEditorEnvironment(environment) // Environment should be overridden
 
         XCTAssertNotNil(editor2)
@@ -452,7 +452,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         // Create comprehensive environment
         let environment = CodeEditorEnvironment(
             language: .swift,
-            theme: .dark,
+            theme: .lcarsDark,
             configuration: config,
             becomeFirstResponder: true,
             memoryMonitor: memoryMonitor,
@@ -492,17 +492,17 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         XCTAssertEqual(updated1.language, .python)
         XCTAssertEqual(updated1.theme, environment.theme) // Unchanged
 
-        let updated2 = environment.with(theme: .dark)
-        XCTAssertEqual(updated2.theme, .dark)
+        let updated2 = environment.with(theme: .lcarsDark)
+        XCTAssertEqual(updated2.theme, .lcarsDark)
         XCTAssertEqual(updated2.language, environment.language) // Unchanged
 
         let updated3 = environment.with(
             language: .javascript,
-            theme: .dark,
+            theme: .lcarsDark,
             configuration: .minimal
         )
         XCTAssertEqual(updated3.language, .javascript)
-        XCTAssertEqual(updated3.theme, .dark)
+        XCTAssertEqual(updated3.theme, .lcarsDark)
         XCTAssertEqual(updated3.configuration, .minimal)
     }
 
@@ -523,7 +523,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         let editor2 = CodeEditor(text: binding)
             .codeEditorEnvironment(
                 language: .go,
-                theme: .dark,
+                theme: .lcarsDark,
                 becomeFirstResponder: .yes
             )
 

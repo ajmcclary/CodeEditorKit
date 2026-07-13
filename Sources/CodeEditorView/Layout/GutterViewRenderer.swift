@@ -4,8 +4,8 @@
 // consolidating all common drawing and calculation logic.
 
 import CodeEditorPlatform
-import DesignKitThemes
 import CoreGraphics
+import DesignKitThemes
 import Foundation
 #if canImport(AppKit)
 import AppKit

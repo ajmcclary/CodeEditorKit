@@ -1,6 +1,6 @@
 #if canImport(AppKit)
-import DesignKitTokens
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// Optional callbacks for the three traffic-light buttons.

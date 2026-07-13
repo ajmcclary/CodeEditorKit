@@ -5,8 +5,8 @@ import CodeEditorDiagnostics
 // both iOS and macOS platforms, eliminating code duplication.
 
 import CodeEditorPlatform
-import DesignKitThemes
 import CoreGraphics
+import DesignKitThemes
 import Foundation
 #if canImport(AppKit)
 import AppKit

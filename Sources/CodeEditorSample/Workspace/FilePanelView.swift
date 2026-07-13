@@ -1,9 +1,9 @@
 #if canImport(AppKit)
-import DesignKitTokens
 import CodeEditorPlugin
 import CodeEditorSwiftUI
 import CodeEditorView
 import CodeEditorWorkspace
+import DesignKitTokens
 import SwiftUI
 
 /// File-tree panel content. Three states:

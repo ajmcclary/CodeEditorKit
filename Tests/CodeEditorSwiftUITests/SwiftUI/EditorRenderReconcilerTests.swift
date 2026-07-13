@@ -2,8 +2,8 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 @testable import CodeEditorSwiftUI
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
 import Testing
 
 @MainActor

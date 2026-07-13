@@ -2,8 +2,8 @@
 import AppKit
 import CodeEditorSwiftUI
 #endif
-import DesignKitTokens
 import CodeEditorPlugin
+import DesignKitTokens
 import SwiftUI
 
 /// Section that surfaces the runtime workspace root. The picker

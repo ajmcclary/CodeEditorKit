@@ -1,5 +1,5 @@
-import DesignKitTokens
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// Opinionated command-palette view. Pass `Binding<Bool>` to control

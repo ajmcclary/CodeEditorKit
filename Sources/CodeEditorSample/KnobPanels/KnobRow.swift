@@ -1,7 +1,7 @@
-import DesignKitTokens
 import CodeEditorPlatform
 import CodeEditorPlugin
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 // MARK: - Separator

@@ -37,8 +37,5 @@ jobs:
       - name: swift build (CodeEditorUI)
         run: swift build --target CodeEditorUI
 
-      - name: swift build (CodeEditorDesignTokens)
-        run: swift build --target CodeEditorDesignTokens
-
       - name: swift test --parallel
         run: swift test --parallel

@@ -6,11 +6,10 @@ What works on the package's declared Apple platforms. Reflects the current `Pack
 
 | Product | macOS | iOS / iPadOS | Notes |
 |---|:---:|:---:|---|
-| `CodeEditorPlugin` | ✅ | ✅ | Umbrella framework. It re-exports the common editor entry points (`CodeEditorCommon`, `CodeEditorConfiguration`, `CodeEditorLanguages`, `CodeEditorSwiftUI`, `CodeEditorTheming`, `CodeEditorView`) while building the feature targets it depends on. |
+| `CodeEditorPlugin` | ✅ | ✅ | Umbrella framework. It re-exports the common editor entry points (`CodeEditorCommon`, `CodeEditorConfiguration`, `CodeEditorLanguages`, `CodeEditorSwiftUI`, `DesignKitThemes`, `CodeEditorView`) while building the feature targets it depends on. |
 | `CodeEditorView` | ✅ | ✅ | Lower-level TextKit2 editor surface, layout coordination, in-document search, folding presentation, document store, and view-coupled LSP/symbol adapters. |
 | `CodeEditorSwiftUI` | ✅ | ✅ | Declarative `CodeEditor` wrapper, SwiftUI environment values, controller bridge, active-document binding, and modifier APIs. |
 | `CodeEditorUI` | ✅ | ⚠️ | Optional SwiftUI chrome. `EditorSidebarShell` is macOS-oriented by design; `EditorTabStrip`, `EditorStatusBar`, and `EditorCommandPalette` are portable SwiftUI components, but the sample uses the full chrome shell only on macOS. |
-| `CodeEditorDesignTokens` | ✅ | ✅ | Standalone tokens. Depend on this directly if you only need the design-token surface without the editor. |
 | `CodeEditorDiagnostics` | ✅ | ✅ | Performance monitoring, memory monitoring, adaptive performance mode, production metrics, and SwiftUI performance views. |
 | `CodeEditorLSP` | ✅ | ✅ | LSP wire types, client, manager, transports, retry/path configuration, and remote WebSocket support. Local process-backed servers are macOS-only. |
 | `CodeEditorLayout` | ✅ | ✅ | Reusable layout primitives and chrome internals: completion cells, fold chevrons, glass surfaces, layout providers, minimap style data, and event bus. |

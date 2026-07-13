@@ -8,8 +8,8 @@
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
-import DesignKitThemes
 import CodeEditorView
+import DesignKitThemes
 import SwiftUI
 
 // MARK: - Supporting Types

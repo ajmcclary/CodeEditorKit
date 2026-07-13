@@ -30,8 +30,6 @@
     - blue: 10
     - green: 6
     - red: 5
-  ▿ backgroundAppearance: Optional<String>
-    - some: "opaque"
   ▿ borders: BorderColors
     ▿ base: Color
       - alpha: 1.0
@@ -43,7 +41,6 @@
       - blue: 42
       - green: 31
       - red: 27
-    - extras: 0 key/value pairs
     ▿ focused: Color
       - alpha: 1.0
       - blue: 51
@@ -70,7 +67,6 @@
       - blue: 67
       - green: 42
       - red: 29
-    - extras: 0 key/value pairs
     ▿ paneFocusedBorder: Color
       - alpha: 1.0
       - blue: 51
@@ -147,13 +143,13 @@
       - green: 16
       - red: 13
   ▿ dropTarget: Color
-    - alpha: 0.25098039215686274
+    - alpha: 0.2509803922
     - blue: 51
     - green: 153
     - red: 255
   ▿ editor: EditorColors
     ▿ activeLineBackground: Color
-      - alpha: 0.0784313725490196
+      - alpha: 0.0784313725
       - blue: 51
       - green: 153
       - red: 255
@@ -178,16 +174,15 @@
       - green: 204
       - red: 255
     ▿ documentHighlightRead: Color
-      - alpha: 0.14901960784313725
+      - alpha: 0.1490196078
       - blue: 222
       - green: 200
       - red: 126
     ▿ documentHighlightWrite: Color
-      - alpha: 0.14901960784313725
+      - alpha: 0.1490196078
       - blue: 51
       - green: 153
       - red: 255
-    - extras: 0 key/value pairs
     ▿ foreground: Color
       - alpha: 1.0
       - blue: 216
@@ -262,7 +257,7 @@
         - red: 42
     ▿ ghostElement: States
       ▿ active: Color
-        - alpha: 0.1607843137254902
+        - alpha: 0.1607843137
         - blue: 51
         - green: 153
         - red: 255
@@ -277,222 +272,18 @@
         - green: 0
         - red: 0
       ▿ hover: Color
-        - alpha: 0.10196078431372549
+        - alpha: 0.1019607843
         - blue: 176
         - green: 216
         - red: 255
       ▿ selected: Color
-        - alpha: 0.1607843137254902
+        - alpha: 0.1607843137
         - blue: 51
         - green: 153
         - red: 255
-  ▿ extras: 29 key/value pairs
-    ▿ (2 elements)
-      - key: "terminal.ansi.background"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 15
-        - green: 10
-        - red: 8
-    ▿ (2 elements)
-      - key: "terminal.ansi.black"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 10
-        - green: 6
-        - red: 5
-    ▿ (2 elements)
-      - key: "terminal.ansi.blue"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 167
-        - green: 126
-        - red: 37
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_black"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 130
-        - green: 114
-        - red: 104
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_blue"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 222
-        - green: 200
-        - red: 126
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_cyan"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 247
-        - green: 234
-        - red: 156
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_green"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 208
-        - green: 243
-        - red: 167
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_magenta"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 255
-        - green: 153
-        - red: 204
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_red"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 122
-        - green: 122
-        - red: 255
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_white"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 237
-        - green: 247
-        - red: 255
-    ▿ (2 elements)
-      - key: "terminal.ansi.bright_yellow"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 138
-        - green: 224
-        - red: 255
-    ▿ (2 elements)
-      - key: "terminal.ansi.cyan"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 222
-        - green: 200
-        - red: 126
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_black"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 54
-        - green: 43
-        - red: 37
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_blue"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 95
-        - green: 58
-        - red: 30
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_cyan"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 167
-        - green: 126
-        - red: 37
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_green"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 145
-        - green: 181
-        - red: 76
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_magenta"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 230
-        - green: 99
-        - red: 138
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_red"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 55
-        - green: 55
-        - red: 201
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_white"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 161
-        - green: 147
-        - red: 139
-    ▿ (2 elements)
-      - key: "terminal.ansi.dim_yellow"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 0
-        - green: 91
-        - red: 182
-    ▿ (2 elements)
-      - key: "terminal.ansi.green"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 222
-        - green: 200
-        - red: 126
-    ▿ (2 elements)
-      - key: "terminal.ansi.magenta"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 255
-        - green: 153
-        - red: 204
-    ▿ (2 elements)
-      - key: "terminal.ansi.red"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 90
-        - green: 90
-        - red: 239
-    ▿ (2 elements)
-      - key: "terminal.ansi.white"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 216
-        - green: 231
-        - red: 242
-    ▿ (2 elements)
-      - key: "terminal.ansi.yellow"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 102
-        - green: 204
-        - red: 255
-    ▿ (2 elements)
-      - key: "terminal.background"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 15
-        - green: 10
-        - red: 8
-    ▿ (2 elements)
-      - key: "terminal.bright_foreground"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 237
-        - green: 247
-        - red: 255
-    ▿ (2 elements)
-      - key: "terminal.dim_foreground"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 161
-        - green: 147
-        - red: 139
-    ▿ (2 elements)
-      - key: "terminal.foreground"
-      ▿ value: Color
-        - alpha: 1.0
-        - blue: 216
-        - green: 231
-        - red: 242
   ▿ hint: HintColors
     ▿ background: Color
-      - alpha: 0.10196078431372549
+      - alpha: 0.1019607843
       - blue: 222
       - green: 200
       - red: 126
@@ -506,7 +297,6 @@
       - blue: 167
       - green: 126
       - red: 37
-    - extras: 0 key/value pairs
   ▿ icon: IconLevels
     ▿ accent: Color
       - alpha: 1.0
@@ -523,7 +313,6 @@
       - blue: 82
       - green: 66
       - red: 59
-    - extras: 0 key/value pairs
     ▿ muted: Color
       - alpha: 1.0
       - blue: 161
@@ -553,7 +342,7 @@
         - green: 153
         - red: 255
       ▿ selection: Color
-        - alpha: 0.3333333333333333
+        - alpha: 0.3333333333
         - blue: 51
         - green: 153
         - red: 255
@@ -570,7 +359,7 @@
         - green: 200
         - red: 126
       ▿ selection: Color
-        - alpha: 0.26666666666666666
+        - alpha: 0.2666666667
         - blue: 222
         - green: 200
         - red: 126
@@ -587,7 +376,7 @@
         - green: 153
         - red: 204
       ▿ selection: Color
-        - alpha: 0.26666666666666666
+        - alpha: 0.2666666667
         - blue: 255
         - green: 153
         - red: 204
@@ -604,13 +393,13 @@
         - green: 90
         - red: 239
       ▿ selection: Color
-        - alpha: 0.26666666666666666
+        - alpha: 0.2666666667
         - blue: 90
         - green: 90
         - red: 239
   ▿ predictive: PredictiveColors
     ▿ background: Color
-      - alpha: 0.10196078431372549
+      - alpha: 0.1019607843
       - blue: 222
       - green: 200
       - red: 126
@@ -624,11 +413,9 @@
       - blue: 167
       - green: 126
       - red: 37
-    - extras: 0 key/value pairs
   ▿ scrollbar: ScrollbarColors
-    - extras: 0 key/value pairs
     ▿ thumbBackground: Color
-      - alpha: 0.6666666666666666
+      - alpha: 0.6666666667
       - blue: 51
       - green: 153
       - red: 255
@@ -653,16 +440,15 @@
       - green: 34
       - red: 27
   ▿ search: SearchColors
-    - extras: 0 key/value pairs
     ▿ matchBackground: Color
-      - alpha: 0.5333333333333333
+      - alpha: 0.5333333333
       - blue: 102
       - green: 204
       - red: 255
   ▿ status: StatusPalette
     ▿ conflict: Status
       ▿ background: Color
-        - alpha: 0.1607843137254902
+        - alpha: 0.1607843137
         - blue: 51
         - green: 153
         - red: 255
@@ -678,7 +464,7 @@
         - red: 255
     ▿ error: Status
       ▿ background: Color
-        - alpha: 0.1411764705882353
+        - alpha: 0.1411764706
         - blue: 90
         - green: 90
         - red: 239
@@ -694,7 +480,7 @@
         - red: 239
     ▿ info: Status
       ▿ background: Color
-        - alpha: 0.10196078431372549
+        - alpha: 0.1019607843
         - blue: 222
         - green: 200
         - red: 126
@@ -710,7 +496,7 @@
         - red: 37
     ▿ success: Status
       ▿ background: Color
-        - alpha: 0.10196078431372549
+        - alpha: 0.1019607843
         - blue: 222
         - green: 200
         - red: 126
@@ -726,7 +512,7 @@
         - red: 37
     ▿ warning: Status
       ▿ background: Color
-        - alpha: 0.1411764705882353
+        - alpha: 0.1411764706
         - blue: 102
         - green: 204
         - red: 255
@@ -810,7 +596,7 @@
       ▿ value: SyntaxStyle
         ▿ backgroundColor: Optional<Color>
           ▿ some: Color
-            - alpha: 0.10196078431372549
+            - alpha: 0.1019607843
             - blue: 222
             - green: 200
             - red: 126
@@ -1117,7 +903,6 @@
       - blue: 104
       - green: 88
       - red: 79
-    - extras: 0 key/value pairs
     ▿ muted: Color
       - alpha: 1.0
       - blue: 173
@@ -1131,7 +916,7 @@
   ▿ vcs: VCSPalette
     ▿ created: VCS
       ▿ background: Color
-        - alpha: 0.12156862745098039
+        - alpha: 0.1215686275
         - blue: 222
         - green: 200
         - red: 126
@@ -1147,7 +932,7 @@
         - red: 37
     ▿ deleted: VCS
       ▿ background: Color
-        - alpha: 0.1411764705882353
+        - alpha: 0.1411764706
         - blue: 90
         - green: 90
         - red: 239
@@ -1195,7 +980,7 @@
         - red: 27
     ▿ modified: VCS
       ▿ background: Color
-        - alpha: 0.1411764705882353
+        - alpha: 0.1411764706
         - blue: 51
         - green: 153
         - red: 255
@@ -1211,7 +996,7 @@
         - red: 255
     ▿ renamed: VCS
       ▿ background: Color
-        - alpha: 0.12156862745098039
+        - alpha: 0.1215686275
         - blue: 255
         - green: 153
         - red: 204

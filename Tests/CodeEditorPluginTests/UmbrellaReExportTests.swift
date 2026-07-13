@@ -28,7 +28,7 @@ final class UmbrellaReExportTests: XCTestCase {
         let error: CodeEditorError = .invalidConfiguration("smoke")
         XCTAssertNotNil(error.errorDescription)
 
-        // CodeEditorTheming via @_exported — naming a public type from
+        // DesignKitThemes via @_exported — naming a public type from
         // that module proves the symbol resolves through the umbrella.
         _ = SyntaxStyle.self
     }

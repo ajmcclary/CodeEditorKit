@@ -93,7 +93,7 @@ All diagrams are written in Mermaid syntax and can be viewed:
 
 ## Regenerating Dependency Diagrams
 
-Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. They reflect the actual products and important target dependencies declared in the manifest, including the focused library products (`CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, `CodeEditorWorkspace`, `CodeEditorDesignTokens`), the umbrella `CodeEditorPlugin`, the sample executable, runtime dependencies, and test-only dependencies.
+Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. They reflect the actual products and important target dependencies declared in the manifest, including the focused library products (`CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, `CodeEditorWorkspace`), the umbrella `CodeEditorPlugin`, the sample executable, runtime dependencies, and test-only dependencies.
 
 ## Diagram Conventions
 

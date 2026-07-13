@@ -1,7 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorLanguages
-import DesignKitThemes
 import CodeEditorView
+import DesignKitThemes
 
 /// Value state used to decide whether a SwiftUI render requires view mutation.
 struct EditorRenderState: Equatable {

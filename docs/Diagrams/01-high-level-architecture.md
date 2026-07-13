@@ -142,7 +142,7 @@ graph TD
         CDP["Umbrella<br/>CodeEditorPlugin"]
         CEVP["Editor Surface<br/>CodeEditorView"]
         CSUI["SwiftUI Wrapper<br/>CodeEditorSwiftUI"]
-        CDT["Design Tokens<br/>CodeEditorDesignTokens"]
+        CDT["Design Tokens<br/>DesignKit (external)"]
         CUI["Optional Chrome<br/>CodeEditorUI"]
         CDIAG["Diagnostics<br/>CodeEditorDiagnostics"]
         CLSP["LSP<br/>CodeEditorLSP"]

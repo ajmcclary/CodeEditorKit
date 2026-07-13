@@ -19,7 +19,6 @@ Sources/
 ├── CodeEditorSwiftUI/            # SwiftUI `CodeEditor` wrapper and environment
 ├── CodeEditorUI/                 # Optional SwiftUI chrome/components
 ├── CodeEditorConfiguration/      # Settings, presets, validation
-├── CodeEditorTheming/            # Theme model, loader, bundled theme JSON
 ├── CodeEditorSyntaxHighlighting/ # SwiftSyntax/regex highlighters and range-query helpers
 ├── CodeEditorLanguages/          # Language catalog, detection, folding/symbol interfaces
 ├── CodeEditorCompletion/         # Completion manager, ranking, providers, UI adapters

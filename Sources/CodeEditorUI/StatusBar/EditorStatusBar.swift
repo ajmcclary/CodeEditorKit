@@ -1,8 +1,8 @@
 import CodeEditorConfiguration
-import DesignKitTokens
 import CodeEditorSwiftUI
-import DesignKitThemes
 import CodeEditorView
+import DesignKitThemes
+import DesignKitTokens
 import SwiftUI
 
 /// Bottom status bar — language indicator on the left, selection +

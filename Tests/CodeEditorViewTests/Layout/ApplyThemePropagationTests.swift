@@ -1,7 +1,7 @@
-import DesignKitTokens
 import CodeEditorPlatform
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
+import DesignKitTokens
 import Foundation
 import Testing
 
@@ -51,7 +51,7 @@ struct ApplyThemePropagationTests {
     func differentThemesUpdate() {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
         container.apply(theme: .lcarsDark)
-        let fallback = Theme.fallback(appearance: .light)
+        let fallback = Theme.lcarsLight
         container.apply(theme: fallback)
         #expect(container.appliedTheme == fallback)
         #expect(container.appliedTheme != Theme.lcarsDark)
@@ -77,7 +77,7 @@ struct ApplyThemePropagationTests {
         let textView = container.textView
         textView.string = "first line\nsecond line\nthird line"
 
-        let light = try #require(ThemeFamily.bundled("zed-trek")?.theme(named: "LCARS Light"))
+        let light = Theme.lcarsLight
         container.apply(theme: light)
         #expect(renderingForegroundColor(in: textView)?.cgColor == PlatformColor(tokens: light.style.editor.foreground).cgColor)
 
@@ -111,7 +111,7 @@ struct ApplyThemePropagationTests {
         #expect(container.textView.usesAdaptiveColorMappingForDarkAppearance == false)
         #expect(container.textView.appearance?.name == NSAppearance.Name.darkAqua)
 
-        let light = try #require(ThemeFamily.bundled("zed-trek")?.theme(named: "LCARS Light"))
+        let light = Theme.lcarsLight
         container.apply(theme: light)
         #expect(container.textView.usesAdaptiveColorMappingForDarkAppearance == false)
         #expect(container.textView.appearance?.name == NSAppearance.Name.aqua)

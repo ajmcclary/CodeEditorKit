@@ -1,7 +1,7 @@
 #if canImport(AppKit)
 import AppKit
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
 import XCTest
 
 @MainActor

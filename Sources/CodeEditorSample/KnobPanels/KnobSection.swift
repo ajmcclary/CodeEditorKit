@@ -1,6 +1,6 @@
-import DesignKitTokens
 import CodeEditorPlugin
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// How a `KnobSection`'s content area behaves.

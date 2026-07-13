@@ -65,17 +65,9 @@
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditor+AppKitExtensions.swift:52 and Sources/CodeEditorSwiftUI/CodeEditor+UIKitExtensions.swift:49 remain explicit to preserve framework-specific types and call sites."
     },
-    "2269e1f84661533e": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/BorderColors.swift:37 and Sources/CodeEditorTheming/ChromeColors.swift:80 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
     "22e8fbe228f800b3": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LanguageProviderFactory.swift:104 and Sources/CodeEditorLanguages/LanguageProviderFactory.swift:142 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
-    "26511e0322c1537a": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/ChromeColors.swift:81 and Sources/CodeEditorTheming/ElementStates.swift:46 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
     "27770bb1773ccfb1": {
       "classification": "semantic-schema",
@@ -193,10 +185,6 @@
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTextModel/Text/SinglePhaseRangeValidator.swift:194 and Sources/CodeEditorTextModel/Text/SinglePhaseRangeValidator.swift:231 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
-    "97eb8713d2a780df": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/EditorColors.swift:79 and Sources/CodeEditorTheming/ScrollbarColors.swift:33 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
     "98d74742fadea098": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorCompletion/CompletionViewController.swift:86 and Sources/CodeEditorCompletion/CompletionViewController.swift:301 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
@@ -212,10 +200,6 @@
     "a0873ed13a587e60": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorDiagnostics/UnifiedPerformanceSystem.swift:51 and Sources/CodeEditorDiagnostics/UnifiedPerformanceSystem.swift:99 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
-    "a0f5dc3f5b6c2d1c": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/ThemeStyle.swift:77 and Sources/CodeEditorTheming/ThemeStyle.swift:182 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
     "a13ec3b057104f97": {
       "classification": "platform-contract",
@@ -240,14 +224,6 @@
     "a9a46cc76538dc78": {
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/InsertionPointView.swift:19 and Sources/CodeEditorLayout/LineHighlightView.swift:75 remain explicit to preserve framework-specific types and call sites."
-    },
-    "ac25b73766b0588e": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/StatusPalette.swift:10 and Sources/CodeEditorTheming/VCSPalette.swift:11 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
-    "ad7e61d3b2e3dd04": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/StatusPalette.swift:56 and Sources/CodeEditorTheming/VCSPalette.swift:68 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
     "b18bfc74cdd8f440": {
       "classification": "platform-contract",
@@ -281,10 +257,6 @@
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/CompletionCellComponents.swift:299 and Sources/CodeEditorLayout/CompletionCellComponents.swift:417 remain explicit to preserve framework-specific types and call sites."
     },
-    "c99ca32a2f5da99c": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/HintColors.swift:7 and Sources/CodeEditorTheming/PredictiveColors.swift:8 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
     "cba0230dad755714": {
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorView+Responder.swift:5 and Sources/CodeEditorView/CodeEditorView+Responder.swift:21 remain explicit to preserve framework-specific types and call sites."
@@ -292,10 +264,6 @@
     "cc598cd307066387": {
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/MinimapView.swift:459 and Sources/CodeEditorView/Layout/MinimapView.swift:593 remain explicit to preserve framework-specific types and call sites."
-    },
-    "cee45310e351f79f": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTheming/IconLevels.swift:8 and Sources/CodeEditorTheming/TextLevels.swift:9 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
     "d1464b6cffb22984": {
       "classification": "semantic-schema",

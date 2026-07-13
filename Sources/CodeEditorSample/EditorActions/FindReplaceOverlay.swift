@@ -1,6 +1,6 @@
-import DesignKitTokens
 import CodeEditorPlugin
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// Xcode-style overlay banner pinned to the top of the editor pane.

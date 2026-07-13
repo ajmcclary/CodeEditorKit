@@ -25,7 +25,7 @@ The floor is intentional, not aspirational — the editor uses APIs introduced i
 
 The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. Release tags are not published yet, so SwiftPM consumers should use the `main` branch until tags exist.
 
-`CodeEditorPlugin` is now a small umbrella library over extracted sibling targets. `import CodeEditorPlugin` gives host apps the normal editor entry points, while focused products are available for direct use when you only need a subsystem: `CodeEditorDesignTokens`, `CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, and `CodeEditorWorkspace`.
+`CodeEditorPlugin` is now a small umbrella library over extracted sibling targets. `import CodeEditorPlugin` gives host apps the normal editor entry points, while focused products are available for direct use when you only need a subsystem: `CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, and `CodeEditorWorkspace`. Design tokens and themes come from the external `DesignKit` package (`DesignKitTokens`, `DesignKitThemes`).
 
 ## By topic
 

@@ -1,5 +1,5 @@
-import DesignKitTokens
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// Style protocol for `EditorCommandPalette`, à la `ButtonStyle`.

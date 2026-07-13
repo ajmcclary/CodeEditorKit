@@ -1,8 +1,8 @@
-import DesignKitTokens
 @testable import CodeEditorPlugin
 @testable import CodeEditorSwiftUI
-import DesignKitThemes
 @testable import CodeEditorUI
+import DesignKitThemes
+import DesignKitTokens
 import Foundation
 import SwiftUI
 import Testing
@@ -26,18 +26,18 @@ struct ThemeChromeAccessorTests {
         #expect(theme.panelFocusedBorderColor == Color(tokens: theme.style.chrome.panelFocusedBorder))
     }
 
-    @Test("glass accessors map to platform.glass.* underlying tokens")
+    @Test("glass accessors map to glass.glass.* underlying tokens")
     func glassAccessorsMapCorrectly() {
         let theme = Theme.lcarsDark
-        #expect(theme.glassTintColor == Color(tokens: theme.platform.glass.tint))
-        #expect(theme.glassOpacity == theme.platform.glass.opacity)
+        #expect(theme.glassTintColor == Color(tokens: theme.glass.glass.tint))
+        #expect(theme.glassOpacity == theme.glass.glass.opacity)
     }
 
-    @Test("popoverShadow returns the platform.shadows.popover values")
+    @Test("popoverShadow returns the glass.shadows.popover values")
     func popoverShadowMaps() {
         let theme = Theme.lcarsDark
         let shadow = theme.popoverShadow
-        let source = theme.platform.shadows.popover
+        let source = theme.glass.shadows.popover
         #expect(shadow.color == Color(tokens: source.color))
         #expect(shadow.blur == CGFloat(source.blur))
         #expect(shadow.x == CGFloat(source.xOffset))

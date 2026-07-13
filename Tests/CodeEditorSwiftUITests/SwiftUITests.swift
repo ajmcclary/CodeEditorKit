@@ -1,8 +1,8 @@
 import CodeEditorConfiguration
 import CodeEditorLanguages
 @testable import CodeEditorSwiftUI
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
 import SwiftUI
 import XCTest
 
@@ -37,7 +37,7 @@ final class SwiftUITests: XCTestCase {
     func testEnvironmentThemePropagation() {
         // Test that the environment key properly stores and retrieves values
         struct TestView: View {
-            @Environment(\.codeEditorTheme) var theme
+            @Environment(\.designTheme) var theme
 
             var body: some View {
                 Text("Test")
@@ -46,7 +46,7 @@ final class SwiftUITests: XCTestCase {
 
         // Create a view and verify the environment modifier works
         let view = TestView()
-            .environment(\.codeEditorTheme, .dark)
+            .environment(\.designTheme, .lcarsDark)
 
         // The environment value should be properly set
         let mirror = Mirror(reflecting: view)
@@ -107,7 +107,7 @@ final class SwiftUITests: XCTestCase {
         )
 
         let view = CodeEditor(text: binding)
-            .codeTheme(.dark)
+            .designTheme(.lcarsDark)
 
         // The modifier should set the environment value
         let mirror = Mirror(reflecting: view)
@@ -168,7 +168,7 @@ final class SwiftUITests: XCTestCase {
             set: { _ in }
         )
 
-        let view = CodeEditor(text: binding, language: .python, theme: .dark)
+        let view = CodeEditor(text: binding, language: .python, theme: .lcarsDark)
 
         // The initializer should create a valid view
         XCTAssertNotNil(view)
@@ -183,7 +183,7 @@ final class SwiftUITests: XCTestCase {
             set: { _ in }
         )
 
-        let view = CodeEditor.withLanguage(binding, language: .python, theme: .dark)
+        let view = CodeEditor.withLanguage(binding, language: .python, theme: .lcarsDark)
 
         // The factory should return a view with environment values set
         XCTAssertNotNil(view)

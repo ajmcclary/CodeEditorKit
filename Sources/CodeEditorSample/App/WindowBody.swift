@@ -2,9 +2,9 @@ import CodeEditorConfiguration
 import CodeEditorSwiftUI
 import DesignKitThemes
 #if canImport(AppKit)
-import DesignKitTokens
 import CodeEditorPlugin
 import CodeEditorUI
+import DesignKitTokens
 import SwiftUI
 
 /// Horizontal split: workspace | editor | inspector. macOS only —

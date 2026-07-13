@@ -1,6 +1,6 @@
-import DesignKitTokens
 import CodeEditorSwiftUI
 import DesignKitThemes
+import DesignKitTokens
 import SwiftUI
 
 /// Styled sidebar container. *No tree* — the host fills `content` with

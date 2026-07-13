@@ -1,8 +1,8 @@
-import DesignKitTokens
 import CodeEditorSwiftUI
 import CodeEditorSymbols
-import DesignKitThemes
 import CodeEditorView
+import DesignKitThemes
+import DesignKitTokens
 import SwiftUI
 
 /// Renders a breadcrumb trail (workspace › folder › file › symbol).

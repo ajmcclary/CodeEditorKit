@@ -1,8 +1,8 @@
-import DesignKitTokens
 @testable import CodeEditorLayout
 import CodeEditorPlatform
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
+import DesignKitTokens
 import Foundation
 import Testing
 
@@ -48,14 +48,14 @@ struct CompletionCellGlassTests {
         #expect(abs(metrics.cornerRadius - CGFloat(Tokens.Shape.radiusMD)) < 0.001)
     }
 
-    @Test("_GlassSurface.themedTintColor = platform.glass.tint @ glass.opacity")
+    @Test("_GlassSurface.themedTintColor = glass.glass.tint @ glass.opacity")
     @MainActor
     func glassSurfaceTint() {
         let surface = _GlassSurface(frame: .zero)
         let theme = Theme.lcarsDark
         surface.apply(theme: theme)
-        let expected = PlatformColor(tokens: theme.platform.glass.tint)
-            .withAlphaComponent(CGFloat(theme.platform.glass.opacity))
+        let expected = PlatformColor(tokens: theme.glass.glass.tint)
+            .withAlphaComponent(CGFloat(theme.glass.glass.opacity))
         #expect(surface.themedTintColor == expected)
     }
 

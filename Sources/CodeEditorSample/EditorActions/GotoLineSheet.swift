@@ -1,6 +1,6 @@
-import DesignKitTokens
 import CodeEditorPlugin
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// Modal sheet for jumping the caret to a specific line. Triggered from

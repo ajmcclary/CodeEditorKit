@@ -2,8 +2,8 @@ import CodeEditorDiagnostics
 import CodeEditorLayout
 import CodeEditorPlatform
 import CodeEditorTextModel
-import DesignKitThemes
 import CoreGraphics
+import DesignKitThemes
 import Foundation
 
 #if canImport(AppKit)

@@ -1,8 +1,8 @@
-import DesignKitTokens
 import CodeEditorPlatform
 @testable import CodeEditorSyntaxHighlighting
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
+import DesignKitTokens
 import Foundation
 import Testing
 

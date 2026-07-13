@@ -1,7 +1,7 @@
 import CodeEditorAnnotations
 @testable import CodeEditorLayout
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
 import Foundation
 import Testing
 

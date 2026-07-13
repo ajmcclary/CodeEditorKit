@@ -1,6 +1,6 @@
-import DesignKitTokens
 import CodeEditorSwiftUI
 import DesignKitThemes
+import DesignKitTokens
 import SwiftUI
 
 /// One row inside the command palette. Public so custom styles can

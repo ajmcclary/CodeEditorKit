@@ -1,7 +1,7 @@
 import CodeEditorConfiguration
-import DesignKitTokens
 @testable import CodeEditorLayout
 @testable import CodeEditorView
+import DesignKitTokens
 import Foundation
 import SwiftUI
 import Testing

@@ -1,7 +1,7 @@
-import DesignKitTokens
 import CodeEditorLanguages
 import CodeEditorPlugin
 import CodeEditorSwiftUI
+import DesignKitTokens
 import SwiftUI
 
 /// Inspector surface that lists the host-managed annotations and

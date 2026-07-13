@@ -22,7 +22,6 @@ swift run CodeEditorSample
 # Build a single library target
 swift build --target CodeEditorPlugin
 swift build --target CodeEditorUI
-swift build --target CodeEditorDesignTokens
 
 # Run the package test helper
 ./Scripts/run-parallel-tests.sh
@@ -30,11 +29,10 @@ swift build --target CodeEditorDesignTokens
 
 ## Package Structure
 
-**Swift 6.3** with `StrictConcurrency` enabled. 11 products defined in `Package.swift`:
+**Swift 6.3** with `StrictConcurrency` enabled. 10 products defined in `Package.swift`:
 
 | Product | Type | Purpose |
 |---|---|---|
-| `CodeEditorDesignTokens` | library | Design tokens (colors, spacing, typography) |
 | `CodeEditorDiagnostics` | library | Opt-in performance and memory diagnostics |
 | `CodeEditorLSP` | library | Language Server Protocol client and transports |
 | `CodeEditorLayout` | library | Editor presentation and layout primitives |
@@ -46,11 +44,11 @@ swift build --target CodeEditorDesignTokens
 | `CodeEditorWorkspace` | library | Opt-in workspace file-tree interfaces |
 | `CodeEditorSample` | executable | Demo app |
 
-Key dependencies: `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
+Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `DesignKitThemes`), `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
 
 The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
 
-Tests mix both XCTest and Swift Testing frameworks across 10 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorDesignTokensTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSampleTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
+Tests mix both XCTest and Swift Testing frameworks across 9 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSampleTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
 
 Tree-sitter work is internal scaffolding only. There is no public configuration flag and no bundled C grammar libraries wired into `Package.swift`; normal syntax highlighting uses the descriptor-backed regex path.
 
@@ -70,7 +68,6 @@ No top-level directories left in the umbrella target source tree (`Resources/` h
 
 Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7); `SendablePerformanceMetric` + `FileChangeNotification` (added §6.2.12b); `SelectionState`, `EditorInteractionState` + `EditorCursorPosition`, `DirtyTracker`, `ErrorRecoveryCoordinator` (added §6.2.12c — `ErrorRecoveryCoordinator` is a rename of umbrella `Core/AsyncOperationErrors.swift`; the now-deleted `CompletionAsyncError` was dead code).
-- `Sources/CodeEditorDesignTokens/` — standalone design-token library.
 - `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds; phase 4).
 - `Sources/CodeEditorFolding/` — fold-storage primitives (`FoldStoreElement`, `LineFoldStorage`, `FoldInfo`), `FoldRegionAdapter`, and `FoldingProviderRegistry` (phase 4; new in §6.2.8a). The view-coupled fold engine, operations service, and presentation strategy live in `Sources/CodeEditorView/Folding/` (moved with the rest of `Core/` in §6.2.12).
 - `Sources/CodeEditorSymbols/` — symbol-navigation surface: `BreadcrumbItem`, `SymbolNavigationConfiguration`, `SymbolProviderCatalog`, and generic `SymbolRangeIndex` storage (phase 4; new in §6.2.8b). The view-coupled `SymbolNavigator` lives in `Sources/CodeEditorView/Symbols/` (moved with the rest of `Core/` in §6.2.12).
@@ -78,7 +75,6 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorPlatform/` — cross-platform color/font/view abstractions (phase 0).
 - `Sources/CodeEditorTextModel/` — TextKit2 primitives, `RangeStore`/`RangeStoreElement`/`RangeStoreRun`, geometry, location, parsing primitives (phase 1; RangeStore relocated from umbrella in §6.2.7).
 - `Sources/CodeEditorConfiguration/` — settings, presets, validation (phase 1).
-- `Sources/CodeEditorTheming/` — theme system, color tokens, appearance + bundled theme JSON (phase 2).
 - `Sources/CodeEditorAnnotations/` — annotation data model + view chrome: `Annotation`, `AnnotationKind`, `AnnotationView`, `AnnotationsContentView`, `CodeEditorViewAnnotation`, `LineAnnotation`, `MessageLineAnnotation` (phase 4; new in §6.2.8e). The view-coupled `AnnotationsDataSource` protocol lives in `Sources/CodeEditorView/Annotations/` (its required method takes `CodeEditorView`). Not productized — `CodeEditorView` and `CodeEditorSwiftUI` both consume Annotation types directly, so it routes through those targets rather than as an opt-in `.library`.
 - `Sources/CodeEditorSearch/` — project-wide file-search protocols + portable adapter (phase 4; new in §6.2.8d). Productized as opt-in `.library` per NEXT.md §6.3; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; cross-platform (no `#if canImport`). The in-document `SearchReplaceEngine` lives in `Sources/CodeEditorView/Search/` (CodeEditorView-coupled; moved with the rest of `Core/` in §6.2.12).
 - `Sources/CodeEditorSmartEditing/` — smart-editing engines: `SmartEditingEngine` (top-level coordinator) + 4 strategy engines (`AutoBracketingEngine`, `MultiCursorEditor`, `SmartIndentationEngine`, `SmartSelectionExpander`). 5 files (phase 4; new in §6.2.8c — closes the §6.2.8 feature-engine extraction series). Not productized — umbrella `CodeEditorPlugin` depends on it directly (matches Folding/Symbols/Annotations/Completion precedent). Hosts attach via `engine.attach(to: codeEditorView)` — not wired into `EditorConfiguration`. Sub-folder `Features/SmartEditing/` flattened at destination per the target-name-is-the-namespace convention.

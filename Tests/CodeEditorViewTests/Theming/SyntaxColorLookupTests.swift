@@ -1,6 +1,6 @@
-import DesignKitTokens
-import DesignKitThemes
 @testable import CodeEditorView
+import DesignKitThemes
+import DesignKitTokens
 import Foundation
 import Testing
 

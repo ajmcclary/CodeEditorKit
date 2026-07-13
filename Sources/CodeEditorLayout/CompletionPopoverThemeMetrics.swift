@@ -1,7 +1,7 @@
-import DesignKitTokens
 import CodeEditorPlatform
-import DesignKitThemes
 import CoreGraphics
+import DesignKitThemes
+import DesignKitTokens
 import Foundation
 
 /// Value-typed bundle of theme-derived metrics for the completion

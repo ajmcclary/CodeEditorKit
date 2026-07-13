@@ -1,6 +1,6 @@
-import DesignKitTokens
-import DesignKitThemes
 import CoreGraphics
+import DesignKitThemes
+import DesignKitTokens
 import Foundation
 
 #if canImport(AppKit)

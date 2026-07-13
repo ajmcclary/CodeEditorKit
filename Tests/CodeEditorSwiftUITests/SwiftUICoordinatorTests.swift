@@ -125,7 +125,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
             container,
             text: "updated",
             language: .python,
-            theme: .dark,
+            theme: .lcarsDark,
             configuration: .minimal,
             runtimeDependencies: runtimeDependencies
         )

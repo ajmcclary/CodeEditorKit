@@ -250,6 +250,12 @@ force_unwrapping:
 # ===========================
 
 custom_rules:
+  no_retired_design_modules:
+    included: '.*\.swift'
+    name: "No retired design modules"
+    regex: 'import Code(EditorDesignTokens|EditorTheming)'
+    message: "CodeEditorDesignTokens/CodeEditorTheming are retired — import DesignKitTokens/DesignKitThemes."
+    severity: error
   no_print_statements:
     included: '.*\.swift'
     name: "No print statements"

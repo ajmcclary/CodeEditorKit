@@ -1,9 +1,9 @@
 #if canImport(AppKit)
-import DesignKitTokens
 import CodeEditorPlugin
 import CodeEditorSearch
 import CodeEditorSwiftUI
 import CodeEditorView
+import DesignKitTokens
 import SwiftUI
 
 struct ProjectSearchPanelView: View {

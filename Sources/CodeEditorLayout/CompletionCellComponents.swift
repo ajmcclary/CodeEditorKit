@@ -1,6 +1,6 @@
-import DesignKitTokens
 import CodeEditorPlatform
 import DesignKitThemes
+import DesignKitTokens
 import Foundation
 #if canImport(AppKit)
 import AppKit
