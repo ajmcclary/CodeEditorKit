@@ -50,7 +50,7 @@ swift build --target CodeEditorUI
 
 Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `DesignKitThemes`), `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
 
-The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
+`swift-snapshot-testing` is consumed from upstream by version (`from: "1.19.3"`, tests only). The former `ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable` fork was only required on the open-source `swift-6.3-RELEASE` toolchain (cross-import-overlay `Attachable` conformances weren't visible to the SnapshotTesting library target); it builds cleanly under the Apple Swift 6.4 / Xcode 27 toolchain this workspace targets. Keep it version-pinned so the package stays consumable by stable-version dependents.
 
 Tests mix both XCTest and Swift Testing frameworks across 11 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorHighlightingCoreTests`, `CodeEditorHygieneTests`, `CodeEditorLSPIntegrationTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
 

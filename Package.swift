@@ -135,11 +135,13 @@ let package = Package(
         .package(url: "https://github.com/ajmcclary/LanguageKit.git", .upToNextMinor(from: "0.1.0")),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
-        // TEMP: using ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable
-        // because upstream 1.19.x fails to build under Swift 6.3's Testing
-        // Attachment APIs. Revert to upstream after pointfreeco/swift-snapshot-testing#1090
-        // lands in a tagged release.
-        .package(url: "https://github.com/ajmcclary/swift-snapshot-testing", branch: "fix-swift-6.3-attachable"),
+        // Test-only dependency. Upstream 1.19.3 builds cleanly under the
+        // Apple Swift 6.4 / Xcode 27 toolchain this workspace targets; the
+        // former ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable
+        // fork was only needed on the open-source swift-6.3-RELEASE toolchain
+        // (cross-import-overlay Attachable conformances). Version-pinned so
+        // this package stays consumable by stable-version dependents.
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.19.3"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0")
     ],

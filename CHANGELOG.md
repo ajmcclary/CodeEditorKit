@@ -2,6 +2,25 @@
 
 All notable changes to CodeEditorPlugin are documented in this file.
 
+## [0.1.0-beta.2] - 2026-07-13
+
+Dependency hygiene and a target-graph split since beta.1.
+
+- **Dependency hygiene:** the test-only `swift-snapshot-testing` dependency now
+  points at upstream by version (`from: "1.19.3"`) instead of the branch-pinned
+  `ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable` fork. Upstream
+  1.19.3 builds cleanly under the Apple Swift 6.4 / Xcode 27 toolchain; the fork
+  was only needed on the open-source `swift-6.3-RELEASE` toolchain. Removing the
+  branch pin makes the package consumable by stable-version dependents (LanguageKit
+  was already pinned by version in beta.1).
+- **Target split (Task 6):** lightweight runtime instrumentation was split out of
+  `CodeEditorDiagnostics` into a new `CodeEditorInstrumentation` product; the LSP
+  editor bridge was extracted into `CodeEditorLSPIntegration`, dropping the
+  `CodeEditorView → CodeEditorLSP` edge so LSP is genuinely optional; and a
+  view-free `CodeEditorHighlightingCore` value contract was introduced as the
+  external highlight seam. Product count grew accordingly (see the target table
+  in `CLAUDE.md`).
+
 ## [0.1.0-beta.1] - 2026-07-13
 
 First documented prerelease.
