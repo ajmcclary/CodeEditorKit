@@ -1,31 +1,34 @@
 import CodeEditorCommon
-import CodeEditorLanguages
+import CodeEditorHighlightingCore
 import CodeEditorLSP
-import CodeEditorPlatform
 import CodeEditorSyntaxHighlighting
 import Foundation
 
 // MARK: - LSP Semantic Token Provider
 
-/// A `RangeHighlightProviding` adapter that feeds LSP semantic tokens
-/// into the range-store highlighting pipeline at priority -1 (higher
-/// than syntax token priority 0, so semantic tokens override syntax).
+/// A value-oriented ``HighlightRangeProviding`` adapter that feeds LSP semantic
+/// tokens into the editor's range-store highlighting pipeline at priority -1
+/// (higher than syntax token priority 0, so semantic tokens override syntax).
+///
+/// The provider consumes immutable ``HighlightDocumentSnapshot`` values — it
+/// never touches the editor view — so it lives entirely in the
+/// `CodeEditorLSPIntegration` product, out of `CodeEditorView`.
 ///
 /// ## Refresh ordering (critical)
 ///
-/// The provider does **not** call the server inside `applyEdit` — doing
-/// so would race the server before it has processed the `didChange`
-/// notification. Instead it subscribes to `LSPContentCoordinator.onBatchFlushed`
-/// (Phase 4) and requests updated tokens only after the server has
+/// The provider does **not** call the server inside ``invalidate(for:in:)`` —
+/// doing so would race the server before it has processed the `didChange`
+/// notification. Instead it is refreshed via ``refreshAfterBatch()``, driven
+/// from `LSPContentCoordinator.onBatchFlushed`, only after the server has
 /// acknowledged the document change.
 ///
 /// ## Token type mapping
 ///
 /// LSP token type indices (from the server's `SemanticTokensLegend`) are
-/// resolved to `TokenType` via a standard mapping table. Unrecognized
-/// types map to `.identifier`.
+/// resolved to `TokenType` via a standard mapping table and emitted as the
+/// token type's raw string. Unrecognized types map to `.identifier`.
 @MainActor
-final class LSPSemanticTokenProvider: RangeHighlightProviding {
+final class LSPSemanticTokenProvider: HighlightRangeProviding {
     // MARK: - Token type mapping
 
     /// Standard LSP token type names → `TokenType`. Index in this array
@@ -61,7 +64,8 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
     private let storage = LSPSemanticTokenStorage()
     private let lspManager: LSPManager
     private let filePath: String
-    private var textView: CodeEditorView?
+    private var languageID = ""
+    private var lastDocumentLength = 0
     private var isSetup = false
 
     /// Called when full or delta token responses update local storage.
@@ -75,62 +79,57 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
         self.filePath = filePath
     }
 
-    // MARK: - RangeHighlightProviding
+    // MARK: - HighlightRangeProviding
 
-    func setUp(textView: CodeEditorView, language: Language) {
-        self.textView = textView
+    func prepare(for document: HighlightDocumentSnapshot) async {
+        languageID = document.languageID
+        lastDocumentLength = document.utf16Length
         isSetup = true
 
         // Request initial full semantic tokens.
         let uri = "file://\(filePath)"
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                let client = self.lspManager.client(
-                    for: language.lspIdentifier
-                )
-                let tokens = try await client?.requestSemanticTokens(uri: uri)
-                if let tokens {
-                    self.storage.applyFull(tokens)
-                    self.notifyTokensUpdated()
-                }
-            } catch {
-                // Non-fatal — server may not support semantic tokens.
-                let logger = CodeEditorLog.lsp(category: "SemanticTokens")
-                logger.debug("Semantic tokens unavailable: \(error.localizedDescription)")
+        do {
+            let client = lspManager.client(for: document.languageID)
+            let tokens = try await client?.requestSemanticTokens(uri: uri)
+            if let tokens {
+                storage.applyFull(tokens)
+                notifyTokensUpdated()
             }
+        } catch {
+            // Non-fatal — server may not support semantic tokens.
+            let logger = CodeEditorLog.lsp(category: "SemanticTokens")
+            logger.debug("Semantic tokens unavailable: \(error.localizedDescription)")
         }
     }
 
-    func willApplyEdit(textView _: CodeEditorView, range _: NSRange) {
-        // No-op: the server manages its own state.
-    }
-
-    func willApplyEdit(textView _: CodeEditorView, source _: String, range _: NSRange) {
-        // No-op.
-    }
-
-    func applyEdit(textView: CodeEditorView, range _: NSRange, delta _: Int) async -> IndexSet {
+    func invalidate(
+        for _: HighlightTextEdit,
+        in document: HighlightDocumentSnapshot
+    ) async -> HighlightInvalidation {
         // Do NOT request tokens from the server here — the server hasn't
         // received the didChange yet. Refresh is triggered from the
-        // post-batch hook instead. Return the full document as invalidated
+        // post-batch hook instead. Report the whole document as invalidated
         // so the visible range is re-queried after refresh.
-        let length = textView.textKitBridge.documentLength
-        return IndexSet(integersIn: 0..<max(1, length))
+        lastDocumentLength = document.utf16Length
+        return .everything(length: max(1, document.utf16Length))
     }
 
-    func queryHighlights(textView: CodeEditorView, range: NSRange) async throws -> [HighlightedToken] {
+    func highlights(
+        in range: HighlightRange,
+        of document: HighlightDocumentSnapshot
+    ) async throws -> [HighlightToken] {
+        lastDocumentLength = document.utf16Length
         guard isSetup, !storage.isEmpty else { return [] }
 
-        // Convert the character range to a line range.
-        let source = textView.textKitBridge.documentString
+        let source = document.text
         guard !source.isEmpty else { return [] }
-        let lineRange = lineNumbers(in: source, for: range)
+        let queryRange = range.nsRange
+        let lineRange = lineNumbers(in: source, for: queryRange)
 
         let decoded = storage.tokens(in: lineRange)
         guard !decoded.isEmpty else { return [] }
 
-        var tokens: [HighlightedToken] = []
+        var tokens: [HighlightToken] = []
         tokens.reserveCapacity(decoded.count)
 
         for dt in decoded {
@@ -146,7 +145,7 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
             ) else { continue }
 
             // Intersect with the query range.
-            let intersection = NSIntersectionRange(utf16Range, range)
+            let intersection = NSIntersectionRange(utf16Range, queryRange)
             guard intersection.length > 0 else { continue }
 
             guard
@@ -164,7 +163,13 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
                 let stringEnd = String.Index(endIdx, within: source)
             else { continue }
             let text = String(source[stringStart..<stringEnd])
-            tokens.append(HighlightedToken(range: intersection, type: tokenType, text: text))
+            tokens.append(
+                HighlightToken(
+                    range: HighlightRange(intersection),
+                    tokenType: tokenType.rawValue,
+                    text: text
+                )
+            )
         }
 
         return tokens
@@ -175,12 +180,12 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
     /// Should be called from `LSPContentCoordinator.onBatchFlushed`.
     /// Requests updated semantic tokens from the server and invalidates
     /// affected ranges.
-    func refreshAfterBatch(textView _: CodeEditorView) {
+    func refreshAfterBatch() {
         guard isSetup else { return }
 
         let uri = "file://\(filePath)"
         let fileExtension = URL(fileURLWithPath: filePath).pathExtension
-        let langId = lspManager.languageId(for: fileExtension) ?? ""
+        let langId = lspManager.languageId(for: fileExtension) ?? languageID
 
         Task { [weak self] in
             guard let self else { return }
@@ -220,9 +225,8 @@ final class LSPSemanticTokenProvider: RangeHighlightProviding {
     }
 
     private func notifyTokensUpdated() {
-        let length = textView?.textKitBridge.documentLength ?? 0
-        guard length > 0 else { return }
-        onTokensUpdated?(IndexSet(integersIn: 0..<length))
+        guard lastDocumentLength > 0 else { return }
+        onTokensUpdated?(IndexSet(integersIn: 0..<lastDocumentLength))
     }
 
     /// Converts a (0-based line, 0-based character, length) triplet

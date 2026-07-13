@@ -119,9 +119,6 @@ final class MemoryMonitorDITests: XCTestCase {
         XCTAssertIdentical(editor.runtime.dependencies.memoryMonitor, memoryMonitor)
         XCTAssertIdentical(editor.runtime.dependencies.languageMetadataRegistry, metadataRegistry)
         XCTAssertEqual(editor.runtime.dependencies.workspaceRoot, workspaceRoot)
-        #if canImport(AppKit)
-        XCTAssertEqual(editor.lspManager.workspaceRoot, workspaceRoot)
-        #endif
 
         editor.completionManager.ensureBuiltInProvider(for: .python)
         let providerIds = editor.completionManager.registeredProviders.map(\.id)
@@ -171,23 +168,6 @@ final class MemoryMonitorDITests: XCTestCase {
             editor.completionManager.registeredProviders.contains { $0.id == provider.id }
         )
     }
-
-    #if canImport(AppKit)
-    @MainActor
-    func testMonitorSwapPreservesLSPManagerAndWorkspaceRoot() {
-        let workspaceRoot = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("CodeEditorMemoryMonitorSwap")
-        let editor = CodeEditorView(frame: .zero)
-        editor.runtime.update(workspaceRoot: workspaceRoot)
-        let manager = editor.lspManager
-        manager.workspaceRoot = workspaceRoot
-
-        editor.memoryMonitor = MemoryMonitor()
-
-        XCTAssertIdentical(editor.lspManager, manager)
-        XCTAssertEqual(editor.lspManager.workspaceRoot, workspaceRoot)
-    }
-    #endif
 
     // MARK: - Cleanup Handler Tests
 

@@ -1,6 +1,7 @@
 import CodeEditorCommon
 import CodeEditorLSP
 import CodeEditorTextModel
+import CodeEditorView
 import Foundation
 
 // MARK: - LSP Content Coordinator

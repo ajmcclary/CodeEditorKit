@@ -61,13 +61,5 @@ struct LSPManagerIOSCoverageTests {
         let provider = LSPCompletionProvider(lspManager: manager, supportedLanguages: [.swift])
         #expect(provider.supportedLanguages == [.swift])
     }
-
-    @Test("LSPSemanticTokenProvider initializes on iOS")
-    func semanticTokenProviderInitializesOnIOS() {
-        let memoryMonitor = MemoryMonitor.mock()
-        let manager = LSPManager(memoryMonitor: memoryMonitor, workspaceRoot: nil)
-        let provider = LSPSemanticTokenProvider(lspManager: manager, filePath: "/tmp/x.swift")
-        _ = provider    // smoke test only — initializes without crashing
-    }
 }
 #endif

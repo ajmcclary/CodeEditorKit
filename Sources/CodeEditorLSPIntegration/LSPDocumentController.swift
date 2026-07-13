@@ -1,25 +1,33 @@
 import CodeEditorLSP
+import CodeEditorView
+import Foundation
 
 /// Teardown surface for document-scoped LSP coordination.
 @MainActor
-package protocol LSPContentCoordinating: AnyObject {
+protocol LSPContentCoordinating: AnyObject {
     /// Stops observing edits and cancels pending document synchronization.
     func detach()
 }
 
 extension LSPContentCoordinator: LSPContentCoordinating {}
 
-/// Owns document-scoped LSP synchronization without owning the shared manager.
+/// Owns document-scoped LSP synchronization for a single editor view without
+/// owning the shared manager.
+///
+/// This controller lives in the `CodeEditorLSPIntegration` product. It reaches
+/// the editor only through package-visible seams (the value-oriented
+/// supplemental-provider API on the range-based highlighting controller and
+/// the text-edit event hub), so `CodeEditorView` carries no LSP dependency.
 @MainActor
-package final class LSPDocumentController: EditorFeatureController {
+final class LSPDocumentController {
     private weak var attachedView: CodeEditorView?
     private var contentCoordinator: (any LSPContentCoordinating)?
-    internal var semanticTokenProvider: LSPSemanticTokenProvider?
-    package private(set) var isAttached = false
+    private var semanticTokenProvider: LSPSemanticTokenProvider?
+    private(set) var isAttached = false
 
-    package init() {}
+    init() {}
 
-    package func attach(to view: CodeEditorView) {
+    func attach(to view: CodeEditorView) {
         guard isAttached == false || attachedView !== view else { return }
 
         detach()
@@ -27,7 +35,7 @@ package final class LSPDocumentController: EditorFeatureController {
         isAttached = true
     }
 
-    package func detach() {
+    func detach() {
         guard isAttached else { return }
 
         if let semanticTokenProvider {
@@ -42,16 +50,14 @@ package final class LSPDocumentController: EditorFeatureController {
         isAttached = false
     }
 
-    package func install(contentCoordinator: any LSPContentCoordinating) {
+    /// Installs a document content coordinator directly, replacing any
+    /// existing one. Primarily used by tests to inject a spy coordinator.
+    func install(contentCoordinator: any LSPContentCoordinating) {
         self.contentCoordinator?.detach()
         self.contentCoordinator = contentCoordinator
     }
 
-    internal var concreteContentCoordinator: LSPContentCoordinator? {
-        contentCoordinator as? LSPContentCoordinator
-    }
-
-    internal func configure(
+    func configure(
         manager: LSPManager,
         filePath: String,
         languageId: String
@@ -83,13 +89,11 @@ package final class LSPDocumentController: EditorFeatureController {
             view.rangeBasedHighlightingController?
                 .invalidateSupplementalProvider(provider, indices: indices)
         }
-        coordinator.onBatchFlushed = { [weak view, weak self] in
-            guard let view, let provider = self?.semanticTokenProvider else { return }
-            provider.refreshAfterBatch(textView: view)
+        coordinator.onBatchFlushed = { [weak provider] in
+            provider?.refreshAfterBatch()
         }
 
-        #if canImport(AppKit)
-        view.registerSemanticTokenProviderIfAvailable()
-        #endif
+        view.rangeBasedHighlightingController?
+            .registerSupplementalProvider(provider, priority: -1)
     }
 }

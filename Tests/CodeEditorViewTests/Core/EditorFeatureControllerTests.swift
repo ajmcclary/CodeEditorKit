@@ -39,15 +39,6 @@ private final class FoldingLifecycleSpy: EditorFoldingLifecycle {
 }
 
 @MainActor
-private final class LSPContentCoordinatorSpy: LSPContentCoordinating {
-    private(set) var detachCount = 0
-
-    func detach() {
-        detachCount += 1
-    }
-}
-
-@MainActor
 @Suite("Editor feature controller ownership")
 struct EditorFeatureControllerTests {
     @Test("view teardown delegates feature cleanup to its session")
@@ -83,18 +74,5 @@ struct EditorFeatureControllerTests {
 
         #expect(lifecycle.attachCount == 1)
         #expect(lifecycle.detachCount == 1)
-    }
-
-    @Test("LSP controller detaches document coordination idempotently")
-    func lspDetachReleasesDocumentCoordinator() {
-        let contentCoordinator = LSPContentCoordinatorSpy()
-        let controller = LSPDocumentController()
-        controller.install(contentCoordinator: contentCoordinator)
-
-        controller.attach(to: CodeEditorView(frame: .zero))
-        controller.detach()
-        controller.detach()
-
-        #expect(contentCoordinator.detachCount == 1)
     }
 }

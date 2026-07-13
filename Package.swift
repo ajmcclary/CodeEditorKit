@@ -82,6 +82,10 @@ let package = Package(
             targets: ["CodeEditorLSP"]
         ),
         .library(
+            name: "CodeEditorLSPIntegration",
+            targets: ["CodeEditorLSPIntegration"]
+        ),
+        .library(
             name: "CodeEditorLanguages",
             targets: ["CodeEditorLanguages"]
         ),
@@ -275,7 +279,6 @@ let package = Package(
                 "CodeEditorDiagnostics",
                 "CodeEditorFolding",
                 "CodeEditorHighlightingCore",
-                "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorLayout",
                 "CodeEditorPlatform",
@@ -285,6 +288,20 @@ let package = Package(
                 .product(name: "DesignKitThemes", package: "DesignKit"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
+            name: "CodeEditorLSPIntegration",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorHighlightingCore",
+                "CodeEditorLSP",
+                "CodeEditorLanguages",
+                "CodeEditorPlatform",
+                "CodeEditorSyntaxHighlighting",
+                "CodeEditorTextModel",
+                "CodeEditorView"
             ],
             swiftSettings: swiftSettings
         ),
@@ -397,6 +414,17 @@ let package = Package(
         .testTarget(
             name: "CodeEditorLSPTests",
             dependencies: ["CodeEditorCommon", "CodeEditorDiagnostics", "CodeEditorLSP"],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorLSPIntegrationTests",
+            dependencies: [
+                "CodeEditorDiagnostics",
+                "CodeEditorLSP",
+                "CodeEditorLSPIntegration",
+                "CodeEditorLanguages",
+                "CodeEditorView"
+            ],
             swiftSettings: swiftSettings
         ),
         .testTarget(

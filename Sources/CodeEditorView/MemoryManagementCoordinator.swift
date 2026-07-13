@@ -1,7 +1,6 @@
 import CodeEditorCommon
 import CodeEditorCompletion
 import CodeEditorDiagnostics
-import CodeEditorLSP
 import CodeEditorPlatform
 import Foundation
 #if canImport(UIKit)
@@ -34,10 +33,6 @@ public final class MemoryManagementCoordinator {
     private struct ManagedComponents {
         var asyncHighlighter: AsyncSyntaxHighlighter?
         var completionManager: CompletionManager?
-
-        #if canImport(AppKit)
-        var lspManager: LSPManager?
-        #endif
     }
 
     private var components = ManagedComponents()
@@ -95,16 +90,6 @@ public final class MemoryManagementCoordinator {
         components.completionManager = manager
         return manager
     }
-
-    #if canImport(AppKit)
-    /// Creates and returns an LSPManager with proper memory monitoring
-    /// - Parameter workspaceRoot: Optional workspace root URL for the LSP manager
-    public func createLSPManager(workspaceRoot: URL? = nil) -> LSPManager {
-        let manager = LSPManager(memoryMonitor: memoryMonitor, workspaceRoot: workspaceRoot)
-        components.lspManager = manager
-        return manager
-    }
-    #endif
 
     // MARK: - Memory Monitor Updates
 
@@ -169,10 +154,6 @@ public final class MemoryManagementCoordinator {
     private func updateComponentsMemoryMonitor() {
         components.asyncHighlighter?.setMemoryMonitor(memoryMonitor)
         components.completionManager?.setMemoryMonitor(memoryMonitor)
-
-        #if canImport(AppKit)
-        components.lspManager?.setMemoryMonitor(memoryMonitor)
-        #endif
     }
 
     /// Performs memory cleanup when under pressure
@@ -240,9 +221,5 @@ extension CodeEditorView {
         memoryCoordinator.updateMemoryMonitor(memoryMonitor)
         self.asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
         self.completionManager = memoryCoordinator.createCompletionManager()
-
-        #if canImport(AppKit)
-        self.lspManager = memoryCoordinator.createLSPManager(workspaceRoot: runtime.dependencies.workspaceRoot)
-        #endif
     }
 }

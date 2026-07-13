@@ -5,7 +5,6 @@ import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorLayout
-import CodeEditorLSP
 import CodeEditorPlatform
 import CodeEditorSyntaxHighlighting
 import CodeEditorTextModel
@@ -206,9 +205,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             guard runtime !== oldValue else { return }
             memoryCoordinator.updateMemoryMonitor(runtime.dependencies.memoryMonitor)
             memoryCoordinator.updatePolicy(runtime.dependencies.memoryManagementPolicy)
-            #if canImport(AppKit)
-            lspManager.workspaceRoot = runtime.dependencies.workspaceRoot
-            #endif
             applyConfiguration()
         }
     }
@@ -309,13 +305,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal lazy var foldingController = EditorFoldingController(
         lifecycle: codeFoldingEngine
     )
-    internal lazy var lspDocumentController = LSPDocumentController()
     private lazy var defaultSession = EditorSession(
         features: [
             highlightingController,
             completionController,
-            foldingController,
-            lspDocumentController
+            foldingController
         ]
     )
     package var session: any EditorSessionLifecycle {
@@ -336,22 +330,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     /// Metrics captured from actual TextKit 2 layout passes.
     public let renderingMetrics = TextKit2RenderingMetrics()
-
-    /// LSP manager for language server integration
-    #if canImport(AppKit)
-    internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: runtime.dependencies.workspaceRoot)
-
-    /// Document-scoped LSP synchronization owned by the session controller.
-    internal var lspContentCoordinator: LSPContentCoordinator? {
-        lspDocumentController.concreteContentCoordinator
-    }
-
-    /// LSP semantic-token provider retained by the editor so it can be
-    /// registered when the range-based highlighting controller is created.
-    internal var lspSemanticTokenProvider: LSPSemanticTokenProvider? {
-        lspDocumentController.semanticTokenProvider
-    }
-    #endif
 
     /// Code folding engine for managing foldable regions and fold states
     internal let codeFoldingEngine = CodeFoldingEngine()
@@ -393,11 +371,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Consumers (RangeStore sync, highlighting, folding, gutter) subscribe
     /// to receive canonical edit events instead of watching `NSTextStorage`
     /// notifications independently.
-    internal let textEditEventHub = TextEditEventHub()
+    package let textEditEventHub = TextEditEventHub()
 
     /// Range-store-backed highlighting pipeline used by opt-in visible-range
-    /// invalidation and minimap style data.
-    internal var rangeBasedHighlightingController: RangeBasedHighlightingController? {
+    /// invalidation and minimap style data. Package-visible so the
+    /// `CodeEditorLSPIntegration` target can register supplemental providers.
+    package var rangeBasedHighlightingController: RangeBasedHighlightingController? {
         get { highlightingController.rangeBasedController }
         set { highlightingController.rangeBasedController = newValue }
     }

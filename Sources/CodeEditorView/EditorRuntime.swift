@@ -159,12 +159,6 @@ extension CodeEditorView {
         }
 
         memoryCoordinator.updatePolicy(runtimeDependencies.memoryManagementPolicy)
-
-        #if canImport(AppKit)
-        if lspManager.workspaceRoot != runtimeDependencies.workspaceRoot {
-            lspManager.workspaceRoot = runtimeDependencies.workspaceRoot
-        }
-        #endif
     }
 }
 

@@ -1,11 +1,11 @@
 import CodeEditorDiagnostics
 import CodeEditorLSP
-@testable import CodeEditorSwiftUI
+@testable import CodeEditorLSPIntegration
+@testable import CodeEditorView
 #if canImport(AppKit)
 // LSP tests are only available on macOS
 
 import CodeEditorLanguages
-@testable import CodeEditorView
 import XCTest
 
 @available(macOS 12.0, *)
