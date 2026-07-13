@@ -50,6 +50,11 @@ enum SampleCodeCatalog {
         case .csharp: return "csharp"
         case .kotlin: return "kotlin"
         case .dart: return "dart"
+        case .mermaid: return "mermaid"
+        case .d2: return "d2"
+        case .dot: return "dot"
+        case .structurizr: return "structurizr"
+        case .plantuml: return "plantuml"
         case .plainText: return "plainText"
         }
     }

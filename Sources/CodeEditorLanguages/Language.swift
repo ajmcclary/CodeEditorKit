@@ -10,7 +10,7 @@ import Foundation
 ///
 /// ## Supported Languages
 ///
-/// The editor supports 25 programming languages plus plain text, grouped by category:
+/// The editor supports 30 languages plus plain text, grouped by category:
 ///
 /// ### Web Development
 /// - `.html` - HTML markup
@@ -40,6 +40,13 @@ import Foundation
 /// ### Documentation
 /// - `.markdown` - Markdown (.md, .markdown)
 /// - `.plainText` - Plain text (no highlighting)
+///
+/// ### Diagram DSLs
+/// - `.mermaid` - Mermaid (.mmd, .mermaid)
+/// - `.d2` - D2 (.d2)
+/// - `.dot` - Graphviz DOT (.dot, .gv)
+/// - `.structurizr` - Structurizr DSL (.dsl)
+/// - `.plantuml` - PlantUML (.puml, .plantuml, .pu)
 ///
 /// ## Example
 ///
@@ -86,6 +93,11 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable, Codab
     case csharp
     case kotlin
     case dart
+    case mermaid
+    case d2
+    case dot
+    case structurizr
+    case plantuml
     case plainText = "plaintext"
 
     /// The human-readable display name for the language.

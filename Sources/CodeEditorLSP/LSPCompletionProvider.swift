@@ -230,6 +230,21 @@ public final class LSPCompletionProvider: CompletionProvider {
         case .dart:
             return "dart"
 
+        case .mermaid:
+            return "mermaid"
+
+        case .d2:
+            return "d2"
+
+        case .dot:
+            return "dot"
+
+        case .structurizr:
+            return "structurizr"
+
+        case .plantuml:
+            return "plantuml"
+
         case .plainText:
             return "plaintext"
         }

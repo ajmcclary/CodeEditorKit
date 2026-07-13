@@ -54,6 +54,10 @@ let package = Package(
     platforms: [.macOS("26.3"), .iOS("26.3")],
     products: [
         .library(
+            name: "CodeEditorAnnotations",
+            targets: ["CodeEditorAnnotations"]
+        ),
+        .library(
             name: "CodeEditorDiagnostics",
             targets: ["CodeEditorDiagnostics"]
         ),

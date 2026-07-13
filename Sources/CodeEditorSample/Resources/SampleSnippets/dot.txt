@@ -1,0 +1,21 @@
+// Request lifecycle
+digraph pipeline {
+    rankdir=LR;
+    node [shape=box, fontname="Menlo"];
+
+    client [label="Client"];
+    lb     [label="Load Balancer"];
+    api    [label="API Gateway"];
+    db     [label="Database", shape=cylinder];
+
+    client -> lb [label="HTTPS"];
+    lb -> api;
+    api -> db [label="query", color=blue];
+
+    subgraph cluster_observability {
+        label = "Observability";
+        logs; metrics;
+    }
+    api -> logs;
+    api -> metrics;
+}

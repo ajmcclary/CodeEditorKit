@@ -29,10 +29,11 @@ swift build --target CodeEditorUI
 
 ## Package Structure
 
-**Swift 6.3** with `StrictConcurrency` enabled. 10 products defined in `Package.swift`:
+**Swift 6.3** with `StrictConcurrency` enabled. 11 products defined in `Package.swift`:
 
 | Product | Type | Purpose |
 |---|---|---|
+| `CodeEditorAnnotations` | library | Opt-in annotation model + chrome (line badges) |
 | `CodeEditorDiagnostics` | library | Opt-in performance and memory diagnostics |
 | `CodeEditorLSP` | library | Language Server Protocol client and transports |
 | `CodeEditorLayout` | library | Editor presentation and layout primitives |
@@ -75,7 +76,7 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorPlatform/` — cross-platform color/font/view abstractions (phase 0).
 - `Sources/CodeEditorTextModel/` — TextKit2 primitives, `RangeStore`/`RangeStoreElement`/`RangeStoreRun`, geometry, location, parsing primitives (phase 1; RangeStore relocated from umbrella in §6.2.7).
 - `Sources/CodeEditorConfiguration/` — settings, presets, validation (phase 1).
-- `Sources/CodeEditorAnnotations/` — annotation data model + view chrome: `Annotation`, `AnnotationKind`, `AnnotationView`, `AnnotationsContentView`, `CodeEditorViewAnnotation`, `LineAnnotation`, `MessageLineAnnotation` (phase 4; new in §6.2.8e). The view-coupled `AnnotationsDataSource` protocol lives in `Sources/CodeEditorView/Annotations/` (its required method takes `CodeEditorView`). Not productized — `CodeEditorView` and `CodeEditorSwiftUI` both consume Annotation types directly, so it routes through those targets rather than as an opt-in `.library`.
+- `Sources/CodeEditorAnnotations/` — annotation data model + view chrome: `Annotation`, `AnnotationKind`, `AnnotationView`, `AnnotationsContentView`, `CodeEditorViewAnnotation`, `LineAnnotation`, `MessageLineAnnotation` (phase 4; new in §6.2.8e). The view-coupled `AnnotationsDataSource` protocol lives in `Sources/CodeEditorView/Annotations/` (its required method takes `CodeEditorView`). Productized as an opt-in `.library` (added for DiagramKit's editor migration — external hosts need to name `Annotation`/`AnnotationKind` to call `EditorController.addAnnotation`); `CodeEditorView` and `CodeEditorSwiftUI` still consume the types directly.
 - `Sources/CodeEditorSearch/` — project-wide file-search protocols + portable adapter (phase 4; new in §6.2.8d). Productized as opt-in `.library` per NEXT.md §6.3; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; cross-platform (no `#if canImport`). The in-document `SearchReplaceEngine` lives in `Sources/CodeEditorView/Search/` (CodeEditorView-coupled; moved with the rest of `Core/` in §6.2.12).
 - `Sources/CodeEditorSmartEditing/` — smart-editing engines: `SmartEditingEngine` (top-level coordinator) + 4 strategy engines (`AutoBracketingEngine`, `MultiCursorEditor`, `SmartIndentationEngine`, `SmartSelectionExpander`). 5 files (phase 4; new in §6.2.8c — closes the §6.2.8 feature-engine extraction series). Not productized — umbrella `CodeEditorPlugin` depends on it directly (matches Folding/Symbols/Annotations/Completion precedent). Hosts attach via `engine.attach(to: codeEditorView)` — not wired into `EditorConfiguration`. Sub-folder `Features/SmartEditing/` flattened at destination per the target-name-is-the-namespace convention.
 - `Sources/CodeEditorSwiftUI/` — SwiftUI host wrapper + Representable bridge: `CodeEditor` (SwiftUI view struct), `EditorController` (host controller class), `CodeEditorBaseCoordinator` (open class, conforms to `CodeEditorCoordinating` package protocol in `CodeEditorView`), `CodeEditorIntent`, `CodeEditorEnvironment+Extensions`, `CodeEditorPlatformAdapter`, `CodeEditorRepresentableHelper`, `CodeEditorTheme+Extensions`, `EditorState+Environment` reader, plus 7 `CodeEditor+*` and 2 `EditorController+*` slice extensions. 17 files (phase 9; new in §6.2.13). Productized as `.library` per NEXT.md §6.3; umbrella `CodeEditorPlugin` DOES depend on it (matches §6.2.9 LSP / §6.2.10 Diagnostics / §6.2.11 Layout / §6.2.12 View precedent — productized + umbrella-coupled).
@@ -146,7 +147,7 @@ Snapshot tests write to `__Snapshots__/` directories (excluded from git in `Pack
 Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with the codebase — when adding features or renaming classes, update the relevant diagram. The folder has its own [`README.md`](docs/Diagrams/README.md) indexing every diagram.
 
 **Watch for stale claims in diagrams:**
-- Language count is 25 concrete languages plus plain text (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, C++, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell, Dockerfile, TOML, Lua, C#, Kotlin, Dart, plus plain text).
+- Language count is 30 concrete languages plus plain text (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, C++, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell, Dockerfile, TOML, Lua, C#, Kotlin, Dart, Mermaid, D2, Graphviz DOT, Structurizr DSL, PlantUML, plus plain text). The five diagram DSLs were added for DiagramKit's editor migration.
 - Historical snapshots and design-only diagrams (pre-0.2.0 platform abstraction, the extended debugging-integration design, the plugin system, and the planned enhanced-syntax-highlighting design) live in [`docs/archive/Diagrams/`](docs/archive/Diagrams/). Treat them as point-in-time references, not current truth.
 - These symbols are referenced in those archived diagrams (and in scripts / design docs) but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`, `CodeEditorSwiftUITheme`, `EditorTheme`, `LanguageConfig`, `CodeEditorLayoutManager`, `ConfigurationValidator`, `EditorConfigurationBuilder`, `ConfigurationMigrator`, `ConfigurationHotReload`, `PluginAPI`, `PluginContext`, `MarkdownPlugin`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
 

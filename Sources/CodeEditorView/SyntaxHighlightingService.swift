@@ -170,6 +170,21 @@ public final class SyntaxHighlightingService {
         case .dart:
             return [".", "(", "[", "<", " ", ":"]
 
+        case .mermaid:
+            return [" "]
+
+        case .d2:
+            return [" ", ".", ":"]
+
+        case .dot:
+            return [" ", "=", "["]
+
+        case .structurizr:
+            return [" ", "{"]
+
+        case .plantuml:
+            return [" ", "@"]
+
         case .plainText:
             return []
         }

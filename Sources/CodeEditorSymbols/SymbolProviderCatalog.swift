@@ -53,6 +53,11 @@ public struct SymbolProviderCatalog: Sendable {
         registerProvider(HeuristicSymbolProviderFacade(language: .dockerfile), for: .dockerfile)
         registerProvider(HeuristicSymbolProviderFacade(language: .toml), for: .toml)
         registerProvider(HeuristicSymbolProviderFacade(language: .lua), for: .lua)
+
+        for language in [Language.mermaid, .d2, .dot, .structurizr, .plantuml] {
+            registerProvider(HeuristicSymbolProviderFacade(language: language), for: language)
+        }
+
         registerProvider(EmptySymbolProvider(), for: .plainText)
     }
 }

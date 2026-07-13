@@ -328,6 +328,14 @@
     "fffc7f302288c477": {
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/GutterView+AccessibilityExtensions.swift:43 and Sources/CodeEditorView/Layout/GutterView+AccessibilityExtensions.swift:94 remain explicit to preserve framework-specific types and call sites."
+    },
+    "471dbb4a8bc575f1": {
+      "classification": "semantic-schema",
+      "rationale": "Diagram-DSL language descriptors (Mermaid/D2/DOT/Structurizr/PlantUML) share the LanguageDescriptor tail schema (functions/literals/snippets/parser fields); each file stays a standalone per-language catalog entry by design, matching the existing descriptor-cohort layout."
+    },
+    "ea5d01b5f38038e4": {
+      "classification": "semantic-schema",
+      "rationale": "Diagram-DSL language descriptors (Mermaid/D2/DOT/Structurizr/PlantUML) share the LanguageDescriptor tail schema (functions/literals/snippets/parser fields); each file stays a standalone per-language catalog entry by design, matching the existing descriptor-cohort layout."
     }
   }
 }

@@ -1,0 +1,18 @@
+@startuml
+' Request lifecycle
+title Order Checkout
+
+actor Customer
+participant "Web App" as Web
+participant "API" as API
+participant "Database" as DB <<store>>
+
+Customer -> Web: Place order
+Web -> API: POST /orders
+API -> DB: INSERT order
+DB --> API: order id
+API --> Web: 201 Created
+note over Web: Show confirmation
+Web --> Customer: Receipt
+
+@enduml

@@ -1,0 +1,26 @@
+// Request lifecycle
+workspace {
+    model {
+        user = person "Customer" "Places orders via the web app."
+        shop = softwareSystem "Shop" {
+            web = container "Web App" "Serves the storefront."
+            api = container "API" "Handles orders." "Swift"
+            db = container "Database" "Stores orders." "PostgreSQL"
+        }
+
+        user -> web "Browses"
+        web -> api "Calls" "JSON/HTTPS"
+        api -> db "Reads from and writes to"
+    }
+
+    views {
+        systemContext shop {
+            include *
+        }
+        styles {
+            element "Database" {
+                shape Cylinder
+            }
+        }
+    }
+}

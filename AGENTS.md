@@ -29,10 +29,11 @@ swift build --target CodeEditorUI
 
 ## Package Structure
 
-**Swift 6.3** with `StrictConcurrency` enabled. 10 products defined in `Package.swift`:
+**Swift 6.3** with `StrictConcurrency` enabled. 11 products defined in `Package.swift`:
 
 | Product | Type | Purpose |
 |---|---|---|
+| `CodeEditorAnnotations` | library | Opt-in annotation model + chrome (line badges) |
 | `CodeEditorDiagnostics` | library | Opt-in performance and memory diagnostics |
 | `CodeEditorLSP` | library | Language Server Protocol client and transports |
 | `CodeEditorLayout` | library | Editor presentation and layout primitives |

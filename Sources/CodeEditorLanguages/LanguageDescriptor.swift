@@ -139,6 +139,11 @@ package struct LanguageDescriptor: Sendable {
         csharpDescriptor,
         kotlinDescriptor,
         dartDescriptor,
+        mermaidDescriptor,
+        d2Descriptor,
+        dotDescriptor,
+        structurizrDescriptor,
+        plantumlDescriptor,
         plainTextDescriptor
     ]
 
@@ -169,6 +174,11 @@ package struct LanguageDescriptor: Sendable {
         .csharp: csharpDescriptor,
         .kotlin: kotlinDescriptor,
         .dart: dartDescriptor,
+        .mermaid: mermaidDescriptor,
+        .d2: d2Descriptor,
+        .dot: dotDescriptor,
+        .structurizr: structurizrDescriptor,
+        .plantuml: plantumlDescriptor,
         .plainText: plainTextDescriptor
     ]
 

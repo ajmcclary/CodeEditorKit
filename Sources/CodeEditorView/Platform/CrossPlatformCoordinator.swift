@@ -346,6 +346,18 @@ public final class CrossPlatformCoordinator: ObservableObject {
         case .yaml:
             return "#"
 
+        case .d2:
+            return "#"
+
+        case .dot, .structurizr:
+            return "//"
+
+        case .mermaid:
+            return "%%"
+
+        case .plantuml:
+            return "'"
+
         case .markdown, .json, .plainText:
             return "//" // Default fallback
         }

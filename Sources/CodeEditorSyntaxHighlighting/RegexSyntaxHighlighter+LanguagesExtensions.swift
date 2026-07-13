@@ -135,7 +135,8 @@ extension RegexSyntaxHighlighter {
 
     private static func functionCallPattern(for descriptor: LanguageDescriptor) -> String {
         switch descriptor.language {
-        case .css, .html, .xml, .yaml, .toml, .markdown, .dockerfile:
+        case .css, .html, .xml, .yaml, .toml, .markdown, .dockerfile,
+             .mermaid, .d2, .dot, .structurizr, .plantuml:
             #"(?!)"#
 
         default:

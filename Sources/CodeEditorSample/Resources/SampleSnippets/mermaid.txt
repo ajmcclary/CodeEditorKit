@@ -1,0 +1,17 @@
+flowchart LR
+    %% Request lifecycle
+    client["Client"] --> lb["Load Balancer"]
+    lb --> api["API Gateway"]
+    api --> auth{"Authenticated?"}
+    auth -->|yes| svc["Service"]
+    auth -->|no| deny["401 Response"]
+    svc --> db[("Database")]
+    svc --> cache[("Cache")]
+
+    subgraph observability
+        svc -.-> logs["Structured Logs"]
+        svc -.-> metrics["Metrics"]
+    end
+
+    classDef store fill:#224,stroke:#88f
+    class db,cache store
