@@ -1,9 +1,7 @@
 {
   "schema_version": 1,
   "window": 8,
-  "excluded_targets": [
-    "CodeEditorSample"
-  ],
+  "excluded_targets": [],
   "families": {
     "046f50eda59333a0": {
       "classification": "platform-contract",

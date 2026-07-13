@@ -67,9 +67,6 @@ Matrix view of language support capabilities across 25 concrete supported langua
 ### 25. [Package Dependencies](25-package-dependencies.md)
 Package dependency diagram showing the current library products, the single-file `CodeEditorPlugin` umbrella target, runtime dependencies, and test target dependencies.
 
-### 26. [Sample App Dependencies](26-sample-dependencies.md)
-CodeEditorSample demonstration app architecture showing its direct dependencies on the umbrella editor product, focused subsystem targets, optional project search/workspace products, and sample code structure.
-
 ### 28. [Performance Budget System](28-performance-budget-system.md)
 Comprehensive performance budget system that monitors and enforces performance targets across all operations. Includes budget definitions, status tracking, violation reporting, test integration, and enforcement configuration with support for warning, critical, and exceeded thresholds.
 
@@ -93,7 +90,7 @@ All diagrams are written in Mermaid syntax and can be viewed:
 
 ## Regenerating Dependency Diagrams
 
-Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. They reflect the actual products and important target dependencies declared in the manifest, including the focused library products (`CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, `CodeEditorWorkspace`), the umbrella `CodeEditorPlugin`, the sample executable, runtime dependencies, and test-only dependencies.
+Dependency diagram 25 should be manually updated when `Package.swift` changes (run `./Scripts/generate-dependency-diagrams.sh`). It reflects the actual products and important target dependencies declared in the manifest, including the focused library products, the umbrella `CodeEditorPlugin`, runtime dependencies, and test-only dependencies. (The former diagram 26 covered the `CodeEditorSample` demo app, which was extracted to the workspace's `apps/CodeEditorDemo` package.)
 
 ## Diagram Conventions
 

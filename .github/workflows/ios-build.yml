@@ -23,10 +23,10 @@ jobs:
           xcodebuild -version
           xcrun -sdk iphoneos --show-sdk-version
 
-      - name: xcodebuild CodeEditorSample (iOS)
+      - name: xcodebuild CodeEditorPlugin (iOS)
         run: |
           xcodebuild \
-            -scheme CodeEditorSample \
+            -scheme CodeEditorPlugin \
             -destination "generic/platform=iOS" \
             -configuration Debug \
             build \

@@ -95,12 +95,7 @@ def write_diagram(path, title, product_filter):
 write_diagram(
     diagram_dir / "25-package-dependencies.md",
     "Package Dependencies - CodeEditorPlugin",
-    lambda product_name, _: product_name != "CodeEditorSample",
-)
-write_diagram(
-    diagram_dir / "26-sample-dependencies.md",
-    "Package Dependencies - CodeEditorSample",
-    lambda product_name, targets: product_name == "CodeEditorSample" or "CodeEditorSample" in targets,
+    lambda product_name, _: True,
 )
 PY
 

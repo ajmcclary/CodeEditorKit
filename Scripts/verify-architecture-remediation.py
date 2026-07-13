@@ -33,7 +33,7 @@ def clone_classifications_complete() -> bool:
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    report = module.clone_report(ROOT, ROOT / "Sources", {"CodeEditorSample"}, 8)
+    report = module.clone_report(ROOT, ROOT / "Sources", set(), 8)
     expected = {entry["hash"] for entry in report["clones"]}
     classifications = json.loads(
         (ROOT / "Scripts/clone-classifications.json").read_text()

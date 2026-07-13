@@ -14,11 +14,6 @@ swiftlint --fix
 # Run a single test (matches by name substring)
 swift test --filter TestName
 
-# Build/run the sample app (target, not a separate package)
-swift build --target CodeEditorSample
-swift run CodeEditorSample
-./Scripts/run-sample.sh [debug|release]
-
 # Build a single library target
 swift build --target CodeEditorPlugin
 swift build --target CodeEditorUI
@@ -29,27 +24,32 @@ swift build --target CodeEditorUI
 
 ## Package Structure
 
-**Swift 6.3** with `StrictConcurrency` enabled. 11 products defined in `Package.swift`:
+**Swift 6.3** with `StrictConcurrency` enabled. 16 products defined in `Package.swift`:
 
 | Product | Type | Purpose |
 |---|---|---|
 | `CodeEditorAnnotations` | library | Opt-in annotation model + chrome (line badges) |
+| `CodeEditorCommon` | library | Shared utilities, models, errors, recovery infra |
+| `CodeEditorCompletion` | library | Completion subsystem (manager, ranking, providers) |
+| `CodeEditorConfiguration` | library | Settings, presets, validation |
 | `CodeEditorDiagnostics` | library | Opt-in performance and memory diagnostics |
 | `CodeEditorLSP` | library | Language Server Protocol client and transports |
+| `CodeEditorLanguages` | library | Language descriptors and detection |
 | `CodeEditorLayout` | library | Editor presentation and layout primitives |
+| `CodeEditorPlatform` | library | Cross-platform color/font/view abstractions |
 | `CodeEditorPlugin` | library | Umbrella editor framework |
 | `CodeEditorSearch` | library | Opt-in project-wide search interfaces |
 | `CodeEditorSwiftUI` | library | SwiftUI editor host and controller bridge |
+| `CodeEditorTextModel` | library | TextKit2 text-model primitives |
 | `CodeEditorUI` | library | Optional SwiftUI chrome and components |
 | `CodeEditorView` | library | Native editor surface and runtime services |
 | `CodeEditorWorkspace` | library | Opt-in workspace file-tree interfaces |
-| `CodeEditorSample` | executable | Demo app |
 
 Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `DesignKitThemes`), `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
 
 The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
 
-Tests mix both XCTest and Swift Testing frameworks across 9 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSampleTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
+Tests mix both XCTest and Swift Testing frameworks across 9 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorHygieneTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
 
 Tree-sitter work is internal scaffolding only. There is no public configuration flag and no bundled C grammar libraries wired into `Package.swift`; normal syntax highlighting uses the descriptor-backed regex path.
 
@@ -87,7 +87,6 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorLSP/` — Language Server Protocol subsystem: `LSPClient`, `LSPManager`, transport (process + WebSocket with cert pinning), document/path/process/connection managers, message handler, wire types, completion + semantic-token storage, retry config. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` depends on it. The two `CodeEditorView`-coupled files (`LSPSemanticTokenProvider`, `LSPContentCoordinator`) live in `Sources/CodeEditorView/LSP/`.
 - `Sources/CodeEditorLayout/` — presentation primitives: layout caches/coordinator/optimizer, fold chevrons, `_GlassSurface`, insertion-point/line-highlight views, layout providers, event bus, completion popover chrome, `ThemeableUIComponent` protocol + `LayoutConformances`, `MinimapStyleDataSource`. Productized as a `.library`; umbrella depends on it.
 - `Sources/CodeEditorView/` — editor-surface target: `CodeEditorView` class + 24 `CodeEditorView+*Extensions` slices + delegate companions (`CodeEditorViewDelegate`, `CodeEditorViewDelegateProxy`, `CodeEditorViewProtocol`) + standalone services (`ActorCoordinator`, `CodeEditorAPI`, `EditorEvent`/`EditorEventHandler`/`EditorEventPublisher`, `EditorLayoutService`, `EditorRuntime`, `EditorState`/`EditorStateBridge`, `MemoryManagementCoordinator`, `SyntaxHighlightingService`, `TextEditingService`, `TextKitSetupHelper`, `UnifiedEventSystem`, etc.) + carve-out residues from `Annotations/`, `Configuration/`, `Documents/`, `Folding/`, `Layout/`, `LSP/`, `Platform/`, `Search/`, `Symbols/`, `SyntaxHighlighting/`, `Text/`, `Actors/` + `CodeEditorCoordinating.swift` (package-visible marker protocol that breaks the would-be circular dep with `CodeEditorSwiftUI`). Productized as a `.library`; umbrella depends on it.
-- `Sources/CodeEditorSample/` — executable demo app target.
 - `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; not currently an SPM target.
 
 ## Conventions
@@ -149,13 +148,9 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 **Watch for stale claims in diagrams:**
 - Language count is 25 concrete languages plus plain text (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, C++, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell, Dockerfile, TOML, Lua, C#, Kotlin, Dart, plus plain text).
 - Historical snapshots and design-only diagrams (pre-0.2.0 platform abstraction, the extended debugging-integration design, the plugin system, and the planned enhanced-syntax-highlighting design) live in [`docs/archive/Diagrams/`](docs/archive/Diagrams/). Treat them as point-in-time references, not current truth.
-- These symbols are referenced in those archived diagrams (and in scripts / design docs) but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`, `CodeEditorSwiftUITheme`, `EditorTheme`, `LanguageConfig`, `CodeEditorLayoutManager`, `ConfigurationValidator`, `EditorConfigurationBuilder`, `ConfigurationMigrator`, `ConfigurationHotReload`, `PluginAPI`, `PluginContext`, `MarkdownPlugin`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
+- These symbols are referenced in those archived diagrams (and in scripts / design docs) but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`, `CodeEditorSwiftUITheme`, `EditorTheme`, `LanguageConfig`, `CodeEditorLayoutManager`, `ConfigurationValidator`, `EditorConfigurationBuilder`, `ConfigurationMigrator`, `ConfigurationHotReload`, `PluginAPI`, `PluginContext`, `MarkdownPlugin`. (`AppState` exists in the workspace's `apps/CodeEditorDemo` demo app, not in the framework — don't confuse the two.)
 
 ## What Will Go Wrong
-
-- **Sample app is a target, not a directory**: `cd CodeEditorSample && swift build` will fail. Use `swift run CodeEditorSample` or `swift build --target CodeEditorSample`.
-
-- **`CodeEditorSample` uses the native NSWindow chrome**: do NOT add `EditorTitleBar`, `EditorTrafficLights`, or `.windowStyle(.hiddenTitleBar)` to `RootWindow` / `CodeEditorSampleApp`. `.hiddenTitleBar` hides the title-bar background but leaves the OS traffic-light buttons drawn in the window's top-left corner, so embedding `EditorTitleBar` on top produces a visible "app inside an app." `EditorTitleBar` is a public `CodeEditorUI` component for hosts that genuinely own their chrome (and hide the standard NSWindow buttons themselves); it remains covered by `EditorTitleBarSnapshots` / `EditorTrafficLightsSnapshots` and the `ConformanceAuditTests` type audit — none of that requires the sample to embed it.
 
 - **No DocC catalog**: this project ships plain Markdown in `docs/`, not a DocC bundle. Don't add `@Metadata`, `<doc:>`, `## Topics`, or `.tutorial` directives to files in `docs/` — they won't render and they re-introduce a toolchain dependency that was deliberately removed.
 

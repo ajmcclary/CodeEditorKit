@@ -58,6 +58,18 @@ let package = Package(
             targets: ["CodeEditorAnnotations"]
         ),
         .library(
+            name: "CodeEditorCommon",
+            targets: ["CodeEditorCommon"]
+        ),
+        .library(
+            name: "CodeEditorCompletion",
+            targets: ["CodeEditorCompletion"]
+        ),
+        .library(
+            name: "CodeEditorConfiguration",
+            targets: ["CodeEditorConfiguration"]
+        ),
+        .library(
             name: "CodeEditorDiagnostics",
             targets: ["CodeEditorDiagnostics"]
         ),
@@ -66,8 +78,16 @@ let package = Package(
             targets: ["CodeEditorLSP"]
         ),
         .library(
+            name: "CodeEditorLanguages",
+            targets: ["CodeEditorLanguages"]
+        ),
+        .library(
             name: "CodeEditorLayout",
             targets: ["CodeEditorLayout"]
+        ),
+        .library(
+            name: "CodeEditorPlatform",
+            targets: ["CodeEditorPlatform"]
         ),
         .library(
             name: "CodeEditorPlugin",
@@ -80,6 +100,10 @@ let package = Package(
         .library(
             name: "CodeEditorSwiftUI",
             targets: ["CodeEditorSwiftUI"]
+        ),
+        .library(
+            name: "CodeEditorTextModel",
+            targets: ["CodeEditorTextModel"]
         ),
         .library(
             name: "CodeEditorUI",
@@ -407,6 +431,10 @@ let package = Package(
             exclude: [
                 "Snapshots/__Snapshots__"
             ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorHygieneTests",
             swiftSettings: swiftSettings
         )
     ]
