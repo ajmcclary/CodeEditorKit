@@ -1,6 +1,6 @@
 import CodeEditorCommon
 import CodeEditorConfiguration
-import CodeEditorDiagnostics
+import CodeEditorInstrumentation
 import CodeEditorLanguages
 import CodeEditorPlatform
 import DesignKitThemes

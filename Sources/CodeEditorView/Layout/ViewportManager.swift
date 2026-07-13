@@ -1,4 +1,4 @@
-import CodeEditorDiagnostics
+import CodeEditorInstrumentation
 import CodeEditorPlatform
 import Foundation
 #if canImport(Combine)

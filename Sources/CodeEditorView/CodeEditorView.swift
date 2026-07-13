@@ -2,7 +2,7 @@ import CodeEditorAnnotations
 import CodeEditorCommon
 import CodeEditorCompletion
 import CodeEditorConfiguration
-import CodeEditorDiagnostics
+import CodeEditorInstrumentation
 import CodeEditorLanguages
 import CodeEditorLayout
 import CodeEditorPlatform

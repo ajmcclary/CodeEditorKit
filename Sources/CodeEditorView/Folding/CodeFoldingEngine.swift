@@ -1,5 +1,5 @@
 import CodeEditorCommon
-import CodeEditorDiagnostics
+import CodeEditorInstrumentation
 import CodeEditorFolding
 import CodeEditorLanguages
 import CodeEditorTextModel

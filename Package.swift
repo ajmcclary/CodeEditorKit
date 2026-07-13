@@ -78,6 +78,10 @@ let package = Package(
             targets: ["CodeEditorHighlightingCore"]
         ),
         .library(
+            name: "CodeEditorInstrumentation",
+            targets: ["CodeEditorInstrumentation"]
+        ),
+        .library(
             name: "CodeEditorLSP",
             targets: ["CodeEditorLSP"]
         ),
@@ -174,10 +178,21 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "CodeEditorInstrumentation",
+            dependencies: [
+                "CodeEditorCommon",
+                "CodeEditorConfiguration",
+                "CodeEditorLanguages",
+                "CodeEditorPlatform"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorDiagnostics",
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
+                "CodeEditorInstrumentation",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
@@ -190,7 +205,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 .product(name: "DesignKitTokens", package: "DesignKit"),
-                "CodeEditorDiagnostics",
+                "CodeEditorInstrumentation",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel",
@@ -214,7 +229,7 @@ let package = Package(
             name: "CodeEditorCompletion",
             dependencies: [
                 "CodeEditorCommon",
-                "CodeEditorDiagnostics",
+                "CodeEditorInstrumentation",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel"
@@ -236,7 +251,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorCompletion",
-                "CodeEditorDiagnostics",
+                "CodeEditorInstrumentation",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel"
@@ -276,7 +291,7 @@ let package = Package(
                 "CodeEditorCompletion",
                 "CodeEditorConfiguration",
                 .product(name: "DesignKitTokens", package: "DesignKit"),
-                "CodeEditorDiagnostics",
+                "CodeEditorInstrumentation",
                 "CodeEditorFolding",
                 "CodeEditorHighlightingCore",
                 "CodeEditorLanguages",

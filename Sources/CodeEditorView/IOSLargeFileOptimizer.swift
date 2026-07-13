@@ -1,4 +1,4 @@
-import CodeEditorDiagnostics
+import CodeEditorInstrumentation
 import Foundation
 
 #if canImport(UIKit)

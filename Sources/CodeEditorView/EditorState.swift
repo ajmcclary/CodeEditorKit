@@ -1,5 +1,5 @@
 import CodeEditorCommon
-import CodeEditorDiagnostics
+import CodeEditorInstrumentation
 import CodeEditorLanguages
 import CodeEditorSymbols
 import Foundation

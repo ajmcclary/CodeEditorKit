@@ -1,4 +1,4 @@
-import CodeEditorDiagnostics
+import CodeEditorInstrumentation
 import CodeEditorLayout
 import CodeEditorPlatform
 import CodeEditorTextModel

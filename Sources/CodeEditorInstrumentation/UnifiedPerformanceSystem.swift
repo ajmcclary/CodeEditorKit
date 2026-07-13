@@ -514,6 +514,9 @@ public struct UnifiedPerformanceInsights {
     public var recommendations: [PerformanceRecommendation] = []
     /// Composite health score (`0...100`, higher is better).
     public var overallHealth: Double = 100.0
+
+    /// Creates an empty, fully healthy insights value.
+    public init() {}
 }
 
 /// Represents a performance issue that needs attention.
