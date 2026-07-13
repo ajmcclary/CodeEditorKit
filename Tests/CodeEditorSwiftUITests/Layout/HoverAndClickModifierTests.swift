@@ -10,7 +10,7 @@ import XCTest
 /// "modifier fires when the bus emits" path depends on SwiftUI scheduling
 /// subscriptions through `NSHostingView`, which is brittle outside a real app
 /// runloop — that integration is exercised by the live LSP smoke test in
-/// CodeEditorSampleTests.
+/// the extracted demo's test suite (CodeEditorDemoTests, apps/CodeEditorDemo).
 final class HoverAndClickModifierTests: XCTestCase {
     @MainActor
     func testOnTextHoverModifierCompilesAndAccepts() {

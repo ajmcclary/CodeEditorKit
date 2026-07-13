@@ -115,13 +115,14 @@ Sources/
 ├── CodeEditorSearch/          # Project-wide file-search protocols + adapter
 ├── CodeEditorWorkspace/       # Workspace file-tree protocols + macOS adapter
 ├── CodeEditorDiagnostics/     # Performance instrumentation, memory monitoring
-├── CodeEditorSample/          # Demo app (executable)
 └── CodeEditorTreeSitterLanguages/  # Tree-sitter staging sources (not an SPM target yet)
 ```
 
+The demo app now lives at `apps/CodeEditorDemo` in the superproject workspace, not in this package.
+
 Long-form prose docs live in [`docs/`](docs/README.md), organized by topic.
 
-24 source roots under `Sources/`, 589 Swift files total. The `CodeEditorPlugin` umbrella
+21 source roots under `Sources/`, 515 Swift files total. The `CodeEditorPlugin` umbrella
 target itself ships a single `CodeEditorPlugin.swift` entry stub plus `Resources/Info.plist`
 — all subsystems live in sibling targets.
 

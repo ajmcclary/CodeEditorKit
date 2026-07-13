@@ -20,7 +20,8 @@ import SwiftUI
 /// (e.g. `window.standardWindowButton(.closeButton)?.isHidden = true`
 /// for close/minimize/zoom) or for hosting the editor inside a window
 /// that has none — a borderless `NSWindow`, an `NSPanel`, or an
-/// in-process preview surface. `CodeEditorSample` deliberately uses
+/// in-process preview surface. `CodeEditorDemo` (the extracted demo app
+/// at `apps/CodeEditorDemo` in the superproject) deliberately uses
 /// the native NSWindow chrome instead of this view.
 public struct EditorTitleBar<Trailing: View>: View {
     @Environment(\.designTheme) private var theme
