@@ -274,6 +274,7 @@ let package = Package(
                 .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorDiagnostics",
                 "CodeEditorFolding",
+                "CodeEditorHighlightingCore",
                 "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorLayout",

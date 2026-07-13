@@ -1,3 +1,4 @@
+import CodeEditorHighlightingCore
 import CodeEditorLanguages
 import CodeEditorLayout
 import CodeEditorPlatform
@@ -10,7 +11,7 @@ import Foundation
 /// This controller currently feeds minimap style data and visible-range
 /// invalidation. It does not replace the legacy attributed-text highlighter.
 @MainActor
-internal final class RangeBasedHighlightingController: TextEditEventObserving {
+package final class RangeBasedHighlightingController: TextEditEventObserving {
     private weak var textView: CodeEditorView?
     private let language: Language
     private let container: StyledRangeContainer
@@ -30,6 +31,11 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     private var supplementalProviders: [ObjectIdentifier: any RangeHighlightProviding] = [:]
     private var supplementalProviderStates: [ObjectIdentifier: HighlightProviderState] = [:]
     private var supplementalProviderIDs: [ObjectIdentifier: Int] = [:]
+
+    /// Bridges keyed by the identity of the value-oriented provider they wrap,
+    /// so `HighlightRangeProviding` supplemental providers can be
+    /// unregistered/invalidated by the same object the caller registered.
+    private var valueProviderBridges: [ObjectIdentifier: SnapshotHighlightProviderBridge] = [:]
 
     /// Primary initializer.
     ///
@@ -101,6 +107,22 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         providerState.updateVisibleSet(visibleRangeProvider.visibleIndices)
     }
 
+    /// Creates a controller whose primary provider is a value-oriented
+    /// ``HighlightRangeProviding``. The provider is bridged onto the internal
+    /// range mechanics via ``SnapshotHighlightProviderBridge`` so it never
+    /// touches the editor view directly.
+    package convenience init(
+        textView: CodeEditorView,
+        language: Language,
+        valueProvider: any HighlightRangeProviding
+    ) {
+        self.init(
+            textView: textView,
+            language: language,
+            externalProvider: SnapshotHighlightProviderBridge(valueProvider: valueProvider)
+        )
+    }
+
     internal var currentLanguage: Language {
         language
     }
@@ -157,6 +179,41 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         }
     }
 
+    // MARK: - Value-oriented supplemental providers
+
+    /// Registers a value-oriented ``HighlightRangeProviding`` supplemental
+    /// provider. The provider is wrapped in a
+    /// ``SnapshotHighlightProviderBridge`` so external adapters plug in
+    /// without depending on the editor view or the internal provider protocol.
+    package func registerSupplementalProvider(
+        _ valueProvider: any HighlightRangeProviding,
+        priority: Int
+    ) {
+        let identity = ObjectIdentifier(valueProvider)
+        guard valueProviderBridges[identity] == nil else { return }
+        let bridge = SnapshotHighlightProviderBridge(valueProvider: valueProvider)
+        valueProviderBridges[identity] = bridge
+        registerSupplementalProvider(bridge, priority: priority)
+    }
+
+    /// Removes a previously registered value-oriented supplemental provider.
+    package func unregisterSupplementalProvider(_ valueProvider: any HighlightRangeProviding) {
+        let identity = ObjectIdentifier(valueProvider)
+        guard let bridge = valueProviderBridges.removeValue(forKey: identity) else { return }
+        unregisterSupplementalProvider(bridge)
+    }
+
+    /// Invalidates and re-queries a value-oriented supplemental provider after
+    /// its backing data changes out of band (e.g. an LSP semantic-token push).
+    package func invalidateSupplementalProvider(
+        _ valueProvider: any HighlightRangeProviding,
+        indices: IndexSet
+    ) {
+        let identity = ObjectIdentifier(valueProvider)
+        guard let bridge = valueProviderBridges[identity] else { return }
+        invalidateSupplementalProvider(bridge, indices: indices)
+    }
+
     internal func refreshVisibleRange() {
         visibleRangeProvider.updateVisibleSet()
     }
@@ -169,13 +226,14 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         supplementalProviderStates.removeAll()
         supplementalProviders.removeAll()
         supplementalProviderIDs.removeAll()
+        valueProviderBridges.removeAll()
         visibleRangeProvider.stopObserving()
         applier.detach()
         textView?.textEditEventHub.removeObserver(self)
         textView = nil
     }
 
-    internal func textStorageDidApplyEdit(_ event: TextEditEvent) {
+    package func textStorageDidApplyEdit(_ event: TextEditEvent) {
         guard let textView else { return }
         defer {
             previousSourceSnapshot = Self.sourceString(from: textView)
