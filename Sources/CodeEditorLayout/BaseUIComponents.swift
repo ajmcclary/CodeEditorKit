@@ -1,5 +1,5 @@
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 import Foundation
 #if canImport(AppKit)
 import AppKit

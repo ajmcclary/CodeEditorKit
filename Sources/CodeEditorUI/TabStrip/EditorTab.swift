@@ -1,7 +1,7 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorLanguages
 import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 import SwiftUI
 
 /// One file tab in the chrome's tab strip.

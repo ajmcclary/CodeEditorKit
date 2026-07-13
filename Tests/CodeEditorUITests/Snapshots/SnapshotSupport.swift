@@ -1,8 +1,8 @@
 @testable import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 #if canImport(AppKit)
 import AppKit
-import CodeEditorDesignTokens
+import DesignKitTokens
 @testable import CodeEditorPlugin
 @testable import CodeEditorUI
 import SnapshotTesting

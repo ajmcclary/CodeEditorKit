@@ -1,7 +1,7 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 @testable import CodeEditorPlugin
 @testable import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 @testable import CodeEditorUI
 import Foundation
 import SwiftUI

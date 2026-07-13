@@ -1,5 +1,5 @@
 import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 import SwiftUI
 
 /// `ViewModifier` that applies the platform's Liquid Glass surface to its

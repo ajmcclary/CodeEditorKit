@@ -1,7 +1,7 @@
 import CodeEditorLanguages
 import CodeEditorPlugin
 import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 import SwiftUI
 
 /// Rounded card containing the Theme switcher chip. Language and preset

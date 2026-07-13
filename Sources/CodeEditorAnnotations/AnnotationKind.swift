@@ -1,5 +1,5 @@
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 import Foundation
 
 /// Unified annotation type enumeration with associated display properties.

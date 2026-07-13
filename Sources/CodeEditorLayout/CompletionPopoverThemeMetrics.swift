@@ -1,6 +1,6 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 import CoreGraphics
 import Foundation
 

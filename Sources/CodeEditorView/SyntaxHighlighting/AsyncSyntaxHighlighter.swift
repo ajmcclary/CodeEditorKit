@@ -4,7 +4,7 @@ import CodeEditorDiagnostics
 import CodeEditorLanguages
 import CodeEditorPlatform
 import CodeEditorSyntaxHighlighting
-import CodeEditorTheming
+import DesignKitThemes
 import Foundation
 #if canImport(AppKit)
 import AppKit

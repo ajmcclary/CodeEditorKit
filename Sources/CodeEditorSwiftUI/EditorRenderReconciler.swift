@@ -1,6 +1,6 @@
 import CodeEditorConfiguration
 import CodeEditorLanguages
-import CodeEditorTheming
+import DesignKitThemes
 import CodeEditorView
 
 /// Value state used to decide whether a SwiftUI render requires view mutation.

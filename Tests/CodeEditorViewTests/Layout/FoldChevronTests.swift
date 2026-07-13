@@ -1,5 +1,5 @@
 import CodeEditorConfiguration
-import CodeEditorDesignTokens
+import DesignKitTokens
 @testable import CodeEditorLayout
 @testable import CodeEditorView
 import Foundation

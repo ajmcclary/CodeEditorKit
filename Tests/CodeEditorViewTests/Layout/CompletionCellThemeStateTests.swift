@@ -1,5 +1,5 @@
 @testable import CodeEditorLayout
-import CodeEditorTheming
+import DesignKitThemes
 import Testing
 
 @MainActor

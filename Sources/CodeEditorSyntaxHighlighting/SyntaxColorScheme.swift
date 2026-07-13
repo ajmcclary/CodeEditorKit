@@ -1,10 +1,10 @@
 // swiftlint:disable object_literal
 // This file uses programmatic color definitions for cross-platform compatibility
 
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorLanguages
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 import Foundation
 
 #if canImport(UIKit)

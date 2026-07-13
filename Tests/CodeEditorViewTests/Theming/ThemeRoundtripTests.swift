@@ -1,4 +1,4 @@
-@testable import CodeEditorTheming
+import DesignKitThemes
 @testable import CodeEditorView
 import CustomDump
 import Foundation

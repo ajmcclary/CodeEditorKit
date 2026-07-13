@@ -4,7 +4,7 @@
 // both iOS and macOS platforms, eliminating code duplication.
 
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 import Foundation
 #if canImport(AppKit)
 import AppKit

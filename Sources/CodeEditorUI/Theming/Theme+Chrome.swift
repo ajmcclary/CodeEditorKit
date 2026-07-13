@@ -1,6 +1,6 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 import SwiftUI
 
 /// SwiftUI `Color` accessors for `Theme.style.chrome.*` token values.

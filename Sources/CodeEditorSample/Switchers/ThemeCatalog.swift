@@ -1,6 +1,6 @@
 import CodeEditorPlugin
 import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 import Foundation
 
 /// Bundled-theme catalog for the sample app's theme picker. Reads the

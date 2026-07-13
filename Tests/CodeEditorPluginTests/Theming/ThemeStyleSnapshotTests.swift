@@ -1,6 +1,6 @@
 @testable import CodeEditorPlugin
 @testable import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 @testable import CodeEditorView
 import CustomDump
 import Foundation

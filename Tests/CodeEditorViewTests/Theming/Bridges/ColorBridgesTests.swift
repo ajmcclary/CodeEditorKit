@@ -1,4 +1,4 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 @testable import CodeEditorView
 import Foundation
 import SwiftUI

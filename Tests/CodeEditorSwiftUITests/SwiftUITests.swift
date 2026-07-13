@@ -1,7 +1,7 @@
 import CodeEditorConfiguration
 import CodeEditorLanguages
 @testable import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 @testable import CodeEditorView
 import SwiftUI
 import XCTest

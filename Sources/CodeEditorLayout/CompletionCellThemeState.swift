@@ -1,6 +1,6 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 import Foundation
 
 /// Shared semantic theme state for native completion-cell implementations.

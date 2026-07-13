@@ -8,7 +8,7 @@
 import CodeEditorConfiguration
 import CodeEditorDiagnostics
 import CodeEditorLanguages
-import CodeEditorTheming
+import DesignKitThemes
 import CodeEditorView
 import SwiftUI
 

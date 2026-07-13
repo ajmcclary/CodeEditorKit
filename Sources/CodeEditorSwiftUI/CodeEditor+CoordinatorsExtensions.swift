@@ -3,7 +3,7 @@ import CodeEditorCompletion
 import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 import CodeEditorView
 import Foundation
 import SwiftUI

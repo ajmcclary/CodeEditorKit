@@ -1,6 +1,6 @@
 import CodeEditorPlugin
 import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 import Observation
 
 /// Active editor theme. First wrapper extracted in the AppState

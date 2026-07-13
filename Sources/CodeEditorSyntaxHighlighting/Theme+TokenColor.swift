@@ -1,5 +1,5 @@
-import CodeEditorDesignTokens
-import CodeEditorTheming
+import DesignKitTokens
+import DesignKitThemes
 import Foundation
 
 extension Theme {

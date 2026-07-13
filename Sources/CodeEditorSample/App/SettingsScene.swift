@@ -1,6 +1,6 @@
 import CodeEditorConfiguration
 import CodeEditorSwiftUI
-import CodeEditorTheming
+import DesignKitThemes
 #if canImport(AppKit)
 import CodeEditorPlugin
 import SwiftUI

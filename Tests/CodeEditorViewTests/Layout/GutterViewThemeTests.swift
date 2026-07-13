@@ -1,6 +1,6 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 @testable import CodeEditorView
 import Foundation
 import Testing

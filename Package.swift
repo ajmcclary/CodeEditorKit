@@ -54,10 +54,6 @@ let package = Package(
     platforms: [.macOS("26.3"), .iOS("26.3")],
     products: [
         .library(
-            name: "CodeEditorDesignTokens",
-            targets: ["CodeEditorDesignTokens"]
-        ),
-        .library(
             name: "CodeEditorDiagnostics",
             targets: ["CodeEditorDiagnostics"]
         ),
@@ -99,6 +95,7 @@ let package = Package(
         )
     ],
     dependencies: [
+        .package(url: "https://github.com/ajmcclary/DesignKit.git", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         // TEMP: using ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable
@@ -110,10 +107,6 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0")
     ],
     targets: [
-        .target(
-            name: "CodeEditorDesignTokens",
-            swiftSettings: swiftSettings
-        ),
         .target(
             name: "CodeEditorCommon",
             dependencies: [
@@ -135,14 +128,6 @@ let package = Package(
         .target(
             name: "CodeEditorConfiguration",
             dependencies: ["CodeEditorCommon", "CodeEditorPlatform", "CodeEditorTextModel"],
-            swiftSettings: swiftSettings
-        ),
-        .target(
-            name: "CodeEditorTheming",
-            dependencies: ["CodeEditorCommon", "CodeEditorDesignTokens"],
-            resources: [
-                .process("Resources/Themes")
-            ],
             swiftSettings: swiftSettings
         ),
         .target(
@@ -170,12 +155,12 @@ let package = Package(
             name: "CodeEditorSyntaxHighlighting",
             dependencies: [
                 "CodeEditorCommon",
-                "CodeEditorDesignTokens",
+                .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorDiagnostics",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
                 .product(name: "SwiftSyntax", package: "swift-syntax")
             ],
@@ -187,7 +172,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorPlatform",
-                "CodeEditorTheming"
+                .product(name: "DesignKitThemes", package: "DesignKit")
             ],
             swiftSettings: swiftSettings
         ),
@@ -230,10 +215,10 @@ let package = Package(
                 "CodeEditorAnnotations",
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
-                "CodeEditorDesignTokens",
+                .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorPlatform",
                 "CodeEditorSyntaxHighlighting",
-                "CodeEditorTheming"
+                .product(name: "DesignKitThemes", package: "DesignKit")
             ],
             swiftSettings: swiftSettings
         ),
@@ -256,7 +241,7 @@ let package = Package(
                 "CodeEditorCommon",
                 "CodeEditorCompletion",
                 "CodeEditorConfiguration",
-                "CodeEditorDesignTokens",
+                .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorDiagnostics",
                 "CodeEditorFolding",
                 "CodeEditorLSP",
@@ -266,7 +251,7 @@ let package = Package(
                 "CodeEditorSymbols",
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
             ],
@@ -299,7 +284,7 @@ let package = Package(
                 "CodeEditorLayout",
                 "CodeEditorPlatform",
                 "CodeEditorTextModel",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 "CodeEditorView"
             ],
             swiftSettings: swiftSettings
@@ -311,7 +296,7 @@ let package = Package(
                 "CodeEditorConfiguration",
                 "CodeEditorLanguages",
                 "CodeEditorSwiftUI",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 "CodeEditorView"
             ],
             exclude: [
@@ -323,11 +308,11 @@ let package = Package(
             name: "CodeEditorUI",
             dependencies: [
                 "CodeEditorConfiguration",
-                "CodeEditorDesignTokens",
+                .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorLanguages",
                 "CodeEditorSwiftUI",
                 "CodeEditorSymbols",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 "CodeEditorView"
             ],
             swiftSettings: swiftSettings
@@ -339,7 +324,7 @@ let package = Package(
                 "CodeEditorCommon",
                 "CodeEditorCompletion",
                 "CodeEditorConfiguration",
-                "CodeEditorDesignTokens",
+                .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorDiagnostics",
                 "CodeEditorLSP",
                 "CodeEditorLanguages",
@@ -348,7 +333,7 @@ let package = Package(
                 "CodeEditorSearch",
                 "CodeEditorSwiftUI",
                 "CodeEditorTextModel",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 "CodeEditorUI",
                 "CodeEditorView",
                 "CodeEditorWorkspace"
@@ -368,7 +353,7 @@ let package = Package(
                 "CodeEditorDiagnostics",
                 "CodeEditorPlugin",
                 "CodeEditorSwiftUI",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 "CodeEditorView",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
@@ -377,18 +362,6 @@ let package = Package(
                 "__Snapshots__",
                 "Theming/__Snapshots__",
                 "Layout/__Snapshots__"
-            ],
-            swiftSettings: swiftSettings
-        ),
-        .testTarget(
-            name: "CodeEditorDesignTokensTests",
-            dependencies: [
-                "CodeEditorDesignTokens",
-                .product(name: "CustomDump", package: "swift-custom-dump"),
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-            ],
-            exclude: [
-                "__Snapshots__"
             ],
             swiftSettings: swiftSettings
         ),
@@ -423,11 +396,11 @@ let package = Package(
             name: "CodeEditorViewTests",
             dependencies: [
                 "CodeEditorAnnotations", "CodeEditorCommon", "CodeEditorCompletion",
-                "CodeEditorConfiguration", "CodeEditorDesignTokens", "CodeEditorDiagnostics",
+                "CodeEditorConfiguration", .product(name: "DesignKitTokens", package: "DesignKit"), "CodeEditorDiagnostics",
                 "CodeEditorFolding", "CodeEditorLSP", "CodeEditorLanguages", "CodeEditorLayout",
                 "CodeEditorPlatform", "CodeEditorSearch", "CodeEditorSmartEditing",
                 "CodeEditorSymbols", "CodeEditorSyntaxHighlighting",
-                "CodeEditorTextModel", "CodeEditorTheming", "CodeEditorView",
+                "CodeEditorTextModel", .product(name: "DesignKitThemes", package: "DesignKit"), "CodeEditorView",
                 .product(name: "CustomDump", package: "swift-custom-dump")
             ],
             swiftSettings: swiftSettings
@@ -439,7 +412,7 @@ let package = Package(
                 "CodeEditorConfiguration", "CodeEditorDiagnostics", "CodeEditorFolding",
                 "CodeEditorLSP", "CodeEditorLanguages", "CodeEditorLayout", "CodeEditorPlatform",
                 "CodeEditorSwiftUI", "CodeEditorSymbols", "CodeEditorSyntaxHighlighting",
-                "CodeEditorTextModel", "CodeEditorTheming", "CodeEditorView",
+                "CodeEditorTextModel", .product(name: "DesignKitThemes", package: "DesignKit"), "CodeEditorView",
                 .product(name: "CustomDump", package: "swift-custom-dump")
             ],
             swiftSettings: swiftSettings
@@ -449,12 +422,12 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
-                "CodeEditorDesignTokens",
+                .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorLanguages",
                 "CodeEditorPlugin",
                 "CodeEditorSwiftUI",
                 "CodeEditorSymbols",
-                "CodeEditorTheming",
+                .product(name: "DesignKitThemes", package: "DesignKit"),
                 "CodeEditorUI",
                 "CodeEditorView",
                 .product(name: "CustomDump", package: "swift-custom-dump"),

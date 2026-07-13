@@ -1,4 +1,4 @@
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorLanguages
 import CodeEditorPlugin
 import CodeEditorSwiftUI

@@ -2,7 +2,7 @@ import CodeEditorDiagnostics
 import CodeEditorLayout
 import CodeEditorPlatform
 import CodeEditorTextModel
-import CodeEditorTheming
+import DesignKitThemes
 import CoreGraphics
 import Foundation
 

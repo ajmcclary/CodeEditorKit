@@ -1,6 +1,6 @@
 #if canImport(AppKit)
 import AppKit
-@testable import CodeEditorTheming
+import DesignKitThemes
 @testable import CodeEditorView
 import XCTest
 

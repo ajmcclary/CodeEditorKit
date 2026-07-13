@@ -2,7 +2,7 @@
 import AppKit
 import CodeEditorSwiftUI
 #endif
-import CodeEditorDesignTokens
+import DesignKitTokens
 import CodeEditorPlugin
 import SwiftUI
 

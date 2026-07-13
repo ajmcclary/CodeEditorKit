@@ -1,7 +1,7 @@
 #if canImport(AppKit)
 import AppKit
 import CodeEditorPlatform
-import CodeEditorTheming
+import DesignKitThemes
 
 /// macOS line-number gutter hosted by `NSScrollView.verticalRulerView`.
 ///
