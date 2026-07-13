@@ -36,7 +36,7 @@ public final class AsyncSyntaxHighlighter {
     public var backgroundHighlightingThreshold: Int = 10_000
 
     // Memory monitor for managing cache memory
-    private var memoryMonitor: MemoryMonitor
+    private var memoryMonitor: any MemoryMonitoring
     private let cleanupIdentifier = "async-syntax-highlighter-cache-\(UUID().uuidString)"
 
     // Performance metrics for production monitoring
@@ -54,7 +54,7 @@ public final class AsyncSyntaxHighlighter {
     ///   - performanceMetrics: Performance metrics instance (defaults to shared)
     ///   - debounceInterval: Time to wait before processing highlighting requests
     ///   - enablePeriodicOptimization: Whether to enable periodic cache optimization
-    public init(memoryMonitor: MemoryMonitor, performanceMetrics: ProductionPerformanceMetrics? = nil, debounceInterval: Duration = .seconds(PlatformConstants.defaultAsyncHighlightingDebounceInterval), enablePeriodicOptimization: Bool = true) {
+    public init(memoryMonitor: any MemoryMonitoring, performanceMetrics: ProductionPerformanceMetrics? = nil, debounceInterval: Duration = .seconds(PlatformConstants.defaultAsyncHighlightingDebounceInterval), enablePeriodicOptimization: Bool = true) {
         self.coordinator = SyntaxHighlightingCoordinator()
         self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)
         self.debounceInterval = debounceInterval
@@ -584,7 +584,7 @@ public final class AsyncSyntaxHighlighter {
 }
 
 extension AsyncSyntaxHighlighter: MemoryMonitorUsing {
-    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+    public func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
         guard monitor !== memoryMonitor else { return }
 
         memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)

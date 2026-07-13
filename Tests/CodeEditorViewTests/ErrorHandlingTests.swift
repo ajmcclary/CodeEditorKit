@@ -235,9 +235,10 @@ final class ErrorHandlingTests: XCTestCase {
             view.text = "func test\(index)() {}"
         }
 
-        // Force memory pressure cleanup
-        if let firstView = editorViews.first {
-            await firstView.memoryMonitor.performCleanup()
+        // Force memory pressure cleanup. `performCleanup` is concrete
+        // MemoryMonitor API, not part of the MemoryMonitoring contract.
+        if let firstMonitor = editorViews.first?.memoryMonitor as? MemoryMonitor {
+            await firstMonitor.performCleanup()
         }
 
         // Views should still be functional after cleanup

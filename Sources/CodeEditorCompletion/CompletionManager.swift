@@ -56,7 +56,7 @@ public final class CompletionManager {
     private let responseCache: CompletionResponseCache
     private let learningStore: CompletionLearningStore
     private let ranker: CompletionRanker
-    private var memoryMonitor: MemoryMonitor
+    private var memoryMonitor: any MemoryMonitoring
     private let cleanupIdentifier = "completion-manager-\(UUID().uuidString)"
     private let broadcaster: CompletionEventBroadcaster
 
@@ -75,7 +75,7 @@ public final class CompletionManager {
     ///   - enableCaching: Whether to enable result caching
     ///   - debouncer: Optional debouncer for throttling completion requests
     public convenience init(
-        memoryMonitor: MemoryMonitor,
+        memoryMonitor: any MemoryMonitoring,
         cacheSize: Int = 100,
         cacheExpirationTime: TimeInterval = 300, // 5 minutes
         enableCaching: Bool = true,
@@ -107,7 +107,7 @@ public final class CompletionManager {
     }
 
     init(
-        memoryMonitor: MemoryMonitor,
+        memoryMonitor: any MemoryMonitoring,
         providerRegistry: CompletionProviderRegistry,
         requestCoordinator: CompletionRequestCoordinator,
         responseCache: CompletionResponseCache,
@@ -399,7 +399,7 @@ public final class CompletionManager {
 }
 
 extension CompletionManager: MemoryMonitorUsing {
-    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+    public func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
         guard monitor !== memoryMonitor else { return }
 
         memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)

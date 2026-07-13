@@ -21,7 +21,7 @@ public struct HighlightDocumentSnapshot: Sendable, Equatable {
     }
 
     /// The document length in UTF-16 code units (the unit editor ranges use).
-    public var utf16Length: Int { (text as NSString).length }
+    public var utf16Length: Int { text.utf16.count }
 
     /// Whether the snapshot carries no text.
     public var isEmpty: Bool { text.isEmpty }

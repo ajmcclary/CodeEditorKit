@@ -80,7 +80,7 @@ def main() -> int:
         "P5": all((ROOT / f"Tests/{name}").is_dir() for name in ("CodeEditorCommonTests", "CodeEditorTextModelTests", "CodeEditorCompletionTests", "CodeEditorLSPTests", "CodeEditorViewTests", "CodeEditorSwiftUITests")) and len(list((ROOT / "Tests/CodeEditorPluginTests").rglob("*.swift"))) < 40,
         "P6": "Sources/CodeEditorSwiftUI/.*\\.swift" in text(".swiftlint.yml") and exists("Scripts/verify-project-metadata.py"),
         "P7": exists("Sources/CodeEditorCommon/Utilities/CodeEditorLog.swift", "Scripts/verify-logger-usage.py") and "CrossPlatformLogger.logger()" not in source_text,
-        "D1": sum(value.count("private final class Node") for value in (text("Sources/CodeEditorCommon/LinkedLRU.swift"), text("Sources/CodeEditorDiagnostics/LRUCache.swift"))) == 1,
+        "D1": sum(value.count("private final class Node") for value in (text("Sources/CodeEditorCommon/LinkedLRU.swift"), text("Sources/CodeEditorInstrumentation/LRUCache.swift"))) == 1,
         "D2": exists("Sources/CodeEditorCommon/Utilities/KeyedDebouncer.swift") and "debounceResults" not in source_text and "debounceErrors" not in source_text,
         "D3": exists("Sources/CodeEditorLSP/StringOrInteger.swift") and "typescript = javascript.merging" in text("Sources/CodeEditorSyntaxHighlighting/RegexQuery/QueryCaptureMap.swift"),
         "D4": exists("Sources/CodeEditorLayout/CompletionCellThemeState.swift", "Sources/CodeEditorView/Platform/ToolbarCatalog.swift") and "preservingScrollPosition" in text("Sources/CodeEditorView/CodeEditorView+SelectionScrolling.swift"),

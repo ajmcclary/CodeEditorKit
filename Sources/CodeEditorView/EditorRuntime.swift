@@ -24,7 +24,7 @@ public struct EditorRuntimeDependencies {
     public var eventBus: EditorEventBus
 
     /// Memory monitor shared by performance-sensitive runtime components.
-    public var memoryMonitor: MemoryMonitor
+    public var memoryMonitor: any MemoryMonitoring
 
     /// Coordinator for editor actors and background work.
     @available(macOS 13.0, iOS 16.0, *)
@@ -34,7 +34,7 @@ public struct EditorRuntimeDependencies {
     public var platformCapabilities: PlatformCapabilities
 
     /// Performance telemetry system.
-    public var unifiedPerformanceSystem: UnifiedPerformanceSystem
+    public var unifiedPerformanceSystem: any UnifiedPerformanceTracking
 
     /// Paragraph style cache used during layout.
     public var paragraphStyleCache: ParagraphStyleCache
@@ -55,10 +55,10 @@ public struct EditorRuntimeDependencies {
         workspaceRoot: URL? = nil,
         eventSystem: UnifiedEventSystem? = nil,
         eventBus: EditorEventBus? = nil,
-        memoryMonitor: MemoryMonitor? = nil,
+        memoryMonitor: (any MemoryMonitoring)? = nil,
         actorCoordinator: ActorCoordinator? = nil,
         platformCapabilities: PlatformCapabilities? = nil,
-        unifiedPerformanceSystem: UnifiedPerformanceSystem? = nil,
+        unifiedPerformanceSystem: (any UnifiedPerformanceTracking)? = nil,
         paragraphStyleCache: ParagraphStyleCache? = nil,
         languageMetadataRegistry: LanguageMetadataRegistry? = nil,
         platformServiceLayer: PlatformServiceLayer? = nil,
@@ -133,7 +133,7 @@ public final class EditorRuntime {
         eventSystem?.attach(to: dependencies.eventBus)
     }
 
-    public func update(memoryMonitor: MemoryMonitor) {
+    public func update(memoryMonitor: any MemoryMonitoring) {
         dependencies.memoryMonitor = memoryMonitor
     }
 }

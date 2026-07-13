@@ -7,7 +7,7 @@ import Foundation
 public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     private let storage: LinkedLRU<Key, Value>
     private let cacheId = UUID().uuidString
-    private var memoryMonitor: MemoryMonitor
+    private var memoryMonitor: any MemoryMonitoring
 
     /// Total number of items currently in cache
     public var count: Int { storage.count }
@@ -19,7 +19,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     /// - Parameters:
     ///   - capacity: Maximum number of items to store
     ///   - memoryMonitor: Memory monitor for tracking cache memory usage
-    public init(capacity: Int, memoryMonitor: MemoryMonitor) {
+    public init(capacity: Int, memoryMonitor: any MemoryMonitoring) {
         self.storage = LinkedLRU(capacity: capacity)
         self.memoryMonitor = memoryMonitor
 
@@ -121,7 +121,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
 }
 
 extension LRUCache: MemoryMonitorUsing {
-    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+    public func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
         guard monitor !== memoryMonitor else { return }
 
         memoryMonitor.unregisterCleanupHandler(identifier: "lru-cache-\(cacheId)")

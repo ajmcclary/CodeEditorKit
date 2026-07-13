@@ -1,6 +1,6 @@
 import CodeEditorCommon
-import CodeEditorInstrumentation
 import CodeEditorFolding
+import CodeEditorInstrumentation
 import CodeEditorLanguages
 import CodeEditorTextModel
 import Foundation
@@ -74,14 +74,14 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     private static let detectionDebounceNanoseconds: UInt64 = 250_000_000
 
     /// Optional memory monitor for cache-pressure cleanup (perf C6).
-    private let memoryMonitor: MemoryMonitor?
+    private let memoryMonitor: (any MemoryMonitoring)?
     private static let memoryCleanupIdentifier = "CodeFoldingEngine.foldRegionCache"
 
     // MARK: - Initialization
 
     internal init(
         performanceMetrics: ProductionPerformanceMetrics? = nil,
-        memoryMonitor: MemoryMonitor? = nil
+        memoryMonitor: (any MemoryMonitoring)? = nil
     ) {
         self.performanceMetrics = performanceMetrics ?? CodeEditorDependencies.makeProductionPerformanceMetrics()
         self.memoryMonitor = memoryMonitor

@@ -406,7 +406,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// let editor2 = CodeEditorView() 
     /// editor2.memoryMonitor = sharedMonitor
     /// ```
-    public var memoryMonitor: MemoryMonitor {
+    public var memoryMonitor: any MemoryMonitoring {
         get {
             runtime.dependencies.memoryMonitor
         }
@@ -609,7 +609,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
     ///   - memoryMonitor: Custom memory monitor for resource management
-    public convenience init(frame frameRect: NSRect, memoryMonitor: MemoryMonitor) {
+    public convenience init(frame frameRect: NSRect, memoryMonitor: any MemoryMonitoring) {
         self.init(frame: frameRect)
         self.memoryMonitor = memoryMonitor
     }
@@ -622,7 +622,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     public convenience init(
         frame frameRect: NSRect,
         featureDependencies: EditorFeatureRuntimeDependencies,
-        memoryMonitor: MemoryMonitor? = nil
+        memoryMonitor: (any MemoryMonitoring)? = nil
     ) {
         self.init(frame: frameRect)
         runtime.replace(featureDependencies: featureDependencies)
@@ -651,7 +651,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
     ///   - memoryMonitor: Custom memory monitor for resource management
-    public convenience init(frame frameRect: CGRect, memoryMonitor: MemoryMonitor) {
+    public convenience init(frame frameRect: CGRect, memoryMonitor: any MemoryMonitoring) {
         self.init(frame: frameRect)
         self.memoryMonitor = memoryMonitor
     }
@@ -664,7 +664,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     public convenience init(
         frame frameRect: CGRect,
         featureDependencies: EditorFeatureRuntimeDependencies,
-        memoryMonitor: MemoryMonitor? = nil
+        memoryMonitor: (any MemoryMonitoring)? = nil
     ) {
         self.init(frame: frameRect)
         runtime.replace(featureDependencies: featureDependencies)

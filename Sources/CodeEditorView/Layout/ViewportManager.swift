@@ -38,7 +38,7 @@ public final class ViewportManager: ObservableObject {
     public var maxCachedRanges: Int = 10
 
     /// Memory monitor for managing cache memory
-    private let memoryMonitor: MemoryMonitor
+    private let memoryMonitor: any MemoryMonitoring
 
     /// Cached visible ranges for quick access
     private let rangeCache: LRUCache<ViewportManagerCacheKey, CachedViewportData>
@@ -53,7 +53,7 @@ public final class ViewportManager: ObservableObject {
 
     // MARK: - Initialization
 
-    public init(textView: PlatformTextView, memoryMonitor: MemoryMonitor) {
+    public init(textView: PlatformTextView, memoryMonitor: any MemoryMonitoring) {
         self.textView = textView
         self.textKitBridge = textView.createTextKitBridge()
         self.memoryMonitor = memoryMonitor

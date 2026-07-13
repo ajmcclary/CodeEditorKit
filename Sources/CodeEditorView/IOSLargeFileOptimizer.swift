@@ -61,7 +61,7 @@ public final class IOSLargeFileOptimizer: ObservableObject {
     @Published public private(set) var metrics = OptimizationMetrics()
 
     private weak var textView: UITextView?
-    private let memoryMonitor: MemoryMonitor
+    private let memoryMonitor: any MemoryMonitoring
     private let performanceMonitor: UnifiedPerformanceSystem
 
     private var highlightingTask: Task<Void, Never>?
@@ -97,7 +97,7 @@ public final class IOSLargeFileOptimizer: ObservableObject {
 
     public init(
         textView: UITextView,
-        memoryMonitor: MemoryMonitor,
+        memoryMonitor: any MemoryMonitoring,
         performanceMonitor: UnifiedPerformanceSystem
     ) {
         self.textView = textView

@@ -10,7 +10,7 @@ import Foundation
 /// own monitor (or ``NoOpMemoryMonitor``) without carrying the full
 /// diagnostics system.
 @MainActor
-public protocol MemoryMonitoring: AnyObject {
+public protocol MemoryMonitoring: AnyObject, Sendable {
     /// Memory threshold for triggering cleanup (in MB).
     var memoryThresholdMB: Double { get set }
 

@@ -3,5 +3,5 @@
 public protocol MemoryMonitorUsing: AnyObject {
     /// Moves cleanup registration and monitoring to a new monitor.
     /// - Parameter monitor: The monitor that should own subsequent cleanup work.
-    func setMemoryMonitor(_ monitor: MemoryMonitor)
+    func setMemoryMonitor(_ monitor: any MemoryMonitoring)
 }

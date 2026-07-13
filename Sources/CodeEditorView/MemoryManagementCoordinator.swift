@@ -21,7 +21,7 @@ public final class MemoryManagementCoordinator {
     // MARK: - Properties
 
     /// The memory monitor instance
-    private(set) var memoryMonitor: MemoryMonitor
+    private(set) var memoryMonitor: any MemoryMonitoring
 
     /// Weak reference to the editor view
     private weak var editorView: CodeEditorView?
@@ -48,7 +48,7 @@ public final class MemoryManagementCoordinator {
     ///   - memoryMonitor: The memory monitor to use
     ///   - editorView: The editor view to manage
     public init(
-        memoryMonitor: MemoryMonitor,
+        memoryMonitor: any MemoryMonitoring,
         policy: MemoryManagementPolicy = .live,
         editorView: CodeEditorView
     ) {
@@ -95,7 +95,7 @@ public final class MemoryManagementCoordinator {
 
     /// Updates the memory monitor and all managed components
     /// - Parameter newMonitor: The new memory monitor to use
-    public func updateMemoryMonitor(_ newMonitor: MemoryMonitor) {
+    public func updateMemoryMonitor(_ newMonitor: any MemoryMonitoring) {
         guard newMonitor !== memoryMonitor else { return }
 
         // Unregister from old monitor

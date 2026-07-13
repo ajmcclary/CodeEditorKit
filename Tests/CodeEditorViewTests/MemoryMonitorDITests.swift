@@ -317,8 +317,11 @@ final class MemoryMonitorDITests: XCTestCase {
         // Verify the monitor is injected
         XCTAssertIdentical(editor.memoryMonitor, customMonitor, "Custom monitor should be injected")
 
-        // Force cleanup through the editor's monitor
-        _ = await editor.memoryMonitor.performCleanup()
+        // Force cleanup through the injected monitor (identical to the
+        // editor's, per the assertion above). `performCleanup` is concrete
+        // MemoryMonitor API, not part of the lightweight MemoryMonitoring
+        // contract the editor exposes.
+        _ = await customMonitor.performCleanup()
 
         // Verify cleanup was called
         XCTAssertTrue(cleanupCalled, "Cleanup handler should be called through injected monitor")

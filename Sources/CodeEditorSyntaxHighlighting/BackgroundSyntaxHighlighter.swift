@@ -59,7 +59,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     private let logger = CodeEditorLog.logger(category: "BackgroundSyntaxHighlighter")
 
     /// Memory monitor for managing cache memory
-    private var memoryMonitor: MemoryMonitor
+    private var memoryMonitor: any MemoryMonitoring
     private let cleanupIdentifier = "background-syntax-highlighter-\(UUID().uuidString)"
 
     /// Observer for app termination to ensure cleanup
@@ -72,7 +72,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
 
     // MARK: - Initialization
 
-    public init(memoryMonitor: MemoryMonitor) {
+    public init(memoryMonitor: any MemoryMonitoring) {
         self.memoryMonitor = memoryMonitor
         // Register with memory monitor
         registerWithMemoryMonitor()
@@ -486,7 +486,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
 }
 
 extension BackgroundSyntaxHighlighter: MemoryMonitorUsing {
-    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+    public func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
         guard monitor !== memoryMonitor else { return }
 
         memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)

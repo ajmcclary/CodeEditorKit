@@ -24,7 +24,7 @@ swift build --target CodeEditorUI
 
 ## Package Structure
 
-**Swift 6.3** with `StrictConcurrency` enabled. 18 products defined in `Package.swift`:
+**Swift 6.3** with `StrictConcurrency` enabled. 19 products defined in `Package.swift`:
 
 | Product | Type | Purpose |
 |---|---|---|
@@ -34,6 +34,7 @@ swift build --target CodeEditorUI
 | `CodeEditorConfiguration` | library | Settings, presets, validation |
 | `CodeEditorDiagnostics` | library | Opt-in performance and memory diagnostics |
 | `CodeEditorHighlightingCore` | library | View-free value contracts for highlight providers |
+| `CodeEditorInstrumentation` | library | Lightweight runtime instrumentation (memory monitor, perf counters) |
 | `CodeEditorLSP` | library | Language Server Protocol client and transports |
 | `CodeEditorLSPIntegration` | library | Opt-in LSP-to-editor bridge (semantic tokens, sync) |
 | `CodeEditorLanguages` | library | Language descriptors and detection |
@@ -71,7 +72,8 @@ No top-level directories left in the umbrella target source tree (`Resources/` h
 
 Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorCommon/` — utilities, models, extensions, errors, `RecoverableAsyncError`+`RecoveryStrategy`+`BackoffStrategy` infra (phase 0; expanded in §6.2.7); `SendablePerformanceMetric` + `FileChangeNotification` (added §6.2.12b); `SelectionState`, `EditorInteractionState` + `EditorCursorPosition`, `DirtyTracker`, `ErrorRecoveryCoordinator` (added §6.2.12c — `ErrorRecoveryCoordinator` is a rename of umbrella `Core/AsyncOperationErrors.swift`; the now-deleted `CompletionAsyncError` was dead code).
-- `Sources/CodeEditorDiagnostics/` — performance instrumentation and memory monitoring (separate SPM product so consumers can omit it from release builds; phase 4).
+- `Sources/CodeEditorDiagnostics/` — the full diagnostics system (PerformanceInsights, PerformanceViews dashboards, PerformanceTypes, PerformanceObservation, FrameRateMonitor, PerformanceBudget, metric providers; phase 4). Depends on and `@_exported`-re-exports `CodeEditorInstrumentation`, so `import CodeEditorDiagnostics` still exposes `MemoryMonitor` and friends.
+- `Sources/CodeEditorInstrumentation/` — lightweight runtime instrumentation consumed by the lean editor targets: `MemoryMonitor` (+`MemoryMonitorUsing`), `UnifiedPerformanceSystem`, `PerformanceMonitor`, `LRUCache`, `AdaptivePerformanceMode`, `HardwareAcceleration`, `ProductionPerformanceMetrics`, plus the `MemoryMonitoring` protocol and `NoOpMemoryMonitor`/`NoOpPerformanceTracker`. `CodeEditorView`/`Completion`/`SyntaxHighlighting`/`LSP` depend on this, NOT on `CodeEditorDiagnostics`.
 - `Sources/CodeEditorHighlightingCore/` — view-free value contracts for highlight providers: `HighlightRange`, `HighlightToken`, `HighlightDocumentSnapshot`, `HighlightTextEdit`, `HighlightInvalidation`, and the `HighlightRangeProviding` protocol. Zero CodeEditor dependencies (Foundation only). The blocking external highlight seam that replaces the internal view-based `RangeHighlightProviding`; `CodeEditorView` bridges value providers via `SnapshotHighlightProviderBridge`.
 - `Sources/CodeEditorLSPIntegration/` — opt-in LSP-to-editor bridge (depends on `CodeEditorView` + `CodeEditorLSP`): `LSPEditorBridge` (public entry, owns the `LSPManager`), `LSPDocumentController`, `LSPContentCoordinator`, and `LSPSemanticTokenProvider` (a value-oriented `HighlightRangeProviding`). `CodeEditorView` no longer depends on `CodeEditorLSP`; the LSP bridge was moved out here so LSP is genuinely optional.
 - `Sources/CodeEditorFolding/` — fold-storage primitives (`FoldStoreElement`, `LineFoldStorage`, `FoldInfo`), `FoldRegionAdapter`, and `FoldingProviderRegistry` (phase 4; new in §6.2.8a). The view-coupled fold engine, operations service, and presentation strategy live in `Sources/CodeEditorView/Folding/` (moved with the rest of `Core/` in §6.2.12).

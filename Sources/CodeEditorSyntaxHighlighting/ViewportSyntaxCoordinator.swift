@@ -26,7 +26,7 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
     /// Statistics for viewport highlighting
     @Published public private(set) var statistics = ViewportStatistics()
 
-    private let memoryMonitor: MemoryMonitor
+    private let memoryMonitor: any MemoryMonitoring
 
     private struct ViewportExtraction {
         let text: String
@@ -34,7 +34,7 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
     }
 
     public init(
-        memoryMonitor: MemoryMonitor,
+        memoryMonitor: any MemoryMonitoring,
         baseCoordinator: SyntaxHighlightingCoordinator = SyntaxHighlightingCoordinator(),
         maxCacheSize: Int = 50,
         viewportExpansionRatio: Double = 1.5 // Highlight 50% more content around visible area

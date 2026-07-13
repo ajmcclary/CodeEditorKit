@@ -113,10 +113,10 @@ public final class LSPManager: ObservableObject {
 
     // MARK: - Initialization
 
-    private var memoryMonitor: MemoryMonitor
+    private var memoryMonitor: any MemoryMonitoring
     private let cleanupIdentifier = "lsp-manager-\(UUID().uuidString)"
 
-    public init(memoryMonitor: MemoryMonitor, workspaceRoot: URL? = nil) {
+    public init(memoryMonitor: any MemoryMonitoring, workspaceRoot: URL? = nil) {
         self.clientRegistry = LSPClientRegistry()
         self.documentManager = LSPDocumentManager(clientRegistry: clientRegistry)
         self.memoryMonitor = memoryMonitor
@@ -440,7 +440,7 @@ public final class LSPManager: ObservableObject {
 }
 
 extension LSPManager: MemoryMonitorUsing {
-    public func setMemoryMonitor(_ monitor: MemoryMonitor) {
+    public func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
         guard monitor !== memoryMonitor else { return }
 
         memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)

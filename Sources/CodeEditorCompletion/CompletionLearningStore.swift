@@ -24,7 +24,7 @@ final class CompletionLearningStore {
     private let entries: LRUCache<String, CompletionFrequencyEntry>
     private var lastContext: CompletionContextModel?
 
-    init(capacity: Int, memoryMonitor: MemoryMonitor) {
+    init(capacity: Int, memoryMonitor: any MemoryMonitoring) {
         self.entries = LRUCache(capacity: capacity, memoryMonitor: memoryMonitor)
     }
 
@@ -74,7 +74,7 @@ final class CompletionLearningStore {
     }
 
     /// Rebinds memory-pressure observation without replacing learned values.
-    func setMemoryMonitor(_ monitor: MemoryMonitor) {
+    func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
         entries.setMemoryMonitor(monitor)
     }
 }

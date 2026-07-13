@@ -314,6 +314,7 @@ let package = Package(
                 "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorPlatform",
+                "CodeEditorSwiftUI",
                 "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel",
                 "CodeEditorView"
@@ -342,7 +343,6 @@ let package = Package(
                 "CodeEditorCompletion",
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
-                "CodeEditorLSP",
                 "CodeEditorLanguages",
                 "CodeEditorLayout",
                 "CodeEditorPlatform",

@@ -16,20 +16,20 @@ public struct HighlightInvalidation: Sendable, Equatable {
     }
 
     /// An empty result — nothing needs re-highlighting.
-    public static let none = HighlightInvalidation(ranges: [])
+    public static let empty = Self(ranges: [])
 
     /// A result covering a single range.
-    public static func range(_ range: HighlightRange) -> HighlightInvalidation {
-        HighlightInvalidation(ranges: [range])
+    public static func range(_ range: HighlightRange) -> Self {
+        Self(ranges: [range])
     }
 
     /// A result covering the whole document `[0, length)`.
     ///
-    /// Returns ``none`` when `length` is not positive.
-    public static func everything(length: Int) -> HighlightInvalidation {
+    /// Returns ``empty`` when `length` is not positive.
+    public static func everything(length: Int) -> Self {
         length > 0
-            ? HighlightInvalidation(ranges: [HighlightRange(location: 0, length: length)])
-            : .none
+            ? Self(ranges: [HighlightRange(location: 0, length: length)])
+            : .empty
     }
 
     /// Whether the result invalidates no characters.

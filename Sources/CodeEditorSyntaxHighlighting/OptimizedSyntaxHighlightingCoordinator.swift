@@ -52,7 +52,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
     private let coordinator: SyntaxHighlightingCoordinator
     private let tokenCache: SmartTokenCache
     private let performanceTracker: SyntaxHighlightingPerformanceTracker
-    private let memoryMonitor: MemoryMonitor
+    private let memoryMonitor: any MemoryMonitoring
     private var configuration: HighlightingConfiguration
 
     // Circuit breaker state
@@ -70,7 +70,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
     ///   - memoryMonitor: Memory monitor for tracking resource usage
     ///   - configuration: Highlighting configuration with optimization settings
     public init(
-        memoryMonitor: MemoryMonitor,
+        memoryMonitor: any MemoryMonitoring,
         configuration: HighlightingConfiguration = .default
     ) {
         self.coordinator = SyntaxHighlightingCoordinator()

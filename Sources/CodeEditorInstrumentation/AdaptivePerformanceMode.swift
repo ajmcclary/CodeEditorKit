@@ -21,14 +21,14 @@ public final class AdaptivePerformanceMode: ObservableObject {
     private let fileSizeThresholds = FileSizeThresholds()
 
     /// System resource monitor
-    private let memoryMonitor: MemoryMonitor
+    private let memoryMonitor: any MemoryMonitoring
 
     /// Performance metrics for mode decisions
     private let performanceMetrics: ProductionPerformanceMetrics
 
     // MARK: - Initialization
 
-    public init(memoryMonitor: MemoryMonitor, performanceMetrics: ProductionPerformanceMetrics? = nil) {
+    public init(memoryMonitor: any MemoryMonitoring, performanceMetrics: ProductionPerformanceMetrics? = nil) {
         self.memoryMonitor = memoryMonitor
         self.performanceMetrics = performanceMetrics ?? ProductionPerformanceMetrics()
         self.configuration = PerformanceModeConfiguration(mode: .balanced)

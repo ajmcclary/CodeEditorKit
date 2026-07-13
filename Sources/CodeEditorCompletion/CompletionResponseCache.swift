@@ -13,7 +13,7 @@ final class CompletionResponseCache {
         capacity: Int,
         expirationTime: TimeInterval,
         isEnabled: Bool,
-        memoryMonitor: MemoryMonitor
+        memoryMonitor: any MemoryMonitoring
     ) {
         self.cache = LRUCache(capacity: capacity, memoryMonitor: memoryMonitor)
         self.expirationTime = expirationTime
@@ -56,7 +56,7 @@ final class CompletionResponseCache {
     }
 
     /// Rebinds memory-pressure observation without replacing cache contents.
-    func setMemoryMonitor(_ monitor: MemoryMonitor) {
+    func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
         cache.setMemoryMonitor(monitor)
     }
 }

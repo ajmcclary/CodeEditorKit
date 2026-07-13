@@ -57,7 +57,7 @@ struct HighlightContractValueTests {
 
     @Test("invalidation helpers cover the expected regions")
     func invalidationHelpers() {
-        #expect(HighlightInvalidation.none.isEmpty)
+        #expect(HighlightInvalidation.empty.isEmpty)
         #expect(HighlightInvalidation.everything(length: 0).isEmpty)
         let all = HighlightInvalidation.everything(length: 10)
         #expect(all.ranges == [HighlightRange(location: 0, length: 10)])
