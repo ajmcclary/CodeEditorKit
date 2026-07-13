@@ -10,11 +10,11 @@ import SwiftUI
 /// trailing `@ViewBuilder` slot for host extras (e.g., LSP status,
 /// branch name).
 ///
-/// Reads `\.codeEditorTheme`, `\.codeEditorConfiguration`, and
+/// Reads `\.designTheme`, `\.codeEditorConfiguration`, and
 /// `\.editorState` from the environment. Renders zero-fields when no
 /// document is open (no selection in `EditorState`).
 public struct EditorStatusBar<Trailing: View>: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Environment(\.codeEditorConfiguration) private var configuration
     @Environment(\.editorState) private var editorState
 

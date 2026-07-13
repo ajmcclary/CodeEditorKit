@@ -9,7 +9,7 @@ import SwiftUI
 /// editor state directly — purely reflects what's in `AnnotationsHub`
 /// and `EditorController.symbols`.
 struct AnnotationsInspectorPanel: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let hub: AnnotationsHub
     let controller: EditorController
 

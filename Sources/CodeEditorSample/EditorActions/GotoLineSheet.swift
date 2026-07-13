@@ -7,7 +7,7 @@ import SwiftUI
 /// the command palette ("Go to Line…"). Backed by
 /// `EditorController.gotoLine(_:)`.
 struct GotoLineSheet: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Environment(\.dismiss) private var dismiss
 
     let controller: EditorController

@@ -68,7 +68,7 @@ public struct CompactEditorTabStripStyle: EditorTabStripStyle {
 }
 
 private struct DefaultTabStripBody: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let configuration: EditorTabStripStyleConfiguration
 
     var body: some View {
@@ -98,7 +98,7 @@ private struct DefaultTabStripBody: View {
 }
 
 private struct CompactTabStripBody: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let configuration: EditorTabStripStyleConfiguration
 
     var body: some View {

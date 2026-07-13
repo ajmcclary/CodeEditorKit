@@ -10,7 +10,7 @@ import SwiftUI
 /// the same primitive. Renders a leading language glyph, the tab name,
 /// and a trailing close button (or dirty dot when `tab.isDirty` is true).
 public struct EditorTab: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     private let tab: TabModel
     private let isActive: Bool

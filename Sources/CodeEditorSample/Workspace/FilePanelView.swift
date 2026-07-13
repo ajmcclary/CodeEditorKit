@@ -11,7 +11,7 @@ import SwiftUI
 /// - loaded: OutlineGroup-style lazy tree
 /// - error overlay: inline row above the tree
 struct FilePanelView: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Bindable var model: WorkspaceModel
     @Bindable var appState: AppState
 

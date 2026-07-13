@@ -12,23 +12,6 @@ import SwiftUI
 
 @available(macOS 13.0, iOS 16.0, *)
 extension View {
-    /// Sets the color theme for the editor.
-    ///
-    /// - Parameter theme: The theme to apply to the editor
-    /// - Returns: A view with the specified theme environment value
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// CodeEditor(text: $code)
-    ///     .codeTheme(.default)
-    ///     .codeTheme(.dark)
-    ///     .codeTheme(customTheme)
-    /// ```
-    public func codeTheme(_ theme: Theme) -> some View {
-        environment(\.codeEditorTheme, theme)
-    }
-
     /// Sets the programming language for syntax highlighting.
     ///
     /// - Parameter language: The programming language to use for syntax highlighting

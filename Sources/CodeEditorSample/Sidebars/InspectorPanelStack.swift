@@ -20,7 +20,7 @@ import SwiftUI
 /// footnote naming the constraint; real iOS LSP data lands with the
 /// B.1 LSP iOS coverage rollout.
 struct InspectorPanelStack: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Bindable var appState: AppState
     @Binding var showingPerformanceReport: Bool
 

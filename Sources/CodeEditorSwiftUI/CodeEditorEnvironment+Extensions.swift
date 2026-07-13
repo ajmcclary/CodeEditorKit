@@ -160,12 +160,6 @@ extension EnvironmentValues {
 
     // MARK: - Legacy Support (Computed Properties)
 
-    /// Legacy: Access the theme directly
-    public var codeEditorTheme: Theme {
-        get { codeEditorEnvironment.theme }
-        set { codeEditorEnvironment = codeEditorEnvironment.with(theme: newValue) }
-    }
-
     /// Legacy: Access the language directly
     public var codeEditorLanguage: Language {
         get { codeEditorEnvironment.language }

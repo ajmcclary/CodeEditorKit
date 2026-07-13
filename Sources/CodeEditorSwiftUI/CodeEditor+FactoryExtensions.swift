@@ -28,7 +28,7 @@ extension CodeEditor {
     ) -> some View {
         CodeEditor(text: text, debounceInterval: debounceInterval)
             .environment(\.codeEditorLanguage, language)
-            .environment(\.codeEditorTheme, theme)
+            .environment(\.designTheme, theme)
     }
 
     /// Creates a code editor with the specified configuration.
@@ -53,7 +53,7 @@ extension CodeEditor {
         CodeEditor(text: text, debounceInterval: debounceInterval)
             .environment(\.codeEditorConfiguration, configuration)
             .environment(\.codeEditorLanguage, language)
-            .environment(\.codeEditorTheme, theme)
+            .environment(\.designTheme, theme)
     }
 }
 

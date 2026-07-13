@@ -6,7 +6,7 @@ import SwiftUI
 /// category label on top, current value as the dominant text below,
 /// trailing chevron on the right edge. Tapping opens a `Menu` of options.
 struct SwitcherChip<Option: Hashable>: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     let icon: String
     let label: String

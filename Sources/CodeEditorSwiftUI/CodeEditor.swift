@@ -43,7 +43,7 @@ import SwiftUI
 /// // Using modifiers (recommended)
 /// CodeEditor(text: $code)
 ///     .codeLanguage(.swift)
-///     .codeTheme(.dark)
+///     .designTheme(.lcarsDark)
 ///
 /// // Using factory method
 /// CodeEditor.withLanguage($code, language: .swift, theme: .dark)
@@ -60,7 +60,7 @@ import SwiftUI
 ///     CodeEditor(text: $code)
 ///         .environment(\\.codeEditorConfiguration, config)
 ///         .environment(\\.codeEditorLanguage, .swift)
-///         .environment(\\.codeEditorTheme, .default)
+///         .designTheme(.default)
 /// }
 /// ```
 ///
@@ -142,6 +142,9 @@ public struct CodeEditor: View {
 
     // Environment - Using consolidated environment
     @Environment(\.codeEditorEnvironment) private var environment
+
+    // Host-provided theme (DesignKit environment key).
+    @Environment(\.designTheme) private var designTheme
 
     // Shared editor state surfaced by chrome (status bar, breadcrumb, title).
     // Defaults to the process-wide sentinel `EditorStateEnvironmentKey.defaultValue`
@@ -356,7 +359,7 @@ public struct CodeEditor: View {
 
     public var body: some View {
         let effectiveLanguage = initialLanguage ?? environment.language
-        let effectiveTheme = initialTheme ?? environment.theme
+        let effectiveTheme = initialTheme ?? designTheme
 
         var effectiveRuntimeDependencies: EditorRuntimeDependencies
         if let provided = environment.runtimeDependencies {
@@ -429,7 +432,8 @@ public struct CodeEditor: View {
         // valid `becomeFirstResponder: .yes` request. Hosts that want
         // searchable chrome can layer it outside the editor.
         .environment(\.codeEditorLanguage, effectiveLanguage)
-        .environment(\.codeEditorTheme, effectiveTheme)
+        .transformEnvironment(\.codeEditorEnvironment) { $0 = $0.with(theme: effectiveTheme) }
+        .environment(\.designTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, effectiveConfiguration)
         #if canImport(AppKit)
         .environment(\.editorEventBus, codeEditorIntent.editorController?.editorEventBus)

@@ -23,7 +23,7 @@ import SwiftUI
 /// in-process preview surface. `CodeEditorSample` deliberately uses
 /// the native NSWindow chrome instead of this view.
 public struct EditorTitleBar<Trailing: View>: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Environment(\.editorState) private var editorState
 
     private let titleOverride: String?

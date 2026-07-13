@@ -54,7 +54,7 @@ struct SettingsScene: View {
             detail
         }
         .navigationSplitViewStyle(.balanced)
-        .codeTheme(appState.theme.current)
+        .designTheme(appState.theme.current)
         .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
         .frame(minWidth: 760, idealWidth: 880, minHeight: 540, idealHeight: 660)
     }
@@ -113,7 +113,7 @@ struct SettingsScene: View {
 
 /// One sidebar row: SF Symbol + title, with hover/selection treatment.
 private struct CategoryRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     let category: SettingsScene.Category
     let isSelected: Bool

@@ -6,8 +6,8 @@ import SwiftUI
 /// content, layered with a theme-driven tint, role-specific background,
 /// and (for `.popover`) the theme's popover shadow.
 ///
-/// Reads `\.codeEditorTheme` from the SwiftUI environment to pick up
-/// `Theme.platform.glass` and `Theme.style.chrome.*` colors. Pass a `Role`
+/// Reads `\.designTheme` from the SwiftUI environment to pick up
+/// `Theme.glass.glass` and `Theme.style.chrome.*` colors. Pass a `Role`
 /// to indicate which kind of chrome surface this is — the modifier maps
 /// roles to backgrounds and tint multipliers per the spec's table.
 public struct PlatformGlassSurface: ViewModifier {
@@ -27,7 +27,7 @@ public struct PlatformGlassSurface: ViewModifier {
         case popover
     }
 
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     /// Surface role; selected by the host at modifier-installation time.
     public let role: Role

@@ -3,17 +3,13 @@ import CodeEditorSwiftUI
 import DesignKitThemes
 import Foundation
 
-/// Bundled-theme catalog for the sample app's theme picker. Reads the
-/// 22 `zed-trek` variants once at first access; lookup is O(1) by name.
+/// Theme catalog for the sample app's theme picker, backed by DesignKit's
+/// compile-time catalog (12 families × light/dark).
 enum ThemeCatalog {
-    static let all: [Theme] = {
-        guard let family = ThemeFamily.bundled("zed-trek") else { return [] }
-        return family.themes
-    }()
+    static let all: [Theme] = Theme.all
 
-    /// Default on launch — `LCARS Dark` from the bundled `zed-trek`
-    /// family (same `Theme` value as `Theme.lcarsDark`).
-    static let `default`: Theme = .lcarsDark
+    /// Default on launch — `Theme.default` (LCARS Dark).
+    static let `default`: Theme = .default
 
     /// Look up a theme by display name; returns `default` on miss.
     static func theme(named name: String) -> Theme {

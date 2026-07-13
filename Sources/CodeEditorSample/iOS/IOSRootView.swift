@@ -37,7 +37,7 @@ struct IOSRootView: View {
                 columnVisibility = .doubleColumn
             }
         }
-        .codeTheme(appState.theme.current)
+        .designTheme(appState.theme.current)
         .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
         .sheet(item: $appState.documents.pendingSaveAs) { state in
             ExportDocumentSheet(
@@ -137,7 +137,7 @@ struct IOSRootView: View {
                 .editorController(appState.documents.editorController)
                 .activeDocument(in: appState.documents.store)
                 .environment(\.codeEditorConfiguration, appState.configuration.current)
-                .codeTheme(appState.theme.current)
+                .designTheme(appState.theme.current)
                 .codeWorkspaceRoot(appState.workspaceRoot)
                 .becomeFirstResponder()
                 .eventSystem(appState.eventSystem)

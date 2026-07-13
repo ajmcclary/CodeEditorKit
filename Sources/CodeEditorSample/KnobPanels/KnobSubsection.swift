@@ -6,7 +6,7 @@ import SwiftUI
 /// for an inline subsection — paired hairlines flank the text so it reads
 /// as a divider rather than a heading.
 struct KnobSubsection: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     let title: String
 

@@ -11,7 +11,7 @@ import SwiftUI
 /// `IOSRootView` provides the iOS layout via `NavigationSplitView`.
 /// Global settings live in `Settings { SettingsScene(...) }` (⌘,).
 struct WindowBody: View {
-    @Environment(\.codeEditorTheme) private var editorTheme
+    @Environment(\.designTheme) private var editorTheme
     @Bindable var appState: AppState
     @Binding var workspaceVisible: Bool
     @Binding var inspectorVisible: Bool

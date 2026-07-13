@@ -9,7 +9,7 @@ import Observation
 @MainActor
 @Observable
 final class ThemeModel {
-    /// Currently active theme. Mirrored to `\.codeEditorTheme` and to
+    /// Currently active theme. Mirrored to `\.designTheme` and to
     /// `.preferredColorScheme` at the scene root.
     var current: Theme
 

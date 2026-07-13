@@ -6,7 +6,7 @@ import SwiftUI
 /// One row inside the command palette. Public so custom styles can
 /// compose the same primitive.
 public struct EditorCommandPaletteRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     private let item: CommandPaletteItem
     private let isHighlighted: Bool

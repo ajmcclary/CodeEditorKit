@@ -18,7 +18,7 @@ import SwiftUI
 /// section/prominent header, content slot, and footer slot. Pure
 /// SwiftUI — `.platformGlassSurface(.panel)` provides the chrome.
 public struct EditorSidebarShell<Header: View, Content: View, Footer: View>: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     private let sectionTitle: String?
     private let prominentTitle: String?

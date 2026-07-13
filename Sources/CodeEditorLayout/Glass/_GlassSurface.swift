@@ -58,8 +58,8 @@ public final class _GlassSurface: NSView {
     public func apply(theme: Theme) {
         if appliedTheme == theme { return }
         appliedTheme = theme
-        let tint = NSColor(tokens: theme.platform.glass.tint)
-            .withAlphaComponent(CGFloat(theme.platform.glass.opacity))
+        let tint = NSColor(tokens: theme.glass.glass.tint)
+            .withAlphaComponent(CGFloat(theme.glass.glass.opacity))
         themedTintColor = tint
         tintLayer.backgroundColor = tint.cgColor
     }
@@ -116,8 +116,8 @@ public final class _GlassSurface: UIView {
     public func apply(theme: Theme) {
         if appliedTheme == theme { return }
         appliedTheme = theme
-        let tint = UIColor(tokens: theme.platform.glass.tint)
-            .withAlphaComponent(CGFloat(theme.platform.glass.opacity))
+        let tint = UIColor(tokens: theme.glass.glass.tint)
+            .withAlphaComponent(CGFloat(theme.glass.glass.opacity))
         themedTintColor = tint
         tintView.backgroundColor = tint
     }

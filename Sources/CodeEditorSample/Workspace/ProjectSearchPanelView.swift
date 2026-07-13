@@ -7,7 +7,7 @@ import CodeEditorView
 import SwiftUI
 
 struct ProjectSearchPanelView: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Bindable var model: ProjectSearchModel
     @Bindable var workspace: WorkspaceModel
     @Bindable var appState: AppState

@@ -65,7 +65,7 @@ struct AnnotationsKnobsSection: View {
 }
 
 private struct ButtonRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let label: String
     let icon: String
     let action: () -> Void

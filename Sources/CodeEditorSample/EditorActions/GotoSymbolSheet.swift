@@ -7,7 +7,7 @@ import SwiftUI
 /// Filterable list of `EditorController.symbols`. Picking a row calls
 /// `controller.gotoSymbol(_:)` and dismisses.
 struct GotoSymbolSheet: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Environment(\.dismiss) private var dismiss
 
     let controller: EditorController

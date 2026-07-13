@@ -16,7 +16,7 @@ enum KnobSectionExpansion {
 /// window. Renders an accent-striped header with icon + title + chevron,
 /// and an expand/collapse animation around the supplied content.
 struct KnobSection<Content: View>: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     let title: String
     let icon: String

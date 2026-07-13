@@ -3,7 +3,7 @@
 //  CodeEditorPlugin
 //
 //  Convenience SwiftUI modifiers for the editor's selected-line color.
-//  The full `Theme` type and `.codeTheme(_:)` modifier live in
+//  The full `Theme` type and `.designTheme(_:)` modifier live in
 //  `Sources/CodeEditorPlugin/Theming/`.
 //
 

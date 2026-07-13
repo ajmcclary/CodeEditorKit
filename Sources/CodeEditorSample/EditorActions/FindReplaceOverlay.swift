@@ -7,7 +7,7 @@ import SwiftUI
 /// View-only: reads / writes `FindReplaceModel`, calls the model's
 /// helpers which dispatch into the framework via `EditorController`.
 struct FindReplaceOverlay: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Bindable var model: FindReplaceModel
     let controller: EditorController
     let isReadOnly: Bool

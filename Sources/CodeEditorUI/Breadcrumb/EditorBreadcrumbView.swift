@@ -12,7 +12,7 @@ import SwiftUI
 /// the user clicks a segment; nil callback means segments are not
 /// interactive.
 public struct EditorBreadcrumbView: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Environment(\.editorState) private var editorState
 
     // swiftlint:disable:next discouraged_optional_collection

@@ -12,7 +12,7 @@ import SwiftUI
 /// URL, so wiring it from the sample makes those subsystems addressable
 /// at all.
 struct WorkspaceKnobsSection: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     @Binding var workspaceRoot: URL?
     @State private var expanded: Bool = true
     var expansion: KnobSectionExpansion = .toggleable

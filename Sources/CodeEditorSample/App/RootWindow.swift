@@ -67,7 +67,7 @@ struct RootWindow: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
-        .codeTheme(appState.theme.current)
+        .designTheme(appState.theme.current)
         .preferredColorScheme(appState.theme.current.appearance == .dark ? .dark : .light)
         .navigationTitle(documents.active?.name ?? "CodeEditorSample")
     }

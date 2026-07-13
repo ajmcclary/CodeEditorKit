@@ -8,7 +8,7 @@ import SwiftUI
 
 /// Hairline rule used between knob rows; tinted by the active theme.
 struct KnobRowSeparator: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     var body: some View {
         Rectangle()
@@ -24,7 +24,7 @@ struct KnobRowSeparator: View {
 /// icon + humanized label. Centralizes the typography so toggles, sliders,
 /// steppers, and pickers stay visually aligned.
 private struct KnobLabelCell: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     let icon: String?
     let label: String
@@ -55,7 +55,7 @@ private struct KnobLabelCell: View {
 
 /// Mono-digit value badge used by sliders and steppers.
 private struct KnobValueBadge: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
 
     let text: String
     var minWidth: CGFloat = 44
@@ -81,7 +81,7 @@ private struct KnobValueBadge: View {
 // MARK: - Toggle
 
 struct ToggleRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let label: String
     @Binding var value: Bool
 
@@ -106,7 +106,7 @@ struct ToggleRow: View {
 // MARK: - Stepper (Int)
 
 struct StepperRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let label: String
     @Binding var value: Int
     let range: ClosedRange<Int>
@@ -133,7 +133,7 @@ struct StepperRow: View {
 // MARK: - Slider (Double)
 
 struct SliderRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let label: String
     @Binding var value: Double
     let range: ClosedRange<Double>
@@ -190,7 +190,7 @@ struct CGFloatSliderRow: View {
 // MARK: - Picker (generic)
 
 struct PickerRow<T: Hashable & Sendable>: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let label: String
     @Binding var value: T
     let cases: [T]
@@ -252,7 +252,7 @@ struct PickerRow<T: Hashable & Sendable>: View {
 // MARK: - Color (PlatformColor)
 
 struct ColorRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let label: String
     @Binding var value: PlatformColor
 
@@ -296,7 +296,7 @@ struct ColorRow: View {
 // MARK: - Char-set (Set<Character>)
 
 struct CharSetRow: View {
-    @Environment(\.codeEditorTheme) private var theme
+    @Environment(\.designTheme) private var theme
     let label: String
     @Binding var value: Set<Character>
     @State private var editing: String = ""
