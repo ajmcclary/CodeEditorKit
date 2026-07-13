@@ -74,6 +74,10 @@ let package = Package(
             targets: ["CodeEditorDiagnostics"]
         ),
         .library(
+            name: "CodeEditorHighlightingCore",
+            targets: ["CodeEditorHighlightingCore"]
+        ),
+        .library(
             name: "CodeEditorLSP",
             targets: ["CodeEditorLSP"]
         ),
@@ -134,10 +138,10 @@ let package = Package(
     targets: [
         .target(
             name: "CodeEditorCommon",
-            dependencies: [
-                .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
-            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
+            name: "CodeEditorHighlightingCore",
             swiftSettings: swiftSettings
         ),
         .target(
@@ -365,6 +369,11 @@ let package = Package(
         .testTarget(
             name: "CodeEditorCommonTests",
             dependencies: ["CodeEditorCommon", "CodeEditorDiagnostics"],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorHighlightingCoreTests",
+            dependencies: ["CodeEditorHighlightingCore"],
             swiftSettings: swiftSettings
         ),
         .testTarget(
