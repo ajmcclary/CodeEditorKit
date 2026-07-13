@@ -92,10 +92,6 @@ let package = Package(
         .library(
             name: "CodeEditorWorkspace",
             targets: ["CodeEditorWorkspace"]
-        ),
-        .executable(
-            name: "CodeEditorSample",
-            targets: ["CodeEditorSample"]
         )
     ],
     dependencies: [
@@ -321,35 +317,6 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
-        .executableTarget(
-            name: "CodeEditorSample",
-            dependencies: [
-                "CodeEditorAnnotations",
-                "CodeEditorCommon",
-                "CodeEditorCompletion",
-                "CodeEditorConfiguration",
-                .product(name: "DesignKitTokens", package: "DesignKit"),
-                "CodeEditorDiagnostics",
-                "CodeEditorLSP",
-                "CodeEditorLanguages",
-                "CodeEditorPlatform",
-                "CodeEditorPlugin",
-                "CodeEditorSearch",
-                "CodeEditorSwiftUI",
-                "CodeEditorTextModel",
-                .product(name: "DesignKitThemes", package: "DesignKit"),
-                "CodeEditorUI",
-                "CodeEditorView",
-                "CodeEditorWorkspace"
-            ],
-            exclude: [
-                "README.md"
-            ],
-            resources: [
-                .process("Resources/SampleSnippets")
-            ],
-            swiftSettings: swiftSettings
-        ),
         .testTarget(
             name: "CodeEditorPluginTests",
             dependencies: [
@@ -439,30 +406,6 @@ let package = Package(
             ],
             exclude: [
                 "Snapshots/__Snapshots__"
-            ],
-            swiftSettings: swiftSettings
-        ),
-        .testTarget(
-            name: "CodeEditorSampleTests",
-            dependencies: [
-                "CodeEditorAnnotations",
-                "CodeEditorCommon",
-                "CodeEditorCompletion",
-                "CodeEditorConfiguration",
-                "CodeEditorDiagnostics",
-                "CodeEditorLSP",
-                "CodeEditorLanguages",
-                "CodeEditorPlatform",
-                "CodeEditorPlugin",
-                "CodeEditorSample",
-                "CodeEditorSearch",
-                "CodeEditorSwiftUI",
-                "CodeEditorView",
-                "CodeEditorWorkspace",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-            ],
-            exclude: [
-                "__Snapshots__"
             ],
             swiftSettings: swiftSettings
         )
