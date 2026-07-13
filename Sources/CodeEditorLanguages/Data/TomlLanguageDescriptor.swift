@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── TOML ───────────────────────────────────────────────────────
     static let tomlDescriptor = Self(
             language: .toml,
-            displayName: "TOML",
             fileExtensions: ["toml"],
-            lspIdentifier: "toml",
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
@@ -25,7 +23,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: "toml",
             shebangIdentifiers: [],
             scriptAliases: []
         )

@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── CSS ────────────────────────────────────────────────────────
     static let cssDescriptor = Self(
             language: .css,
-            displayName: "CSS",
             fileExtensions: ["css", "scss", "sass", "less"],
-            lspIdentifier: "css",
             usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: "/*",
@@ -40,7 +38,6 @@ extension LanguageDescriptor {
             snippets: DescriptorSnippetData.css,
             memberCompletions: nil,
             commonModules: [],
-            parserName: "css",
             shebangIdentifiers: [],
             scriptAliases: []
         )

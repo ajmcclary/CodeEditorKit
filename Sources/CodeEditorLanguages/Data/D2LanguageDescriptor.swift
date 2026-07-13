@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── D2 ─────────────────────────────────────────────────────────
     static let d2Descriptor = Self(
             language: .d2,
-            displayName: "D2",
             fileExtensions: ["d2"],
-            lspIdentifier: "d2",
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: nil,
@@ -28,7 +26,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: nil,
             shebangIdentifiers: [],
             scriptAliases: []
         )

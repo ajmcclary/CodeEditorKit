@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Mermaid ────────────────────────────────────────────────────
     static let mermaidDescriptor = Self(
             language: .mermaid,
-            displayName: "Mermaid",
             fileExtensions: ["mmd", "mermaid"],
-            lspIdentifier: "mermaid",
             usesRegexHighlighter: true,
             lineComment: "%%",
             blockCommentStart: nil,
@@ -86,7 +84,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: nil,
             shebangIdentifiers: [],
             scriptAliases: []
         )

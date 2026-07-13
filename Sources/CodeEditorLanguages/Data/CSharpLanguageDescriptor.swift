@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── C# ─────────────────────────────────────────────────────────
     static let csharpDescriptor = Self(
             language: .csharp,
-            displayName: "C#",
             fileExtensions: ["cs"],
-            lspIdentifier: "csharp",
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -45,7 +43,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: "c_sharp",
             shebangIdentifiers: [],
             scriptAliases: []
         )

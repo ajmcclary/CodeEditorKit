@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Markdown ───────────────────────────────────────────────────
     static let markdownDescriptor = Self(
             language: .markdown,
-            displayName: "Markdown",
             fileExtensions: ["md", "markdown", "mdown", "mkd"],
-            lspIdentifier: "markdown",
             usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: nil,
@@ -31,7 +29,6 @@ extension LanguageDescriptor {
             snippets: MarkdownCompletionData.snippets,
             memberCompletions: nil,
             commonModules: [],
-            parserName: "markdown",
             shebangIdentifiers: [],
             scriptAliases: []
         )

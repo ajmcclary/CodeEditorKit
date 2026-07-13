@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Java ───────────────────────────────────────────────────────
     static let javaDescriptor = Self(
             language: .java,
-            displayName: "Java",
             fileExtensions: ["java"],
-            lspIdentifier: "java",
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -43,7 +41,6 @@ extension LanguageDescriptor {
             snippets: DescriptorSnippetData.java,
             memberCompletions: JavaMemberCompletions(),
             commonModules: [],
-            parserName: "java",
             shebangIdentifiers: [],
             scriptAliases: []
         )

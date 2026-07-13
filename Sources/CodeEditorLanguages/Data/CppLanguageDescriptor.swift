@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── C++ ────────────────────────────────────────────────────────
     static let cppDescriptor = Self(
             language: .cpp,
-            displayName: "C++",
             fileExtensions: ["cpp", "cc", "cxx", "hpp", "hh", "hxx"],
-            lspIdentifier: "cpp",
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -49,7 +47,6 @@ extension LanguageDescriptor {
             snippets: DescriptorSnippetData.cLanguage,
             memberCompletions: CMemberCompletions(),
             commonModules: [],
-            parserName: "cpp",
             shebangIdentifiers: [],
             scriptAliases: []
         )

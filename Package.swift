@@ -120,6 +120,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ajmcclary/DesignKit.git", from: "1.1.0"),
+        .package(url: "https://github.com/ajmcclary/LanguageKit.git", branch: "main"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         // TEMP: using ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable
@@ -159,7 +160,8 @@ let package = Package(
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorPlatform",
-                "CodeEditorTextModel"
+                "CodeEditorTextModel",
+                .product(name: "LanguageKit", package: "LanguageKit")
             ],
             swiftSettings: swiftSettings
         ),

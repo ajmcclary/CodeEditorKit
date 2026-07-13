@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── JavaScript ─────────────────────────────────────────────────
     static let javascriptDescriptor = Self(
             language: .javascript,
-            displayName: "JavaScript",
             fileExtensions: ["js", "jsx", "mjs"],
-            lspIdentifier: "javascript",
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -37,7 +35,6 @@ extension LanguageDescriptor {
             snippets: DescriptorSnippetData.javascript,
             memberCompletions: JavaScriptMemberCompletions(),
             commonModules: [],
-            parserName: "javascript",
             shebangIdentifiers: ["node", "javascript"],
             scriptAliases: ["node", "js"]
         )

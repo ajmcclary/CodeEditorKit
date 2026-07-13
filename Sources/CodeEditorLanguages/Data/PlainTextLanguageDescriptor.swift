@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Plain Text ─────────────────────────────────────────────────
     static let plainTextDescriptor = Self(
             language: .plainText,
-            displayName: "Plain Text",
             fileExtensions: ["txt", "text", "log"],
-            lspIdentifier: "plaintext",
             usesRegexHighlighter: false,
             lineComment: nil,
             blockCommentStart: nil,
@@ -21,7 +19,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: nil,
             shebangIdentifiers: [],
             scriptAliases: []
         )

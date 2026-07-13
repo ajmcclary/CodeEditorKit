@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── PlantUML ───────────────────────────────────────────────────
     static let plantumlDescriptor = Self(
             language: .plantuml,
-            displayName: "PlantUML",
             fileExtensions: ["puml", "plantuml", "pu"],
-            lspIdentifier: "plantuml",
             usesRegexHighlighter: true,
             lineComment: "'",
             blockCommentStart: "/'",
@@ -33,7 +31,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: nil,
             shebangIdentifiers: [],
             scriptAliases: []
         )

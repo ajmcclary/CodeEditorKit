@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Lua ────────────────────────────────────────────────────────
     static let luaDescriptor = Self(
             language: .lua,
-            displayName: "Lua",
             fileExtensions: ["lua"],
-            lspIdentifier: "lua",
             usesRegexHighlighter: true,
             lineComment: "--",
             blockCommentStart: "--[[",
@@ -33,7 +31,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: "lua",
             shebangIdentifiers: ["lua"],
             scriptAliases: ["lua"]
         )

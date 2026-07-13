@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── HTML ───────────────────────────────────────────────────────
     static let htmlDescriptor = Self(
             language: .html,
-            displayName: "HTML",
             fileExtensions: ["html", "htm", "xhtml"],
-            lspIdentifier: "html",
             usesRegexHighlighter: true,
             lineComment: nil,
             blockCommentStart: "<!--",
@@ -31,7 +29,6 @@ extension LanguageDescriptor {
             snippets: DescriptorSnippetData.html,
             memberCompletions: nil,
             commonModules: [],
-            parserName: "html",
             shebangIdentifiers: [],
             scriptAliases: []
         )

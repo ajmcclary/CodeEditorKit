@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Graphviz DOT ───────────────────────────────────────────────
     static let dotDescriptor = Self(
             language: .dot,
-            displayName: "Graphviz DOT",
             fileExtensions: ["dot", "gv"],
-            lspIdentifier: "dot",
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -28,7 +26,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: nil,
             shebangIdentifiers: [],
             scriptAliases: []
         )

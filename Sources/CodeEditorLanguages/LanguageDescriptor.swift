@@ -1,20 +1,58 @@
 import Foundation
+import LanguageKit
 
 // MARK: - Language Descriptor
 
-/// Single source of truth for all language metadata.
+/// Single source of truth for all *editor-specific* language behavior, with
+/// language *identity* metadata sourced from `LanguageKit.LanguageCatalog`.
 ///
 /// Replaces the dual `LanguageStaticMetadata` / `LanguageMetadataRegistry` systems
 /// with one `Sendable` struct per language. The `Language` enum's computed properties
 /// (`name`, `fileExtensions`, `lspIdentifier`) delegate here so there is exactly one
 /// place to update when adding a language.
+///
+/// ## Identity vs. behavior (LanguageKit adoption, workspace-reorg Task 7)
+///
+/// The scalar identity fields `displayName`, `lspIdentifier`, and `parserName`
+/// (the tree-sitter grammar identifier) are no longer stored here; they are
+/// computed by looking the `language` up in `LanguageKit.LanguageCatalog` (an
+/// identity mapping, because `LanguageID.rawValue == Language.rawValue` for
+/// every CEP language). Deleting those 92 literal duplications was a true no-op
+/// for the pinned characterization behavior, save one documented divergence:
+///
+/// - **swift `parserName`**: `LanguageCatalog` records grammar id `"swift"`, but
+///   CEP highlights Swift via SwiftSyntax and pins `parserName == nil`. Swift is
+///   listed in ``grammarIdentifierSuppressed`` so the local behavior is
+///   preserved. See `LanguageCatalogCharacterizationTests`.
+///
+/// Fields that remain stored/local because they encode information LanguageKit
+/// cannot round-trip or deliberately does not reproduce:
+///
+/// - **`fileExtensions`**: `LanguageCatalog` stores extensions as an *unordered*
+///   `Set`, but CEP's public `Language.fileExtensions` (and its characterization)
+///   are order-sensitive arrays, and CEP folds the `tsx` extension into
+///   `typescript` (`["ts", "tsx"]`) whereas LanguageKit models `tsx` as its own
+///   language. Ordering + that mapping are CEP-owned, so the arrays stay here.
+/// - **`shebangIdentifiers` / `scriptAliases`**: richer than LanguageKit's
+///   intentionally-minimal `interpreters`, and they drive live shebang detection.
+/// - **Special filenames** (Dockerfile / Makefile / Rakefile ...): handled by
+///   `LanguageDetectionService`, whose `dockerfile.`-prefix quirk LanguageKit
+///   deliberately dropped; kept local to preserve pinned behavior.
 package struct LanguageDescriptor: Sendable {
-    // MARK: - Identity
+    // MARK: - Identity (sourced from LanguageKit)
 
     package let language: Language
-    package let displayName: String
     package let fileExtensions: [String]
-    package let lspIdentifier: String
+
+    /// Human-readable display name, sourced from `LanguageKit.LanguageCatalog`.
+    package var displayName: String {
+        Self.catalogMetadata(for: language)?.displayName ?? language.rawValue.capitalized
+    }
+
+    /// LSP language identifier, sourced from `LanguageKit.LanguageCatalog`.
+    package var lspIdentifier: String {
+        Self.catalogMetadata(for: language)?.lspIdentifier ?? language.rawValue
+    }
 
     // MARK: - Highlighting
 
@@ -57,15 +95,21 @@ package struct LanguageDescriptor: Sendable {
 
     // MARK: - Parser / detection
 
-    package let parserName: String?
+    /// Tree-sitter grammar identifier, sourced from
+    /// `LanguageKit.LanguageCatalog`'s `treeSitterGrammarIdentifier`, except for
+    /// languages in ``grammarIdentifierSuppressed`` (currently only Swift, which
+    /// is highlighted via SwiftSyntax and pins `nil`).
+    package var parserName: String? {
+        if Self.grammarIdentifierSuppressed.contains(language) { return nil }
+        return Self.catalogMetadata(for: language)?.treeSitterGrammarIdentifier
+    }
+
     package let shebangIdentifiers: Set<String>
     package let scriptAliases: Set<String>
 
     init(
         language: Language,
-        displayName: String,
         fileExtensions: [String],
-        lspIdentifier: String,
         usesRegexHighlighter: Bool,
         lineComment: String?,
         blockCommentStart: String?,
@@ -82,14 +126,11 @@ package struct LanguageDescriptor: Sendable {
         snippets: [SnippetTemplate],
         memberCompletions: (any LanguageMemberCompletions)?,
         commonModules: [String],
-        parserName: String?,
         shebangIdentifiers: Set<String>,
         scriptAliases: Set<String>
     ) {
         self.language = language
-        self.displayName = displayName
         self.fileExtensions = fileExtensions
-        self.lspIdentifier = lspIdentifier
         self.usesRegexHighlighter = usesRegexHighlighter
         self.lineComment = lineComment
         self.blockCommentStart = blockCommentStart
@@ -106,7 +147,6 @@ package struct LanguageDescriptor: Sendable {
         self.snippets = snippets
         self.memberCompletions = memberCompletions
         self.commonModules = commonModules
-        self.parserName = parserName
         self.shebangIdentifiers = shebangIdentifiers
         self.scriptAliases = scriptAliases
     }
@@ -181,6 +221,24 @@ package struct LanguageDescriptor: Sendable {
         .plantuml: plantumlDescriptor,
         .plainText: plainTextDescriptor
     ]
+
+    // MARK: - LanguageKit adapter
+
+    /// CEP-side divergences from `LanguageKit.LanguageCatalog`: languages whose
+    /// tree-sitter grammar identifier the catalog records but CEP intentionally
+    /// suppresses because the editor highlights them by another strategy.
+    ///
+    /// - `swift`: highlighted via SwiftSyntax, so `parserName` stays `nil` even
+    ///   though `LanguageCatalog` lists grammar `"swift"`. Pinned by
+    ///   `LanguageCatalogCharacterizationTests` (swift `parserName == nil`).
+    private static let grammarIdentifierSuppressed: Set<Language> = [.swift]
+
+    /// Looks a CEP `Language` up in `LanguageKit.LanguageCatalog`. The mapping is
+    /// the identity on raw values: every CEP `Language.rawValue` is a registered
+    /// `LanguageID.rawValue`.
+    private static func catalogMetadata(for language: Language) -> LanguageMetadata? {
+        LanguageCatalog.metadata(for: LanguageID(rawValue: language.rawValue))
+    }
 
     // MARK: - Lookup
 

@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Rust ───────────────────────────────────────────────────────
     static let rustDescriptor = Self(
             language: .rust,
-            displayName: "Rust",
             fileExtensions: ["rs"],
-            lspIdentifier: "rust",
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -37,7 +35,6 @@ extension LanguageDescriptor {
             snippets: DescriptorSnippetData.rust,
             memberCompletions: RustMemberCompletions(),
             commonModules: [],
-            parserName: "rust",
             shebangIdentifiers: [],
             scriptAliases: []
         )

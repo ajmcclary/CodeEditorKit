@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Kotlin ─────────────────────────────────────────────────────
     static let kotlinDescriptor = Self(
             language: .kotlin,
-            displayName: "Kotlin",
             fileExtensions: ["kt", "kts"],
-            lspIdentifier: "kotlin",
             usesRegexHighlighter: true,
             lineComment: "//",
             blockCommentStart: "/*",
@@ -42,7 +40,6 @@ extension LanguageDescriptor {
             snippets: [],
             memberCompletions: nil,
             commonModules: [],
-            parserName: "kotlin",
             shebangIdentifiers: [],
             scriptAliases: []
         )

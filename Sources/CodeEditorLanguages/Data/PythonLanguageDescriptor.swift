@@ -4,9 +4,7 @@ extension LanguageDescriptor {
     // ── Python ─────────────────────────────────────────────────────
     static let pythonDescriptor = Self(
             language: .python,
-            displayName: "Python",
             fileExtensions: ["py", "pyw"],
-            lspIdentifier: "python",
             usesRegexHighlighter: true,
             lineComment: "#",
             blockCommentStart: "\"\"\"",
@@ -43,7 +41,6 @@ extension LanguageDescriptor {
             snippets: DescriptorSnippetData.python,
             memberCompletions: PythonMemberCompletions(),
             commonModules: [],
-            parserName: "python",
             shebangIdentifiers: ["python", "python2", "python3"],
             scriptAliases: ["python", "python2", "python3"]
         )

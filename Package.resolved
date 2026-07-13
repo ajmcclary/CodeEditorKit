@@ -1,5 +1,5 @@
 {
-  "originHash" : "b7eb6c8f156a76ef3be969999dd79e2ba912c182218e2a03e0e75ebc6d91c421",
+  "originHash" : "23d4404edd353d439dd61c954b2d31bb738095ad9230f0561baf56153932ff5a",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "a9d33e2fbf196fc6131af67f1ff9c63e30b49495",
         "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "languagekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ajmcclary/LanguageKit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "a170b8e320188ff8bb322070e024dabfae200bcd"
       }
     },
     {
