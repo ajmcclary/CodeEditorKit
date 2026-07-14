@@ -17,7 +17,10 @@ import os.lock
 /// - Symbol navigation
 ///
 /// This class serves as a facade that coordinates LSP communication through
-/// dedicated components: LSPConnectionManager, LSPLanguageFeatures, and LSPProcessManager.
+/// dedicated components: LSPConnectionManager, LSPLanguageFeatures, and an
+/// `LSPTransport` (ProcessTransport for local servers, WebSocketTransport
+/// for remote ones) installed via `connect(configuration:languageId:)` or
+/// `init(transport:)`.
 ///
 /// - Important: LSP client is available on all platforms, but functionality varies:
 ///   - macOS: Full support for both local and remote LSP servers
@@ -110,9 +113,6 @@ public final class LSPClient: ObservableObject {
     /// before any transport work. Production callers leave this `nil`.
     internal var recordingHandler: (@Sendable (LSPServerConfiguration, String) async -> Void)?
 
-    /// Process manager for local server processes (macOS only)
-    private lazy var processManager = LSPProcessManager(messageHandler: messageHandler)
-
     /// JSON-RPC request allocation, encoding, and continuation routing.
     private lazy var jsonRPCSession = JSONRPCSession { [weak self] data in
         guard let self else { throw LSPError.notConnected }
@@ -197,15 +197,16 @@ public final class LSPClient: ObservableObject {
         logger.info("Connecting to LSP server: \(configuration.serverPath)")
 
         do {
-            // Use transport if available, otherwise fall back to process
-            if transport != nil {
-                try await LSPConnectionManager.startTransportConnection(
-                    transport: transport,
-                    messageHandler: messageHandler
-                )
-            } else {
-                try processManager.startServerProcess(configuration: configuration)
+            // No implicit process fallback: local servers are reached via
+            // ProcessTransport, installed by the modern
+            // connect(configuration:languageId:) overload or init(transport:).
+            guard transport != nil else {
+                throw LSPError.transportNotConfigured
             }
+            try await LSPConnectionManager.startTransportConnection(
+                transport: transport,
+                messageHandler: messageHandler
+            )
 
             connectionState = .initializing
             serverCapabilities = try await LSPConnectionManager.initializeServer(
@@ -299,8 +300,6 @@ public final class LSPClient: ObservableObject {
 
                 if let transport = self.transport {
                     await transport.disconnect()
-                } else {
-                    self.processManager.terminateServerProcess()
                 }
 
                 self.connectionState = .disconnected
@@ -314,7 +313,6 @@ public final class LSPClient: ObservableObject {
                     self?.connectionState = .disconnected
                 }
             } else {
-                processManager.terminateServerProcess()
                 connectionState = .disconnected
             }
         }
@@ -534,11 +532,8 @@ public final class LSPClient: ObservableObject {
     }
 
     private func sendEncodedMessage(_ data: Data) async throws {
-        if let transport {
-            try await transport.send(data)
-        } else {
-            try processManager.sendMessage(data)
-        }
+        guard let transport else { throw LSPError.notConnected }
+        try await transport.send(data)
     }
 
     private func handleNotification(method: String, params: Data) async {
