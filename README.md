@@ -238,6 +238,41 @@ let server = LSPServerConfiguration.remote(
 try await client.connect(configuration: server, language: .swift)
 ```
 
+### External syntax-highlighting providers
+
+`CodeEditorHighlightingCore` defines a view-free, `Sendable` value contract,
+`HighlightRangeProviding`, that lets an external engine drive syntax
+highlighting without depending on the editor surface. Inject one through any of
+three seams:
+
+```swift
+// 1. View level
+codeEditorView.setExternalHighlightProvider(myProvider)
+
+// 2. EditorController (SwiftUI host)
+controller.setExternalHighlightProvider(myProvider)
+
+// 3. SwiftUI modifier
+CodeEditor(text: $code)
+    .codeEditorHighlightProvider(myProvider)
+```
+
+**Semantics:** the injected provider *replaces* the built-in regex / SwiftSyntax
+highlighter as the editor's **primary** highlight source — the built-in
+highlighter no longer runs while a provider is installed. (This differs from the
+LSP integration, which layers semantic tokens on top as a higher-priority
+*supplemental* provider while the built-in highlighter still runs.) Pass `nil`
+to restore the built-in highlighter. The provider only paints once the
+range-store pipeline is enabled:
+
+```swift
+config.performance.usesRangeBasedHighlighting = true
+config.display.useRangeStoreHighlighting = true
+```
+
+The separate [`CodeEditorTreeSitter`](../CodeEditorTreeSitter) package ships a
+ready-made tree-sitter conformer, `TreeSitterHighlightProvider.standard(languageID:)`.
+
 ## 🧪 Testing
 
 The package includes 4 test targets and 221 `*Tests.swift` files covering the major editor, configuration, platform, and language paths:

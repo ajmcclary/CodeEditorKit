@@ -1,3 +1,4 @@
+import CodeEditorHighlightingCore
 import CodeEditorLayout
 import Foundation
 
@@ -22,6 +23,14 @@ package final class HighlightingController: EditorFeatureController {
     private var cancellation: any HighlightingCancelling
 
     internal var rangeBasedController: RangeBasedHighlightingController?
+
+    /// Host-injected value-oriented highlight provider. When non-nil, the
+    /// `RangeBasedHighlightingController` is constructed to use it as its
+    /// *primary* provider (replacing the built-in regex/SwiftSyntax adapter);
+    /// when nil, the built-in adapter is used. Persisted here so it survives
+    /// controller teardown/rebuild on language and configuration changes.
+    internal var externalHighlightProvider: (any HighlightRangeProviding)?
+
     package private(set) var isAttached = false
 
     package init(cancellation: any HighlightingCancelling) {

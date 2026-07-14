@@ -166,6 +166,16 @@ enum CodeEditorRepresentableHelper {
             coordinator.editorController = nil
         }
 
+        // Install a host-injected highlight provider from the
+        // `.codeEditorHighlightProvider(_:)` modifier. Install-only (applied
+        // only when non-nil, mirroring the `.memoryMonitor(_:)` precedent) so a
+        // default/absent environment value never clears a provider set through
+        // the `EditorController` seam. The view's identity guard keeps repeated
+        // updates cheap.
+        if let highlightProvider = parameters.environment.codeEditorHighlightProvider {
+            container.textView.setExternalHighlightProvider(highlightProvider)
+        }
+
         // Handle focus request from environment using coordinator's tracking
         coordinator.requestFocusIfNeeded(
             for: container,

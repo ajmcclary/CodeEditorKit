@@ -345,6 +345,7 @@ let package = Package(
                 "CodeEditorCompletion",
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
+                "CodeEditorHighlightingCore",
                 "CodeEditorLanguages",
                 "CodeEditorLayout",
                 "CodeEditorPlatform",
@@ -462,6 +463,7 @@ let package = Package(
             dependencies: [
                 "CodeEditorAnnotations", "CodeEditorCommon", "CodeEditorCompletion",
                 "CodeEditorConfiguration", "CodeEditorDiagnostics", "CodeEditorFolding",
+                "CodeEditorHighlightingCore",
                 "CodeEditorLSP", "CodeEditorLanguages", "CodeEditorLayout", "CodeEditorPlatform",
                 "CodeEditorSwiftUI", "CodeEditorSymbols", "CodeEditorSyntaxHighlighting",
                 "CodeEditorTextModel", .product(name: "DesignKitThemes", package: "DesignKit"), "CodeEditorView",

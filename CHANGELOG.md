@@ -2,6 +2,29 @@
 
 All notable changes to CodeEditorPlugin are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Public injection seam for external highlight providers.** A host can now
+  install a value-oriented `HighlightRangeProviding` (from the view-free
+  `CodeEditorHighlightingCore` contract) as the editor's primary syntax-highlight
+  source through three parallel APIs:
+  - `CodeEditorView.setExternalHighlightProvider(_:)` (view level, plus a
+    matching `externalHighlightProvider` read accessor).
+  - `EditorController.setExternalHighlightProvider(_:)` (SwiftUI host façade);
+    the controller remembers the provider and re-applies it on every (re)attach,
+    so it works even when set before the underlying view exists.
+  - `.codeEditorHighlightProvider(_:)` SwiftUI view modifier.
+
+  Injecting a provider *replaces* the built-in regex / SwiftSyntax highlighter as
+  the primary source (it does not augment it — that remains the LSP
+  supplemental-provider path). Passing `nil` restores the built-in highlighter.
+  The provider paints once `performance.usesRangeBasedHighlighting` and
+  `display.useRangeStoreHighlighting` are enabled. This exposes the previously
+  internal `RangeBasedHighlightingController(externalProvider:)` seam that the
+  `CodeEditorTreeSitter` package's `TreeSitterHighlightProvider` was written for.
+
 ## [0.1.0-beta.2] - 2026-07-13
 
 Dependency hygiene and a target-graph split since beta.1.

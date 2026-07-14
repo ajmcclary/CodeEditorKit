@@ -1,5 +1,6 @@
 import CodeEditorAnnotations
 import CodeEditorDiagnostics
+import CodeEditorHighlightingCore
 import CodeEditorLanguages
 import CodeEditorLayout
 import CodeEditorPlatform
@@ -57,6 +58,12 @@ public final class EditorController {
     /// so the controller never extends the editor view's lifetime.
     @ObservationIgnored
     weak var codeEditorView: CodeEditorView?
+
+    /// Host-injected primary highlight provider, remembered so it can be
+    /// re-applied whenever the controller (re)attaches to a view. See
+    /// ``setExternalHighlightProvider(_:)``.
+    @ObservationIgnored
+    var storedExternalHighlightProvider: (any HighlightRangeProviding)?
 
     @ObservationIgnored
     private lazy var symbolNavigator = SymbolNavigator()
@@ -197,6 +204,16 @@ public final class EditorController {
             // update, so skipping the same-view case keeps handlers from
             // firing on every keystroke.
             if view !== previousView {
+                // Re-assert any host-injected highlight provider onto the newly
+                // attached view. Install-only (never clears on nil) so it does
+                // not clobber a provider installed through the SwiftUI modifier
+                // on a host that also attaches a controller. The view's identity
+                // guard makes this a no-op when the same provider is already in
+                // place.
+                if let storedExternalHighlightProvider {
+                    view.setExternalHighlightProvider(storedExternalHighlightProvider)
+                }
+
                 let snapshot = attachHandlers
                 for (_, handler) in snapshot {
                     handler(self)
