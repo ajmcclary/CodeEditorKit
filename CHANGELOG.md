@@ -2,6 +2,25 @@
 
 All notable changes to CodeEditorPlugin are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **`LSPClient` is transport-only.** Content-Length framing is owned by a
+  single internal `LSPFrameCodec` (both `ProcessTransport` and
+  `WebSocketTransport` encode through it; `LSPMessageHandler` decodes
+  through it, keeping the malformed-framing recovery semantics pinned by
+  `LSPMessageHandlerRecoveryTests`). The legacy
+  `connect(configuration: ServerConfiguration)` overload no longer falls
+  back to spawning a server process when no transport is configured — it
+  throws `LSPError.transportNotConfigured` (previously it spawned the
+  executable and then hung awaiting an initialize response). Local servers
+  are reached via `ProcessTransport`, installed by
+  `connect(configuration:languageId:)` or `init(transport:)`; no in-package
+  or demo caller used the fallback. The internal `LSPProcessManager` was
+  deleted; `ProcessTransport` gained a direct end-to-end framing test.
+  (ProcessKit proof-of-two, steps 1–4.)
+
 ## [0.1.0-beta.3] - 2026-07-14
 
 ### Added

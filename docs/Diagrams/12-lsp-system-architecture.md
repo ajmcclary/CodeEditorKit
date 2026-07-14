@@ -37,6 +37,11 @@ classDiagram
     class LSPTransport
     class ProcessTransport
     class WebSocketTransport
+    class LSPMessageHandler
+    class LSPFrameCodec {
+        +encode(payload)
+        +extractCompleteMessage(from buffer)
+    }
 
     LSPManager *-- LSPClientRegistry
     LSPClientRegistry o-- LSPClient
@@ -44,7 +49,11 @@ classDiagram
     LSPClient *-- LSPConnectionLifecycle
     LSPClient *-- LSPDocumentSession
     LSPClient *-- LSPLanguageFeatureClient
+    LSPClient *-- LSPMessageHandler
     LSPConnectionLifecycle --> LSPTransport
     LSPTransport <|.. ProcessTransport
     LSPTransport <|.. WebSocketTransport
+    ProcessTransport ..> LSPFrameCodec : encode
+    WebSocketTransport ..> LSPFrameCodec : encode
+    LSPMessageHandler ..> LSPFrameCodec : decode
 ```

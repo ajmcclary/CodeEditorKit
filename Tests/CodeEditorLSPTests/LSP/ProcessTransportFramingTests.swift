@@ -1,7 +1,7 @@
 #if canImport(AppKit)
+@testable import CodeEditorLSP
 import Foundation
 import XCTest
-@testable import CodeEditorLSP
 
 final class ProcessTransportFramingTests: XCTestCase {
     /// End-to-end framing pin: `send` writes LSPFrameCodec framing to the

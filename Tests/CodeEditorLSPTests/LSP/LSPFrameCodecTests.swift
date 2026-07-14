@@ -1,6 +1,6 @@
+@testable import CodeEditorLSP
 import Foundation
 import Testing
-@testable import CodeEditorLSP
 
 @Suite struct LSPFrameCodecTests {
     @Test func encodeProducesContentLengthHeaderThenPayload() {

@@ -1,6 +1,6 @@
+@testable import CodeEditorLSP
 import Foundation
 import Testing
-@testable import CodeEditorLSP
 
 @Suite struct LSPClientTransportRequiredTests {
     /// The legacy connect overload no longer falls back to spawning a
