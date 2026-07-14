@@ -62,6 +62,11 @@ jobs:
           xcodebuild -version
           swift --version
 
+      # CodeEditorHygieneTests' project-metadata check shells out to swiftlint
+      # (SwiftUI architecture rule); the runner image doesn't ship it.
+      - name: Install swiftlint
+        run: brew install swiftlint
+
       - name: swift build
         run: swift build
 
