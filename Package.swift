@@ -133,10 +133,11 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ajmcclary/DesignKit.git", from: "1.1.0"),
         .package(url: "https://github.com/ajmcclary/LanguageKit.git", .upToNextMinor(from: "0.1.0")),
-        // TEMPORARY integration-branch pin — replaced with
-        // .upToNextMinor(from: "0.1.0-beta.1") before this merges to main.
-        // No branch-based dependency lands on main.
-        .package(url: "https://github.com/ajmcclary/ProcessKit.git", branch: "integration/first-cut"),
+        // Neutral POSIX process primitives (spawn/lifecycle/ordered byte
+        // streams) — the ProcessKit "proof-of-two" shared with RepoPrompt.
+        // Prerelease lower bound named explicitly (SwiftPM only resolves
+        // prerelease tags when the requirement itself names one).
+        .package(url: "https://github.com/ajmcclary/ProcessKit.git", .upToNextMinor(from: "0.1.0-beta.1")),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         // Test-only dependency. Upstream 1.19.3 builds cleanly under the
