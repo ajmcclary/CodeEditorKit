@@ -1,4 +1,5 @@
 import CodeEditorPlatform
+import CodeEditorTextModel
 import CodeEditorView
 import SwiftUI
 

@@ -1,8 +1,10 @@
 #if canImport(UIKit)
 import CodeEditorCommon
 import CodeEditorCompletion
+import CodeEditorConfiguration
 import CodeEditorLanguages
 import CodeEditorView
+import DesignKitThemes
 import SwiftUI
 import UIKit
 

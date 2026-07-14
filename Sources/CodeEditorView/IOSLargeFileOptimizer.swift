@@ -348,36 +348,9 @@ public final class IOSLargeFileOptimizer: ObservableObject {
 }
 #endif // canImport(UIKit)
 
-// MARK: - SwiftUI Integration
-
-#if canImport(SwiftUI) && canImport(UIKit)
-import SwiftUI
-
-@available(iOS 13.0, *)
-extension View {
-    /// Enable iOS-specific large file optimizations
-    public func iOSLargeFileOptimization(_ enabled: Bool = true) -> some View {
-        self.modifier(IOSLargeFileOptimizationModifier(enabled: enabled))
-    }
-}
-
-@available(iOS 13.0, *)
-struct IOSLargeFileOptimizationModifier: ViewModifier {
-    let enabled: Bool
-    @Environment(\.codeEditorConfiguration) private var configuration
-
-    func body(content: Content) -> some View {
-        content
-            .onAppear {
-                if enabled {
-                    // Note: To actually apply these optimizations, you would need to
-                    // pass the modified configuration to the CodeEditor view
-                    var modifiedConfig = configuration
-                    modifiedConfig.performance.enableIOSOptimizations = true
-                    modifiedConfig.performance.maxSyntaxHighlightingLength = 100_000
-                    // The actual application would need to be done through the CodeEditor initializer
-                }
-            }
-    }
-}
-#endif
+// The former SwiftUI `View.iOSLargeFileOptimization(_:)` modifier was removed:
+// its body was a documented no-op (it mutated a local configuration copy and
+// never applied it), and its `@Environment(\.codeEditorConfiguration)` key
+// lives in CodeEditorSwiftUI, which this target cannot import without a
+// circular dependency. Hosts enable these optimizations via
+// `configuration.performance.enableIOSOptimizations` instead.

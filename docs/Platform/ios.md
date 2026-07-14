@@ -331,15 +331,22 @@ The optimizer captures the editor's pre-optimization settings (`maxSyntaxHighlig
 
 ### SwiftUI
 
+Enable the optimizations through the editor configuration (the former `.iOSLargeFileOptimization(_:)` view modifier was removed — it never applied the configuration it computed):
+
 ```swift
 struct EditorView: View {
     @StateObject private var optimizer: IOSLargeFileOptimizer
     @State private var content = ""
 
+    var configuration: EditorConfiguration {
+        var config = EditorConfiguration()
+        config.performance.enableIOSOptimizations = content.count > 500_000
+        return config
+    }
+
     var body: some View {
         VStack {
-            CodeEditor(text: $content)
-                .iOSLargeFileOptimization(content.count > 500_000)
+            CodeEditor.withConfiguration($content, configuration: configuration)
 
             if optimizer.isOptimizing {
                 Label("Optimized — \(optimizer.currentMode.rawValue)", systemImage: "speedometer")
