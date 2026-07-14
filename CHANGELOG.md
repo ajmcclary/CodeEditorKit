@@ -2,7 +2,7 @@
 
 All notable changes to CodeEditorPlugin are documented in this file.
 
-## [Unreleased]
+## [0.1.0-beta.4] - 2026-07-14
 
 ### Changed
 
