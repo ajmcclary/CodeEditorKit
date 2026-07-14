@@ -48,7 +48,7 @@ swift build --target CodeEditorUI
 | `CodeEditorView` | library | Native editor surface and runtime services |
 | `CodeEditorWorkspace` | library | Opt-in workspace file-tree interfaces |
 
-Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `DesignKitThemes`), `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
+Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `DesignKitThemes`), `ProcessKit` (neutral POSIX process primitives — spawn/lifecycle/ordered byte streams; used by CodeEditorLSP's ProcessTransport), `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
 
 `swift-snapshot-testing` is consumed from upstream by version (`from: "1.19.3"`, tests only). The former `ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable` fork was only required on the open-source `swift-6.3-RELEASE` toolchain (cross-import-overlay `Attachable` conformances weren't visible to the SnapshotTesting library target); it builds cleanly under the Apple Swift 6.4 / Xcode 27 toolchain this workspace targets. Keep it version-pinned so the package stays consumable by stable-version dependents.
 

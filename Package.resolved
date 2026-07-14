@@ -1,5 +1,5 @@
 {
-  "originHash" : "3015b269eff43a89abbf216f47d586689709318f9c958543f5f0bb9abd93ae2b",
+  "originHash" : "a83604cc5c4b18e8c9aec07092fb49e48c9280c15e5e722654dbfc4c2d6b759e",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "b4dadf4963e50bc83728b951104d0135663daad4",
         "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "processkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ajmcclary/ProcessKit.git",
+      "state" : {
+        "branch" : "integration/first-cut",
+        "revision" : "24ae2e2db33bc7293c772effbe1f69aa52d8064c"
       }
     },
     {

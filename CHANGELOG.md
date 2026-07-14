@@ -6,6 +6,18 @@ All notable changes to CodeEditorPlugin are documented in this file.
 
 ### Changed
 
+- **`ProcessTransport` runs on ProcessKit** (the promoted neutral process
+  package — the "proof-of-two" with RepoPrompt). `ProcessLauncher` owns
+  spawning (posix_spawnp), `FileHandleChunkChannel` preserves stdout/stderr
+  byte-arrival order (the previous per-chunk `Task` dispatch never
+  guaranteed start order), `ProcessTermination` owns SIGTERM→SIGKILL
+  escalation and single reaping (replacing the 5-second
+  `waitUntilExit`/`interrupt()` race), and `FDWriteSupport` handles framed
+  stdin writes (EPIPE-safe). `LSPFrameCodec` still owns framing; the actor
+  keeps only LSP orchestration. Public API and `LSPTransport` conformance
+  are unchanged; new lifecycle tests cover EOF, broken stdin, and
+  child-exit-before-disconnect.
+
 - **`LSPClient` is transport-only.** Content-Length framing is owned by a
   single internal `LSPFrameCodec` (both `ProcessTransport` and
   `WebSocketTransport` encode through it; `LSPMessageHandler` decodes

@@ -1,15 +1,22 @@
 #if canImport(AppKit)
 import CodeEditorCommon
 import Foundation
+import ProcessKit
 
-/// Transport implementation using Process for local LSP servers (macOS only)
+/// Transport implementation for local LSP servers (macOS only), built on
+/// ProcessKit's neutral primitives.
 ///
-/// ProcessTransport launches and communicates with LSP servers as local processes
-/// using stdin/stdout pipes. This is the traditional way to interact with language
-/// servers on desktop platforms.
+/// Responsibility split (the ProcessKit "proof-of-two" contract):
+/// - `ProcessLauncher` owns spawning (posix_spawnp, pipes, CLOEXEC/SIGPIPE).
+/// - `FileHandleChunkChannel` preserves stdout/stderr byte-arrival order
+///   (a per-chunk `Task` per `readabilityHandler` callback does not).
+/// - `ProcessTermination` owns SIGTERM→SIGKILL escalation and reaping —
+///   this actor is the child's single reaper, in `disconnect()`.
+/// - `LSPFrameCodec` owns LSP Content-Length framing.
+/// - This actor owns only LSP-specific orchestration and state.
 ///
 /// ## Platform Availability
-/// This transport is only available on macOS due to Process API restrictions.
+/// macOS only (process spawning).
 ///
 /// ## Example Usage
 /// ```swift
@@ -19,7 +26,7 @@ import Foundation
 ///     workingDirectory: projectURL,
 ///     environment: ProcessInfo.processInfo.environment
 /// )
-/// 
+///
 /// try await transport.connect()
 /// ```
 @available(macOS 10.15, *)
@@ -32,13 +39,13 @@ public actor ProcessTransport: LSPTransport {
     private let environment: [String: String]
     private let configuration: LSPTransportConfiguration
 
-    private var process: Process?
-    private var stdinPipe: Pipe?
-    private var stdoutPipe: Pipe?
-    private var stderrPipe: Pipe?
+    private var spawned: SpawnedProcess?
+    private var stdoutEOF = false
 
     private var dataHandler: (@Sendable (Data) async -> Void)?
-    private var stdoutReading: Bool = false
+    private var stdoutReading = false
+    private var stdoutConsumer: Task<Void, Never>?
+    private var stderrConsumer: Task<Void, Never>?
 
     private let logger = CodeEditorLog.lsp(category: "ProcessTransport")
 
@@ -61,46 +68,36 @@ public actor ProcessTransport: LSPTransport {
     // MARK: - LSPTransport Implementation
 
     public var isConnected: Bool {
-        process?.isRunning ?? false
+        guard let spawned else { return false }
+        // kill(pid, 0) probes liveness without signalling. A zombie (exited
+        // but not yet reaped) still probes alive, so the stdout-EOF flag
+        // covers the exited-before-disconnect window.
+        return !stdoutEOF && kill(spawned.pid, 0) == 0
     }
 
     public func connect() async throws {
-        guard process == nil else {
+        guard spawned == nil else {
             throw LSPTransportError.transportSpecific(message: "Process already running")
         }
 
         logger.info("Starting LSP process: \(executablePath)")
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
+        // Foundation's `Process` inherited the parent environment when no
+        // explicit environment was set; posix_spawnp REPLACES the
+        // environment, so replicate the inheritance branch explicitly.
+        let childEnvironment = environment.isEmpty
+            ? ProcessInfo.processInfo.environment
+            : environment
 
-        if let workingDirectory {
-            process.currentDirectoryURL = workingDirectory
-        }
-
-        if !environment.isEmpty {
-            process.environment = environment
-        }
-
-        // Set up pipes
-        let stdinPipe = Pipe()
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-
-        process.standardInput = stdinPipe
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        // Store references
-        self.process = process
-        self.stdinPipe = stdinPipe
-        self.stdoutPipe = stdoutPipe
-        self.stderrPipe = stderrPipe
-
-        // Start the process
         do {
-            try process.run()
+            let child = try ProcessLauncher.spawn(
+                command: executablePath,
+                arguments: arguments,
+                environment: childEnvironment,
+                workingDirectory: workingDirectory?.path
+            )
+            spawned = child
+            stdoutEOF = false
             logger.info("LSP process started successfully")
 
             // Start reading from stdout
@@ -111,10 +108,7 @@ public actor ProcessTransport: LSPTransport {
             // Monitor stderr for debugging
             attachStderrLogging()
         } catch {
-            self.process = nil
-            self.stdinPipe = nil
-            self.stdoutPipe = nil
-            self.stderrPipe = nil
+            spawned = nil
             throw LSPTransportError.connectionFailed(underlying: error)
         }
     }
@@ -122,60 +116,50 @@ public actor ProcessTransport: LSPTransport {
     public func disconnect() async {
         logger.info("Stopping LSP process")
 
+        guard let spawned else {
+            dataHandler = nil
+            return
+        }
+
         // Detach kernel-driven readers before terminating to avoid the
         // background queue racing the cleanup that follows.
-        stdoutPipe?.fileHandleForReading.readabilityHandler = nil
-        stderrPipe?.fileHandleForReading.readabilityHandler = nil
+        spawned.stdout.readabilityHandler = nil
+        spawned.stderr.readabilityHandler = nil
+        stdoutConsumer?.cancel()
+        stderrConsumer?.cancel()
+        stdoutConsumer = nil
+        stderrConsumer = nil
         stdoutReading = false
 
-        process?.terminate()
-
-        // Wait for process to exit (with timeout)
-        let timeoutTask = Task {
-            try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
-            return false
+        // Single reaper: SIGTERM → SIGKILL escalation with default grace
+        // periods, then the child is reaped exactly once, here.
+        let reapLogger: (String) -> Void = { [logger] message in
+            logger.warning("\(message)")
         }
+        let exitCode = await ProcessTermination.terminateAndReap(
+            pid: spawned.pid,
+            policy: .default,
+            logger: reapLogger
+        )
+        logger.debug("LSP process reaped with exit code \(exitCode)")
 
-        let exitTask = Task {
-            process?.waitUntilExit()
-            return true
-        }
+        // The launcher's caller owns the pipe handles; release them.
+        spawned.stdin?.closeFile()
+        spawned.stdout.closeFile()
+        spawned.stderr.closeFile()
 
-        let didExit = await withTaskGroup(of: Bool.self) { group in
-            group.addTask { await timeoutTask.value }
-            group.addTask { await exitTask.value }
-
-            for await result in group where result {
-                group.cancelAll()
-                return true
-            }
-            return false
-        }
-
-        if !didExit {
-            logger.warning("Process did not exit gracefully, forcing termination")
-            process?.interrupt()
-        }
-
-        // Clean up
-        process = nil
-        stdinPipe = nil
-        stdoutPipe = nil
-        stderrPipe = nil
+        self.spawned = nil
         dataHandler = nil
     }
 
     public func send(_ data: Data) async throws {
-        guard let stdinPipe, process?.isRunning == true else {
+        guard let spawned, isConnected, let stdinFD = spawned.stdinDescriptor else {
             throw LSPTransportError.notConnected
         }
 
         do {
-            let fileHandle = stdinPipe.fileHandleForWriting
-
             // Frame via the shared codec and write to the server's stdin.
-            try fileHandle.write(contentsOf: LSPFrameCodec.encode(data))
-
+            try FDWriteSupport.writeAll(LSPFrameCodec.encode(data), to: stdinFD)
             logger.debug("Sent \(data.count) bytes to LSP process")
         } catch {
             throw LSPTransportError.sendFailed(underlying: error)
@@ -183,16 +167,14 @@ public actor ProcessTransport: LSPTransport {
     }
 
     public func receive() async throws -> Data {
-        guard let stdoutPipe, process?.isRunning == true else {
+        guard let spawned, isConnected else {
             throw LSPTransportError.notConnected
         }
 
         // This is a blocking receive for compatibility
         // In practice, most callers should use setDataHandler for async processing
-        let fileHandle = stdoutPipe.fileHandleForReading
-
         do {
-            let data = try fileHandle.read(upToCount: 65_536) ?? Data()
+            let data = try spawned.stdout.read(upToCount: 65_536) ?? Data()
             if data.isEmpty {
                 throw LSPTransportError.transportSpecific(message: "Process terminated")
             }
@@ -214,71 +196,82 @@ public actor ProcessTransport: LSPTransport {
     // MARK: - Private Methods
 
     private func startReading() {
-        guard !stdoutReading, let stdoutPipe else { return }
+        guard !stdoutReading, let spawned else { return }
         stdoutReading = true
         logger.debug("Started reading from LSP process")
 
-        // The kernel notifies us via `readabilityHandler` whenever data is
-        // available — no need to busy-poll. The handler runs on a private
-        // background queue; we hop back into the actor to deliver bytes to
-        // the handler and to mutate any actor state.
-        stdoutPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let data = handle.availableData
-            guard let self else { return }
-            Task { [data] in
-                await self.deliverStdoutData(data)
+        // The kernel notifies via `readabilityHandler` on a private queue.
+        // Chunks flow through a FileHandleChunkChannel so delivery order
+        // matches byte-arrival order (spawning a Task per chunk would not
+        // guarantee start order); ONE consumer task drains the stream.
+        let channel = Self.installChunkReader(on: spawned.stdout)
+
+        stdoutConsumer = Task { [weak self] in
+            for await chunk in channel.stream {
+                await self?.deliverStdoutData(chunk)
             }
+            await self?.markStdoutEOF()
         }
     }
 
     private func deliverStdoutData(_ data: Data) async {
-        // Empty data signals EOF on the pipe — the process closed stdout.
-        guard !data.isEmpty else {
-            if process?.isRunning == false {
-                logger.info("LSP process terminated")
-            }
-            stdoutPipe?.fileHandleForReading.readabilityHandler = nil
-            stdoutReading = false
-            return
-        }
         if let handler = dataHandler {
             await handler(data)
         }
     }
 
+    private func markStdoutEOF() {
+        // The channel finished: the process closed stdout (EOF) or teardown
+        // detached the reader.
+        guard stdoutReading else { return }
+        stdoutReading = false
+        stdoutEOF = true
+        logger.info("LSP process stdout reached EOF")
+    }
+
     private func attachStderrLogging() {
-        guard let stderrPipe else { return }
-        // Mirror the stdout pattern: bounce off the FileHandle's private
-        // dispatch queue into the actor via a Task so a chatty server
-        // emitting MB/s of stderr cannot starve stdout's reads on the
-        // same queue. The Task hop also serializes stderr deliveries with
-        // any other actor-isolated work (teardown, EOF cleanup).
-        stderrPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let data = handle.availableData
-            guard let self else { return }
-            Task { [data] in
-                await self.deliverStderrData(data)
+        guard let spawned else { return }
+        // Same channel pattern as stdout so a chatty server emitting MB/s
+        // of stderr cannot starve stdout's reads, and stderr lines log in
+        // arrival order.
+        let channel = Self.installChunkReader(on: spawned.stderr)
+
+        stderrConsumer = Task { [weak self] in
+            for await chunk in channel.stream {
+                await self?.logStderr(chunk)
             }
         }
     }
 
-    private func deliverStderrData(_ data: Data) async {
-        // Empty data signals EOF on the pipe — the process closed stderr.
-        guard !data.isEmpty else {
-            stderrPipe?.fileHandleForReading.readabilityHandler = nil
-            return
+    /// Install a `readabilityHandler` that feeds an ordered chunk channel,
+    /// finishing it (and detaching itself) on EOF.
+    private static func installChunkReader(on handle: FileHandle) -> FileHandleChunkChannel {
+        let channel = FileHandleChunkChannel()
+        handle.readabilityHandler = { handle in
+            let data = handle.availableData
+            if data.isEmpty {
+                handle.readabilityHandler = nil
+                channel.finish()
+            } else {
+                channel.yield(data)
+            }
         }
+        return channel
+    }
+
+    private func logStderr(_ data: Data) {
         if let string = String(data: data, encoding: .utf8) {
             logger.debug("LSP stderr: \(string)")
         }
     }
 
     deinit {
-        stdoutPipe?.fileHandleForReading.readabilityHandler = nil
-        stderrPipe?.fileHandleForReading.readabilityHandler = nil
-        if process?.isRunning == true {
+        if let spawned {
             logger.warning("ProcessTransport deallocated while process still running")
-            process?.terminate()
+            spawned.stdout.readabilityHandler = nil
+            spawned.stderr.readabilityHandler = nil
+            // Best effort — deinit cannot await the reap.
+            kill(spawned.pid, SIGTERM)
         }
     }
 }

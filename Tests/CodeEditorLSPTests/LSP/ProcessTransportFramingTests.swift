@@ -29,7 +29,7 @@ final class ProcessTransportFramingTests: XCTestCase {
 }
 
 /// Accumulates reader chunks until a byte target is reached.
-private actor FramingByteCollector {
+actor FramingByteCollector {
     private(set) var bytes = Data()
     private let target: Int
     private let onTarget: @Sendable () -> Void
