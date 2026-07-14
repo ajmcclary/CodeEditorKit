@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ajmcclary/ProcessKit.git",
       "state" : {
-        "revision" : "d89d4b44e9e51c0e9bea15d01100e2e64cce73fc",
-        "version" : "0.1.0-beta.1"
+        "revision" : "75ccd86fedeba8abbe9978d4164d734870a6b25c",
+        "version" : "0.1.0-beta.2"
       }
     },
     {
