@@ -1,4 +1,5 @@
 #if canImport(UIKit)
+import CodeEditorPlatform
 import Foundation
 import UIKit
 

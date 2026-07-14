@@ -252,6 +252,8 @@ public final class CompletionViewController: CompletionViewControllerBase, Compl
 
     // MARK: - Private Properties
 
+    private static let logger = CodeEditorLog.logger(category: "CompletionViewController")
+
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.backgroundColor = PlatformColors.systemBackground

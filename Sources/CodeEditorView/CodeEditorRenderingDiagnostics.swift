@@ -292,15 +292,23 @@ package enum CodeEditorRenderingDiagnostics {
         guard let rgb = convertedColor else {
             return String(describing: color)
         }
+        let redComponent = rgb.redComponent
+        let greenComponent = rgb.greenComponent
+        let blueComponent = rgb.blueComponent
+        let alphaComponent = rgb.alphaComponent
         #else
         let resolved = color.resolvedColor(with: textView.traitCollection)
-        let rgb = resolved
+        var redComponent: CGFloat = 0
+        var greenComponent: CGFloat = 0
+        var blueComponent: CGFloat = 0
+        var alphaComponent: CGFloat = 0
+        resolved.getRed(&redComponent, green: &greenComponent, blue: &blueComponent, alpha: &alphaComponent)
         #endif
 
-        let red = max(0, min(255, Int((rgb.redComponent * 255).rounded())))
-        let green = max(0, min(255, Int((rgb.greenComponent * 255).rounded())))
-        let blue = max(0, min(255, Int((rgb.blueComponent * 255).rounded())))
-        let alpha = max(0, min(255, Int((rgb.alphaComponent * 255).rounded())))
+        let red = max(0, min(255, Int((redComponent * 255).rounded())))
+        let green = max(0, min(255, Int((greenComponent * 255).rounded())))
+        let blue = max(0, min(255, Int((blueComponent * 255).rounded())))
+        let alpha = max(0, min(255, Int((alphaComponent * 255).rounded())))
         return String(format: "#%02X%02X%02X/%02X", red, green, blue, alpha)
     }
 

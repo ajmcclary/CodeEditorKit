@@ -5,7 +5,7 @@ import UIKit
 
 /// UIKit screen metrics resolved through scene or view context.
 @MainActor
-enum UIKitScreenMetrics {
+package enum UIKitScreenMetrics {
     private static var currentSceneScreen: UIScreen? {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
@@ -21,7 +21,8 @@ enum UIKitScreenMetrics {
         currentSceneScreen?.bounds ?? CGRect(origin: .zero, size: CGSize(width: 390.0, height: 844.0))
     }
 
-    static var maximumFramesPerSecond: Int {
+    /// Maximum refresh rate of the current scene's screen, or 60 if unavailable.
+    package static var maximumFramesPerSecond: Int {
         currentSceneScreen?.maximumFramesPerSecond ?? 60
     }
 

@@ -16,7 +16,7 @@ extension CodeEditorView {
         #if canImport(AppKit)
         return FrameworkEdgeInsets(size: textContainerInset)
         #else
-        return FrameworkEdgeInsets(uiFrameworkEdgeInsets: textContainerInset)
+        return FrameworkEdgeInsets(uiEdgeInsets: textContainerInset)
         #endif
     }
 
@@ -25,7 +25,7 @@ extension CodeEditorView {
         #if canImport(AppKit)
         textContainerInset = insets.nsSize
         #else
-        textContainerInset = insets.uiFrameworkEdgeInsets
+        textContainerInset = insets.uiEdgeInsets
         #endif
     }
 }
