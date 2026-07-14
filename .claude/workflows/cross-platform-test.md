@@ -4,7 +4,7 @@
 
 ## Description
 
-Validates the current platform contract: native macOS 26.3+ and iOS / iPadOS 26.3+. Mac Catalyst was retired in 0.2.0 and should not appear as a supported build target in active docs or commands.
+Validates the current platform contract: native macOS 26.0+ and iOS / iPadOS 26.0+. Mac Catalyst was retired in 0.2.0 and should not appear as a supported build target in active docs or commands.
 
 ## Usage
 
@@ -57,7 +57,7 @@ swift test --filter CodeEditorSampleTests
 
 ### macOS
 
-- **Minimum**: macOS 26.3+
+- **Minimum**: macOS 26.0+
 - **Features**:
   - TextKit2 editor path
   - AppKit-backed SwiftUI representable
@@ -66,7 +66,7 @@ swift test --filter CodeEditorSampleTests
 
 ### iOS / iPadOS
 
-- **Minimum**: iOS / iPadOS 26.3+
+- **Minimum**: iOS / iPadOS 26.0+
 - **Features**:
   - TextKit2 editor path
   - UIKit-backed SwiftUI representable

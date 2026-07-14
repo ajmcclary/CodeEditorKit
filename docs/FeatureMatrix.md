@@ -1,6 +1,6 @@
 # Feature Matrix
 
-What works on the package's declared Apple platforms. Reflects the current `Package.swift` layout: macOS / iOS 26.3+, Swift 6.3, strict concurrency, TextKit2-only, and a split target graph with a small umbrella product. Mac Catalyst was retired in 0.2.0.
+What works on the package's declared Apple platforms. Reflects the current `Package.swift` layout: macOS / iOS 26.0+, Swift 6.3, strict concurrency, TextKit2-only, and a split target graph with a small umbrella product. Mac Catalyst was retired in 0.2.0.
 
 ## Library products
 

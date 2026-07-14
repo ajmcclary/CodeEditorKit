@@ -98,8 +98,8 @@ try await coordinator.fileSystem.writeFile(content, to: destinationURL)
 
 ## Platform requirements
 
-`ActorCoordinator` supports the package deployment targets: macOS 26.3+ and
-iOS/iPadOS 26.3+.
+`ActorCoordinator` supports the package deployment targets: macOS 26.0+ and
+iOS/iPadOS 26.0+.
 
 ## See also
 

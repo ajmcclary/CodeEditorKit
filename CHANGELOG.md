@@ -25,6 +25,16 @@ All notable changes to CodeEditorPlugin are documented in this file.
   internal `RangeBasedHighlightingController(externalProvider:)` seam that the
   `CodeEditorTreeSitter` package's `TreeSitterHighlightProvider` was written for.
 
+### Changed
+
+- **Platform floor lowered from macOS 26.3 / iOS 26.3 to macOS 26.0 / iOS 26.0.**
+  The 26.3 floor was never a real API requirement: the package contains no
+  26.3-gated declarations and the full package builds with availability
+  checking at 26.0. Lowering the floor aligns CodeEditorPlugin with DesignKit
+  (26.0) and RepoPrompt (26.0), removing the deployment-target obstacle to
+  embedding the editor in RepoPrompt. Toolchain requirements are unchanged
+  (Swift 6.3+, Xcode 26.3+).
+
 ## [0.1.0-beta.2] - 2026-07-13
 
 Dependency hygiene and a target-graph split since beta.1.

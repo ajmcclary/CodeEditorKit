@@ -140,7 +140,7 @@ This pipeline forms the basis for CI/CD:
 ## Environment Requirements
 - **Swift**: 6.3+
 - **Xcode**: 26.3+
-- **Platforms**: macOS 26.3+, iOS / iPadOS 26.3+
+- **Platforms**: macOS 26.0+, iOS / iPadOS 26.0+
 - **Tools**: SwiftLint, swift-syntax dependencies
 
 ## Notes

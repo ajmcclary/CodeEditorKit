@@ -73,8 +73,8 @@ Comprehensive release preparation workflow that validates all aspects of the cod
 - [ ] **CLAUDE.md** reflects current architecture
 
 ### ✅ Platform Compatibility
-- [ ] **macOS 26.3+** support verified
-- [ ] **iOS / iPadOS 26.3+** support verified
+- [ ] **macOS 26.0+** support verified
+- [ ] **iOS / iPadOS 26.0+** support verified
 - [ ] **Mac Catalyst unsupported** status reflected in docs and package metadata
 - [ ] **Swift 6.3+** requirement met
 - [ ] **Xcode 26.3+** compatibility confirmed

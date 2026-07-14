@@ -54,7 +54,7 @@ Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `Design
 
 Tests mix both XCTest and Swift Testing frameworks across 11 test targets (`CodeEditorCommonTests`, `CodeEditorCompletionTests`, `CodeEditorHighlightingCoreTests`, `CodeEditorHygieneTests`, `CodeEditorLSPIntegrationTests`, `CodeEditorLSPTests`, `CodeEditorPluginTests`, `CodeEditorSwiftUITests`, `CodeEditorTextModelTests`, `CodeEditorUITests`, `CodeEditorViewTests`).
 
-Tree-sitter work is internal scaffolding only. There is no public configuration flag and no bundled C grammar libraries wired into `Package.swift`; normal syntax highlighting uses the descriptor-backed regex path.
+Tree-sitter is not bundled: no C grammar libraries are wired into `Package.swift`, and the built-in path remains the descriptor-backed regex highlighter (plus SwiftSyntax for Swift). External tree-sitter highlighting plugs in through the public injection seam — `CodeEditorView.setExternalHighlightProvider(_:)` / `EditorController.setExternalHighlightProvider(_:)` / `.codeEditorHighlightProvider(_:)` — with the separate `CodeEditorTreeSitter` package's `TreeSitterHighlightProvider` as the reference conformer.
 
 ## Source Tree
 

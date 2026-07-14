@@ -13,17 +13,17 @@ This package targets the current Apple OS family deliberately:
 
 | Platform | Minimum |
 |---|---|
-| macOS | 26.3 |
-| iOS / iPadOS | 26.3 |
+| macOS | 26.0 |
+| iOS / iPadOS | 26.0 |
 | Swift toolchain | 6.3 |
 
-The floor is intentional, not aspirational — the editor uses APIs introduced in this release window and exercising them on older OSes would require deprecation paths the project explicitly rejected during the most recent remediation pass. If you need broader OS coverage, pin a future LTS tag rather than building from `main`.
+The floor is deliberate: the package targets the current Apple OS family (26.x) and rejects deprecation paths for older OS generations. Within that family the true API floor is 26.0 — the package contains no 26.3-gated API use — so the manifest declares 26.0, matching DesignKit and host apps such as RepoPrompt. If you need broader OS coverage, pin a future LTS tag rather than building from `main`.
 
 **Mac Catalyst is not supported** as of 0.2.0. The framework is pure SwiftUI plus native AppKit (macOS) / UIKit (iOS) — Catalyst's UIKit-on-Mac hosting layer added compilation and maintenance complexity without any feature the native paths don't already provide.
 
 ## Distribution
 
-The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. Release tags are not published yet, so SwiftPM consumers should use the `main` branch until tags exist.
+The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. Release tags are published (the `0.1.0-beta.x` prerelease series); SwiftPM consumers should pin a version (see the README installation snippet) rather than tracking `main`.
 
 `CodeEditorPlugin` is now a small umbrella library over extracted sibling targets. `import CodeEditorPlugin` gives host apps the normal editor entry points, while focused products are available for direct use when you only need a subsystem: `CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, and `CodeEditorWorkspace`. Design tokens and themes come from the external `DesignKit` package (`DesignKitTokens`, `DesignKitThemes`).
 

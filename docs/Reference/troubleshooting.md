@@ -176,7 +176,7 @@ if let textRange = NSTextRange(validRange) {
 
 ### TextKit2 (always on)
 
-As of 0.2.0 the framework is TextKit2-only on every supported platform — the legacy layout fallback was retired along with Catalyst. `PlatformCapabilities.supportsRequiredTextKit2Surface` always returns `true` on macOS / iOS 26.3+. If you have older code that branches on it, you can simplify the call site.
+As of 0.2.0 the framework is TextKit2-only on every supported platform — the legacy layout fallback was retired along with Catalyst. `PlatformCapabilities.supportsRequiredTextKit2Surface` always returns `true` on macOS / iOS 26.0+. If you have older code that branches on it, you can simplify the call site.
 
 ## Debugging Tips
 

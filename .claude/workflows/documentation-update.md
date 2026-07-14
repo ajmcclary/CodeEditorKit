@@ -44,7 +44,7 @@ Update these files when metrics or package shape changes:
 Current stable facts:
 
 - Swift 6.3+, Xcode 26.3+
-- Platforms: native macOS 26.3+ and iOS / iPadOS 26.3+
+- Platforms: native macOS 26.0+ and iOS / iPadOS 26.0+
 - Mac Catalyst is retired
 - Language catalog: 25 concrete languages plus plain text
 - Sample app target: `CodeEditorSample`

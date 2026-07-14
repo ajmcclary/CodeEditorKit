@@ -44,7 +44,9 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", branch: "main")
+    // 0.1.0-beta.3 is a prerelease identifier — SwiftPM only resolves
+    // prerelease tags when the lower bound itself names one.
+    .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", .upToNextMinor(from: "0.1.0-beta.3"))
 ]
 ```
 
@@ -54,8 +56,8 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 
 - **Swift**: 6.3+
 - **Platforms**:
-  - macOS 26.3+
-  - iOS 26.3+
+  - macOS 26.0+
+  - iOS 26.0+
 - **Xcode**: 26.3+
 
 ## 📊 Platform Feature Availability
