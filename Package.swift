@@ -138,6 +138,11 @@ let package = Package(
         // Prerelease lower bound named explicitly (SwiftPM only resolves
         // prerelease tags when the requirement itself names one).
         .package(url: "https://github.com/ajmcclary/ProcessKit.git", .upToNextMinor(from: "0.1.0-beta.1")),
+        // Workspace file-tree contracts + macOS adapter, promoted out of this
+        // package's CodeEditorWorkspace target (workspace decomposition
+        // step 5) — that target is now an @_exported re-export shim.
+        // Prerelease lower bound named explicitly (same rule as ProcessKit).
+        .package(url: "https://github.com/ajmcclary/WorkspaceKit.git", .upToNextMinor(from: "0.1.0-beta.1")),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         // Test-only dependency. Upstream 1.19.3 builds cleanly under the
@@ -331,6 +336,9 @@ let package = Package(
         ),
         .target(
             name: "CodeEditorWorkspace",
+            dependencies: [
+                .product(name: "WorkspaceKit", package: "WorkspaceKit")
+            ],
             swiftSettings: swiftSettings
         ),
         .target(

@@ -46,7 +46,7 @@ swift build --target CodeEditorUI
 | `CodeEditorTextModel` | library | TextKit2 text-model primitives |
 | `CodeEditorUI` | library | Optional SwiftUI chrome and components |
 | `CodeEditorView` | library | Native editor surface and runtime services |
-| `CodeEditorWorkspace` | library | Opt-in workspace file-tree interfaces |
+| `CodeEditorWorkspace` | library | Opt-in workspace file-tree interfaces (re-export shim over the top-level `WorkspaceKit` package) |
 
 Key dependencies: `DesignKit` (shared design system: `DesignKitTokens` + `DesignKitThemes`), `ProcessKit` (neutral POSIX process primitives — spawn/lifecycle/ordered byte streams; used by CodeEditorLSP's ProcessTransport), `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
 
@@ -87,7 +87,7 @@ Other source roots (each is its own SPM target — see `Package.swift`):
 - `Sources/CodeEditorSwiftUI/` — SwiftUI host wrapper + Representable bridge: `CodeEditor` (SwiftUI view), `EditorController`, `CodeEditorBaseCoordinator` (conforms to `CodeEditorCoordinating` package protocol in `CodeEditorView`), `CodeEditorIntent`, plus SwiftUI environment and platform adapter glue.
 - `Sources/CodeEditorSyntaxHighlighting/` — syntax-highlighting engine: color schemes, tokenizers, regex/SwiftSyntax highlighters, parsing helpers, descriptor execution, performance instrumentation.
 - `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
-- `Sources/CodeEditorWorkspace/` — workspace file-tree protocols + macOS `MacOSWorkspaceFileManager` adapter. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` does not depend on it. Foundation-only; AppKit-conditional manager.
+- `Sources/CodeEditorWorkspace/` — compatibility shim: a single `@_exported import WorkspaceKit` file. The workspace file-tree protocols + macOS `MacOSWorkspaceFileManager` adapter were promoted verbatim to the top-level `WorkspaceKit` package (workspace decomposition step 5; consumed by URL, `.upToNextMinor(from: "0.1.0-beta.1")`). Product stays opt-in; the umbrella `CodeEditorPlugin` does not depend on it.
 - `Sources/CodeEditorCompletion/` — completion subsystem: `CompletionManager`, ranking model, fuzzy matcher, built-in providers, view controllers + adapter, event broadcaster, SwiftUI bridge types.
 - `Sources/CodeEditorLSP/` — Language Server Protocol subsystem: `LSPClient`, `LSPManager`, transport (process + WebSocket with cert pinning), document/path/connection managers, message handler, `LSPFrameCodec` (single owner of Content-Length framing), wire types, completion + semantic-token storage, retry config. Productized as an opt-in `.library`; the umbrella `CodeEditorPlugin` depends on it. The editor-coupled bridge lives in `Sources/CodeEditorLSPIntegration/`, not `CodeEditorView` (see next entry).
 - `Sources/CodeEditorLSPIntegration/` — opt-in LSP-to-editor bridge (depends on `CodeEditorView` + `CodeEditorLSP`): `LSPEditorBridge` (public entry, owns the `LSPManager`), `LSPDocumentController`, `LSPContentCoordinator`, and `LSPSemanticTokenProvider` (a value-oriented `HighlightRangeProviding`). `CodeEditorView` no longer depends on `CodeEditorLSP`; LSP hosts consume this product.
