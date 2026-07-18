@@ -8,8 +8,9 @@ import ProcessKit
 ///
 /// Responsibility split (the ProcessKit "proof-of-two" contract):
 /// - `ProcessLauncher` owns spawning (posix_spawnp, pipes, CLOEXEC/SIGPIPE).
-/// - `FileHandleChunkChannel` preserves stdout/stderr byte-arrival order
-///   (a per-chunk `Task` per `readabilityHandler` callback does not).
+/// - `ProcessPipeReader` owns the stdout/stderr read side (readability
+///   handler + FIFO channel + single consumer), preserving byte-arrival
+///   order (a per-chunk `Task` per `readabilityHandler` callback does not).
 /// - `ProcessTermination` owns SIGTERM→SIGKILL escalation and reaping —
 ///   this actor is the child's single reaper, in `disconnect()`.
 /// - `LSPFrameCodec` owns LSP Content-Length framing.
@@ -44,8 +45,8 @@ public actor ProcessTransport: LSPTransport {
 
     private var dataHandler: (@Sendable (Data) async -> Void)?
     private var stdoutReading = false
-    private var stdoutConsumer: Task<Void, Never>?
-    private var stderrConsumer: Task<Void, Never>?
+    private var stdoutReader: ProcessPipeReader?
+    private var stderrReader: ProcessPipeReader?
 
     private let logger = CodeEditorLog.lsp(category: "ProcessTransport")
 
@@ -123,12 +124,10 @@ public actor ProcessTransport: LSPTransport {
 
         // Detach kernel-driven readers before terminating to avoid the
         // background queue racing the cleanup that follows.
-        spawned.stdout.readabilityHandler = nil
-        spawned.stderr.readabilityHandler = nil
-        stdoutConsumer?.cancel()
-        stderrConsumer?.cancel()
-        stdoutConsumer = nil
-        stderrConsumer = nil
+        stdoutReader?.cancel()
+        stderrReader?.cancel()
+        stdoutReader = nil
+        stderrReader = nil
         stdoutReading = false
 
         // Single reaper: SIGTERM → SIGKILL escalation with default grace
@@ -200,18 +199,30 @@ public actor ProcessTransport: LSPTransport {
         stdoutReading = true
         logger.debug("Started reading from LSP process")
 
-        // The kernel notifies via `readabilityHandler` on a private queue.
-        // Chunks flow through a FileHandleChunkChannel so delivery order
-        // matches byte-arrival order (spawning a Task per chunk would not
-        // guarantee start order); ONE consumer task drains the stream.
-        let channel = Self.installChunkReader(on: spawned.stdout)
-
-        stdoutConsumer = Task { [weak self] in
-            for await chunk in channel.stream {
-                await self?.deliverStdoutData(chunk)
-            }
-            await self?.markStdoutEOF()
+        // ProcessPipeReader owns the readabilityHandler + FIFO channel +
+        // single consumer, preserving byte-arrival order; genuine EOF (not
+        // teardown cancel) reports through markStdoutEOF.
+        stdoutReader?.cancel()
+        let reader = ProcessPipeReader()
+        do {
+            try reader.start(
+                handle: spawned.stdout,
+                label: "LSP stdout",
+                preflight: { _, _ in },
+                onChunk: { [weak self] chunk in
+                    await self?.deliverStdoutData(chunk)
+                },
+                onEOF: { [weak self] in
+                    await self?.markStdoutEOF()
+                }
+            )
+        } catch {
+            // Unreachable with a no-throw preflight; keep the actor consistent.
+            stdoutReading = false
+            logger.error("Failed to start LSP stdout reader: \(error)")
+            return
         }
+        stdoutReader = reader
     }
 
     private func deliverStdoutData(_ data: Data) async {
@@ -231,32 +242,26 @@ public actor ProcessTransport: LSPTransport {
 
     private func attachStderrLogging() {
         guard let spawned else { return }
-        // Same channel pattern as stdout so a chatty server emitting MB/s
+        // Same reader pattern as stdout so a chatty server emitting MB/s
         // of stderr cannot starve stdout's reads, and stderr lines log in
         // arrival order.
-        let channel = Self.installChunkReader(on: spawned.stderr)
-
-        stderrConsumer = Task { [weak self] in
-            for await chunk in channel.stream {
-                await self?.logStderr(chunk)
-            }
+        stderrReader?.cancel()
+        let reader = ProcessPipeReader()
+        do {
+            try reader.start(
+                handle: spawned.stderr,
+                label: "LSP stderr",
+                preflight: { _, _ in },
+                onChunk: { [weak self] chunk in
+                    await self?.logStderr(chunk)
+                }
+            )
+        } catch {
+            // Unreachable with a no-throw preflight.
+            logger.error("Failed to start LSP stderr reader: \(error)")
+            return
         }
-    }
-
-    /// Install a `readabilityHandler` that feeds an ordered chunk channel,
-    /// finishing it (and detaching itself) on EOF.
-    private static func installChunkReader(on handle: FileHandle) -> FileHandleChunkChannel {
-        let channel = FileHandleChunkChannel()
-        handle.readabilityHandler = { handle in
-            let data = handle.availableData
-            if data.isEmpty {
-                handle.readabilityHandler = nil
-                channel.finish()
-            } else {
-                channel.yield(data)
-            }
-        }
-        return channel
+        stderrReader = reader
     }
 
     private func logStderr(_ data: Data) {

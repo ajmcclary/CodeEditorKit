@@ -137,7 +137,7 @@ let package = Package(
         // streams) — the ProcessKit "proof-of-two" shared with RepoPrompt.
         // Prerelease lower bound named explicitly (SwiftPM only resolves
         // prerelease tags when the requirement itself names one).
-        .package(url: "https://github.com/ajmcclary/ProcessKit.git", .upToNextMinor(from: "0.1.0-beta.1")),
+        .package(url: "https://github.com/ajmcclary/ProcessKit.git", .upToNextMinor(from: "0.1.0-beta.3")),
         // Workspace file-tree contracts + macOS adapter, promoted out of this
         // package's CodeEditorWorkspace target (workspace decomposition
         // step 5) — that target is now an @_exported re-export shim.
