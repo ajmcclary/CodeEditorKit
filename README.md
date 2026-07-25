@@ -56,8 +56,13 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 
 - **Swift**: 6.3+
 - **Platforms**:
-  - macOS 26.0+
-  - iOS 26.0+
+  - macOS 27.0+
+  - iOS: not declared. The manifest carried `.iOS("26.0")` until the macOS 27
+    migration; the declaration was removed, not raised, because the
+    `CodeEditorWorkspace` product re-exports `WorkspaceKit`, which is macOS-only
+    (unguarded FSEvents use). Every other product was verified to build for
+    iOS 27 — see the `platforms:` comment in `Package.swift` for the evidence
+    and for what restoring an iOS floor would require.
 - **Xcode**: 26.3+
 
 ## 📊 Platform Feature Availability

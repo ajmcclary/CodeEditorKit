@@ -13,11 +13,13 @@ This package targets the current Apple OS family deliberately:
 
 | Platform | Minimum |
 |---|---|
-| macOS | 26.0 |
-| iOS / iPadOS | 26.0 |
+| macOS | 27.0 |
+| iOS / iPadOS | not declared (see below) |
 | Swift toolchain | 6.3 |
 
-The floor is deliberate: the package targets the current Apple OS family (26.x) and rejects deprecation paths for older OS generations. Within that family the true API floor is 26.0 — the package contains no 26.3-gated API use — so the manifest declares 26.0, matching DesignKit and host apps such as RepoPrompt. If you need broader OS coverage, pin a future LTS tag rather than building from `main`.
+The floor is deliberate: the package targets the current Apple OS family and rejects deprecation paths for older OS generations. If you need broader OS coverage, pin a future LTS tag rather than building from `main`.
+
+**iOS is no longer declared.** The manifest carried `.iOS("26.0")` until the macOS 27 migration. It was removed rather than raised to 27.0 because the `CodeEditorWorkspace` product is an `@_exported` re-export of `WorkspaceKit`, which declares no iOS floor of its own (its `WorkspaceFileSystem` target uses the FSEvents C API unguarded). An iOS build of the full package graph fails inside WorkspaceKit. The scope was measured: with `.iOS("27.0")` declared, `CodeEditorKit`, `CodeEditorUI`, `CodeEditorLSPIntegration`, and `CodeEditorSearch` all built cleanly for `generic/platform=iOS`, and between them those four cover the target closures of the other 18 products — so the WorkspaceKit edge is the only blocker among the products. (`CodeEditorSmartEditing` is not productized, has no scheme, and was not reached; its iOS status is unverified.) See the `platforms:` comment in `Package.swift` for the exact failing symbols.
 
 **Mac Catalyst is not supported** as of 0.2.0. The framework is pure SwiftUI plus native AppKit (macOS) / UIKit (iOS) — Catalyst's UIKit-on-Mac hosting layer added compilation and maintenance complexity without any feature the native paths don't already provide.
 

@@ -1,6 +1,8 @@
 # Feature Matrix
 
-What works on the package's declared Apple platforms. Reflects the current `Package.swift` layout: macOS / iOS 26.0+, Swift 6.3, strict concurrency, TextKit2-only, and a split target graph with a small umbrella product. Mac Catalyst was retired in 0.2.0.
+What works on the package's Apple platforms. Reflects the current `Package.swift` layout: macOS 27.0+, Swift 6.3, strict concurrency, TextKit2-only, and a split target graph with a small umbrella product. Mac Catalyst was retired in 0.2.0.
+
+**The iOS column is a statement about the source, not a supported configuration.** The manifest no longer declares an iOS floor (see [Platform Requirements](README.md#platform-requirements)), so an iOS build of the package as published fails at graph validation. A ✅ below means that product compiled cleanly for `generic/platform=iOS` while `.iOS("27.0")` was temporarily declared during the macOS 27 migration.
 
 ## Library products
 
@@ -14,10 +16,10 @@ What works on the package's declared Apple platforms. Reflects the current `Pack
 | `CodeEditorLSP` | ✅ | ✅ | LSP wire types, client, manager, transports, retry/path configuration, and remote WebSocket support. Local process-backed servers are macOS-only. |
 | `CodeEditorLayout` | ✅ | ✅ | Reusable layout primitives and chrome internals: completion cells, fold chevrons, glass surfaces, layout providers, minimap style data, and event bus. |
 | `CodeEditorSearch` | ✅ | ✅ | Opt-in project-wide file-search protocols plus the portable search adapter. The in-document search/replace engine lives in `CodeEditorView`. |
-| `CodeEditorWorkspace` | ✅ | ✅ | Opt-in workspace file-tree protocols. The concrete `MacOSWorkspaceFileManager` is AppKit-conditional; protocol surfaces remain portable. |
+| `CodeEditorWorkspace` | ✅ | ❌ | Opt-in workspace file-tree protocols, re-exported from `WorkspaceKit`. **Does not build for iOS** — `WorkspaceKit` declares no iOS floor and its `WorkspaceFileSystem` target uses FSEvents unguarded. This is the single reason the package no longer declares an iOS platform. |
 | `CodeEditorSample` | ✅ | ✅ | macOS shell uses 3-pane `RootWindow`; iOS uses `IOSRootView` (`NavigationSplitView`). `Settings` scene and command palette are macOS-only. |
 
-`Package.swift` declares macOS and iOS only. visionOS is not a package platform and is not exercised by the sample or CI.
+`Package.swift` declares macOS only. visionOS is not a package platform and is not exercised by the sample or CI.
 
 **Mac Catalyst:** not supported. Removed in 0.2.0. Use the native macOS path (AppKit-backed SwiftUI) for Mac, and the iOS path for iPad. Apple Silicon Macs can also run the iOS build directly without Catalyst.
 

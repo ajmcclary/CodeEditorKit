@@ -6,7 +6,7 @@ A modern, cross-platform code editor for macOS and iOS / iPadOS. Built on TextKi
 
 - **Swift**: 6.3 or later
 - **Xcode**: 26.3 or later
-- **Deployment targets**: macOS 26.0+, iOS 26.0+
+- **Deployment targets**: macOS 27.0+. iOS is not declared — see [Platform Requirements](README.md#platform-requirements).
 
 ## Installation
 
@@ -24,7 +24,7 @@ import PackageDescription
 
 let package = Package(
     name: "MyApp",
-    platforms: [.macOS("26.0"), .iOS("26.0")],
+    platforms: [.macOS("27.0")],
     dependencies: [
         .package(url: "https://github.com/ajmcclary/CodeEditorKit.git", branch: "main")
     ],
