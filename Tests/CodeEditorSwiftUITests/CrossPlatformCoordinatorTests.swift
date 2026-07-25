@@ -2,7 +2,7 @@ import CodeEditorDiagnostics
 @testable import CodeEditorSwiftUI
 //
 //  CrossPlatformCoordinatorTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Tests for CrossPlatformCoordinator functionality
 //

@@ -1,6 +1,6 @@
 # Advanced Layout & UI Components Architecture
 
-This diagram shows the comprehensive layout system and UI component architecture that handles advanced positioning, responsive design, and complex component interactions within the CodeEditorPlugin. The architecture emphasizes cross-platform compatibility, actor-based coordination, and modern UI patterns.
+This diagram shows the comprehensive layout system and UI component architecture that handles advanced positioning, responsive design, and complex component interactions within the CodeEditorKit. The architecture emphasizes cross-platform compatibility, actor-based coordination, and modern UI patterns.
 
 ```mermaid
 classDiagram

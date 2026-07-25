@@ -1,5 +1,5 @@
 #if canImport(AppKit)
-@testable import CodeEditorPlugin
+@testable import CodeEditorKit
 @testable import CodeEditorSwiftUI
 import CodeEditorUI
 import SnapshotTesting
@@ -44,6 +44,8 @@ final class EditorSidebarShellSnapshots: XCTestCase {
     private func contentBody() -> some View {
         let labels = [
             "Sources",
+            // Sample display text baked into the committed __Snapshots__ PNGs — kept as
+            // the package's former name so the recorded baselines stay valid.
             "CodeEditorPlugin",
             "Configuration",
             "EditorConfiguration.swift",
@@ -83,7 +85,7 @@ final class EditorSidebarShellSnapshots: XCTestCase {
         let resolved = (theme == .dark) ? SnapshotSupport.darkTheme : SnapshotSupport.lightTheme
         let view = SnapshotSupport.framed(
             EditorSidebarShell(
-                sectionTitle: "CodeEditorPlugin",
+                sectionTitle: "CodeEditorPlugin",  // see the note above
                 header: { self.tabBar() },
                 content: { self.contentBody() },
                 footer: { self.footerBody() }

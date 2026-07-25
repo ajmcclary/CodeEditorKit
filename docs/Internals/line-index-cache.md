@@ -1,4 +1,4 @@
-# `CodeEditorPlugin/OptimizedLineIndexCache`
+# `CodeEditorKit/OptimizedLineIndexCache`
 
 High-performance line index cache using a balanced red-black tree for O(log n) line lookups and updates in large documents.
 

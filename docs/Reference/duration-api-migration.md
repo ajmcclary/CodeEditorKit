@@ -1,10 +1,10 @@
 # Duration API Migration
 
-Learn how CodeEditorPlugin uses Swift's modern Duration type for time-based operations.
+Learn how CodeEditorKit uses Swift's modern Duration type for time-based operations.
 
 ## Overview
 
-CodeEditorPlugin has migrated from `TimeInterval` to Swift's modern `Duration` type for all time-based operations. This provides better type safety, more expressive APIs, and seamless integration with Swift concurrency.
+CodeEditorKit has migrated from `TimeInterval` to Swift's modern `Duration` type for all time-based operations. This provides better type safety, more expressive APIs, and seamless integration with Swift concurrency.
 
 ## What Changed
 
@@ -36,7 +36,7 @@ config.performance.cacheTimeout = .hours(1)
 ### Creating Durations
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 
 // Various ways to create durations
 let instant = Duration.zero
@@ -74,7 +74,7 @@ await syntaxHighlighter.configureCacheSettings(
 
 ## Conversion Utilities
 
-CodeEditorPlugin provides a convenient extension for Duration conversion:
+CodeEditorKit provides a convenient extension for Duration conversion:
 
 ```swift
 // Convert Duration to TimeInterval when needed
@@ -202,7 +202,7 @@ class PeriodicMonitor {
 }
 ```
 
-## Integration with CodeEditorPlugin
+## Integration with CodeEditorKit
 
 ### Syntax Highlighting
 

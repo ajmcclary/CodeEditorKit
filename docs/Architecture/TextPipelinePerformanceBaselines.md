@@ -142,7 +142,7 @@ Current key files:
 | `Sources/CodeEditorView/Text/LineGeometryEditHandler.swift` | Keeps the store synchronized after character edits. |
 | `Sources/CodeEditorTextModel/Text/LineGeometryStore+GeometryHelpers.swift` | Cursor, rect, visible range, and point-to-line helpers. |
 | `Sources/CodeEditorPlatform/ViewReuseQueue.swift` | Generic view reuse pool for gutter and minimap optimizations. |
-| `Tests/CodeEditorPluginTests/LineGeometryStoreBenchmarkTests.swift` | Reference, integration, performance, edit-handler, reuse, and geometry coverage. |
+| `Tests/CodeEditorKitTests/LineGeometryStoreBenchmarkTests.swift` | Reference, integration, performance, edit-handler, reuse, and geometry coverage. |
 
 ### Build Baseline
 

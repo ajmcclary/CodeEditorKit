@@ -1,10 +1,10 @@
 # Advanced Patterns
 
-Learn advanced integration patterns and best practices for CodeEditorPlugin.
+Learn advanced integration patterns and best practices for CodeEditorKit.
 
 ## Overview
 
-This guide covers advanced patterns for building sophisticated applications with CodeEditorPlugin, including multi-window support, collaborative editing preparation, and performance optimization techniques.
+This guide covers advanced patterns for building sophisticated applications with CodeEditorKit, including multi-window support, collaborative editing preparation, and performance optimization techniques.
 
 ## Multi-Window Support (macOS)
 
@@ -288,7 +288,7 @@ class PerformanceTests: XCTestCase {
 
 ## Error Handling
 
-CodeEditorPlugin favors validation before applying state:
+CodeEditorKit favors validation before applying state:
 
 ### Safe Operations
 

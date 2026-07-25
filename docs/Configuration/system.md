@@ -1,6 +1,6 @@
 # Configuration System
 
-Master CodeEditorPlugin's powerful and flexible configuration system.
+Master CodeEditorKit's powerful and flexible configuration system.
 
 ## Overview
 

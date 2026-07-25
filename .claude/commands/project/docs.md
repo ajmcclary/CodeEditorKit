@@ -6,6 +6,6 @@ description: Update documentation with current project metrics and status badges
 
 Execute the documentation-update workflow:
 
-@/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/.claude/workflows/documentation-update.md
+@/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/.claude/workflows/documentation-update.md
 
 Sync documentation with current project state including test counts and quality metrics.

@@ -1,10 +1,10 @@
 # SwiftUI Environment Keys
 
-Learn about the custom environment keys provided by CodeEditorPlugin for advanced SwiftUI integration.
+Learn about the custom environment keys provided by CodeEditorKit for advanced SwiftUI integration.
 
 ## Overview
 
-CodeEditorPlugin provides a consolidated `CodeEditorEnvironment` value plus direct environment projections for common settings. The direct keys remain supported for compatibility and convenience; internally they read and write the consolidated environment value.
+CodeEditorKit provides a consolidated `CodeEditorEnvironment` value plus direct environment projections for common settings. The direct keys remain supported for compatibility and convenience; internally they read and write the consolidated environment value.
 
 ## Available Environment Keys
 

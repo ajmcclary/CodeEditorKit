@@ -1,17 +1,17 @@
 # UIKit & AppKit Integration
 
-Integrate CodeEditorPlugin with traditional UIKit and AppKit applications.
+Integrate CodeEditorKit with traditional UIKit and AppKit applications.
 
 ## Overview
 
-While CodeEditorPlugin provides excellent SwiftUI support, it also offers comprehensive integration with UIKit (iOS) and AppKit (macOS) for traditional view-based applications.
+While CodeEditorKit provides excellent SwiftUI support, it also offers comprehensive integration with UIKit (iOS) and AppKit (macOS) for traditional view-based applications.
 
 ## Basic Integration
 
 ### UIKit (iOS)
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 import UIKit
 
 class EditorViewController: UIViewController {
@@ -49,7 +49,7 @@ class EditorViewController: UIViewController {
 ### AppKit (macOS)
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 import AppKit
 
 class EditorViewController: NSViewController {
@@ -59,7 +59,7 @@ class EditorViewController: NSViewController {
         view = NSView()
         
         // Configure editor
-        editor.text = "# Welcome to CodeEditorPlugin"
+        editor.text = "# Welcome to CodeEditorKit"
         editor.setLanguage(fileExtension: "md")
         
         // Apply configuration

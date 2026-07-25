@@ -1,6 +1,6 @@
 //
 //  CodeEditorIntentTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Env-propagation unit tests for CodeEditorIntent. See
 //  docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md.

@@ -1,6 +1,6 @@
 # UI Component Hierarchy
 
-This diagram shows the comprehensive visual component hierarchy and architecture of the CodeEditorPlugin, featuring modern SwiftUI integration, cross-platform abstractions, and MVVM patterns.
+This diagram shows the comprehensive visual component hierarchy and architecture of the CodeEditorKit, featuring modern SwiftUI integration, cross-platform abstractions, and MVVM patterns.
 
 ```mermaid
 classDiagram

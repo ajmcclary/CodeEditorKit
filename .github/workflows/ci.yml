@@ -72,7 +72,7 @@ jobs:
 
       # Test scope is intentionally narrower than `swift test --parallel`.
       # The full suite has a documented pre-existing snapshot/AppKit failure
-      # baseline (CodeEditorUITests, CodeEditorViewTests, CodeEditorPluginTests
+      # baseline (CodeEditorUITests, CodeEditorViewTests, CodeEditorKitTests
       # — see the workspace superproject's
       # docs/architecture/baseline-2026-07-13.md and this repo's CLAUDE.md)
       # recorded under a local Xcode 27 beta toolchain; whether that same

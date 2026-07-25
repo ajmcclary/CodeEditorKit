@@ -6,7 +6,7 @@ Configure robust retry behavior for Language Server Protocol connections to ensu
 
 ## Overview
 
-The CodeEditorPlugin includes sophisticated retry logic for LSP connections, ensuring better reliability when starting language servers. This is particularly useful in environments where servers may take time to start or experience intermittent failures.
+The CodeEditorKit includes sophisticated retry logic for LSP connections, ensuring better reliability when starting language servers. This is particularly useful in environments where servers may take time to start or experience intermittent failures.
 
 ## Predefined Configurations
 

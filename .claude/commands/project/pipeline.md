@@ -6,6 +6,6 @@ description: Run complete development pipeline from code changes to release-read
 
 Execute the swift-full-pipeline workflow:
 
-@/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/.claude/workflows/swift-full-pipeline.md
+@/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/.claude/workflows/swift-full-pipeline.md
 
 Complete development workflow including quality, documentation, performance, and cross-platform testing.

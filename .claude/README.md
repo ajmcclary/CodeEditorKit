@@ -1,6 +1,6 @@
-# CodeEditorPlugin Claude Workflows
+# CodeEditorKit Claude Workflows
 
-This directory contains Claude Code workflows designed to streamline development of the CodeEditorPlugin project. These workflows are based on real development patterns used during the project's evolution.
+This directory contains Claude Code workflows designed to streamline development of the CodeEditorKit project. These workflows are based on real development patterns used during the project's evolution.
 
 ## Available Workflows
 

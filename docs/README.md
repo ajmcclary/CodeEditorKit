@@ -1,4 +1,4 @@
-# CodeEditorPlugin Documentation
+# CodeEditorKit Documentation
 
 A modern code editor framework for Apple platforms — TextKit2, Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a modular feature-target source tree. This folder is the canonical documentation for the framework. Every page is plain Markdown and renders directly on GitHub or in any Markdown viewer.
 
@@ -23,9 +23,9 @@ The floor is deliberate: the package targets the current Apple OS family (26.x) 
 
 ## Distribution
 
-The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. Release tags are published (the `0.1.0-beta.x` prerelease series); SwiftPM consumers should pin a version (see the README installation snippet) rather than tracking `main`.
+The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorKit.git`. Release tags are published (the `0.1.0-beta.x` prerelease series); SwiftPM consumers should pin a version (see the README installation snippet) rather than tracking `main`.
 
-`CodeEditorPlugin` is now a small umbrella library over extracted sibling targets. `import CodeEditorPlugin` gives host apps the normal editor entry points, while focused products are available for direct use when you only need a subsystem: `CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, and `CodeEditorWorkspace`. Design tokens and themes come from the external `DesignKit` package (`DesignKitTokens`, `DesignKitThemes`).
+`CodeEditorKit` is now a small umbrella library over extracted sibling targets. `import CodeEditorKit` gives host apps the normal editor entry points, while focused products are available for direct use when you only need a subsystem: `CodeEditorDiagnostics`, `CodeEditorLSP`, `CodeEditorLayout`, `CodeEditorSearch`, `CodeEditorSwiftUI`, `CodeEditorUI`, `CodeEditorView`, and `CodeEditorWorkspace`. Design tokens and themes come from the external `DesignKit` package (`DesignKitTokens`, `DesignKitThemes`).
 
 ## By topic
 

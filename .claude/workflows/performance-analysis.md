@@ -195,9 +195,9 @@ Monitor real-time performance:
 - Follow with `@documentation-update` to record performance improvements
 
 ## File Locations
-- **Performance Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Tests/CodeEditorPluginTests/Performance*`
-- **Memory Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Tests/CodeEditorPluginTests/Memory*`
-- **Performance Monitor**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Performance/PerformanceMonitor.swift`
+- **Performance Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Tests/CodeEditorKitTests/Performance*`
+- **Memory Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Tests/CodeEditorKitTests/Memory*`
+- **Performance Monitor**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Sources/CodeEditorKit/Performance/PerformanceMonitor.swift`
 
 ## Notes
 Performance analysis ensures:

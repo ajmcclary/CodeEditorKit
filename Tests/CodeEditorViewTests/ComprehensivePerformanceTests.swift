@@ -17,7 +17,7 @@ import os
 /// Comprehensive performance test suite covering all major components
 final class ComprehensivePerformanceTests: CleanupTestCase {
     #if canImport(os)
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "PerformanceTests")
+    private let logger = Logger(subsystem: "CodeEditorKit", category: "PerformanceTests")
     #endif
     // MARK: - Range Processing Performance
 

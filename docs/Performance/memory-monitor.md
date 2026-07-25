@@ -1,17 +1,17 @@
 # MemoryMonitor Dependency Injection
 
-Learn how to properly inject and use MemoryMonitor for memory management in CodeEditorPlugin.
+Learn how to properly inject and use MemoryMonitor for memory management in CodeEditorKit.
 
 ## Overview
 
-The `MemoryMonitor` class provides memory tracking and automatic cleanup capabilities for the code editor. Instead of using the deprecated singleton pattern, CodeEditorPlugin now supports proper dependency injection of MemoryMonitor instances, allowing for better testability and resource management.
+The `MemoryMonitor` class provides memory tracking and automatic cleanup capabilities for the code editor. Instead of using the deprecated singleton pattern, CodeEditorKit now supports proper dependency injection of MemoryMonitor instances, allowing for better testability and resource management.
 
 ## Basic Usage
 
 ### Creating a MemoryMonitor
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 
 // Create a new memory monitor instance
 let memoryMonitor = MemoryMonitor()
@@ -123,7 +123,7 @@ When using CodeEditor in SwiftUI, you have two options for injecting MemoryMonit
 
 ```swift
 import SwiftUI
-import CodeEditorPlugin
+import CodeEditorKit
 
 struct ContentView: View {
     @State private var code = "// Your code here"
@@ -140,7 +140,7 @@ struct ContentView: View {
 
 ```swift
 import SwiftUI
-import CodeEditorPlugin
+import CodeEditorKit
 
 struct ContentView: View {
     @State private var code = "// Your code here"

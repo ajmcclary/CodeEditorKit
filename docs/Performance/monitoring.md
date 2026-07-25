@@ -1,6 +1,6 @@
 # Performance Monitoring
 
-CodeEditorPlugin exposes performance instrumentation through actor-based monitors, memory cleanup hooks, budget checks, and optional SwiftUI insight views.
+CodeEditorKit exposes performance instrumentation through actor-based monitors, memory cleanup hooks, budget checks, and optional SwiftUI insight views.
 
 ## Runtime Monitoring
 
@@ -80,7 +80,7 @@ let report = await reporter.generateReport()
 CrossPlatformLogger.logger().debug(report.summary)
 ```
 
-The package also provides XCTest helpers in `Tests/CodeEditorPluginTests/XCTestCase+PerformanceBudget.swift` for enforcing budgets in performance regression tests.
+The package also provides XCTest helpers in `Tests/CodeEditorKitTests/XCTestCase+PerformanceBudget.swift` for enforcing budgets in performance regression tests.
 
 ## Production Metrics
 

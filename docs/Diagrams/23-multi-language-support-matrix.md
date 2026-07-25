@@ -1,6 +1,6 @@
 # Multi-Language Support Matrix
 
-This diagram provides a comprehensive matrix view of language support capabilities across all 25 concrete supported languages plus plain text in the CodeEditorPlugin framework.
+This diagram provides a comprehensive matrix view of language support capabilities across all 25 concrete supported languages plus plain text in the CodeEditorKit framework.
 
 ```mermaid
 flowchart LR

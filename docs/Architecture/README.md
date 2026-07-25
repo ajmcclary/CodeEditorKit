@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Short ADRs capturing structural decisions made for CodeEditorPlugin. Each one records the gate, the call (`go` / `defer` / `no-go`), and the reasoning so future contributors can re-evaluate the trade-offs.
+Short ADRs capturing structural decisions made for CodeEditorKit. Each one records the gate, the call (`go` / `defer` / `no-go`), and the reasoning so future contributors can re-evaluate the trade-offs.
 
 | Gate | Decision | Status | Date |
 |---|---|---|---|

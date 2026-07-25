@@ -13,7 +13,7 @@ import UIKit
 import SwiftUI
 #endif
 
-/// Tests for auto-scroll behavior in CodeEditorPlugin
+/// Tests for auto-scroll behavior in CodeEditorKit
 final class AutoScrollTests: XCTestCase {
     // MARK: - Basic Configuration Tests
 

@@ -153,7 +153,7 @@ public final class CompletionManager {
     }
 
     /// Internal test hook — exposes the broadcaster so suites in
-    /// `CodeEditorPluginTests` (via `@testable import`) can probe its
+    /// `CodeEditorKitTests` (via `@testable import`) can probe its
     /// `subscriberCount`. Not part of the public API.
     var testOnlyBroadcaster: CompletionEventBroadcaster {
         broadcaster

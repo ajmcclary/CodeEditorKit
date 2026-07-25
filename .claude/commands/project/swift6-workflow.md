@@ -6,6 +6,6 @@ description: Complete Swift 6 concurrency validation workflow
 
 Execute the swift6-validation workflow:
 
-@/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/.claude/workflows/swift6-validation.md
+@/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/.claude/workflows/swift6-validation.md
 
 Comprehensive Swift 6 strict concurrency compliance validation including actor isolation, Sendable conformance, and data race prevention.

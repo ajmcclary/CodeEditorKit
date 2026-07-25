@@ -1,10 +1,10 @@
 # Architecture Overview
 
-Understand the modern, feature-based architecture that powers CodeEditorPlugin.
+Understand the modern, feature-based architecture that powers CodeEditorKit.
 
 ## Overview
 
-CodeEditorPlugin uses a modular architecture optimized for performance, maintainability, and extensibility. Built with Swift 6's actor system, it provides thread-safe operations while maintaining a responsive UI. The current architecture includes platform abstractions based on `#if canImport()` patterns, native AppKit / UIKit TextKit2 surfaces, and an umbrella product over focused SwiftPM targets.
+CodeEditorKit uses a modular architecture optimized for performance, maintainability, and extensibility. Built with Swift 6's actor system, it provides thread-safe operations while maintaining a responsive UI. The current architecture includes platform abstractions based on `#if canImport()` patterns, native AppKit / UIKit TextKit2 surfaces, and an umbrella product over focused SwiftPM targets.
 
 ## Feature-Based Organization
 
@@ -14,7 +14,7 @@ The codebase is organized by feature and product boundary rather than by type. T
 
 ```
 Sources/
-├── CodeEditorPlugin/             # Umbrella target: re-export hub only
+├── CodeEditorKit/                # Umbrella target: re-export hub only
 ├── CodeEditorView/               # TextKit2 editor surface and view-coupled services
 ├── CodeEditorSwiftUI/            # SwiftUI `CodeEditor` wrapper and environment
 ├── CodeEditorUI/                 # Optional SwiftUI chrome/components
@@ -40,7 +40,7 @@ Sources/
 (Long-form prose docs live in the top-level [`docs/`](../README.md) folder, not inside `Sources/`.)
 
 **Key boundaries**:
-- **Umbrella vs. direct products**: `CodeEditorPlugin` re-exports the common host-facing modules, while products such as `CodeEditorLSP`, `CodeEditorSearch`, `CodeEditorWorkspace`, `CodeEditorDiagnostics`, and `CodeEditorUI` can be imported directly.
+- **Umbrella vs. direct products**: `CodeEditorKit` re-exports the common host-facing modules, while products such as `CodeEditorLSP`, `CodeEditorSearch`, `CodeEditorWorkspace`, `CodeEditorDiagnostics`, and `CodeEditorUI` can be imported directly.
 - **View-coupled code stays in `CodeEditorView`**: `CodeEditorView`, `CodeEditorAPI`, `EditorDocuments`, in-document `SearchReplaceEngine`, view-coupled LSP adapters, folding presentation, minimap/gutter views, and TextKit2 setup live together.
 - **Portable models moved out**: shared data structures, language descriptors, folding storage, symbol storage, configuration, theming, platform helpers, and text-model primitives live in separate targets.
 - **Optional project surfaces stay opt-in**: project-wide search and workspace file-tree protocols are products, but the umbrella does not depend on them.
@@ -48,7 +48,7 @@ Sources/
 **Benefits of the extraction**:
 - **Clear ownership**: module names now describe runtime boundaries, not just folders.
 - **Narrower imports**: tests and clients can import `CodeEditorView`, `CodeEditorSwiftUI`, `CodeEditorDiagnostics`, or other focused modules directly.
-- **Smaller public entry point**: the umbrella target has one Swift file plus resources and exists to preserve the simple `import CodeEditorPlugin` path.
+- **Smaller public entry point**: the umbrella target has one Swift file plus resources and exists to preserve the simple `import CodeEditorKit` path.
 - **Better test reach**: internal symbols are tested through the modules that own them instead of through an overgrown umbrella target.
 
 ## Core Components
@@ -162,7 +162,7 @@ config.layout.tabWidth = 4
 
 ### Quality Achievements
 - **221 `*Tests.swift` files** across 4 test targets covering editor, configuration, platform, language, UI, sample, and performance paths
-- **589 Swift files under `Sources/`**, with the umbrella `Sources/CodeEditorPlugin/` reduced to a single re-export file
+- **589 Swift files under `Sources/`**, with the umbrella `Sources/CodeEditorKit/` reduced to a single re-export file
 - **Enhanced cross-platform consistency**
 - **Module organization** aligned with SwiftPM target boundaries for discoverability
 

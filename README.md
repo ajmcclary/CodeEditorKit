@@ -1,4 +1,4 @@
-# CodeEditorPlugin
+# CodeEditorKit
 
 [![Tests](https://img.shields.io/badge/test%20files-221-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
@@ -24,7 +24,7 @@ A powerful, production-ready code editor component for native macOS and iOS / iP
 
 ```swift
 import SwiftUI
-import CodeEditorPlugin
+import CodeEditorKit
 
 struct ContentView: View {
     @State private var code = "print(\"Hello, World!\")"
@@ -46,7 +46,7 @@ Add to your `Package.swift`:
 dependencies: [
     // 0.1.0-beta.4 is a prerelease identifier — SwiftPM only resolves
     // prerelease tags when the lower bound itself names one.
-    .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", .upToNextMinor(from: "0.1.0-beta.4"))
+    .package(url: "https://github.com/ajmcclary/CodeEditorKit.git", .upToNextMinor(from: "0.1.0-beta.4"))
 ]
 ```
 
@@ -89,13 +89,13 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 
 ### SPM Targets
 
-The package is split into focused SPM targets. `CodeEditorPlugin` is the umbrella that
+The package is split into focused SPM targets. `CodeEditorKit` is the umbrella that
 `@_exported`-imports the most common surface; opt-in subsystems (LSP, Search, Workspace,
 Diagnostics) are separate libraries you import by name when you need them.
 
 ```
 Sources/
-├── CodeEditorPlugin/          # Umbrella: re-exports the common surface (1 .swift file)
+├── CodeEditorKit/             # Umbrella: re-exports the common surface (1 .swift file)
 ├── CodeEditorView/            # Editor surface: CodeEditorView class + services
 ├── CodeEditorSwiftUI/         # SwiftUI host wrapper, EditorController, modifiers
 ├── CodeEditorUI/              # Optional SwiftUI chrome/components
@@ -124,8 +124,8 @@ The demo app now lives at `apps/CodeEditorDemo` in the superproject workspace, n
 
 Long-form prose docs live in [`docs/`](docs/README.md), organized by topic.
 
-21 source roots under `Sources/`, 515 Swift files total. The `CodeEditorPlugin` umbrella
-target itself ships a single `CodeEditorPlugin.swift` entry stub plus `Resources/Info.plist`
+21 source roots under `Sources/`, 515 Swift files total. The `CodeEditorKit` umbrella
+target itself ships a single `CodeEditorKit.swift` entry stub plus `Resources/Info.plist`
 — all subsystems live in sibling targets.
 
 ### Core Components
@@ -303,6 +303,6 @@ DocC toolchain needed. Start with:
 
 ## 📄 License
 
-CodeEditorPlugin is MIT licensed. See [`LICENSE`](LICENSE).
+CodeEditorKit is MIT licensed. See [`LICENSE`](LICENSE).
 
 Created by AJ McClary © 2026.

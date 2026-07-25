@@ -4,7 +4,7 @@ description: Build the main package and sample app
 
 # Build Package and Sample
 
-Build both the main CodeEditorPlugin package and CodeEditorSample:
+Build both the main CodeEditorKit package and CodeEditorSample:
 
 ```bash
 # Build main package

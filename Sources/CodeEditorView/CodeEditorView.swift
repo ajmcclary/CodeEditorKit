@@ -232,7 +232,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     //
     // The load-bearing invariant — `textLayoutManager != nil` after init
     // — is covered by
-    // `Tests/CodeEditorPluginTests/Core/CodeEditorViewTextKit2InitTests.swift`.
+    // `Tests/CodeEditorKitTests/Core/CodeEditorViewTextKit2InitTests.swift`.
     // If that test fails, a new `self.textStorage` or `self.layoutManager`
     // read has been re-introduced somewhere on the setup path. The
     // NSRulerView-based gutter at
@@ -271,7 +271,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             do {
                 try configuration.validateAndThrow()
             } catch {
-                Self.logger.error("[CodeEditorPlugin] Rejected invalid configuration: \(error)")
+                Self.logger.error("[CodeEditorKit] Rejected invalid configuration: \(error)")
                 isApplyingConfiguration = true
                 configuration = oldValue
                 isApplyingConfiguration = false
@@ -359,7 +359,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// shim and clears `textLayoutManager`; the bridge routes through
     /// `textContentStorage?.textStorage`, which is the TK2-safe accessor.
     ///
-    /// See `Tests/CodeEditorPluginTests/Core/CodeEditorViewTextKit2InitTests.swift`
+    /// See `Tests/CodeEditorKitTests/Core/CodeEditorViewTextKit2InitTests.swift`
     /// for the load-bearing invariant.
     package lazy var textKitBridge = TextKitBridge(textView: self)
 

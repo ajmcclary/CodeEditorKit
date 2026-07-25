@@ -1,5 +1,5 @@
+import CodeEditorKit
 import CodeEditorLanguages
-import CodeEditorPlugin
 @testable import CodeEditorSwiftUI
 import CodeEditorUI
 import Foundation

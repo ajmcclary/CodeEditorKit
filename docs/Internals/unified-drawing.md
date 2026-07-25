@@ -1,4 +1,4 @@
-# `CodeEditorPlugin/UnifiedDrawingCoordinator`
+# `CodeEditorKit/UnifiedDrawingCoordinator`
 
 Abstracts platform-specific drawing operations, providing a unified interface for cross-platform rendering in code editor components.
 

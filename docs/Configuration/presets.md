@@ -4,7 +4,7 @@ Use built-in configuration presets for common editing scenarios.
 
 ## Overview
 
-CodeEditorPlugin includes eight configuration presets. Five are scenario presets (`default`, `minimal`, `readOnly`, `markdown`, `presentation`) and three are platform-oriented (`iOS`, `macOS`, `platformOptimized`). Each preset is a plain `EditorConfiguration` value and can be further customized.
+CodeEditorKit includes eight configuration presets. Five are scenario presets (`default`, `minimal`, `readOnly`, `markdown`, `presentation`) and three are platform-oriented (`iOS`, `macOS`, `platformOptimized`). Each preset is a plain `EditorConfiguration` value and can be further customized.
 
 ## Available Presets
 

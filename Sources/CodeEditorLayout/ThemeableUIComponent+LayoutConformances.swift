@@ -4,7 +4,9 @@
 // is defined in BaseUIComponents.swift in this target. Conformances for
 // umbrella-resident view types (GutterView, AppKitMinimapView,
 // UIKitMinimapView) live in
-// Sources/CodeEditorPlugin/Core/Layout/ThemeableUIComponent+UmbrellaConformances.swift.
+// ThemeableUIComponent+UmbrellaConformances.swift, which was then at
+// Sources/CodeEditorPlugin/Core/Layout/ (the umbrella's pre-§6.2.12 layout,
+// before the package was renamed to CodeEditorKit).
 // Split during §6.2.11 (CodeEditorLayout extraction).
 
 import CodeEditorAnnotations

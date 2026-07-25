@@ -1,6 +1,6 @@
-# CodeEditorPlugin Architecture Diagrams
+# CodeEditorKit Architecture Diagrams
 
-This directory contains architectural diagrams for the CodeEditorPlugin framework, illustrating major components, systems, integrations, and their data flows.
+This directory contains architectural diagrams for the CodeEditorKit framework, illustrating major components, systems, integrations, and their data flows.
 
 > **Current platform baseline:** these diagrams describe the native macOS and iOS / iPadOS implementation. Mac Catalyst and legacy TextKit fallback designs have been moved to the archive; current diagrams should not introduce Catalyst-specific boxes or TextKit1 branches.
 
@@ -11,7 +11,7 @@ Design-only diagrams covering features that are not yet implemented (the plugin 
 ## Index of Diagrams
 
 ### 1. [High-Level Architecture](01-high-level-architecture.md)
-Overview of the entire CodeEditorPlugin framework showing main layers and their relationships. Includes SwiftUI integration, core components, services, configuration, platform abstraction, features, language support, and external integrations.
+Overview of the entire CodeEditorKit framework showing main layers and their relationships. Includes SwiftUI integration, core components, services, configuration, platform abstraction, features, language support, and external integrations.
 
 ### 2. [Core Components Class Diagram](02-core-components-class.md)
 Current editor ownership map: `CodeEditorView`, `EditorSession`, focused feature controllers, `EditorRuntime`, the event bus, and memory rebinding.
@@ -50,7 +50,7 @@ Language provider ecosystem supporting 25 concrete languages plus plain text wit
 Comprehensive annotation system providing code annotations, diagnostics, and contextual information overlay capabilities. Includes multi-source annotation support, interactive features, and visual customization.
 
 ### 18. [Data Models & Type System Architecture](18-data-models-type-system.md)
-Comprehensive data models and type system forming the foundation of CodeEditorPlugin's data structures. Includes rich text models, versioning system, type information, and performance optimization.
+Comprehensive data models and type system forming the foundation of CodeEditorKit's data structures. Includes rich text models, versioning system, type information, and performance optimization.
 
 ### 19. [SwiftUI Integration Complete Ecosystem](19-swiftui-integration-ecosystem.md)
 SwiftUI hosting with a thin coordinator delegating binding, interaction, runtime/value rendering, and completion-modifier reconciliation.
@@ -65,7 +65,7 @@ Advanced layout system and UI component architecture handling positioning, respo
 Matrix view of language support capabilities across 25 concrete supported languages plus plain text. Shows feature comparison, performance characteristics, and LSP integration notes.
 
 ### 25. [Package Dependencies](25-package-dependencies.md)
-Package dependency diagram showing the current library products, the single-file `CodeEditorPlugin` umbrella target, runtime dependencies, and test target dependencies.
+Package dependency diagram showing the current library products, the single-file `CodeEditorKit` umbrella target, runtime dependencies, and test target dependencies.
 
 ### 28. [Performance Budget System](28-performance-budget-system.md)
 Comprehensive performance budget system that monitors and enforces performance targets across all operations. Includes budget definitions, status tracking, violation reporting, test integration, and enforcement configuration with support for warning, critical, and exceeded thresholds.
@@ -90,7 +90,7 @@ All diagrams are written in Mermaid syntax and can be viewed:
 
 ## Regenerating Dependency Diagrams
 
-Dependency diagram 25 should be manually updated when `Package.swift` changes (run `./Scripts/generate-dependency-diagrams.sh`). It reflects the actual products and important target dependencies declared in the manifest, including the focused library products, the umbrella `CodeEditorPlugin`, runtime dependencies, and test-only dependencies. (The former diagram 26 covered the `CodeEditorSample` demo app, which was extracted to the workspace's `apps/CodeEditorDemo` package.)
+Dependency diagram 25 should be manually updated when `Package.swift` changes (run `./Scripts/generate-dependency-diagrams.sh`). It reflects the actual products and important target dependencies declared in the manifest, including the focused library products, the umbrella `CodeEditorKit`, runtime dependencies, and test-only dependencies. (The former diagram 26 covered the `CodeEditorSample` demo app, which was extracted to the workspace's `apps/CodeEditorDemo` package.)
 
 ## Diagram Conventions
 

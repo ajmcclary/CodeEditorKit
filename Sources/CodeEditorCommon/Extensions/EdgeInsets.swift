@@ -3,7 +3,7 @@ import Foundation
 
 /// Framework alias for `EdgeInsets` so external code can disambiguate from
 /// `SwiftUI.EdgeInsets` without resorting to fully-qualified
-/// `CodeEditorPlugin.EdgeInsets` (which fails because the module name shadows
+/// `CodeEditorKit.EdgeInsets` (which fails because the module name shadows
 /// a public struct of the same name).
 public typealias FrameworkEdgeInsets = EdgeInsets
 

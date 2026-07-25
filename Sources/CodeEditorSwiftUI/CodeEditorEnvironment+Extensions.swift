@@ -1,6 +1,6 @@
 //
 //  CodeEditorEnvironment.swift
-//  CodeEditorPlugin
+//  CodeEditorKit
 //
 //  Consolidated environment configuration for CodeEditor SwiftUI view
 //

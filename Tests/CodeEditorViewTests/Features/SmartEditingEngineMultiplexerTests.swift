@@ -121,7 +121,7 @@ final class SmartEditingEngineMultiplexerTests: XCTestCase {
         let url = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent() // strip filename
             .deletingLastPathComponent() // Features
-            .deletingLastPathComponent() // CodeEditorPluginTests
+            .deletingLastPathComponent() // CodeEditorKitTests
             .deletingLastPathComponent() // Tests
             .appendingPathComponent("Sources/CodeEditorSmartEditing/SmartEditingEngine.swift")
         let source = try String(contentsOf: url, encoding: .utf8)

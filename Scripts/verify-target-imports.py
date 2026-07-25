@@ -48,17 +48,17 @@ def main() -> int:
             imports.update(modules)
             if (
                 not target["path"].startswith("Tests/")
-                and name not in {"CodeEditorPlugin", "CodeEditorSample"}
-                and "CodeEditorPlugin" in modules
+                and name not in {"CodeEditorKit", "CodeEditorSample"}
+                and "CodeEditorKit" in modules
             ):
                 line = next(
                     index for index, value in enumerate(source.read_text().splitlines(), 1)
-                    if "import CodeEditorPlugin" in value
+                    if "import CodeEditorKit" in value
                 )
-                failures.append(f"{source.relative_to(ROOT)}:{line}: {name} imports umbrella CodeEditorPlugin")
+                failures.append(f"{source.relative_to(ROOT)}:{line}: {name} imports umbrella CodeEditorKit")
         for module in sorted(imports - dependencies - {name}):
             failures.append(f"{name}: imported {module} but dependency is missing")
-        if name in {"CodeEditorPlugin", "CodeEditorUI"}:
+        if name in {"CodeEditorKit", "CodeEditorUI"}:
             for module in sorted(dependencies - imports):
                 failures.append(f"{name}: declared {module} but no source imports it")
 

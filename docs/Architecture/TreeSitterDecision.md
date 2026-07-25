@@ -6,7 +6,7 @@
 
 ## Context
 
-CodeEditSourceEditor uses ChimeHQ/SwiftTreeSitter (tag 0.4.x in their fork) as the primary parsing substrate. We evaluated whether to adopt Tree-sitter for CodeEditorPlugin.
+CodeEditSourceEditor uses ChimeHQ/SwiftTreeSitter (tag 0.4.x in their fork) as the primary parsing substrate. We evaluated whether to adopt Tree-sitter for CodeEditorKit.
 
 ## Evaluation
 
@@ -22,15 +22,15 @@ CodeEditSourceEditor uses ChimeHQ/SwiftTreeSitter (tag 0.4.x in their fork) as t
 
 - **macOS:** Tree-sitter works reliably.
 - **iOS:** Requires the C library to be compiled for ARM64. Possible but adds build complexity.
-- **Cross-platform parity:** CodeEditorPlugin targets macOS and iOS. Tree-sitter would require per-platform build configuration.
+- **Cross-platform parity:** CodeEditorKit targets macOS and iOS. Tree-sitter would require per-platform build configuration.
 
 ### Parser Coverage
 
-Tree-sitter has grammars for ~250 languages. CodeEditorPlugin currently supports 25 concrete languages plus plain text. Most have mature tree-sitter grammars (JavaScript, Python, JSON, HTML, CSS, etc.).
+Tree-sitter has grammars for ~250 languages. CodeEditorKit currently supports 25 concrete languages plus plain text. Most have mature tree-sitter grammars (JavaScript, Python, JSON, HTML, CSS, etc.).
 
 ### Architectural Integration
 
-CodeEditSourceEditor's `TreeSitterExecutor` pattern (priority queue with sync/async fallback) is well-designed. CodeEditorPlugin now has the intended integration surface: `RangeHighlightProviding`, `RangeBasedHighlightingController`, and an internal range-query provider.
+CodeEditSourceEditor's `TreeSitterExecutor` pattern (priority queue with sync/async fallback) is well-designed. CodeEditorKit now has the intended integration surface: `RangeHighlightProviding`, `RangeBasedHighlightingController`, and an internal range-query provider.
 
 ### Risks
 

@@ -88,6 +88,6 @@ swift test --filter CodeEditorSampleTests
 
 ## File Locations
 
-- **Platform Abstractions**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Platform/`
-- **Platform Docs**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/docs/Platform/`
-- **Feature Matrix**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/docs/FeatureMatrix.md`
+- **Platform Abstractions**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Sources/CodeEditorKit/Platform/`
+- **Platform Docs**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/docs/Platform/`
+- **Feature Matrix**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/docs/FeatureMatrix.md`

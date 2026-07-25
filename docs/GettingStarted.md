@@ -13,7 +13,7 @@ A modern, cross-platform code editor for macOS and iOS / iPadOS. Built on TextKi
 ### Xcode
 
 1. **File → Add Package Dependencies**
-2. Enter the repository URL: `https://github.com/ajmcclary/CodeEditorPlugin.git`
+2. Enter the repository URL: `https://github.com/ajmcclary/CodeEditorKit.git`
 3. Until release tags are published, choose the `main` branch. After tags exist, switch to an up-to-next-major version rule.
 
 ### Package.swift
@@ -26,21 +26,21 @@ let package = Package(
     name: "MyApp",
     platforms: [.macOS("26.0"), .iOS("26.0")],
     dependencies: [
-        .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", branch: "main")
+        .package(url: "https://github.com/ajmcclary/CodeEditorKit.git", branch: "main")
     ],
     targets: [
-        .target(name: "MyApp", dependencies: ["CodeEditorPlugin"])
+        .target(name: "MyApp", dependencies: ["CodeEditorKit"])
     ]
 )
 ```
 
-CodeEditorPlugin pulls in `swift-syntax`, `swift-dependencies`, and `xctest-dynamic-overlay` (for `IssueReporting`). These are managed automatically by SwiftPM.
+CodeEditorKit pulls in `swift-syntax`, `swift-dependencies`, and `xctest-dynamic-overlay` (for `IssueReporting`). These are managed automatically by SwiftPM.
 
 ## A Minimal Editor
 
 ```swift
 import SwiftUI
-import CodeEditorPlugin
+import CodeEditorKit
 
 struct ContentView: View {
     @State private var code = "// Type your code here"
@@ -106,7 +106,7 @@ CodeEditor(text: $code, debounceInterval: .milliseconds(500))
 
 ```swift
 import AppKit
-import CodeEditorPlugin
+import CodeEditorKit
 
 class ViewController: NSViewController {
     override func viewDidLoad() {
@@ -125,7 +125,7 @@ class ViewController: NSViewController {
 
 ```swift
 import UIKit
-import CodeEditorPlugin
+import CodeEditorKit
 
 class ViewController: UIViewController {
     override func viewDidLoad() {

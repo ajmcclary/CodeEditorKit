@@ -117,3 +117,7 @@ Temporary Items
 .apdisk
 .superpowers/*
 .worktrees/
+
+# Python bytecode caches (Scripts/*.py helpers)
+__pycache__/
+*.pyc

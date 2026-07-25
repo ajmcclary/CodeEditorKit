@@ -69,7 +69,7 @@ def main() -> int:
         "A5": all(name not in source_text for name in ("TextProcessingActor", "TextKit2RenderingOptimizer", "simulateOptimization")),
         "A6": all(name not in source_text for name in ("ConfigurableUIComponent", "ReusableUIComponent", "AnnotationViewProtocol", "GutterViewProtocol", "CompletionCellFactory")),
         "A7": "isRunningTests" not in source_text and "XCTestConfigurationFilePath" not in source_text,
-        "P1": "CodeEditorPlugin\"" not in text("Package.swift").split('name: "CodeEditorUI"', 1)[1].split("swiftSettings:", 1)[0] and not list((ROOT / "Sources/CodeEditorUI").rglob("*.swift")) == [],
+        "P1": "CodeEditorKit\"" not in text("Package.swift").split('name: "CodeEditorUI"', 1)[1].split("swiftSettings:", 1)[0] and not list((ROOT / "Sources/CodeEditorUI").rglob("*.swift")) == [],
         "P2": exists("Sources/CodeEditorSwiftUI/EditorRenderReconciler.swift") and "runtimeSnapshot" in text("Sources/CodeEditorSwiftUI/EditorRenderReconciler.swift"),
         "P3": exists("Sources/CodeEditorView/EditorEventBus.swift", "Sources/CodeEditorView/NotificationCenterEventAdapter.swift") and "eventBus.publish(event)" in text("Sources/CodeEditorView/UnifiedEventSystem.swift"),
         "P4": exists(
@@ -77,7 +77,7 @@ def main() -> int:
             "Sources/CodeEditorView/Platform/ToolbarCatalog.swift",
             "Sources/CodeEditorView/CodeEditorView+SelectionScrolling.swift",
         ),
-        "P5": all((ROOT / f"Tests/{name}").is_dir() for name in ("CodeEditorCommonTests", "CodeEditorTextModelTests", "CodeEditorCompletionTests", "CodeEditorLSPTests", "CodeEditorViewTests", "CodeEditorSwiftUITests")) and len(list((ROOT / "Tests/CodeEditorPluginTests").rglob("*.swift"))) < 40,
+        "P5": all((ROOT / f"Tests/{name}").is_dir() for name in ("CodeEditorCommonTests", "CodeEditorTextModelTests", "CodeEditorCompletionTests", "CodeEditorLSPTests", "CodeEditorViewTests", "CodeEditorSwiftUITests")) and len(list((ROOT / "Tests/CodeEditorKitTests").rglob("*.swift"))) < 40,
         "P6": "Sources/CodeEditorSwiftUI/.*\\.swift" in text(".swiftlint.yml") and exists("Scripts/verify-project-metadata.py"),
         "P7": exists("Sources/CodeEditorCommon/Utilities/CodeEditorLog.swift", "Scripts/verify-logger-usage.py") and "CrossPlatformLogger.logger()" not in source_text,
         "D1": sum(value.count("private final class Node") for value in (text("Sources/CodeEditorCommon/LinkedLRU.swift"), text("Sources/CodeEditorInstrumentation/LRUCache.swift"))) == 1,

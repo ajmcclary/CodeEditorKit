@@ -123,19 +123,19 @@ For Xcode-driven test plans:
 
 ```bash
 xcodebuild test \
-  -scheme CodeEditorPlugin \
-  -testPlan CodeEditorPlugin-SmartParallel \
+  -scheme CodeEditorKit \
+  -testPlan CodeEditorKit-SmartParallel \
   -parallel-testing-enabled YES \
   -maximum-concurrent-test-device-destinations 4
 ```
 
-`Tests/CodeEditorPluginTests/TestMemoryOptimizer.swift` provides bounded data generation for memory-sensitive tests:
+`Tests/CodeEditorKitTests/TestMemoryOptimizer.swift` provides bounded data generation for memory-sensitive tests:
 
 ```swift
 let source = MemoryBoundedTestData.swiftCode(lines: 1_000)
 ```
 
-`Tests/CodeEditorPluginTests/XCTestCase+PerformanceBudget.swift` adds `measureAgainstBudget` and `measureAsyncAgainstBudget` helpers for regression coverage.
+`Tests/CodeEditorKitTests/XCTestCase+PerformanceBudget.swift` adds `measureAgainstBudget` and `measureAsyncAgainstBudget` helpers for regression coverage.
 
 ## Debugging Slow Paths
 

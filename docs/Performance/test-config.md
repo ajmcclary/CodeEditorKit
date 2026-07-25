@@ -4,7 +4,7 @@ Configure and optimize test execution with parallel testing, timeouts, and perfo
 
 ## Overview
 
-This article describes the comprehensive test performance optimizations implemented for CodeEditorPlugin, including parallel test execution strategies, timeout configuration, and performance budget enforcement to ensure reliable and fast test execution.
+This article describes the comprehensive test performance optimizations implemented for CodeEditorKit, including parallel test execution strategies, timeout configuration, and performance budget enforcement to ensure reliable and fast test execution.
 
 ## Test Parallelization
 
@@ -14,9 +14,9 @@ Tests are configured to run in parallel where safe, significantly reducing overa
 
 #### Available Test Plans
 
-1. **CodeEditorPlugin.xctestplan** - Basic configuration with timeouts
-2. **CodeEditorPlugin-Parallel.xctestplan** - Full parallel execution
-3. **CodeEditorPlugin-SmartParallel.xctestplan** - Intelligent grouping for optimal performance
+1. **CodeEditorKit.xctestplan** - Basic configuration with timeouts
+2. **CodeEditorKit-Parallel.xctestplan** - Full parallel execution
+3. **CodeEditorKit-SmartParallel.xctestplan** - Intelligent grouping for optimal performance
 
 ### Smart Parallelization
 
@@ -37,8 +37,8 @@ swift test --parallel --num-workers auto
 
 # Using xcodebuild with test plan
 xcodebuild test \
-  -scheme CodeEditorPlugin \
-  -testPlan CodeEditorPlugin-SmartParallel \
+  -scheme CodeEditorKit \
+  -testPlan CodeEditorKit-SmartParallel \
   -parallel-testing-enabled YES \
   -maximum-concurrent-test-device-destinations 4
 ```

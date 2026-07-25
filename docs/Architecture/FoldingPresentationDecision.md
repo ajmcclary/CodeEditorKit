@@ -6,7 +6,7 @@
 
 ## Context
 
-Code folding must visually hide folded content without destroying document text or conflicting with syntax highlighting attributes. CodeEditSourceEditor uses `TextAttachment`-based placeholders (`LineFoldPlaceholder`), but CodeEditorPlugin does not have the attachment infrastructure that makes this safe.
+Code folding must visually hide folded content without destroying document text or conflicting with syntax highlighting attributes. CodeEditSourceEditor uses `TextAttachment`-based placeholders (`LineFoldPlaceholder`), but CodeEditorKit does not have the attachment infrastructure that makes this safe.
 
 ## Evaluation
 
@@ -36,7 +36,7 @@ Code folding must visually hide folded content without destroying document text 
 
 **Cons:**
 - Modifies document text — must virtualize carefully to avoid corrupting the underlying NSTextStorage.
-- CodeEditorPlugin does not have CodeEditSourceEditor's `TextAttachment` base class or `layoutManager.attachments.add/remove` APIs.
+- CodeEditorKit does not have CodeEditSourceEditor's `TextAttachment` base class or `layoutManager.attachments.add/remove` APIs.
 - High risk of document corruption if attachment management has bugs.
 - TextKit2 attachment behavior differs from the older legacy TextKit attachment APIs many sample implementations were written against.
 
@@ -83,7 +83,7 @@ not match what content-hiding really needs.
 Rationale:
 1. `attributeHidden` works now. Don't break it before a replacement exists.
 2. `overlayPlaceholder` avoids all document-modification and attribute-conflict risks.
-3. `textAttachmentReplacement` requires infrastructure CodeEditorPlugin doesn't have (attachment management APIs).
+3. `textAttachmentReplacement` requires infrastructure CodeEditorKit doesn't have (attachment management APIs).
 4. The `FoldPresentationStrategy` protocol in Phase 5.3 enables both strategies to coexist — `attributeHidden` as default, `overlayPlaceholder` as the feature-flagged upgrade path.
 
 ## Required Implementation (Phase 5.3)

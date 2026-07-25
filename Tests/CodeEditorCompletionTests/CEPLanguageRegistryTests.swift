@@ -3,7 +3,7 @@ import LanguageKit
 import XCTest
 
 /// Tests for `LanguageDescriptor.registry` — the CEP-specific `LanguageRegistry`
-/// derived from `LanguageRegistry.standard` that expresses CodeEditorPlugin's two
+/// derived from `LanguageRegistry.standard` that expresses CodeEditorKit's two
 /// deliberate divergences (tsx→typescript, swift-grammar suppression) and its
 /// richer shebang interpreter aliases as registry data rather than ad-hoc local
 /// mirrors.
@@ -16,7 +16,7 @@ final class CEPLanguageRegistryTests: XCTestCase {
 
     // MARK: - Coverage
 
-    /// The CEP registry models exactly CodeEditorPlugin's 31 languages and does
+    /// The CEP registry models exactly CodeEditorKit's 31 languages and does
     /// not model `tsx` as a distinct language (unlike the 32-language standard
     /// catalog).
     func testRegistryCoversEveryCEPLanguageAndOmitsTSX() {

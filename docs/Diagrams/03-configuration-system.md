@@ -1,6 +1,6 @@
 # Configuration System Diagram
 
-This diagram illustrates the configuration system used throughout the CodeEditorPlugin framework, including nested configuration sections, presets, and SwiftUI environment integration.
+This diagram illustrates the configuration system used throughout the CodeEditorKit framework, including nested configuration sections, presets, and SwiftUI environment integration.
 
 ```mermaid
 classDiagram

@@ -1,6 +1,6 @@
 //
 //  CodeEditorRepresentableHelper.swift
-//  CodeEditorPlugin
+//  CodeEditorKit
 //
 //  Shared helper methods for CodeEditorRepresentable implementations
 //

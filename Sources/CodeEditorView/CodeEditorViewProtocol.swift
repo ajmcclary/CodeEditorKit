@@ -9,7 +9,7 @@ import AppKit
 /// A common interface for TextView implementations across platforms.
 ///
 /// This protocol uses the `package` access modifier (introduced in Swift 5.9) to make it
-/// visible within the CodeEditorPlugin package but not to external consumers. This design
+/// visible within the CodeEditorKit package but not to external consumers. This design
 /// choice allows internal components to share a common interface while keeping implementation
 /// details private from the public API.
 ///

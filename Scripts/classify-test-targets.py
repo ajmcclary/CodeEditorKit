@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "Tests/CodeEditorPluginTests"
+SOURCE = ROOT / "Tests/CodeEditorKitTests"
 MANIFEST = ROOT / "Scripts/test-target-manifest.json"
 IMPORT = re.compile(r"(?:@testable\s+)?import\s+(CodeEditor\w+)")
 TARGET_PATHS = {
@@ -27,8 +27,8 @@ TARGET_PATHS = {
 def classify(path: Path, imports: set[str], text: str) -> str:
     name = path.name
     relative = path.relative_to(SOURCE)
-    if name == "UmbrellaReExportTests.swift" or "Snapshot" in name or imports == {"CodeEditorPlugin"}:
-        return "CodeEditorPluginTests"
+    if name == "UmbrellaReExportTests.swift" or "Snapshot" in name or imports == {"CodeEditorKit"}:
+        return "CodeEditorKitTests"
     if str(relative) in {"Text/RangeStoreTests.swift", "TextRangeUtilitiesRegressionTests.swift"}:
         return "CodeEditorTextModelTests"
     if relative.parts[0] == "Completion":
@@ -93,11 +93,11 @@ def check() -> int:
             candidate = destination / source.relative_to(SOURCE)
             if not candidate.exists():
                 failures.append(f"stale source: {entry['source']}")
-        if entry["target"] != "CodeEditorPluginTests" and destination is None:
+        if entry["target"] != "CodeEditorKitTests" and destination is None:
             failures.append(f"unknown target: {entry['target']}")
     for name, path in TARGET_PATHS.items():
         for source in path.rglob("*.swift"):
-            if "CodeEditorPlugin" in set(IMPORT.findall(source.read_text())):
+            if "CodeEditorKit" in set(IMPORT.findall(source.read_text())):
                 failures.append(
                     f"focused target imports umbrella: {source.relative_to(ROOT)} ({name})"
                 )
@@ -107,7 +107,7 @@ def check() -> int:
             f"integration target contains {len(integration_files)} Swift files; expected fewer than 40"
         )
     for source in integration_files:
-        if "CodeEditorPlugin" not in set(IMPORT.findall(source.read_text())):
+        if "CodeEditorKit" not in set(IMPORT.findall(source.read_text())):
             failures.append(f"integration test omits umbrella import: {source.relative_to(ROOT)}")
     if failures:
         print("\n".join(failures))
@@ -130,8 +130,8 @@ def apply(targets: set[str]) -> int:
         destination.parent.mkdir(parents=True, exist_ok=True)
         text = source.read_text()
         if len(entry["imports"]) > 1:
-            text = re.sub(r"^@testable import CodeEditorPlugin\n", "", text, flags=re.MULTILINE)
-            text = re.sub(r"^import CodeEditorPlugin\n", "", text, flags=re.MULTILINE)
+            text = re.sub(r"^@testable import CodeEditorKit\n", "", text, flags=re.MULTILINE)
+            text = re.sub(r"^import CodeEditorKit\n", "", text, flags=re.MULTILINE)
         if target in {
             "CodeEditorCommonTests",
             "CodeEditorTextModelTests",

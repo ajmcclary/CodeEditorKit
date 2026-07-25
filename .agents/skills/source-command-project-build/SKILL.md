@@ -11,7 +11,7 @@ Use this skill when the user asks to run the migrated source command `project-bu
 
 # Build Package and Sample
 
-Build both the main CodeEditorPlugin package and CodeEditorSample:
+Build both the main CodeEditorKit package and CodeEditorSample:
 
 ```bash
 # Build main package

@@ -1,6 +1,6 @@
 # Data Models & Type System Architecture
 
-This diagram shows the comprehensive data models and type system that forms the foundation of the CodeEditorPlugin's data structures, featuring Swift 6 concurrency patterns, actor-based coordination, and advanced performance optimization.
+This diagram shows the comprehensive data models and type system that forms the foundation of the CodeEditorKit's data structures, featuring Swift 6 concurrency patterns, actor-based coordination, and advanced performance optimization.
 
 ```mermaid
 classDiagram

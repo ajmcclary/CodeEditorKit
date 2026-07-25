@@ -203,10 +203,10 @@ swift build -Xswiftc -strict-concurrency=complete \
 - Combine with `@performance-analysis` for concurrency performance
 
 ## File Locations
-- **Actor Implementations**: `Sources/CodeEditorPlugin/Core/Actors/` and `Sources/CodeEditorPlugin/Text/Processing/`
-- **Concurrency Tests**: `Tests/CodeEditorPluginTests/ConcurrencyTests.swift`
-- **MainActor UI**: `Sources/CodeEditorPlugin/SwiftUI/`
-- **Platform Threading**: `Sources/CodeEditorPlugin/Platform/`
+- **Actor Implementations**: `Sources/CodeEditorKit/Core/Actors/` and `Sources/CodeEditorKit/Text/Processing/`
+- **Concurrency Tests**: `Tests/CodeEditorKitTests/ConcurrencyTests.swift`
+- **MainActor UI**: `Sources/CodeEditorKit/SwiftUI/`
+- **Platform Threading**: `Sources/CodeEditorKit/Platform/`
 
 ## Notes
 Swift 6 concurrency compliance ensures:

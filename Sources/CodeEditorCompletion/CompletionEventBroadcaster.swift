@@ -49,7 +49,7 @@ final class CompletionEventBroadcaster: @unchecked Sendable {
     }
 
     /// Test-only probe. `internal` so production code cannot reach it; tests
-    /// access via `@testable import CodeEditorPlugin`.
+    /// access via `@testable import CodeEditorKit`.
     var subscriberCount: Int {
         lock.lock()
         defer { lock.unlock() }

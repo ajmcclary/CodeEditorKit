@@ -1,6 +1,6 @@
 # High-Level Architecture Diagram
 
-This diagram shows the overall architecture of the CodeEditorPlugin framework, illustrating the main layers and their relationships.
+This diagram shows the overall architecture of the CodeEditorKit framework, illustrating the main layers and their relationships.
 
 ```mermaid
 graph TD
@@ -139,7 +139,7 @@ graph TD
     %% Focused Products / Targets
     subgraph PRODUCTS [" Focused Products & Targets "]
         direction TB
-        CDP["Umbrella<br/>CodeEditorPlugin"]
+        CDP["Umbrella<br/>CodeEditorKit"]
         CEVP["Editor Surface<br/>CodeEditorView"]
         CSUI["SwiftUI Wrapper<br/>CodeEditorSwiftUI"]
         CDT["Design Tokens<br/>DesignKit (external)"]

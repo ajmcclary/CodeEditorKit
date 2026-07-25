@@ -1,4 +1,4 @@
-@testable import CodeEditorPlugin
+@testable import CodeEditorKit
 @testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import CustomDump

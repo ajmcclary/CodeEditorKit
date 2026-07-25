@@ -44,7 +44,7 @@ final class ReviewRemediationRegressionTests: XCTestCase {
             "RegexBacked" + "TreeSitterParser"
         ]
 
-        let files = try sourceFiles(relativeRoots: ["Sources/CodeEditorPlugin", "Tests"], extensions: ["swift"])
+        let files = try sourceFiles(relativeRoots: ["Sources/CodeEditorKit", "Tests"], extensions: ["swift"])
         for (path, contents) in files {
             for name in deletedNames {
                 XCTAssertFalse(containsStandaloneIdentifier(name, in: contents), "\(name) should not be referenced in \(path)")
@@ -61,11 +61,11 @@ final class ReviewRemediationRegressionTests: XCTestCase {
             "Text" + "Kit1 fallbacks",
             "Tree-sitter-shaped",
             "tree-sitter-shaped",
-            "Sources/CodeEditorPlugin/SyntaxHighlighting/" + "TreeSitter"
+            "Sources/CodeEditorKit/SyntaxHighlighting/" + "TreeSitter"
         ]
 
         let files = try sourceFiles(
-            relativeRoots: ["Sources/CodeEditorPlugin", "Tests", "docs"],
+            relativeRoots: ["Sources/CodeEditorKit", "Tests", "docs"],
             extensions: ["swift", "md"],
             excludedPathComponents: ["superpowers"]
         )

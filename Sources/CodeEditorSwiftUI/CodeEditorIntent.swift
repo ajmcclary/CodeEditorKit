@@ -1,6 +1,6 @@
 //
 //  CodeEditorIntent.swift
-//  CodeEditorPlugin
+//  CodeEditorKit
 //
 //  Carries the closures and reference bindings supplied by the
 //  `CodeEditor` modifier chain that previously lived as stored

@@ -21,7 +21,7 @@ Maintains documentation consistency by checking project metrics against the curr
 find . -path './.git' -prune -o -path './.build' -prune -o -name '*.md' -print | wc -l
 
 # Source counts
-rg --files Sources/CodeEditorPlugin -g '*.swift' | wc -l
+rg --files Sources/CodeEditorKit -g '*.swift' | wc -l
 rg --files Sources -g '*.swift' | wc -l
 rg --files Tests -g '*Tests.swift' | wc -l
 
@@ -36,10 +36,10 @@ swift test --parallel
 
 Update these files when metrics or package shape changes:
 
-- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/README.md`
-- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/docs/README.md`
-- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/AGENTS.md`
-- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/CLAUDE.md`
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/README.md`
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/docs/README.md`
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/AGENTS.md`
+- `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/CLAUDE.md`
 
 Current stable facts:
 
@@ -103,4 +103,4 @@ PY
 - Markdown links resolve locally.
 - Active docs do not describe Mac Catalyst as supported.
 - Sample-app commands use the `CodeEditorSample` target from the package root.
-- Archived superpowers notes (now in the workspace superproject under `docs/archive/package/CodeEditorPlugin/superpowers/`) are clearly marked as historical when referenced.
+- Archived superpowers notes (now in the workspace superproject under `docs/archive/package/CodeEditorKit/superpowers/`) are clearly marked as historical when referenced.

@@ -1,6 +1,6 @@
 //
 //  EdgeInsets+Extensions.swift
-//  CodeEditorPlugin
+//  CodeEditorKit
 //
 //  Created on 2025-06-27.
 //

@@ -2,39 +2,39 @@
   "source_count": 4,
   "entries": [
     {
-      "source": "Tests/CodeEditorPluginTests/CodeEditorSnapshotTests.swift",
-      "target": "CodeEditorPluginTests",
+      "source": "Tests/CodeEditorKitTests/CodeEditorSnapshotTests.swift",
+      "target": "CodeEditorKitTests",
       "imports": [
         "CodeEditorConfiguration",
         "CodeEditorDiagnostics",
-        "CodeEditorPlugin",
+        "CodeEditorKit",
         "CodeEditorSwiftUI",
         "CodeEditorView"
       ]
     },
     {
-      "source": "Tests/CodeEditorPluginTests/Layout/CodeEditorGutterViewSnapshotTests.swift",
-      "target": "CodeEditorPluginTests",
+      "source": "Tests/CodeEditorKitTests/Layout/CodeEditorGutterViewSnapshotTests.swift",
+      "target": "CodeEditorKitTests",
       "imports": [
-        "CodeEditorPlugin",
+        "CodeEditorKit",
         "CodeEditorSwiftUI",
         "CodeEditorView"
       ]
     },
     {
-      "source": "Tests/CodeEditorPluginTests/Theming/ThemeStyleSnapshotTests.swift",
-      "target": "CodeEditorPluginTests",
+      "source": "Tests/CodeEditorKitTests/Theming/ThemeStyleSnapshotTests.swift",
+      "target": "CodeEditorKitTests",
       "imports": [
-        "CodeEditorPlugin",
+        "CodeEditorKit",
         "CodeEditorSwiftUI",
         "CodeEditorView"
       ]
     },
     {
-      "source": "Tests/CodeEditorPluginTests/UmbrellaReExportTests.swift",
-      "target": "CodeEditorPluginTests",
+      "source": "Tests/CodeEditorKitTests/UmbrellaReExportTests.swift",
+      "target": "CodeEditorKitTests",
       "imports": [
-        "CodeEditorPlugin"
+        "CodeEditorKit"
       ]
     }
   ]

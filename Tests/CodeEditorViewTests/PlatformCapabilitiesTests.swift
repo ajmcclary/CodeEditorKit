@@ -1,7 +1,7 @@
 import CodeEditorDiagnostics
 //
 //  PlatformCapabilitiesTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Tests for PlatformCapabilities functionality
 //

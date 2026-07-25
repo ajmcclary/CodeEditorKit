@@ -1,6 +1,6 @@
 //
 //  EdgeInsetsTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Created on 2025-06-27.
 //

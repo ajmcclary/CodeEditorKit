@@ -1,6 +1,6 @@
 # LSP Integration
 
-CodeEditorPlugin exposes Language Server Protocol primitives for IDE-style code intelligence. The current implementation has two surfaces:
+CodeEditorKit exposes Language Server Protocol primitives for IDE-style code intelligence. The current implementation has two surfaces:
 
 - macOS local server management through `LSPManager` and process-backed language servers.
 - Cross-platform remote server primitives through `LSPClient`, `LSPServerConfiguration.remote`, and `WebSocketTransport`.
@@ -39,7 +39,7 @@ CodeEditor(text: $code)
 
 ```swift
 #if canImport(AppKit)
-import CodeEditorPlugin
+import CodeEditorKit
 
 let memoryMonitor = MemoryMonitor()
 let manager = LSPManager(
@@ -96,7 +96,7 @@ let definitions = try await manager.requestDefinition(
 Use `LSPClient` directly for remote servers:
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 
 let remote = RemoteLSPConfiguration.publicServer(
     url: URL(string: "wss://lsp.example.com/swift")!

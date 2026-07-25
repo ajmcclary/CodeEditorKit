@@ -1,6 +1,6 @@
 //
 //  PerformanceObserverModifierTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 
 import CodeEditorConfiguration

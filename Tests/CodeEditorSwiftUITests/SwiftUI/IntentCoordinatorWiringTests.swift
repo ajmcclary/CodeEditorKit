@@ -1,6 +1,6 @@
 //
 //  IntentCoordinatorWiringTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Functional tests for CodeEditor.makeRepresentableCallbacks(from:textBinding:).
 //  Spec: docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md.

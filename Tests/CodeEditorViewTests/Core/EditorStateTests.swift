@@ -83,7 +83,7 @@ struct EditorStateTests {
     func breadcrumbRoundtrip() {
         let crumbs = [
             BreadcrumbComponent(name: "Sources", kind: .folder),
-            BreadcrumbComponent(name: "CodeEditorPlugin", kind: .folder),
+            BreadcrumbComponent(name: "CodeEditorKit", kind: .folder),
             BreadcrumbComponent(name: "Foo.swift", kind: .file),
             BreadcrumbComponent(name: "greet(_:)", kind: .symbol)
         ]

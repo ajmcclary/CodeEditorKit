@@ -4,7 +4,7 @@ Create touch-optimized code editing experiences for iPhone and iPad.
 
 ## Overview
 
-CodeEditorPlugin provides comprehensive iOS support with touch-optimized interactions, proper keyboard handling, and iPad-specific features. The platform abstraction layer ensures consistent behavior while leveraging iOS-specific capabilities.
+CodeEditorKit provides comprehensive iOS support with touch-optimized interactions, proper keyboard handling, and iPad-specific features. The platform abstraction layer ensures consistent behavior while leveraging iOS-specific capabilities.
 
 ## Platform Setup
 
@@ -13,7 +13,7 @@ CodeEditorPlugin provides comprehensive iOS support with touch-optimized interac
 Always use the platform abstraction types for cross-platform compatibility. Platform detection uses `#if canImport()` patterns throughout the codebase. (Mac Catalyst support was retired in 0.2.0 — the framework targets macOS and iOS / iPadOS only.)
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 
 // Use platform-agnostic types
 let backgroundColor = PlatformColors.systemBackground
@@ -269,7 +269,7 @@ extension CodeEditorView: UIDropDelegate {
 For iOS, use `CodeEditorContainerView` to get proper gutter separation and minimap support:
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 
 class EditorViewController: UIViewController {
     private var containerView: CodeEditorContainerView!

@@ -1,6 +1,6 @@
 # Utility Systems & Extensions Network
 
-This diagram shows the comprehensive utility systems and extensions network that provides shared utilities, cross-platform helpers, and extensibility infrastructure throughout the CodeEditorPlugin framework.
+This diagram shows the comprehensive utility systems and extensions network that provides shared utilities, cross-platform helpers, and extensibility infrastructure throughout the CodeEditorKit framework.
 
 ```mermaid
 classDiagram

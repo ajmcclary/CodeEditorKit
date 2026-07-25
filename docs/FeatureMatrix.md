@@ -6,7 +6,7 @@ What works on the package's declared Apple platforms. Reflects the current `Pack
 
 | Product | macOS | iOS / iPadOS | Notes |
 |---|:---:|:---:|---|
-| `CodeEditorPlugin` | ✅ | ✅ | Umbrella framework. It re-exports the common editor entry points (`CodeEditorCommon`, `CodeEditorConfiguration`, `CodeEditorLanguages`, `CodeEditorSwiftUI`, `DesignKitThemes`, `CodeEditorView`) while building the feature targets it depends on. |
+| `CodeEditorKit` | ✅ | ✅ | Umbrella framework. It re-exports the common editor entry points (`CodeEditorCommon`, `CodeEditorConfiguration`, `CodeEditorLanguages`, `CodeEditorSwiftUI`, `DesignKitThemes`, `CodeEditorView`) while building the feature targets it depends on. |
 | `CodeEditorView` | ✅ | ✅ | Lower-level TextKit2 editor surface, layout coordination, in-document search, folding presentation, document store, and view-coupled LSP/symbol adapters. |
 | `CodeEditorSwiftUI` | ✅ | ✅ | Declarative `CodeEditor` wrapper, SwiftUI environment values, controller bridge, active-document binding, and modifier APIs. |
 | `CodeEditorUI` | ✅ | ⚠️ | Optional SwiftUI chrome. `EditorSidebarShell` is macOS-oriented by design; `EditorTabStrip`, `EditorStatusBar`, and `EditorCommandPalette` are portable SwiftUI components, but the sample uses the full chrome shell only on macOS. |
@@ -69,7 +69,7 @@ What works on the package's declared Apple platforms. Reflects the current `Pack
 | Item | Status |
 |---|---|
 | MIT license | ✅ `LICENSE` at repo root |
-| Canonical repo URL | ✅ `https://github.com/ajmcclary/CodeEditorPlugin.git` |
+| Canonical repo URL | ✅ `https://github.com/ajmcclary/CodeEditorKit.git` |
 | Tagged release | ⚠️ No git tags are published on `origin` yet; SwiftPM consumers should track `main` |
 | GitHub Actions CI | ✅ `swift-build-test`, `ios-build`, `lint` workflows |
 | Strict-concurrency clean build | ✅ `swift build` produces no warnings under `StrictConcurrency` |

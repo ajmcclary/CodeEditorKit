@@ -1,10 +1,10 @@
 # Swift 6 Concurrency
 
-Understand how CodeEditorPlugin leverages Swift 6's actor system for thread-safe, performant operations.
+Understand how CodeEditorKit leverages Swift 6's actor system for thread-safe, performant operations.
 
 ## Overview
 
-CodeEditorPlugin is built from the ground up with Swift 6's strict concurrency model. This ensures data race safety at compile time while maintaining excellent performance through intelligent use of actors and async/await.
+CodeEditorKit is built from the ground up with Swift 6's strict concurrency model. This ensures data race safety at compile time while maintaining excellent performance through intelligent use of actors and async/await.
 
 ## Actor-Based Architecture
 
@@ -162,7 +162,7 @@ class OldStyleCache {
     }
 }
 
-// Modern actor approach (used in CodeEditorPlugin)
+// Modern actor approach (used in CodeEditorKit)
 actor ModernCache {
     private var cache: [String: Any] = [:]
     

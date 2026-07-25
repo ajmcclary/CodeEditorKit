@@ -94,7 +94,7 @@ def write_diagram(path, title, product_filter):
 
 write_diagram(
     diagram_dir / "25-package-dependencies.md",
-    "Package Dependencies - CodeEditorPlugin",
+    "Package Dependencies - CodeEditorKit",
     lambda product_name, _: True,
 )
 PY

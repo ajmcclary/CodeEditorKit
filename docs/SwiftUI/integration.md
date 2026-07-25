@@ -1,17 +1,17 @@
 # SwiftUI Integration
 
-Integrate CodeEditorPlugin seamlessly into your SwiftUI applications.
+Integrate CodeEditorKit seamlessly into your SwiftUI applications.
 
 ## Overview
 
-CodeEditorPlugin provides first-class SwiftUI support with a modern, declarative API that feels right at home in your SwiftUI apps. Configuration is handled through the environment, and all SwiftUI patterns work as expected.
+CodeEditorKit provides first-class SwiftUI support with a modern, declarative API that feels right at home in your SwiftUI apps. Configuration is handled through the environment, and all SwiftUI patterns work as expected.
 
 ## Basic Integration
 
 The simplest way to add a code editor:
 
 ```swift
-import CodeEditorPlugin
+import CodeEditorKit
 import SwiftUI
 
 struct ContentView: View {
@@ -334,7 +334,7 @@ CodeEditor(text: $code)
 
 ## Environment Keys Reference
 
-CodeEditorPlugin provides a consolidated environment value plus direct projections for common settings. Use the consolidated value when setting several defaults at once, and use direct keys or modifiers for targeted overrides.
+CodeEditorKit provides a consolidated environment value plus direct projections for common settings. Use the consolidated value when setting several defaults at once, and use direct keys or modifiers for targeted overrides.
 
 ### Available Environment Keys
 

@@ -1,6 +1,6 @@
 # Syntax Highlighting
 
-CodeEditorPlugin highlights Swift with SwiftSyntax and uses optimized local highlighters for the rest of the built-in language catalog.
+CodeEditorKit highlights Swift with SwiftSyntax and uses optimized local highlighters for the rest of the built-in language catalog.
 
 ## Overview
 

@@ -37,19 +37,19 @@ jobs:
           xcodebuild -version
           xcrun -sdk iphoneos --show-sdk-version
 
-      - name: xcodebuild CodeEditorPlugin (iOS)
+      - name: xcodebuild CodeEditorKit (iOS)
         run: |
           xcodebuild \
-            -scheme CodeEditorPlugin \
+            -scheme CodeEditorKit \
             -destination "generic/platform=iOS" \
             -configuration Debug \
             build \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: xcodebuild CodeEditorPlugin (iOS Simulator)
+      - name: xcodebuild CodeEditorKit (iOS Simulator)
         run: |
           xcodebuild \
-            -scheme CodeEditorPlugin \
+            -scheme CodeEditorKit \
             -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
             build \

@@ -1,10 +1,10 @@
 # Troubleshooting
 
-Common issues and their solutions when using CodeEditorPlugin.
+Common issues and their solutions when using CodeEditorKit.
 
 ## Overview
 
-This guide helps you resolve common issues that may arise when integrating or using CodeEditorPlugin in your applications.
+This guide helps you resolve common issues that may arise when integrating or using CodeEditorKit in your applications.
 
 ## Build Issues
 
@@ -211,7 +211,7 @@ If you encounter issues not covered here:
 
 1. Check the comprehensive documentation in `CLAUDE.md`
 2. Review the sample application for working examples
-3. Search existing [GitHub issues](https://github.com/ajmcclary/CodeEditorPlugin/issues)
+3. Search existing [GitHub issues](https://github.com/ajmcclary/CodeEditorKit/issues)
 4. File a new issue with:
    - Platform and version information
    - Minimal reproduction code

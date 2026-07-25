@@ -1,6 +1,6 @@
 # Performance Budget System
 
-This diagram shows the performance budget system implementation in CodeEditorPlugin, which currently focuses on test-driven performance regression detection with planned expansion to production runtime enforcement.
+This diagram shows the performance budget system implementation in CodeEditorKit, which currently focuses on test-driven performance regression detection with planned expansion to production runtime enforcement.
 
 ```mermaid
 classDiagram

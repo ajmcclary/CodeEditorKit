@@ -1,6 +1,6 @@
 //
 //  LineNumbersPlatformTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Tests to ensure line numbers are displayed correctly on each platform
 //  and that there's no duplicate display of line numbers.

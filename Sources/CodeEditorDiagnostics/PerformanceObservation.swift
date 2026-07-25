@@ -1,6 +1,6 @@
 //
 //  PerformanceObservation.swift
-//  CodeEditorPlugin
+//  CodeEditorKit
 //
 //  Host-facing observable wrapper around `UnifiedPerformanceSystem`. Owns
 //  an internal Task-driven refresh loop that periodically snapshots

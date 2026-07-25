@@ -1,4 +1,4 @@
-// Umbrella re-exports: `import CodeEditorPlugin` is the single entry the
+// Umbrella re-exports: `import CodeEditorKit` is the single entry the
 // Quick Start docstring promises, so the six sibling targets it visibly uses
 // (CodeEditor / CodeEditorView / EditorConfiguration / Language / theme tokens
 // / CodeEditorError) must come along automatically. Opt-in subsystems
@@ -24,7 +24,7 @@ import SwiftUI
 
 // MARK: - Main Module Exports
 
-/// CodeEditorPlugin: Production-ready code editor component for Swift applications
+/// CodeEditorKit: Production-ready code editor component for Swift applications
 ///
 /// This module provides a comprehensive code editing solution with:
 /// - **25 concrete programming languages plus plain text** with syntax highlighting
@@ -39,7 +39,7 @@ import SwiftUI
 /// ### SwiftUI Integration
 /// ```swift
 /// import SwiftUI
-/// import CodeEditorPlugin
+/// import CodeEditorKit
 ///
 /// struct ContentView: View {
 ///     @State private var code = "logger.debug(\"Hello, World!\")"
@@ -100,6 +100,6 @@ import SwiftUI
 ///     editor.attemptErrorRecovery(from: error)
 /// }
 /// ```
-public struct CodeEditorPlugin {
+public struct CodeEditorKit {
     private init() {}
 }

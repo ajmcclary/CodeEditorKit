@@ -1,17 +1,17 @@
-// Single-import surface smoke test for the CodeEditorPlugin umbrella.
+// Single-import surface smoke test for the CodeEditorKit umbrella.
 //
-// `CodeEditorPlugin.swift`'s Quick Start docstring promises that
-// `import CodeEditorPlugin` alone is enough to reach `CodeEditor`,
+// `CodeEditorKit.swift`'s Quick Start docstring promises that
+// `import CodeEditorKit` alone is enough to reach `CodeEditor`,
 // `CodeEditorView`, `EditorConfiguration`, `Language`, the theme tokens, and
 // `CodeEditorError`. Those types live in sibling targets — without
 // `@_exported import` of each, the docstring would be lying. This file
-// deliberately imports ONLY `CodeEditorPlugin` so the compiler enforces the
+// deliberately imports ONLY `CodeEditorKit` so the compiler enforces the
 // promise: every reference below references a type from a sibling target.
 //
 // If a future refactor reverts an `@_exported import`, this file stops
 // compiling.
 
-import CodeEditorPlugin
+import CodeEditorKit
 import XCTest
 
 final class UmbrellaReExportTests: XCTestCase {

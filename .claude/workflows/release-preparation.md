@@ -253,4 +253,4 @@ Release preparation ensures:
 - Professional presentation
 - Long-term maintainability
 
-This workflow represents the pinnacle of quality assurance for the CodeEditorPlugin project, ensuring every release meets the highest standards of excellence.
+This workflow represents the pinnacle of quality assurance for the CodeEditorKit project, ensuring every release meets the highest standards of excellence.

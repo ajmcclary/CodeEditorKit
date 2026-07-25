@@ -1,4 +1,4 @@
-# Package Dependencies - CodeEditorPlugin
+# Package Dependencies - CodeEditorKit
 
 Generated from `swift package describe --type json`.
 
@@ -18,6 +18,8 @@ graph TD
     product_CodeEditorHighlightingCore --> target_CodeEditorHighlightingCore["CodeEditorHighlightingCore"]
     product_CodeEditorInstrumentation["CodeEditorInstrumentation"]
     product_CodeEditorInstrumentation --> target_CodeEditorInstrumentation["CodeEditorInstrumentation"]
+    product_CodeEditorKit["CodeEditorKit"]
+    product_CodeEditorKit --> target_CodeEditorKit["CodeEditorKit"]
     product_CodeEditorLSP["CodeEditorLSP"]
     product_CodeEditorLSP --> target_CodeEditorLSP["CodeEditorLSP"]
     product_CodeEditorLSPIntegration["CodeEditorLSPIntegration"]
@@ -28,8 +30,6 @@ graph TD
     product_CodeEditorLayout --> target_CodeEditorLayout["CodeEditorLayout"]
     product_CodeEditorPlatform["CodeEditorPlatform"]
     product_CodeEditorPlatform --> target_CodeEditorPlatform["CodeEditorPlatform"]
-    product_CodeEditorPlugin["CodeEditorPlugin"]
-    product_CodeEditorPlugin --> target_CodeEditorPlugin["CodeEditorPlugin"]
     product_CodeEditorSearch["CodeEditorSearch"]
     product_CodeEditorSearch --> target_CodeEditorSearch["CodeEditorSearch"]
     product_CodeEditorSwiftUI["CodeEditorSwiftUI"]

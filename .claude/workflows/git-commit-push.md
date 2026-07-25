@@ -239,7 +239,7 @@ For release commits:
 ```
 
 ## Repository Information
-- **Remote**: origin (https://github.com/ajmcclary/CodeEditorPlugin.git)
+- **Remote**: origin (https://github.com/ajmcclary/CodeEditorKit.git)
 - **Main Branch**: main
 - **Commit Standards**: Conventional commits with detailed bodies
 - **Push Strategy**: Direct to main (ensure quality first)

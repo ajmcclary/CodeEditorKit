@@ -4,7 +4,7 @@
 
 ## Description
 
-`CodeEditorSample` is an executable target inside the main package. There is no separate `CodeEditorSample/` package directory, so run every command from `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin`.
+`CodeEditorSample` is an executable target inside the main package. There is no separate `CodeEditorSample/` package directory, so run every command from `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit`.
 
 ## Usage
 
@@ -57,9 +57,9 @@ Validate the sample app against the current framework surface:
 
 ## File Locations
 
-- **Sample Sources**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorSample/`
-- **Sample Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Tests/CodeEditorSampleTests/`
-- **Run Helper**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Scripts/run-sample.sh`
+- **Sample Sources**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Sources/CodeEditorSample/`
+- **Sample Tests**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Tests/CodeEditorSampleTests/`
+- **Run Helper**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Scripts/run-sample.sh`
 
 ## Related Workflows
 

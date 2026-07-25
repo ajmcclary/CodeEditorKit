@@ -9,7 +9,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}Running CodeEditorPlugin Tests with Smart Parallelization${NC}"
+echo -e "${GREEN}Running CodeEditorKit Tests with Smart Parallelization${NC}"
 echo "================================================"
 
 # Function to run tests and capture timing

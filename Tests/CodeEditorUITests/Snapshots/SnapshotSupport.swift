@@ -2,7 +2,7 @@
 import DesignKitThemes
 #if canImport(AppKit)
 import AppKit
-@testable import CodeEditorPlugin
+@testable import CodeEditorKit
 @testable import CodeEditorUI
 import DesignKitTokens
 import SnapshotTesting

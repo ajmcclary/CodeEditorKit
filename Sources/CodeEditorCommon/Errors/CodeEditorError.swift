@@ -2,7 +2,7 @@
 
 import Foundation
 
-/// Comprehensive error types for CodeEditorPlugin.
+/// Comprehensive error types for CodeEditorKit.
 ///
 /// `CodeEditorError` provides a structured error system for all components of the
 /// code editor. Each error case includes detailed localized descriptions, failure

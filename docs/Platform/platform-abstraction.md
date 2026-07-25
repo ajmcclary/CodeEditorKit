@@ -1,6 +1,6 @@
 # Platform Abstraction
 
-Learn how CodeEditorPlugin's abstraction layer enables true cross-platform development across macOS and iOS.
+Learn how CodeEditorKit's abstraction layer enables true cross-platform development across macOS and iOS.
 
 ## Overview
 
@@ -207,7 +207,7 @@ public struct MacFeature {
 Run the test suite on:
 
 - macOS native (`swift test --parallel`)
-- iOS Simulator (`xcodebuild -scheme CodeEditorPlugin -destination "generic/platform=iOS Simulator"`)
+- iOS Simulator (`xcodebuild -scheme CodeEditorKit -destination "generic/platform=iOS Simulator"`)
 
 The CI matrix exercises both. See [`docs/FeatureMatrix.md`](../FeatureMatrix.md) for what works where.
 

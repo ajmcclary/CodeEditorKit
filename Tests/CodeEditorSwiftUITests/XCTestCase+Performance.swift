@@ -1,6 +1,6 @@
 //
 //  XCTestCase+Performance.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Created to optimize test performance by providing standard measure options
 //

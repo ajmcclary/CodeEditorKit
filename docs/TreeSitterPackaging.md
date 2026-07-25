@@ -9,7 +9,7 @@
 
 ```
 ┌─────────────────────────────────────────┐
-│ CodeEditorPlugin umbrella + core targets│
+│ CodeEditorKit umbrella + core targets   │
 │  ├── Language catalog (25 + plain text) │
 │  ├── RangeHighlightProviding protocol   │
 │  ├── RangeBasedHighlightingController   │
@@ -68,14 +68,14 @@ The empty `Sources/CodeEditorTreeSitterLanguages/` directory exists as a namespa
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", branch: "main"),
+    .package(url: "https://github.com/ajmcclary/CodeEditorKit.git", branch: "main"),
     .package(url: "https://github.com/ajmcclary/CodeEditorTreeSitterLanguages.git", branch: "main")
 ]
 ```
 
 ```swift
 // App code
-import CodeEditorPlugin
+import CodeEditorKit
 import CodeEditorTreeSitterLanguages
 
 var config = EditorConfiguration()
@@ -87,7 +87,7 @@ config.performance.usesRangeBasedHighlighting = true
 
 | Component | Size | Notes |
 |-----------|------|-------|
-| CodeEditorPlugin umbrella + core targets (regex only) | ~2 MB | Swift + SwiftSyntax + regex engine |
+| CodeEditorKit umbrella + core targets (regex only) | ~2 MB | Swift + SwiftSyntax + regex engine |
 | CodeEditorTreeSitterLanguages | ~35 MB | Grammar binaries for the 25 concrete language catalog as XCFramework resources |
 | Combined | ~37 MB | Full editor with Tree-sitter |
 

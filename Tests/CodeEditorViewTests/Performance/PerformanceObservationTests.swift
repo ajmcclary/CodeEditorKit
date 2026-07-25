@@ -1,7 +1,7 @@
 import CodeEditorDiagnostics
 //
 //  PerformanceObservationTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 
 @testable import CodeEditorView

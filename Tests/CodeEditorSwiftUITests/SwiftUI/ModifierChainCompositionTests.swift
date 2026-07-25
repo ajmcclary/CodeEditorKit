@@ -3,7 +3,7 @@ import CodeEditorDiagnostics
 @testable import CodeEditorSwiftUI
 //
 //  ModifierChainCompositionTests.swift
-//  CodeEditorPluginTests
+//  CodeEditorKitTests
 //
 //  Regression net for the SwiftUI modifier return-type migration.
 //  Each test below is a modifier chain that failed to compile before

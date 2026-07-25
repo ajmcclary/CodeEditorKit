@@ -1,6 +1,6 @@
 # Theme System
 
-Use CodeEditorPlugin's `Theme` value type to style editor text, syntax colors, chrome, gutter, minimap, completion rows, annotations, and selection behavior.
+Use CodeEditorKit's `Theme` value type to style editor text, syntax colors, chrome, gutter, minimap, completion rows, annotations, and selection behavior.
 
 ## Overview
 
@@ -166,7 +166,7 @@ for warning in warnings {
 let theme = family.themes.first ?? .lcarsDark
 ```
 
-If JSON is missing optional platform fields, CodeEditorPlugin derives `PlatformExtension` values from the decoded style.
+If JSON is missing optional platform fields, CodeEditorKit derives `PlatformExtension` values from the decoded style.
 
 ## Previews
 

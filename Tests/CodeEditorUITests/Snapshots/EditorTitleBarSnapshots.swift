@@ -1,5 +1,5 @@
 #if canImport(AppKit)
-@testable import CodeEditorPlugin
+@testable import CodeEditorKit
 @testable import CodeEditorSwiftUI
 import CodeEditorUI
 @testable import CodeEditorView
@@ -51,6 +51,8 @@ final class EditorTitleBarSnapshots: XCTestCase {
     private func snap(theme: ThemeChoice, trailing: Bool, name: String) {
         let resolved = (theme == .dark) ? SnapshotSupport.darkTheme : SnapshotSupport.lightTheme
         let state = EditorState()
+        // Sample display text baked into the committed __Snapshots__ PNGs — kept as the
+        // package's former name so the recorded baselines stay valid.
         state.documentName = "EditorState.swift — CodeEditorPlugin"
         let titleBar: AnyView = trailing
             ? AnyView(EditorTitleBar { self.toolbarPills() })

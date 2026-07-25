@@ -1,6 +1,26 @@
 # Changelog
 
-All notable changes to CodeEditorPlugin are documented in this file.
+All notable changes to CodeEditorKit are documented in this file.
+
+Entries dated before the 2026-07-25 rename deliberately keep the package's
+former name, `CodeEditorPlugin` — they record what shipped at the time.
+
+## [Unreleased]
+
+### Changed
+
+- **BREAKING: the package is renamed `CodeEditorPlugin` → `CodeEditorKit`.**
+  The SwiftPM package identity, the umbrella library product, the umbrella
+  target and Swift module, its source directory
+  (`Sources/CodeEditorPlugin/` → `Sources/CodeEditorKit/`), its entry stub
+  (`CodeEditorPlugin.swift` → `CodeEditorKit.swift`), its test target
+  (`CodeEditorPluginTests` → `CodeEditorKitTests`) and the repository URL
+  (`https://github.com/ajmcclary/CodeEditorKit.git`) all change together.
+  No compatibility alias is provided: `import CodeEditorPlugin` becomes
+  `import CodeEditorKit`, and dependents must update both the
+  `.package(url:)`/`.package(path:)` entry and every
+  `.product(name:package: "CodeEditorKit")` label. Every other product,
+  target and public symbol is unchanged — this is a naming migration only.
 
 ## [0.1.0-beta.4] - 2026-07-14
 

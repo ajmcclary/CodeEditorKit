@@ -26,7 +26,7 @@ swiftlint
 **Success criteria**: Must show "Found 0 violations, 0 serious"
 
 ### 3. Build Main Package
-Compile the core CodeEditorPlugin:
+Compile the core CodeEditorKit:
 ```bash
 swift build
 ```
@@ -86,9 +86,9 @@ If tests fail:
 - Run `@git-commit-push` to commit quality improvements
 
 ## File Locations
-- **Main SwiftLint**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/.swiftlint.yml`
-- **Main Package**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/`
-- **Sample Target Sources**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorSample/`
+- **Main SwiftLint**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/.swiftlint.yml`
+- **Main Package**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/`
+- **Sample Target Sources**: `/Users/ajmcclary/Dev/CodeEditor/CodeEditorKit/Sources/CodeEditorSample/`
 
 ## Notes
 This workflow maintains our project standards:

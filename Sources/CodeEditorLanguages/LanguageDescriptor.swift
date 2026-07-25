@@ -17,7 +17,7 @@ import LanguageKit
 /// `parserName`, `fileExtensions`, plus the shebang interpreter aliases and
 /// special-filename rules) is no longer mirrored here. It is sourced from
 /// ``registry`` — a CEP-specific ``LanguageKit/LanguageRegistry`` derived from
-/// ``LanguageKit/LanguageRegistry/standard`` with CodeEditorPlugin's two
+/// ``LanguageKit/LanguageRegistry/standard`` with CodeEditorKit's two
 /// deliberate divergences layered on as registry data:
 ///
 /// - **tsx → typescript**: CEP folds the `tsx` extension into TypeScript
@@ -221,7 +221,7 @@ package struct LanguageDescriptor: Sendable {
     // MARK: - LanguageKit registry
 
     /// The CEP-specific ``LanguageKit/LanguageRegistry``: the standard catalog
-    /// restricted to CodeEditorPlugin's 31 languages (dropping first-class `tsx`)
+    /// restricted to CodeEditorKit's 31 languages (dropping first-class `tsx`)
     /// with CEP's two deliberate divergences and its richer shebang interpreter
     /// aliases layered on as registry data.
     ///

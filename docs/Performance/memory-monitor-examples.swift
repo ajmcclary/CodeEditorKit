@@ -1,4 +1,4 @@
-import CodeEditorPlugin
+import CodeEditorKit
 import SwiftUI
 import XCTest
 

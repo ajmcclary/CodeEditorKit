@@ -1,5 +1,5 @@
 #if canImport(AppKit)
-@testable import CodeEditorPlugin
+@testable import CodeEditorKit
 @testable import CodeEditorSwiftUI
 import CodeEditorSymbols
 import CodeEditorUI
@@ -36,6 +36,8 @@ final class EditorBreadcrumbSnapshots: XCTestCase {
             ? [
                 .init(name: "Workspace", kind: .workspace),
                 .init(name: "Sources", kind: .folder),
+                // Sample display text baked into the committed __Snapshots__ PNGs — kept as
+                // the package's former name so the recorded baselines stay valid.
                 .init(name: "CodeEditorPlugin", kind: .folder),
                 .init(name: "Theming", kind: .folder),
                 .init(name: "Loader", kind: .folder),

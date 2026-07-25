@@ -1,7 +1,7 @@
 // swift-tools-version: 6.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
-/// CodeEditorPlugin Package Configuration
+/// CodeEditorKit Package Configuration
 ///
 /// This package provides a production-ready code editor component for Swift applications
 /// with comprehensive syntax highlighting, code completion, and cross-platform support.
@@ -24,7 +24,7 @@
 /// Add to your `Package.swift`:
 /// ```swift
 /// dependencies: [
-///     .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "0.1.0")
+///     .package(url: "https://github.com/ajmcclary/CodeEditorKit.git", from: "0.1.0")
 /// ]
 /// ```
 ///
@@ -50,7 +50,7 @@ let swiftSettings: [SwiftSetting] = [
 ]
 
 let package = Package(
-    name: "CodeEditorPlugin",
+    name: "CodeEditorKit",
     platforms: [.macOS("26.0"), .iOS("26.0")],
     products: [
         .library(
@@ -82,6 +82,10 @@ let package = Package(
             targets: ["CodeEditorInstrumentation"]
         ),
         .library(
+            name: "CodeEditorKit",
+            targets: ["CodeEditorKit"]
+        ),
+        .library(
             name: "CodeEditorLSP",
             targets: ["CodeEditorLSP"]
         ),
@@ -100,10 +104,6 @@ let package = Package(
         .library(
             name: "CodeEditorPlatform",
             targets: ["CodeEditorPlatform"]
-        ),
-        .library(
-            name: "CodeEditorPlugin",
-            targets: ["CodeEditorPlugin"]
         ),
         .library(
             name: "CodeEditorSearch",
@@ -370,7 +370,7 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
-            name: "CodeEditorPlugin",
+            name: "CodeEditorKit",
             dependencies: [
                 "CodeEditorCommon",
                 "CodeEditorConfiguration",
@@ -398,11 +398,11 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .testTarget(
-            name: "CodeEditorPluginTests",
+            name: "CodeEditorKitTests",
             dependencies: [
                 "CodeEditorConfiguration",
                 "CodeEditorDiagnostics",
-                "CodeEditorPlugin",
+                "CodeEditorKit",
                 "CodeEditorSwiftUI",
                 .product(name: "DesignKitThemes", package: "DesignKit"),
                 "CodeEditorView",
@@ -492,7 +492,7 @@ let package = Package(
                 "CodeEditorConfiguration",
                 .product(name: "DesignKitTokens", package: "DesignKit"),
                 "CodeEditorLanguages",
-                "CodeEditorPlugin",
+                "CodeEditorKit",
                 "CodeEditorSwiftUI",
                 "CodeEditorSymbols",
                 .product(name: "DesignKitThemes", package: "DesignKit"),

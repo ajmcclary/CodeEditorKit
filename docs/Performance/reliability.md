@@ -4,7 +4,7 @@ Comprehensive error handling, concurrency safety, and production-grade reliabili
 
 ## Overview
 
-CodeEditorPlugin is designed for production environments where reliability is critical. Through comprehensive testing, modern concurrency patterns, and robust error handling, the plugin ensures your applications remain stable even under challenging conditions.
+CodeEditorKit is designed for production environments where reliability is critical. Through comprehensive testing, modern concurrency patterns, and robust error handling, the plugin ensures your applications remain stable even under challenging conditions.
 
 ## Swift 6 Concurrency Compliance
 
