@@ -35,8 +35,14 @@ jobs:
           swift --version
           sw_vers -productVersion | grep -q '^27\.' || { echo "::error::expected a macOS 27 host (package floor is macOS 27)"; exit 1; }
           xcodebuild -version | head -1 | grep -q '^Xcode 27\.' || { echo "::error::expected Xcode 27"; exit 1; }
-      - name: Install swiftlint
-        run: brew install swiftlint
+      - name: Install the pinned swiftlint
+        run: |
+          version="$(awk '/^swiftlint_version:/ {print $2}' .swiftlint.yml)"
+          test -n "$version" || { echo "::error::.swiftlint.yml has no swiftlint_version"; exit 1; }
+          curl -fsSL -o "$RUNNER_TEMP/swiftlint.zip" "https://github.com/realm/SwiftLint/releases/download/$version/portable_swiftlint.zip"
+          unzip -q -o "$RUNNER_TEMP/swiftlint.zip" -d "$RUNNER_TEMP/swiftlint"
+          echo "$RUNNER_TEMP/swiftlint" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/swiftlint/swiftlint" --version
       - name: swift build
         run: swift build
       - name: swift test (reliable suites)
@@ -56,7 +62,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - name: Install swiftlint
-        run: brew install swiftlint && swiftlint --version
+      - name: Install the pinned swiftlint
+        run: |
+          version="$(awk '/^swiftlint_version:/ {print $2}' .swiftlint.yml)"
+          test -n "$version" || { echo "::error::.swiftlint.yml has no swiftlint_version"; exit 1; }
+          curl -fsSL -o "$RUNNER_TEMP/swiftlint.zip" "https://github.com/realm/SwiftLint/releases/download/$version/portable_swiftlint.zip"
+          unzip -q -o "$RUNNER_TEMP/swiftlint.zip" -d "$RUNNER_TEMP/swiftlint"
+          echo "$RUNNER_TEMP/swiftlint" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/swiftlint/swiftlint" --version
       - name: swiftlint --strict
         run: swiftlint --strict
