@@ -5,7 +5,32 @@ All notable changes to CodeEditorKit are documented in this file.
 Entries dated before the 2026-07-25 rename deliberately keep the package's
 former name, `CodeEditorPlugin` — they record what shipped at the time.
 
-## [Unreleased]
+## [0.1.0-beta.8] - 2026-10-08
+
+### Changed
+
+- `swift-syntax` requirement widened from `from: "602.0.0"` (i.e.
+  `602.x` only) to `"602.0.0"..<"605.0.0"`, so dependents on the Swift 6.4
+  toolchain resolve the matching `604.0.0`. Only `SwiftParser`/`SwiftSyntax`
+  are used (runtime highlighting); no source change.
+- Package lockfile refreshed to the newest in-range Point-Free stack and
+  `swift-snapshot-testing` 1.19.6 (tests only). No public API change.
+
+## [0.1.0-beta.7] - 2026-07-25
+
+### Changed
+
+- Every target declares Swift 6 language mode per target (it already
+  compiled cleanly under Swift 6 with strict concurrency; no source change).
+- **Platform floor raised to macOS 27.0, and the iOS 26 claim is removed.**
+  `CodeEditorWorkspace` re-exports WorkspaceKit, whose `WorkspaceFileSystem`
+  uses FSEvents unguarded, so an iOS build fails; the claim had most likely
+  been unbacked since 0.1.0-beta.5. Restoring iOS needs WorkspaceKit's
+  FSEvents target platform-gated.
+- Dependency floors: LanguageKit `.upToNextMinor(from: "0.2.0")`, DesignKit
+  `from: "2.0.0"`.
+
+## [0.1.0-beta.6] - 2026-07-25
 
 ### Changed
 
@@ -21,17 +46,18 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
   `.package(url:)`/`.package(path:)` entry and every
   `.product(name:package: "CodeEditorKit")` label. Every other product,
   target and public symbol is unchanged — this is a naming migration only.
+- `ProcessTransport` reads pipes through ProcessKit's shared
+  `ProcessPipeReader` (`installChunkReader` is removed).
 
-## [0.1.0-beta.8] - 2026-10-08
+## [0.1.0-beta.5] - 2026-07-15
 
 ### Changed
 
-- `swift-syntax` requirement widened from `from: "602.0.0"` (i.e.
-  `602.x` only) to `"602.0.0"..<"605.0.0"`, so dependents on the Swift 6.4
-  toolchain resolve the matching `604.0.0`. Only `SwiftParser`/`SwiftSyntax`
-  are used (runtime highlighting); no source change.
-- Package lockfile refreshed to the newest in-range Point-Free stack and
-  `swift-snapshot-testing` 1.19.6 (tests only). No public API change.
+- `CodeEditorWorkspace` is now an `@_exported` re-export shim over the new
+  top-level WorkspaceKit package (0.1.0-beta.1), which received the
+  workspace file-tree contracts and `MacOSWorkspaceFileManager` verbatim.
+  Existing `import CodeEditorWorkspace` code is unaffected. (Released as
+  `CodeEditorPlugin`.)
 
 ## [0.1.0-beta.4] - 2026-07-14
 
