@@ -227,7 +227,9 @@ let package = Package(
         // this package stays consumable by stable-version dependents.
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.19.3"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.0"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0")
+        // 602..<605 spans Swift 6.2 through 6.4 toolchains; only SwiftParser/
+        // SwiftSyntax are used (runtime parsing for highlighting, no macros).
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", "602.0.0"..<"605.0.0")
     ],
     targets: [
         .target(
