@@ -22,6 +22,17 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
   `.product(name:package: "CodeEditorKit")` label. Every other product,
   target and public symbol is unchanged — this is a naming migration only.
 
+## [0.1.0-beta.8] - 2026-10-08
+
+### Changed
+
+- `swift-syntax` requirement widened from `from: "602.0.0"` (i.e.
+  `602.x` only) to `"602.0.0"..<"605.0.0"`, so dependents on the Swift 6.4
+  toolchain resolve the matching `604.0.0`. Only `SwiftParser`/`SwiftSyntax`
+  are used (runtime highlighting); no source change.
+- Package lockfile refreshed to the newest in-range Point-Free stack and
+  `swift-snapshot-testing` 1.19.6 (tests only). No public API change.
+
 ## [0.1.0-beta.4] - 2026-07-14
 
 ### Changed
