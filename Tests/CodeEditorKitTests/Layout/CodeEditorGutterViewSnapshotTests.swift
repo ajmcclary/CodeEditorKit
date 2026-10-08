@@ -25,8 +25,11 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
     /// colors (`NSColor.textColor` etc.) resolve against the gutter's own
     /// effective appearance instead of whatever the test runner's current
     /// drawing appearance happens to be.
-    private func renderedImage(of gutter: LineNumberRulerView) throws -> NSImage {
-        let rep = try XCTUnwrap(gutter.bitmapImageRepForCachingDisplay(in: gutter.bounds))
+    ///
+    /// The bitmap is a fixed 2x (`NativeImageSnapshot`), not the display's
+    /// backing scale, so references match on 1x CI runners too.
+    private func renderedImage(of gutter: LineNumberRulerView) throws -> CGImage {
+        let rep = NativeImageSnapshot.bitmap(size: gutter.bounds.size)
         let context = try XCTUnwrap(NSGraphicsContext(bitmapImageRep: rep))
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
@@ -34,9 +37,7 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
             gutter.drawHashMarksAndLabels(in: gutter.bounds)
         }
         NSGraphicsContext.restoreGraphicsState()
-        let image = NSImage(size: gutter.bounds.size)
-        image.addRepresentation(rep)
-        return image
+        return try XCTUnwrap(rep.cgImage)
     }
 
     func testGutterRendersBaselineFiveLines() throws {
@@ -58,11 +59,14 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
         """
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         let gutter = try XCTUnwrap(container.macLineNumberRulerView)
         let image = try renderedImage(of: gutter)
-        assertSnapshot(of: image, as: .image, named: "baseline")
+        assertSnapshot(of: image, as: .nativeImage(), named: "baseline")
     }
 
     /// Locks in the wrap-anchor behavior: a long logical line that wraps to
@@ -89,6 +93,9 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
         container.textView.string = String(repeating: "wrapped ", count: 18) + "\nshort"
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         container.layoutSubtreeIfNeeded()
@@ -96,7 +103,7 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
 
         let gutter = try XCTUnwrap(container.macLineNumberRulerView)
         let image = try renderedImage(of: gutter)
-        assertSnapshot(of: image, as: .image, named: "wrapped-line")
+        assertSnapshot(of: image, as: .nativeImage(), named: "wrapped-line")
     }
 
     /// Locks in the scroll-position behavior: after a programmatic vertical
@@ -117,6 +124,9 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
         container.textView.string = (1...100).map { "line \($0)" }.joined(separator: "\n")
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         container.layoutSubtreeIfNeeded()
@@ -127,7 +137,7 @@ final class CodeEditorGutterViewSnapshotTests: XCTestCase {
 
         let gutter = try XCTUnwrap(container.macLineNumberRulerView)
         let image = try renderedImage(of: gutter)
-        assertSnapshot(of: image, as: .image, named: "after-scroll")
+        assertSnapshot(of: image, as: .nativeImage(), named: "after-scroll")
     }
 }
 #endif

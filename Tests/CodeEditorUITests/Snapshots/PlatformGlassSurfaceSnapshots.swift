@@ -64,7 +64,7 @@ final class PlatformGlassSurfaceSnapshots: XCTestCase {
         let host = SnapshotSupport.host(body, size: SnapshotSupport.glassSize)
         assertSnapshot(
             of: host,
-            as: .image(precision: 0.99, perceptualPrecision: 0.99),
+            as: .nativeImage(precision: 0.99, perceptualPrecision: 0.99),
             named: name,
             testName: "PlatformGlassSurfaceSnapshots"
         )

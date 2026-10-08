@@ -35,6 +35,9 @@ final class TextRenderingVisibilityTests: XCTestCase {
             backing: .buffered,
             defer: false
         )
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
         window.contentView = textView
         window.makeKeyAndOrderFront(nil)
@@ -69,6 +72,9 @@ final class TextRenderingVisibilityTests: XCTestCase {
             backing: .buffered,
             defer: false
         )
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
         window.contentView = textView
         window.makeKeyAndOrderFront(nil)
@@ -104,6 +110,9 @@ final class TextRenderingVisibilityTests: XCTestCase {
             backing: .buffered,
             defer: false
         )
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
         window.contentView = textView
         window.makeKeyAndOrderFront(nil)
@@ -129,6 +138,9 @@ final class TextRenderingVisibilityTests: XCTestCase {
             defer: false
         )
         let container = CodeEditorContainerView(frame: NSRect(origin: .zero, size: size))
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         var configuration = EditorConfiguration.minimal

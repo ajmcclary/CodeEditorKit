@@ -34,6 +34,9 @@ final class PublishEventFanOutTests: XCTestCase {
 
     func testTextDidChangeFansOutToEventSystem() throws {
         let (view, eventSystem, window) = try makeHostedView(text: "alpha")
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         var received: [String] = []
@@ -69,6 +72,9 @@ final class PublishEventFanOutTests: XCTestCase {
 
     func testSelectionDidChangeFansOutToEventSystem() throws {
         let (view, eventSystem, window) = try makeHostedView(text: "hello world")
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         var received: [NSRange] = []
@@ -103,6 +109,9 @@ final class PublishEventFanOutTests: XCTestCase {
 
     func testBecomeFirstResponderFansOutFocusEvent() throws {
         let (view, eventSystem, window) = try makeHostedView()
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         // makeKeyAndOrderFront may have auto-promoted the text view to first
@@ -137,6 +146,9 @@ final class PublishEventFanOutTests: XCTestCase {
 
     func testResignFirstResponderFansOutFocusEvent() throws {
         let (view, eventSystem, window) = try makeHostedView()
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         var resignedCount = 0

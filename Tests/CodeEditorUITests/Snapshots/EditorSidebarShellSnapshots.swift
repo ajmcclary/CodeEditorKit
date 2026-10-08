@@ -95,7 +95,7 @@ final class EditorSidebarShellSnapshots: XCTestCase {
         let host = SnapshotSupport.host(view, size: SnapshotSupport.panelSize)
         assertSnapshot(
             of: host,
-            as: .image(precision: 0.99, perceptualPrecision: 0.99),
+            as: .nativeImage(precision: 0.99, perceptualPrecision: 0.99),
             named: name,
             testName: "EditorSidebarShellSnapshots"
         )

@@ -36,7 +36,7 @@ concurrency:
 
 jobs:
   macos:
-    name: macOS 27 · build & reliable tests
+    name: macOS 27 · build & test
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
@@ -58,16 +58,8 @@ jobs:
           "$RUNNER_TEMP/swiftlint/swiftlint" --version
       - name: swift build
         run: swift build
-      - name: swift test (reliable suites)
-        run: |
-          swift test \
-            --filter CodeEditorHygieneTests \
-            --filter CodeEditorCommonTests \
-            --filter CodeEditorHighlightingCoreTests \
-            --filter CodeEditorTextModelTests \
-            --filter CodeEditorLSPTests \
-            --filter CodeEditorLSPIntegrationTests \
-            --filter CodeEditorCompletionTests
+      - name: swift test --parallel
+        run: swift test --parallel
 
   lint:
     name: swiftlint --strict

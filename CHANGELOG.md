@@ -5,6 +5,22 @@ All notable changes to CodeEditorKit are documented in this file.
 Entries dated before the 2026-07-25 rename deliberately keep the package's
 former name, `CodeEditorPlugin` — they record what shipped at the time.
 
+## [Unreleased]
+
+### Fixed (tests only)
+
+- The full test suite passes again (1057 XCTest + 368 Swift Testing), and CI
+  runs all of it instead of a hand-picked subset.
+  - 16 crashes (signal 11) in the TextKit 2 ruler, gutter, text-visibility and
+    event fan-out tests: their programmatic `NSWindow`s defaulted to
+    `isReleasedWhenClosed = true`, so `close()` over-released them.
+  - Image snapshots no longer depend on the display scale of the machine that
+    runs them (`NativeImageSnapshotting.swift`: fixed 2x rendering, ImageIO
+    comparison with SnapshotTesting's precision semantics), and 48 references
+    were re-recorded under macOS 27. They predated the 2026-07-12 DesignKit
+    migration, whose theme values changed the title bar, tab strip, glass
+    surfaces and other chrome colours.
+
 ## [0.1.0-beta.8] - 2026-10-08
 
 ### Changed

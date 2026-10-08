@@ -58,7 +58,7 @@ final class EditorBreadcrumbSnapshots: XCTestCase {
         let host = SnapshotSupport.host(view, size: SnapshotSupport.breadcrumbSize)
         assertSnapshot(
             of: host,
-            as: .image(precision: 0.99, perceptualPrecision: 0.99),
+            as: .nativeImage(precision: 0.99, perceptualPrecision: 0.99),
             named: name,
             testName: "EditorBreadcrumbSnapshots"
         )

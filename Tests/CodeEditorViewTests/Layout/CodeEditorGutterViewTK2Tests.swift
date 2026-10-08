@@ -28,6 +28,9 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         container.textView.string = "alpha\nbeta\ngamma\ndelta\nepsilon"
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         let gutter = try XCTUnwrap(container.macLineNumberRulerView)
@@ -65,6 +68,9 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         """
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         let gutter = try XCTUnwrap(container.macLineNumberRulerView)
@@ -104,6 +110,9 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         container.textView.string = "alpha\nbeta\ngamma"
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         let gutter = try XCTUnwrap(container.macLineNumberRulerView)
@@ -136,6 +145,9 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         container.textView.string = "alphabetagamma"
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         let gutter = try XCTUnwrap(container.macLineNumberRulerView)
@@ -179,6 +191,9 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         container.textView.string = String(repeating: "wrapped ", count: 18) + "\nshort"
         window.contentView = container
         window.makeKeyAndOrderFront(nil)
+        // Programmatic NSWindows default to isReleasedWhenClosed = true, so close()
+        // would add an AppKit release on top of ARC's and over-release the window.
+        window.isReleasedWhenClosed = false
         defer { window.close() }
 
         container.layoutSubtreeIfNeeded()
