@@ -13,11 +13,10 @@ struct EditorBindingSynchronizerTests {
 
         synchronizer.receiveEditorText("a")
         synchronizer.receiveEditorText("ab")
-        let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: .seconds(1))
-        while writes != ["ab"], clock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        // Await the debounced write itself rather than polling against a
+        // wall-clock deadline: under parallel CI load the main actor can be
+        // busy past any fixed deadline, which made this test fail with [].
+        await synchronizer.waitForPendingWrite()
 
         #expect(writes == ["ab"])
     }

@@ -39,7 +39,7 @@ final class CodeEditorSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: container,
-            as: .image(precision: 0.99, perceptualPrecision: 0.99, size: size)
+            as: .nativeImage(precision: 0.99, perceptualPrecision: 0.99)
         )
     }
 }

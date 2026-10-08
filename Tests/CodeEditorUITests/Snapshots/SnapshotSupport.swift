@@ -10,7 +10,7 @@ import SwiftUI
 import XCTest
 
 /// Shared snapshot-test helpers. Wraps a SwiftUI `View` in `NSHostingView`
-/// at a fixed size so `assertSnapshot(of:as: .image)` can render it
+/// at a fixed size so `assertSnapshot(of:as: .nativeImage(...))` can render it
 /// deterministically on macOS CI runners.
 @MainActor
 enum SnapshotSupport {
@@ -32,7 +32,7 @@ enum SnapshotSupport {
     static let lightTheme: Theme = .lcarsLight
 
     /// Wrap a SwiftUI view in an NSHostingView at the given size, ready
-    /// for `assertSnapshot(of:as: .image(size:))`.
+    /// for `assertSnapshot(of:as: .nativeImage(...))`.
     static func host<V: View>(_ view: V, size: CGSize) -> NSView {
         let hostingView = NSHostingView(
             rootView: view.frame(width: size.width, height: size.height)

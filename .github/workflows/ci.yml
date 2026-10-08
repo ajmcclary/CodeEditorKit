@@ -60,6 +60,13 @@ jobs:
         run: swift build
       - name: swift test --parallel
         run: swift test --parallel
+      - name: Crash reports (on failure)
+        if: failure()
+        run: |
+          shopt -s nullglob
+          for f in ~/Library/Logs/DiagnosticReports/*.ips; do
+            echo "::group::$f"; head -c 60000 "$f"; echo; echo "::endgroup::"
+          done
 
   lint:
     name: swiftlint --strict
