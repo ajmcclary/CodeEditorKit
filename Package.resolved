@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ajmcclary/DesignKit.git",
       "state" : {
-        "revision" : "1bd19fde3e3703e3388984c7da6e3706bb7228f3",
-        "version" : "3.0.0-beta.1"
+        "revision" : "59919416722ca5979bee497eecdbe723dd705164",
+        "version" : "3.0.0-beta.2"
       }
     },
     {
