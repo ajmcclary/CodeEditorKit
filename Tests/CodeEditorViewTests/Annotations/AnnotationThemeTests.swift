@@ -17,7 +17,7 @@ struct AnnotationThemeTests {
     @Test("AnnotationKind.color(in:) returns theme.style.status.error.base for .error")
     @MainActor
     func errorColor() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let color = AnnotationKind.error.color(in: theme)
         #expect(color == PlatformColor(tokens: theme.style.status.error.base))
     }
@@ -25,7 +25,7 @@ struct AnnotationThemeTests {
     @Test("AnnotationKind.color(in:) returns theme.style.status.warning.base for .warning")
     @MainActor
     func warningColor() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let color = AnnotationKind.warning.color(in: theme)
         #expect(color == PlatformColor(tokens: theme.style.status.warning.base))
     }
@@ -33,7 +33,7 @@ struct AnnotationThemeTests {
     @Test("AnnotationKind.color(in:) maps fixme to status.warning or status.conflict")
     @MainActor
     func fixmeColor() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let color = AnnotationKind.fixme.color(in: theme)
         let warning = PlatformColor(tokens: theme.style.status.warning.base)
         let conflict = PlatformColor(tokens: theme.style.status.conflict.base)
@@ -43,7 +43,7 @@ struct AnnotationThemeTests {
     @Test("AnnotationKind.color(in:) maps info/note/todo to status.info")
     @MainActor
     func infoFamilyColors() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let infoExpected = PlatformColor(tokens: theme.style.status.info.base)
         #expect(AnnotationKind.info.color(in: theme) == infoExpected)
         #expect(AnnotationKind.note.color(in: theme) == infoExpected)
@@ -55,10 +55,10 @@ struct AnnotationThemeTests {
     func annotationsContentViewStoresTheme() {
         let view = AnnotationsContentView(frame: .zero)
         #expect(view.appliedTheme == nil)
-        view.apply(theme: .lcarsDark)
-        #expect(view.appliedTheme == Theme.lcarsDark)
+        view.apply(theme: .dark)
+        #expect(view.appliedTheme == Theme.dark)
         let firstStored = view.appliedTheme
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         #expect(view.appliedTheme == firstStored)
     }
 
@@ -72,9 +72,9 @@ struct AnnotationThemeTests {
             location: TestTextLocation()
         )
         let view = AnnotationView(annotation: annotation, frame: CGRect(x: 0, y: 0, width: 20, height: 20))
-        view.apply(theme: .lcarsDark)
-        #expect(view.appliedTheme == Theme.lcarsDark)
-        #expect(view.themedBadgeColor == AnnotationKind.error.color(in: .lcarsDark))
+        view.apply(theme: .dark)
+        #expect(view.appliedTheme == Theme.dark)
+        #expect(view.themedBadgeColor == AnnotationKind.error.color(in: .dark))
     }
 }
 

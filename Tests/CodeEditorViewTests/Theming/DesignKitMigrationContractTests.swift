@@ -1,33 +1,27 @@
 import DesignKitThemes
 import Testing
 
-/// Value-equivalence contract for the DesignKit migration: these exact
-/// values were previously decoded from zed-trek.json at runtime. If any
-/// fails, DesignKit's transcription diverged from what this editor shipped.
-@Suite("DesignKit migration contract")
+/// Contract with DesignKit 3: the generated theme pair is what this editor
+/// renders. If a value here changes, DesignKit's generator mapping changed.
+@Suite("DesignKit 3 contract")
 struct DesignKitMigrationContractTests {
-    @Test("default theme is LCARS Dark with the shipped values")
+    @Test("default theme is the generated dark theme")
     func defaultThemeValues() {
         let theme = Theme.default
-        #expect(theme.name == "LCARS Dark")
-        #expect(theme.appearance == .dark)
-        #expect(theme.style.background.hexString == "#05060A")
-        #expect(theme.style.editor.background.hexString == "#080A0F")
-        #expect(theme.style.editor.foreground.hexString == "#F2E7D8")
-        #expect(theme.style.text.accent.hexString == "#FFCC66")
-        #expect(theme.style.borders.focused.hexString == "#FF9933")
-        #expect(theme.style.chrome.panelBackground.hexString == "#0C111B")
-        #expect(theme.style.chrome.statusBarBackground.hexString == "#0D1018")
-        #expect(theme.style.accents.first?.hexString == "#FF9933")
+        #expect(theme == .dark && theme.name == "Dark")
+        #expect(theme.style.editor.background.hexString == "#1E1E1E")
+        #expect(theme.style.editor.foreground.hexString == "#FFFFFFD9")
+        #expect(theme.style.borders.focused.hexString == "#0A99FF")
+        #expect(theme.style.accents.first?.hexString == "#0A99FF")
     }
 
-    @Test("syntax resolution matches the shipped hierarchy behavior")
+    @Test("syntax resolution covers the six-way mapping and the hierarchy walk")
     func syntaxResolution() {
-        let theme = Theme.lcarsDark
-        #expect(theme.resolveSyntaxColor(for: "keyword").hexString == "#FF9933")
-        // Hierarchical fallback still walks dotted segments.
-        #expect(theme.resolveSyntaxColor(for: "keyword.some.unknown.leaf").hexString == "#FF9933")
-        // Unknown roots land on editor.foreground.
+        let theme = Theme.dark
+        #expect(theme.resolveSyntaxColor(for: "keyword").hexString == "#569CD6")
+        #expect(theme.resolveSyntaxColor(for: "keyword.unknown.leaf").hexString == "#569CD6")
+        #expect(theme.resolveSyntaxColor(for: "string.special").hexString == "#70A25A")
+        #expect(theme.resolveSyntaxColor(for: "punctuation.bracket") == theme.style.text.base)
         #expect(theme.resolveSyntaxColor(for: "nonexistent.role") == theme.style.editor.foreground)
     }
 
@@ -43,8 +37,7 @@ struct DesignKitMigrationContractTests {
 
     @Test("catalog surface consumed by the sample app")
     func catalogSurface() {
-        #expect(Theme.all.count == 24)
-        #expect(Theme.Family.allCases.count == 12)
-        #expect(Theme.all.contains { $0.name == "LCARS Dark" })
+        #expect(Theme.all == [.dark, .light])
+        #expect(Theme.theme(for: .light) == .light)
     }
 }

@@ -43,7 +43,7 @@ import SwiftUI
 /// // Using modifiers (recommended)
 /// CodeEditor(text: $code)
 ///     .codeLanguage(.swift)
-///     .designTheme(.lcarsDark)
+///     .designTheme(.dark)
 ///
 /// // Using factory method
 /// CodeEditor.withLanguage($code, language: .swift, theme: .dark)

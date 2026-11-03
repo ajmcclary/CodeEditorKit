@@ -17,7 +17,7 @@ struct CompletionCellGlassTests {
     @Test("CompletionPopoverThemeMetrics: selected row = elements.element.active")
     @MainActor
     func selectedRowBackground() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let metrics = CompletionPopoverThemeMetrics(theme: theme)
         #expect(metrics.selectedRowColor == PlatformColor(tokens: theme.style.elements.element.active))
     }
@@ -25,7 +25,7 @@ struct CompletionCellGlassTests {
     @Test("CompletionPopoverThemeMetrics: text colors = text.base + text.muted")
     @MainActor
     func cellTextColors() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let metrics = CompletionPopoverThemeMetrics(theme: theme)
         #expect(metrics.primaryTextColor == PlatformColor(tokens: theme.style.text.base))
         #expect(metrics.secondaryTextColor == PlatformColor(tokens: theme.style.text.muted))
@@ -34,7 +34,7 @@ struct CompletionCellGlassTests {
     @Test("CompletionPopoverThemeMetrics: border = borders.base at strokeHairline")
     @MainActor
     func borderColor() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let metrics = CompletionPopoverThemeMetrics(theme: theme)
         #expect(metrics.borderColor == PlatformColor(tokens: theme.style.borders.base))
         #expect(abs(metrics.borderWidth - CGFloat(Tokens.Shape.strokeHairline)) < 0.001)
@@ -43,7 +43,7 @@ struct CompletionCellGlassTests {
     @Test("CompletionPopoverThemeMetrics: corner radius = Tokens.Shape.radiusMD")
     @MainActor
     func cornerRadius() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let metrics = CompletionPopoverThemeMetrics(theme: theme)
         #expect(abs(metrics.cornerRadius - CGFloat(Tokens.Shape.radiusMD)) < 0.001)
     }
@@ -52,7 +52,7 @@ struct CompletionCellGlassTests {
     @MainActor
     func glassSurfaceTint() {
         let surface = _GlassSurface(frame: .zero)
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         surface.apply(theme: theme)
         let expected = PlatformColor(tokens: theme.glass.glass.tint)
             .withAlphaComponent(CGFloat(theme.glass.glass.opacity))
@@ -64,7 +64,7 @@ struct CompletionCellGlassTests {
     func cellViewAppliesTheme() {
         #if canImport(AppKit)
         let cell = UnifiedCompletionCellView()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         cell.apply(theme: theme)
         let metrics = CompletionPopoverThemeMetrics(theme: theme)
         #expect(cell.themedPrimaryTextColor == metrics.primaryTextColor)

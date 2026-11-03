@@ -81,10 +81,10 @@ final class SwiftUIModifierTests: XCTestCase {
 
         // Test dark theme
         let darkEditor = CodeEditor(text: binding)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
 
         // Test custom theme — use the light fallback as a custom-shaped Theme.
-        let customTheme = Theme.lcarsLight
+        let customTheme = Theme.light
 
         let customEditor = CodeEditor(text: binding)
             .designTheme(customTheme)
@@ -183,7 +183,7 @@ final class SwiftUIModifierTests: XCTestCase {
         // Test comprehensive modifier chain
         let editor = CodeEditor(text: binding)
             .codeLanguage(.swift)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
             .codeEditorEnvironment(configuration: .minimal)
             .becomeFirstResponder(true)
             .codeEditorEnvironment(memoryMonitor: memoryMonitor)
@@ -203,12 +203,12 @@ final class SwiftUIModifierTests: XCTestCase {
 
         // Test that modifiers can be applied in any order
         let editor1 = CodeEditor(text: binding)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
             .codeLanguage(.python)
 
         let editor2 = CodeEditor(text: binding)
             .codeLanguage(.python)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
 
         assertTypeName(editor1, contains: "ModifiedContent")
         assertTypeName(editor2, contains: "ModifiedContent")
@@ -229,7 +229,7 @@ final class SwiftUIModifierTests: XCTestCase {
         var configurationForTheme = EditorConfiguration()
         configurationForTheme.display.isLineNumbersEnabled = showLineNumbers
         let editor = CodeEditor(text: binding)
-            .designTheme(isDarkMode ? .lcarsDark : .default)
+            .designTheme(isDarkMode ? .dark : .default)
             .codeEditorEnvironment(configuration: configurationForTheme)
 
         assertTypeName(editor, contains: "ModifiedContent")
@@ -255,7 +255,7 @@ final class SwiftUIModifierTests: XCTestCase {
 
         // Change state
         language = .python
-        theme = .lcarsDark
+        theme = .dark
         isFocused = true
 
         // Editor should be valid with new state
@@ -316,7 +316,7 @@ final class SwiftUIModifierTests: XCTestCase {
         measure(options: Self.standardMeasureOptions) {
             let editor = CodeEditor(text: binding)
                 .codeLanguage(.swift)
-                .designTheme(.lcarsDark)
+                .designTheme(.dark)
                 .codeEditorEnvironment(configuration: .platformOptimized)
                 .becomeFirstResponder(false)
                 .frame(height: 300)
@@ -344,7 +344,7 @@ final class SwiftUIModifierTests: XCTestCase {
         // Test in HStack
         let hstack = HStack {
             CodeEditor(text: binding)
-                .designTheme(.lcarsDark)
+                .designTheme(.dark)
         }
 
         // Test in ScrollView

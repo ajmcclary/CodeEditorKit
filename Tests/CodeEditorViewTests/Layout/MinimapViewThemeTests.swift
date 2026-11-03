@@ -17,7 +17,7 @@ struct MinimapViewThemeTests {
     @MainActor
     func minimapBackground() {
         let view = MinimapView(frame: .zero)
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         let expected = PlatformColor(tokens: theme.style.editor.background)
         #expect(view.themedBackgroundColor == expected)
@@ -27,7 +27,7 @@ struct MinimapViewThemeTests {
     @MainActor
     func minimapViewportIndicator() {
         let view = MinimapView(frame: .zero)
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         let expected = PlatformColor(tokens: theme.style.scrollbar.thumbBackground)
         #expect(view.themedViewportIndicatorColor == expected)
@@ -37,7 +37,7 @@ struct MinimapViewThemeTests {
     @MainActor
     func minimapViewportTrack() {
         let view = MinimapView(frame: .zero)
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         let expected = PlatformColor(tokens: theme.style.scrollbar.trackBackground)
         #expect(view.themedTrackColor == expected)
@@ -47,9 +47,9 @@ struct MinimapViewThemeTests {
     @MainActor
     func minimapEqualityGate() {
         let view = MinimapView(frame: .zero)
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         let firstStored = view.appliedTheme
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         #expect(view.appliedTheme == firstStored)
     }
 }

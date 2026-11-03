@@ -18,7 +18,7 @@ struct LineHighlightInsertionPointThemeTests {
     @MainActor
     func lineHighlightColorFromTheme() {
         let view = LineHighlightView()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         let expected = PlatformColor(tokens: theme.style.editor.activeLineBackground)
         #expect(view.themedFillColor == expected)
@@ -29,9 +29,9 @@ struct LineHighlightInsertionPointThemeTests {
     @MainActor
     func lineHighlightEqualityGate() {
         let view = LineHighlightView()
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         let firstStored = view.appliedTheme
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         #expect(view.appliedTheme == firstStored)
     }
 
@@ -39,7 +39,7 @@ struct LineHighlightInsertionPointThemeTests {
     @MainActor
     func caretColorFromTheme() {
         let view = InsertionPointView()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         let expected = PlatformColor(tokens: theme.style.players[0].cursor)
         #expect(view.themedCaretColor == expected)
@@ -49,9 +49,9 @@ struct LineHighlightInsertionPointThemeTests {
     @MainActor
     func insertionPointEqualityGate() {
         let view = InsertionPointView()
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         let firstStored = view.appliedTheme
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         #expect(view.appliedTheme == firstStored)
     }
 }

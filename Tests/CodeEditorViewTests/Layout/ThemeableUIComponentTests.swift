@@ -11,31 +11,31 @@ struct ThemeableUIComponentTests {
     @MainActor
     func gutterViewConformance() {
         let view: any ThemeableUIComponent = GutterView()
-        view.apply(theme: .lcarsDark)
-        #expect(view.appliedTheme == Theme.lcarsDark)
+        view.apply(theme: .dark)
+        #expect(view.appliedTheme == Theme.dark)
     }
 
     @Test("LineHighlightView conforms to ThemeableUIComponent")
     @MainActor
     func lineHighlightViewConformance() {
         let view: any ThemeableUIComponent = LineHighlightView()
-        view.apply(theme: .lcarsDark)
-        #expect(view.appliedTheme == Theme.lcarsDark)
+        view.apply(theme: .dark)
+        #expect(view.appliedTheme == Theme.dark)
     }
 
     @Test("InsertionPointView conforms to ThemeableUIComponent")
     @MainActor
     func insertionPointViewConformance() {
         let view: any ThemeableUIComponent = InsertionPointView()
-        view.apply(theme: .lcarsDark)
-        #expect(view.appliedTheme == Theme.lcarsDark)
+        view.apply(theme: .dark)
+        #expect(view.appliedTheme == Theme.dark)
     }
 
     @Test("AnnotationsContentView conforms to ThemeableUIComponent")
     @MainActor
     func annotationsContentViewConformance() {
         let view: any ThemeableUIComponent = AnnotationsContentView(frame: .zero)
-        view.apply(theme: .lcarsDark)
-        #expect(view.appliedTheme == Theme.lcarsDark)
+        view.apply(theme: .dark)
+        #expect(view.appliedTheme == Theme.dark)
     }
 }

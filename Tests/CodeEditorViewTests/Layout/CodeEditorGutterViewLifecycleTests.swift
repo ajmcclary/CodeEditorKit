@@ -38,7 +38,7 @@ final class LineNumberRulerViewLifecycleTests: XCTestCase {
         let ruler = LineNumberRulerView(scrollView: nil, orientation: .verticalRuler)
         let beforeColor = ruler.renderer.themedLineNumberColor
 
-        ruler.apply(theme: .lcarsDark)
+        ruler.apply(theme: .dark)
 
         XCTAssertNotEqual(beforeColor.cgColor, ruler.renderer.themedLineNumberColor.cgColor)
     }

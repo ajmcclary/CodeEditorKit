@@ -1,5 +1,5 @@
 {
-  "originHash" : "27f9d977263d02f265a39a18fa218c6f9d5314b33b95cffada6a5d5628e6ac4e",
+  "originHash" : "dfc3bb0cf2bf8f7c32dfecc6dc0777fbce8c8a29d291493f924f003b2b57ff88",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ajmcclary/DesignKit.git",
       "state" : {
-        "revision" : "e4ff62a7456366e8219ddfd5ef894ba4fe37f08e",
-        "version" : "2.0.0"
+        "revision" : "1bd19fde3e3703e3388984c7da6e3706bb7228f3",
+        "version" : "3.0.0-beta.1"
       }
     },
     {

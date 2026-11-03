@@ -16,7 +16,7 @@ struct ThemingConformanceTests {
     func auditModelTypes() {
         Self.requireValueConformance(Theme.self)
         Self.requireValueConformance(Theme.Appearance.self)
-        Self.requireValueConformance(Theme.Family.self)
+        Self.requireValueConformance(Theme.Appearance.self)
         Self.requireValueConformance(ThemeStyle.self)
         Self.requireValueConformance(EditorColors.self)
         Self.requireValueConformance(ChromeColors.self)

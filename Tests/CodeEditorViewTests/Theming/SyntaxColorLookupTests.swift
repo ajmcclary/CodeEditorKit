@@ -8,10 +8,10 @@ import Testing
 struct SyntaxColorLookupTests {
     @Test("Direct hit returns the SyntaxStyle.color")
     func directHit() {
-        let theme = Theme.lcarsDark
-        // LCARS Dark defines `keyword` directly.
+        let theme = Theme.dark
+        // The dark theme defines `keyword` directly.
         guard let expected = theme.style.syntax["keyword"]?.color else {
-            Issue.record("Expected LCARS Dark to define syntax['keyword']")
+            Issue.record("Expected the dark theme to define syntax['keyword']")
             return
         }
         #expect(theme.color(forToken: "keyword") == expected)
@@ -19,11 +19,11 @@ struct SyntaxColorLookupTests {
 
     @Test("Hierarchical fallback: function.method falls back to function")
     func hierarchicalFallbackFunctionMethod() {
-        let theme = Theme.lcarsDark
-        // LCARS Dark has `function` but not `function.method`.
+        let theme = Theme.dark
+        // The dark theme has `function` but not `function.method`.
         #expect(theme.style.syntax["function.method"] == nil)
         guard let parent = theme.style.syntax["function"]?.color else {
-            Issue.record("Expected LCARS Dark to define syntax['function']")
+            Issue.record("Expected the dark theme to define syntax['function']")
             return
         }
         #expect(theme.color(forToken: "function.method") == parent)
@@ -32,14 +32,14 @@ struct SyntaxColorLookupTests {
 
     @Test("Full miss falls through to style.editor.foreground")
     func fullMissFallsThrough() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let resolved = theme.color(forToken: "totally.unknown.token.foo")
         #expect(resolved == theme.style.editor.foreground)
     }
 
     @Test("Repeated lookups are stable (cache does not corrupt result)")
     func cachedAfterFirstHit() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let first = theme.color(forToken: "function.method")
         let second = theme.color(forToken: "function.method")
         let third = theme.color(forToken: "function")
@@ -49,7 +49,7 @@ struct SyntaxColorLookupTests {
 
     @Test("Missing token: empty string falls through to foreground")
     func emptyTokenFallsThrough() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let resolved = theme.color(forToken: "")
         #expect(resolved == theme.style.editor.foreground)
     }

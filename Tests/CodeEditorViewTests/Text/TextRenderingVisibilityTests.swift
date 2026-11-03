@@ -102,7 +102,7 @@ final class TextRenderingVisibilityTests: XCTestCase {
         textView.language = .plainText
         textView.string = "VISIBLE TEXT\nsecond line"
         textView.setSelectedRange(NSRange(location: 0, length: 0))
-        textView.apply(theme: .lcarsDark)
+        textView.apply(theme: .dark)
 
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -154,7 +154,7 @@ final class TextRenderingVisibilityTests: XCTestCase {
         container.textView.language = .plainText
         container.textView.string = "VISIBLE TEXT\nsecond line"
         container.textView.setSelectedRange(NSRange(location: 0, length: 0))
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
 
         window.contentView = container
         window.makeKeyAndOrderFront(nil)

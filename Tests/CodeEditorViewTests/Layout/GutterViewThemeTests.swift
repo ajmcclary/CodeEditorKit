@@ -17,7 +17,7 @@ struct GutterViewThemeTests {
     @MainActor
     func gutterBackgroundFromTheme() {
         let view = GutterView()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         let expected = PlatformColor(tokens: theme.style.editor.gutterBackground)
         #expect(view.themedBackgroundColor == expected)
@@ -27,7 +27,7 @@ struct GutterViewThemeTests {
     @MainActor
     func rendererInactiveNumberColor() {
         let renderer = GutterViewRenderer()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         renderer.apply(theme: theme)
         #expect(renderer.themedLineNumberColor == PlatformColor(tokens: theme.style.editor.lineNumber))
     }
@@ -36,7 +36,7 @@ struct GutterViewThemeTests {
     @MainActor
     func rendererActiveNumberColor() {
         let renderer = GutterViewRenderer()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         renderer.apply(theme: theme)
         #expect(renderer.themedActiveLineNumberColor == PlatformColor(tokens: theme.style.editor.activeLineNumber))
     }
@@ -45,9 +45,9 @@ struct GutterViewThemeTests {
     @MainActor
     func applyEqualityGated() {
         let view = GutterView()
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         let firstStored = view.appliedTheme
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         #expect(view.appliedTheme == firstStored)
     }
 }

@@ -28,7 +28,7 @@ final class SwiftUIEnvironmentTests: XCTestCase {
 
         let updated = env.with(
             language: .swift,
-            theme: .lcarsDark,
+            theme: .dark,
             configuration: .minimal,
             becomeFirstResponder: .yes,
             memoryMonitor: memoryMonitor,
@@ -36,7 +36,7 @@ final class SwiftUIEnvironmentTests: XCTestCase {
         )
 
         XCTAssertEqual(updated.language, .swift)
-        XCTAssertEqual(updated.theme, .lcarsDark)
+        XCTAssertEqual(updated.theme, .dark)
         XCTAssertEqual(updated.configuration, .minimal)
         XCTAssertTrue(updated.becomeFirstResponder)
         XCTAssertIdentical(updated.memoryMonitor, memoryMonitor)
@@ -112,14 +112,14 @@ final class SwiftUIEnvironmentTests: XCTestCase {
         // Test setter
         let customEnv = CodeEditorEnvironment(
             language: .python,
-            theme: .lcarsDark,
+            theme: .dark,
             configuration: .readOnly,
             becomeFirstResponder: true
         )
         values.codeEditorEnvironment = customEnv
 
         XCTAssertEqual(values.codeEditorEnvironment.language, .python)
-        XCTAssertEqual(values.codeEditorEnvironment.theme, .lcarsDark)
+        XCTAssertEqual(values.codeEditorEnvironment.theme, .dark)
         XCTAssertEqual(values.codeEditorEnvironment.configuration, .readOnly)
         XCTAssertTrue(values.codeEditorEnvironment.becomeFirstResponder)
     }
@@ -132,10 +132,10 @@ final class SwiftUIEnvironmentTests: XCTestCase {
 
         // Theme: the legacy accessor moved to DesignKit's `\.designTheme`;
         // the internal environment struct still carries the theme.
-        values.designTheme = .lcarsDark
-        XCTAssertEqual(values.designTheme, .lcarsDark)
-        values.codeEditorEnvironment = values.codeEditorEnvironment.with(theme: .lcarsDark)
-        XCTAssertEqual(values.codeEditorEnvironment.theme, .lcarsDark)
+        values.designTheme = .dark
+        XCTAssertEqual(values.designTheme, .dark)
+        values.codeEditorEnvironment = values.codeEditorEnvironment.with(theme: .dark)
+        XCTAssertEqual(values.codeEditorEnvironment.theme, .dark)
 
         // Test language
         values.codeEditorLanguage = .javascript
@@ -177,7 +177,7 @@ final class SwiftUIEnvironmentTests: XCTestCase {
     func testCodeEditorEnvironmentViewModifier() {
         let customEnv = CodeEditorEnvironment(
             language: .rust,
-            theme: .lcarsDark,
+            theme: .dark,
             configuration: .markdown
         )
 
@@ -212,7 +212,7 @@ final class SwiftUIEnvironmentTests: XCTestCase {
         let view = TestView()
             .codeEditorEnvironment(
                 language: .sql,
-                theme: .lcarsDark,
+                theme: .dark,
                 configuration: .minimal,
                 becomeFirstResponder: .yes,
                 memoryMonitor: memoryMonitor
@@ -237,7 +237,7 @@ final class SwiftUIEnvironmentTests: XCTestCase {
         customConfig.display.isLineNumbersEnabled = false
         let customEnv = CodeEditorEnvironment(
             language: .php,
-            theme: .lcarsDark,
+            theme: .dark,
             configuration: customConfig
         )
 
@@ -259,7 +259,7 @@ final class SwiftUIEnvironmentTests: XCTestCase {
 
         let customEnv = CodeEditorEnvironment(
             language: .ruby,
-            theme: .lcarsDark
+            theme: .dark
         )
 
         // Create a view hierarchy

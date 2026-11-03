@@ -46,7 +46,7 @@ final class SwiftUITests: XCTestCase {
 
         // Create a view and verify the environment modifier works
         let view = TestView()
-            .environment(\.designTheme, .lcarsDark)
+            .environment(\.designTheme, .dark)
 
         // The environment value should be properly set
         let mirror = Mirror(reflecting: view)
@@ -107,7 +107,7 @@ final class SwiftUITests: XCTestCase {
         )
 
         let view = CodeEditor(text: binding)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
 
         // The modifier should set the environment value
         let mirror = Mirror(reflecting: view)
@@ -168,7 +168,7 @@ final class SwiftUITests: XCTestCase {
             set: { _ in }
         )
 
-        let view = CodeEditor(text: binding, language: .python, theme: .lcarsDark)
+        let view = CodeEditor(text: binding, language: .python, theme: .dark)
 
         // The initializer should create a valid view
         XCTAssertNotNil(view)
@@ -183,7 +183,7 @@ final class SwiftUITests: XCTestCase {
             set: { _ in }
         )
 
-        let view = CodeEditor.withLanguage(binding, language: .python, theme: .lcarsDark)
+        let view = CodeEditor.withLanguage(binding, language: .python, theme: .dark)
 
         // The factory should return a view with environment values set
         XCTAssertNotNil(view)

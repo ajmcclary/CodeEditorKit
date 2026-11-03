@@ -16,17 +16,17 @@ struct ApplyThemePropagationTests {
     func storesAppliedTheme() {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
         #expect(container.appliedTheme == nil)
-        container.apply(theme: .lcarsDark)
-        #expect(container.appliedTheme == Theme.lcarsDark)
+        container.apply(theme: .dark)
+        #expect(container.appliedTheme == Theme.dark)
     }
 
     @Test("apply(theme:) keeps stored theme stable on same-theme reapply")
     @MainActor
     func equalityGated() {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
         let firstStored = container.appliedTheme
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
         #expect(container.appliedTheme == firstStored)
     }
 
@@ -35,13 +35,13 @@ struct ApplyThemePropagationTests {
     func sameThemeReapplyRestampsTextViewForeground() throws {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
         container.textView.string = "alpha"
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
 
         let storage = try #require(container.textView.textContentStorage?.textStorage)
         storage.removeAttribute(.foregroundColor, range: NSRange(location: 0, length: storage.length))
         #expect(storage.attribute(.foregroundColor, at: 0, effectiveRange: nil) == nil)
 
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
 
         #expect(storage.attribute(.foregroundColor, at: 0, effectiveRange: nil) != nil)
     }
@@ -50,11 +50,11 @@ struct ApplyThemePropagationTests {
     @MainActor
     func differentThemesUpdate() {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
-        container.apply(theme: .lcarsDark)
-        let fallback = Theme.lcarsLight
+        container.apply(theme: .dark)
+        let fallback = Theme.light
         container.apply(theme: fallback)
         #expect(container.appliedTheme == fallback)
-        #expect(container.appliedTheme != Theme.lcarsDark)
+        #expect(container.appliedTheme != Theme.dark)
     }
 
     #if canImport(AppKit)
@@ -64,9 +64,9 @@ struct ApplyThemePropagationTests {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let gutter = try #require(container.macLineNumberRulerView)
 
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
 
-        let expected = PlatformColor(tokens: Theme.lcarsDark.style.editor.activeLineNumber)
+        let expected = PlatformColor(tokens: Theme.dark.style.editor.activeLineNumber)
         #expect(gutter.renderer.themedActiveLineNumberColor.cgColor == expected.cgColor)
     }
 
@@ -77,12 +77,12 @@ struct ApplyThemePropagationTests {
         let textView = container.textView
         textView.string = "first line\nsecond line\nthird line"
 
-        let light = Theme.lcarsLight
+        let light = Theme.light
         container.apply(theme: light)
         #expect(renderingForegroundColor(in: textView)?.cgColor == PlatformColor(tokens: light.style.editor.foreground).cgColor)
 
-        container.apply(theme: .lcarsDark)
-        #expect(renderingForegroundColor(in: textView)?.cgColor == PlatformColor(tokens: Theme.lcarsDark.style.editor.foreground).cgColor)
+        container.apply(theme: .dark)
+        #expect(renderingForegroundColor(in: textView)?.cgColor == PlatformColor(tokens: Theme.dark.style.editor.foreground).cgColor)
     }
 
     @Test("Same-theme foreground seeding preserves existing syntax rendering colours")
@@ -91,13 +91,13 @@ struct ApplyThemePropagationTests {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 900, height: 600))
         let textView = container.textView
         textView.string = "keyword identifier"
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
 
         let syntaxRange = NSRange(location: 8, length: 1)
         let syntaxColor = PlatformColor.systemRed
         textView.textKitBridge.addAttributes([.foregroundColor: syntaxColor], range: syntaxRange)
 
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
 
         #expect(renderingForegroundColor(in: textView, location: syntaxRange.location)?.cgColor == syntaxColor.cgColor)
     }
@@ -107,11 +107,11 @@ struct ApplyThemePropagationTests {
     func appKitThemeDisablesAdaptiveForegroundRemapping() throws {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 900, height: 600))
 
-        container.apply(theme: .lcarsDark)
+        container.apply(theme: .dark)
         #expect(container.textView.usesAdaptiveColorMappingForDarkAppearance == false)
         #expect(container.textView.appearance?.name == NSAppearance.Name.darkAqua)
 
-        let light = Theme.lcarsLight
+        let light = Theme.light
         container.apply(theme: light)
         #expect(container.textView.usesAdaptiveColorMappingForDarkAppearance == false)
         #expect(container.textView.appearance?.name == NSAppearance.Name.aqua)

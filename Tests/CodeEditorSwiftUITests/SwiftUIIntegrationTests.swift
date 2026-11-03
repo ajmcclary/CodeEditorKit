@@ -47,7 +47,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
         )
 
         let editor = CodeEditor(text: binding)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
 
         // The theme should be set via environment
         let mirror = Mirror(reflecting: editor)
@@ -81,7 +81,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
 
         let environment = CodeEditorEnvironment(
             language: .swift,
-            theme: .lcarsDark,
+            theme: .dark,
             configuration: .minimal,
             becomeFirstResponder: true,
             memoryMonitor: nil,
@@ -161,7 +161,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
 
         let editor = CodeEditor(text: binding)
             .codeLanguage(.swift)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
             .lineNumbers(false)  // minimal config
             .becomeFirstResponder(true)
             .frame(height: 300)
@@ -327,10 +327,10 @@ final class SwiftUIIntegrationTests: XCTestCase {
 
         // Test dark theme
         let darkEditor = CodeEditor(text: binding)
-            .designTheme(.lcarsDark)
+            .designTheme(.dark)
 
         // Test custom theme — use the light fallback as a custom-shaped Theme.
-        let customTheme = Theme.lcarsLight
+        let customTheme = Theme.light
 
         let customEditor = CodeEditor(text: binding)
             .designTheme(customTheme)

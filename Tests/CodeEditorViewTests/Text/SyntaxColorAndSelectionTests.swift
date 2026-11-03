@@ -17,7 +17,7 @@ struct SyntaxColorAndSelectionTests {
     @Test("SyntaxColorScheme.color(forToken:in:) routes through Theme.color(forToken:)")
     @MainActor
     func highlightUsesResolver() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let result = SyntaxColorScheme.color(forToken: "keyword", in: theme)
         #expect(result == PlatformColor(tokens: theme.color(forToken: "keyword")))
     }
@@ -25,7 +25,7 @@ struct SyntaxColorAndSelectionTests {
     @Test("SyntaxColorScheme.color(forToken:in:) hierarchically falls back")
     @MainActor
     func highlightHierarchicalFallback() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let parent = SyntaxColorScheme.color(forToken: "keyword", in: theme)
         let child = SyntaxColorScheme.color(forToken: "keyword.control.deeply.nested", in: theme)
         #expect(child == parent)
@@ -36,7 +36,7 @@ struct SyntaxColorAndSelectionTests {
     @MainActor
     func selectionBackgroundFromTheme() {
         let view = CodeEditorView()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         let attrs = view.selectedTextAttributes
         let bg = attrs[.backgroundColor] as? NSColor
@@ -47,9 +47,9 @@ struct SyntaxColorAndSelectionTests {
     @MainActor
     func editorEqualityGate() {
         let view = CodeEditorView()
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         let firstStored = view.appliedTheme
-        view.apply(theme: .lcarsDark)
+        view.apply(theme: .dark)
         #expect(view.appliedTheme == firstStored)
     }
     #endif
@@ -59,7 +59,7 @@ struct SyntaxColorAndSelectionTests {
     @MainActor
     func tintColorFromThemeOniOS() {
         let view = CodeEditorView()
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         view.apply(theme: theme)
         #expect(view.tintColor == UIColor(tokens: theme.style.players[0].cursor))
     }

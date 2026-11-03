@@ -12,7 +12,7 @@ import Testing
 struct ThemeChromeAccessorTests {
     @Test("chrome accessors map to style.chrome.* underlying tokens")
     func chromeAccessorsMapCorrectly() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         #expect(theme.titleBarColor == Color(tokens: theme.style.chrome.titleBarBackground))
         #expect(theme.tabBarColor == Color(tokens: theme.style.chrome.tabBarBackground))
         #expect(theme.statusBarColor == Color(tokens: theme.style.chrome.statusBarBackground))
@@ -28,14 +28,14 @@ struct ThemeChromeAccessorTests {
 
     @Test("glass accessors map to glass.glass.* underlying tokens")
     func glassAccessorsMapCorrectly() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         #expect(theme.glassTintColor == Color(tokens: theme.glass.glass.tint))
         #expect(theme.glassOpacity == theme.glass.glass.opacity)
     }
 
     @Test("popoverShadow returns the glass.shadows.popover values")
     func popoverShadowMaps() {
-        let theme = Theme.lcarsDark
+        let theme = Theme.dark
         let shadow = theme.popoverShadow
         let source = theme.glass.shadows.popover
         #expect(shadow.color == Color(tokens: source.color))

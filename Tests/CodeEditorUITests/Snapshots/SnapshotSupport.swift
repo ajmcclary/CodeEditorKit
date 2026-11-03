@@ -28,8 +28,8 @@ enum SnapshotSupport {
     static let glassSize = CGSize(width: 400, height: 80)
 
     /// Themes used for parity snapshots.
-    static let darkTheme: Theme = .lcarsDark
-    static let lightTheme: Theme = .lcarsLight
+    static let darkTheme: Theme = .dark
+    static let lightTheme: Theme = .light
 
     /// Wrap a SwiftUI view in an NSHostingView at the given size, ready
     /// for `assertSnapshot(of:as: .nativeImage(...))`.

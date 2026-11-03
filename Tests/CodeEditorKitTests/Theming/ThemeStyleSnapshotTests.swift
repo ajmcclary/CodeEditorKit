@@ -9,9 +9,9 @@ import Testing
 
 @Suite("Theme structure snapshots")
 struct ThemeStyleSnapshotTests {
-    @Test("LCARS Dark style structure (CustomDump)")
-    func lcarsDarkStyleSnapshot() {
-        let theme = Theme.lcarsDark
+    @Test("dark theme style structure (CustomDump)")
+    func darkStyleSnapshot() {
+        let theme = Theme.dark
         assertSnapshot(of: theme.style, as: .dump)
     }
 }
