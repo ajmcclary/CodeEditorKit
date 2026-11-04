@@ -7,6 +7,16 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+## [0.1.0-beta.11] - 2026-11-04
+
+### Changed
+
+- Requires DesignKit `3.0.0` (was `from: "3.0.0-beta.1"`). DesignKit 3.0.0 takes
+  the window traffic-light colours from the design system (#FF5C60 / #FAC800 /
+  #35C759), so the six `EditorTrafficLights` / `EditorTitleBar` image references
+  were re-recorded (only the three circles' pixels differ), and the dark-theme
+  structure dump gains `borders.strong` and `chrome.tertiaryBackground`.
+
 ### Fixed (tests only)
 
 - The full test suite passes again (1057 XCTest + 368 Swift Testing), and CI
