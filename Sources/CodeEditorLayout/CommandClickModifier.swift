@@ -24,18 +24,12 @@ private struct CommandClickModifier: ViewModifier {
     @Environment(\.editorEventBus) private var bus
 
     func body(content: Content) -> some View {
-        content.onReceive(busPublisher) { position in
-            // `onReceive` delivers on the main runloop. The closure runs
-            // synchronously on the main thread, so calling a @MainActor
-            // function here is well-defined.
-            MainActor.assumeIsolated {
-                action(position)
-            }
-        }
-    }
-
-    private var busPublisher: AnyPublisher<SourcePosition, Never> {
-        bus?.commandClickPublisher ?? Empty().eraseToAnyPublisher()
+        let click = CommandClickAction(perform: action)
+        // See `TextHoverModifier`: the environment carries the action into a
+        // wrapped `CodeEditor`; an injected bus is served directly.
+        content
+            .environment(\.commandClickAction, click)
+            .dispatchPointerActions(bus: bus, hover: nil, commandClick: click)
     }
 }
 #endif

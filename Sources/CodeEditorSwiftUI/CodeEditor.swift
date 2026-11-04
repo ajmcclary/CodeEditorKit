@@ -182,6 +182,11 @@ public struct CodeEditor: View {
     // this struct. See docs/superpowers/specs/2026-05-14-swiftui-modifier-return-types-design.md.
     @Environment(\.codeEditorIntent) private var codeEditorIntent
 
+    #if canImport(AppKit)
+    @Environment(\.textHoverAction) private var textHoverAction
+    @Environment(\.commandClickAction) private var commandClickAction
+    #endif
+
     // Debouncing
     private let textDebounceInterval: Duration?
 
@@ -437,6 +442,14 @@ public struct CodeEditor: View {
         .environment(\.codeEditorConfiguration, effectiveConfiguration)
         #if canImport(AppKit)
         .environment(\.editorEventBus, codeEditorIntent.editorController?.editorEventBus)
+        // `.onTextHover` / `.onCommandClick` applied OUTSIDE this view hand
+        // their actions down the environment; deliver the controller's bus
+        // events to them here, where the bus is known.
+        .dispatchPointerActions(
+            bus: codeEditorIntent.editorController?.editorEventBus,
+            hover: textHoverAction,
+            commandClick: commandClickAction
+        )
         #endif
         .onAppear {
             // Start monitoring if using default memory monitor

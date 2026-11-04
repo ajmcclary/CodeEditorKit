@@ -21,6 +21,23 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
     migration, whose theme values changed the title bar, tab strip, glass
     surfaces and other chrome colours.
 
+## [0.1.0-beta.10] - 2026-11-04
+
+### Fixed
+
+- `.onTextHover` and `.onCommandClick` applied to a `CodeEditor` (the
+  documented usage) never fired: they read `\.editorEventBus` from the
+  environment above the editor, and `CodeEditor` only sets that key on its own
+  content. The modifiers now hand their actions down the environment and
+  `CodeEditor` delivers its controller's hover and ⌘-click events to them
+  (`CodeEditorPointerActionTests`). Public API unchanged; a host that injects
+  `\.editorEventBus` itself is still served directly.
+
+### Changed
+
+- DesignKit `3.0.0-beta.2` (active line distinct from selection); the
+  active-line snapshot is re-recorded.
+
 ## [0.1.0-beta.8] - 2026-10-08
 
 ### Changed

@@ -24,25 +24,15 @@ private struct TextHoverModifier: ViewModifier {
     let action: @Sendable (SourcePosition?) async -> Void
 
     @Environment(\.editorEventBus) private var bus
-    @State private var task: Task<Void, Never>?
 
     func body(content: Content) -> some View {
-        content.onReceive(busPublisher) { position in
-            task?.cancel()
-            let delay = idleDelay
-            let captured = action
-            task = Task { @MainActor in
-                if delay > .zero {
-                    try? await Task.sleep(for: delay)
-                }
-                guard !Task.isCancelled else { return }
-                await captured(position)
-            }
-        }
-    }
-
-    private var busPublisher: AnyPublisher<SourcePosition?, Never> {
-        bus?.hoverPublisher ?? Empty().eraseToAnyPublisher()
+        let hover = TextHoverAction(idleDelay: idleDelay, perform: action)
+        // A wrapped `CodeEditor` reads the action from the environment and
+        // dispatches its controller's bus events to it. A host that injected
+        // `\.editorEventBus` above this modifier is served directly.
+        content
+            .environment(\.textHoverAction, hover)
+            .dispatchPointerActions(bus: bus, hover: hover, commandClick: nil)
     }
 }
 #endif

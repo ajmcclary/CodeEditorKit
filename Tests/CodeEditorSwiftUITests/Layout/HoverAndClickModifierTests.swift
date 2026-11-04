@@ -7,10 +7,8 @@ import SwiftUI
 import XCTest
 
 /// API-shape tests for the hover and command-click modifiers. The end-to-end
-/// "modifier fires when the bus emits" path depends on SwiftUI scheduling
-/// subscriptions through `NSHostingView`, which is brittle outside a real app
-/// runloop — that integration is exercised by the live LSP smoke test in
-/// the extracted demo's test suite (CodeEditorDemoTests, apps/CodeEditorDemo).
+/// "modifier applied outside `CodeEditor` fires when the bus emits" path is
+/// `CodeEditorPointerActionTests`.
 final class HoverAndClickModifierTests: XCTestCase {
     @MainActor
     func testOnTextHoverModifierCompilesAndAccepts() {
