@@ -247,10 +247,47 @@ public final class EditorController {
         }
         let engine = view.searchEngine
         let results = await engine.findAll(pattern: pattern, options: options)
+        guard !Task.isCancelled, codeEditorView === view else { return [] }
         matchCount = results.count
         currentMatchIndex = engine.currentSearchIndex
         return results
     }
+
+    /// Discard undo operations whose offsets belong to replaced host text.
+    public func clearUndoHistory() { codeEditorView?.undoManager?.removeAllActions() }
+
+    /// Refresh highlights after an edit without changing the caret or scroll position.
+    @discardableResult
+    public func refreshSearch(_ pattern: String, options: SearchOptions? = nil) async -> [SearchResult] {
+        guard let view = codeEditorView else { return [] }
+        let results = await view.searchEngine.findAll(pattern: pattern, options: options, selectFirstResult: false)
+        guard !Task.isCancelled, codeEditorView === view else { return [] }
+        matchCount = results.count
+        currentMatchIndex = view.searchEngine.currentSearchIndex
+        return results
+    }
+
+    #if canImport(AppKit)
+    /// Whether this editor currently owns keyboard focus.
+    public var isFirstResponder: Bool {
+        guard let view = codeEditorView else { return false }
+        return view.window?.firstResponder === view
+    }
+
+    /// Bounds of a UTF-16 range in the visible editor's coordinates.
+    public func rect(forCharacterRange range: NSRange) -> CGRect? {
+        guard let view = codeEditorView, let window = view.window else { return nil }
+        let screenRect = view.firstRect(forCharacterRange: range, actualRange: nil)
+        let container = view.enclosingScrollView ?? view
+        let rect = container.convert(window.convertFromScreen(screenRect), from: nil)
+        return CGRect(
+            x: rect.minX,
+            y: container.isFlipped ? rect.minY : container.bounds.height - rect.maxY,
+            width: rect.width,
+            height: rect.height
+        )
+    }
+    #endif
 
     /// Advance to the next search result. Returns nil if no search has
     /// run or there are no more results (and wrap-around is disabled).

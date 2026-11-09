@@ -204,7 +204,7 @@
       - green: 255
       - red: 255
     ▿ lineNumber: Color
-      - alpha: 0.25
+      - alpha: 0.55
       - blue: 255
       - green: 255
       - red: 255
@@ -309,7 +309,7 @@
       - green: 255
       - red: 255
     ▿ placeholder: Color
-      - alpha: 0.25
+      - alpha: 0.55
       - blue: 255
       - green: 255
       - red: 255
@@ -338,7 +338,7 @@
       - green: 0
       - red: 0
     ▿ base: Color
-      - alpha: 0.25
+      - alpha: 0.55
       - blue: 255
       - green: 255
       - red: 255
@@ -818,10 +818,10 @@
         ▿ some: ANSI
           ▿ black: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 30
-              - green: 30
-              - red: 30
+              - alpha: 0.55
+              - blue: 255
+              - green: 255
+              - red: 255
           ▿ blue: Optional<Color>
             ▿ some: Color
               - alpha: 1.0
@@ -830,52 +830,52 @@
               - red: 86
           ▿ brightBlack: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 30
-              - green: 30
-              - red: 30
+              - alpha: 0.61
+              - blue: 255
+              - green: 255
+              - red: 255
           ▿ brightBlue: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 214
-              - green: 156
-              - red: 86
+              - alpha: 0.97
+              - blue: 222
+              - green: 176
+              - red: 120
           ▿ brightCyan: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 225
-              - green: 208
-              - red: 77
+              - alpha: 0.97
+              - blue: 231
+              - green: 217
+              - red: 113
           ▿ brightGreen: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 85
-              - green: 153
-              - red: 106
+              - alpha: 0.97
+              - blue: 119
+              - green: 173
+              - red: 136
           ▿ brightMagenta: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 211
-              - green: 155
-              - red: 195
+              - alpha: 0.97
+              - blue: 220
+              - green: 175
+              - red: 207
           ▿ brightRed: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 71
-              - green: 71
-              - red: 244
+              - alpha: 0.97
+              - blue: 108
+              - green: 108
+              - red: 246
           ▿ brightWhite: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 212
-              - green: 212
-              - red: 212
+              - alpha: 0.97
+              - blue: 221
+              - green: 221
+              - red: 221
           ▿ brightYellow: Optional<Color>
             ▿ some: Color
-              - alpha: 1.0
-              - blue: 125
-              - green: 186
-              - red: 215
+              - alpha: 0.97
+              - blue: 151
+              - green: 200
+              - red: 223
           ▿ cyan: Optional<Color>
             ▿ some: Color
               - alpha: 1.0
@@ -946,7 +946,7 @@
       - green: 255
       - red: 255
     ▿ placeholder: Color
-      - alpha: 0.25
+      - alpha: 0.55
       - blue: 255
       - green: 255
       - red: 255
@@ -1006,7 +1006,7 @@
         - green: 0
         - red: 0
       ▿ base: Color
-        - alpha: 0.25
+        - alpha: 0.55
         - blue: 255
         - green: 255
         - red: 255

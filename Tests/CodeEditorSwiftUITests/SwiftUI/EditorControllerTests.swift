@@ -91,5 +91,19 @@ struct EditorControllerTests {
         #expect(controller.matchCount == 0)
         #expect(controller.currentMatchIndex == -1)
     }
+    @Test("refreshing search preserves the caret")
+    @MainActor
+    func refreshSearchPreservesCaret() async {
+        let controller = EditorController()
+        let view = CodeEditorView(frame: .zero)
+        view.string = "foo foo foo"
+        controller.attach(to: view)
+        _ = await controller.find("foo")
+        view.selectedRange = NSRange(location: 8, length: 0)
+        _ = await controller.refreshSearch("foo")
+        #expect(view.selectedRange == NSRange(location: 8, length: 0))
+        #expect(controller.matchCount == 3)
+        #expect(controller.currentMatchIndex == 2)
+    }
 }
 #endif

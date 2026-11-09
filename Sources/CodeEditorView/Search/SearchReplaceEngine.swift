@@ -45,7 +45,8 @@ public final class SearchReplaceEngine: ObservableObject {
         await findAll(pattern: pattern, options: options, selectFirstResult: true)
     }
 
-    private func findAll(
+    /// Find matches, optionally leaving the user’s selection and scroll position intact.
+    public func findAll(
         pattern: String,
         options: SearchOptions?,
         selectFirstResult: Bool
@@ -80,9 +81,11 @@ public final class SearchReplaceEngine: ObservableObject {
             options: searchOptions
         )
 
+        guard !Task.isCancelled, self.textView === textView else { return [] }
         // Update results and statistics
         currentSearchResults = results
-        currentSearchIndex = results.isEmpty ? -1 : 0
+        currentSearchIndex = results.isEmpty ? -1 : (selectFirstResult ? 0 :
+            (results.firstIndex { $0.range.location >= textView.selectedRange.location } ?? results.count - 1))
         updateStatistics(for: results)
 
         // Highlight results if enabled

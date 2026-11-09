@@ -7,6 +7,20 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+## [0.1.0-beta.12] - 2026-11-09
+
+### Added
+
+- `EditorController.refreshSearch` refreshes live matches without moving the
+  selection or scroll position. Cancelled searches cannot publish stale results.
+- Host APIs for clearing obsolete text undo, detecting editor focus, and anchoring
+  a popover to a text range in visible viewport coordinates.
+
+### Changed
+
+- Requires DesignKit 3.0.1 for displayed contrast and readable foreground roles.
+
+
 ## [0.1.0-beta.11] - 2026-11-04
 
 ### Changed
