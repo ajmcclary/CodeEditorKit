@@ -7,6 +7,18 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+### Fixed
+
+- A memory-cleanup pass no longer empties the editor's line geometry store.
+  `MemoryManagementCoordinator` reset it as if it were a cache, but it is the
+  editor's line index and nothing rebuilds it before the next character edit:
+  after a cleanup every gutter line number read "1", and the active-line
+  number, line-at-point, `lineNumber(at:)`, `lineRange(for:)`, `lineCount` and
+  the minimap were wrong with it. Cleanup now leaves the store alone (and no
+  longer reports "line geometry store" or its 0.5 MB estimate in the cleanup
+  result). Hosts that set `memoryManagementPolicy: .disabled` only to avoid
+  this can return to the default.
+
 ## [0.1.0-beta.12] - 2026-11-09
 
 ### Added

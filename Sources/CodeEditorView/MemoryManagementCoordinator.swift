@@ -196,10 +196,11 @@ public final class MemoryManagementCoordinator {
         memoryFreed += 2.0 // Estimate
         operations.append("syntax highlighting cache")
 
-        // Clear line geometry store
-        editorView.lineGeometryStore.reset()
-        memoryFreed += 0.5 // Estimate
-        operations.append("line geometry store")
+        // The line geometry store is deliberately left alone. It is the
+        // editor's line index, not a cache: the gutter, active-line
+        // highlighting, line-at-point and the minimap all read it, and
+        // nothing rebuilds it until the next character edit. Emptying it
+        // here made every gutter line number read "1".
 
         // Clear folding state for large documents
         if !editorView.codeFoldingEngine.foldedRegions.isEmpty {

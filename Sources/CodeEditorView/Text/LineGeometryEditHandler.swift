@@ -50,10 +50,9 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
         let preEditLineCount = geometryStore.lineCount
 
         // The incremental algorithm assumes at least one line exists in the
-        // store. If the store was reset (memory pressure, transient nil
-        // textStorage during setup) but the text view now has content, fall
-        // back to a full rebuild instead of computing offsets against an
-        // empty tree.
+        // store. If the store was reset (transient nil textStorage during
+        // setup) but the text view now has content, fall back to a full
+        // rebuild instead of computing offsets against an empty tree.
         guard preEditLineCount > 0 else {
             textView.rebuildLineGeometryStoreFromCurrentTextStorage()
             return
