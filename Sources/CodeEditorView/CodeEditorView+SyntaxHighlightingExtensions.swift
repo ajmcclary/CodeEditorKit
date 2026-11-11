@@ -113,7 +113,9 @@ extension CodeEditorView {
         let shouldCheckCompletion = isCodeCompletionEnabled
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+            self.publishingTextChangeGeneration = event.editedCharacters ? eventGeneration : nil
             self.textEditEventHub.publish(event)
+            self.publishingTextChangeGeneration = nil
             guard event.editedCharacters,
                   eventGeneration == self.textChangeEventGeneration
             else { return }

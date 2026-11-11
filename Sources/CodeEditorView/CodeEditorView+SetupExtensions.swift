@@ -107,6 +107,10 @@ extension CodeEditorView {
             return
         }
         lineGeometryStore.build(from: textStorage)
+        // Edit events already queued describe changes this rebuild has just
+        // read from the storage; `LineGeometryEditHandler` must not apply
+        // them a second time.
+        lineGeometrySyncedGeneration = textChangeEventGeneration
     }
 
     internal func updateCompletionTriggerCharacters() {

@@ -46,6 +46,15 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             return
         }
 
+        // Edit events are delivered a runloop hop after the edit. If the
+        // store was rebuilt from the text storage in between (the text
+        // setters do this), it already contains this edit, and applying the
+        // event as an incremental change would count the edited lines twice.
+        if let generation = textView.publishingTextChangeGeneration,
+           generation <= textView.lineGeometrySyncedGeneration {
+            return
+        }
+
         // Compute the affected pre-edit line range from the edit.
         let preEditLineCount = geometryStore.lineCount
 

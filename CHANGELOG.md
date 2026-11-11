@@ -18,6 +18,13 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
   longer reports "line geometry store" or its 0.5 MB estimate in the cleanup
   result). Hosts that set `memoryManagementPolicy: .disabled` only to avoid
   this can return to the default.
+- Setting an editor's text no longer counts the document's lines twice. The
+  text setters rebuild the line geometry store on the spot, and the edit
+  event queued by the same assignment was then applied on top of it as an
+  incremental edit: a five-line document ended with nine lines in the store,
+  inflating `lineCount`, the total height and the minimap's line total. The
+  store now records the edit generation its last full rebuild covers and the
+  edit handler skips events at or before it.
 
 ## [0.1.0-beta.12] - 2026-11-09
 

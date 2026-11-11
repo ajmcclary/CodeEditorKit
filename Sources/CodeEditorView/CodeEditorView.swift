@@ -196,6 +196,16 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal var hasCompletedTextViewSetup = false
     internal var textChangeEventGeneration: UInt64 = 0
 
+    /// The `textChangeEventGeneration` the line geometry store was last
+    /// rebuilt at. A full rebuild reads the text storage as it is, so the
+    /// store already contains every character edit up to this generation,
+    /// including those whose edit events are still waiting on the main queue.
+    internal var lineGeometrySyncedGeneration: UInt64 = 0
+
+    /// The generation of the character edit whose event is being published
+    /// right now; `nil` outside that publish.
+    internal var publishingTextChangeGeneration: UInt64?
+
     /// Optional lifecycle injected by package tests or alternate hosts.
     private var sessionOverride: (any EditorSessionLifecycle)?
 
