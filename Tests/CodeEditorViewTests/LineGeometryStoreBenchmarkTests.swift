@@ -696,6 +696,23 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         return store
     }
 
+    /// Verify that the store a text view maintains describes `text`: the
+    /// same lines, in order, as a store built from scratch. This is the
+    /// assertion for edit-handler tests; `assertStoreMatchesReference`
+    /// builds its own store and so says nothing about the handler's result.
+    private func assertMaintainedStore(
+        of textView: CodeEditorView,
+        matches text: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let maintained = textView.lineGeometryStore
+        let expected = makeStore(for: text).allLineGeometries.map { [$0.utf16Length, $0.lineEndingLength] }
+        let actual = maintained.allLineGeometries.map { [$0.utf16Length, $0.lineEndingLength] }
+        XCTAssertEqual(actual, expected, "Maintained store does not match the text", file: file, line: line)
+        XCTAssertTrue(maintained.validateTree(), "Red-black tree invariants violated", file: file, line: line)
+    }
+
     /// Verify that the store's offsets match the reference implementation
     /// for a given text. Returns the reference offsets for further assertions.
     @discardableResult
@@ -979,7 +996,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
 
         // Store should now reflect the new text
         XCTAssertEqual(textView.lineGeometryStore.lineCount, 4)
-        assertStoreMatchesReference(for: storage.string)
+        assertMaintainedStore(of: textView, matches: storage.string)
 
         handler.detach()
     }
@@ -1036,7 +1053,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
             editedCharacters: true
         ))
         handler.detach()
-        assertStoreMatchesReference(for: storage.string)
+        assertMaintainedStore(of: textView, matches: storage.string)
 
         // Edit 2: delete the newline after "b"
         // "Xa\nb\nc" → find the \n after "b"
@@ -1055,7 +1072,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
             editedCharacters: true
         ))
         handler.detach()
-        assertStoreMatchesReference(for: storage.string)
+        assertMaintainedStore(of: textView, matches: storage.string)
 
         // Edit 3: replace all content
         let oldLength = storage.length
@@ -1075,7 +1092,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
             editedCharacters: true
         ))
         handler.detach()
-        assertStoreMatchesReference(for: storage.string)
+        assertMaintainedStore(of: textView, matches: storage.string)
     }
 
     func testEditHandlerDetachStopsObserving() {
@@ -1160,7 +1177,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         handler.textStorageDidApplyEdit(event)
 
         XCTAssertEqual(textView.lineGeometryStore.lineCount, 2)
-        assertStoreMatchesReference(for: storage.string)
+        assertMaintainedStore(of: textView, matches: storage.string)
 
         handler.detach()
     }

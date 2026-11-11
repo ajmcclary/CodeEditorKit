@@ -55,113 +55,119 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             return
         }
 
-        // Compute the affected pre-edit line range from the edit.
-        let preEditLineCount = geometryStore.lineCount
-
-        // The incremental algorithm assumes at least one line exists in the
-        // store. If the store was reset (transient nil textStorage during
-        // setup) but the text view now has content, fall back to a full
-        // rebuild instead of computing offsets against an empty tree.
-        guard preEditLineCount > 0 else {
+        // swiftlint:disable:next legacy_objc_type
+        let text = textStorage.string as NSString
+        guard let update = incrementalUpdate(for: event, in: text) else {
             textView.rebuildLineGeometryStoreFromCurrentTextStorage()
             return
         }
-        let oldLineStart = geometryStore.lineIndex(forUtf16Offset: event.editedRange.location)
-        let oldLineEnd = geometryStore.lineIndex(
-            forUtf16Offset: max(0, event.editedRange.location + event.editedRange.length - 1)
-        )
-        var removalEnd = oldLineEnd
-        if event.editedRange.length > 0, removalEnd + 1 < preEditLineCount {
-            let nextLineStart = geometryStore.utf16Offset(forLineIndex: removalEnd + 1)
-            if event.editedRange.location + event.editedRange.length >= nextLineStart {
-                removalEnd += 1
+        geometryStore.removeLines(in: update.lines)
+        geometryStore.insertLines(update.replacement, at: update.lines.lowerBound)
+    }
+
+    // MARK: - Incremental Update
+
+    /// The store lines an edit invalidates and the lines that replace them.
+    private struct IncrementalUpdate {
+        /// Pre-edit line indices to remove.
+        let lines: ClosedRange<Int>
+
+        /// Post-edit lines to insert at `lines.lowerBound`.
+        let replacement: [LineGeometry]
+    }
+
+    /// Works out which store lines `event` replaces and what replaces them,
+    /// or returns `nil` when the event cannot be applied to the store as it
+    /// stands and the store must be rebuilt instead.
+    ///
+    /// The affected lines run from the line holding the edit's location to
+    /// the line holding the first character after the replaced range; that
+    /// second line is included because an edit that removes a line
+    /// terminator joins it to what precedes it. Everything before the first
+    /// affected line is untouched by the edit, and everything after the last
+    /// is only shifted, so the replacement is exactly the lines of the new
+    /// text between the start of the first affected line and the shifted end
+    /// of the last one.
+    ///
+    /// - Parameter text: The text storage's content after the edit.
+    private func incrementalUpdate(
+        for event: TextEditEvent,
+        in text: NSString // swiftlint:disable:this legacy_objc_type
+    ) -> IncrementalUpdate? {
+        let lineCount = geometryStore.lineCount
+        let oldLength = geometryStore.totalUtf16Length
+        let location = event.editedRange.location
+        let replacedEnd = location + event.editedRange.length
+
+        // The store must describe the text as it was just before this edit,
+        // and the text must be as this edit left it. Neither holds when the
+        // store was reset, or when several edits were made before their
+        // events were delivered: `text` then already contains the later
+        // edits, and this event's offsets no longer line up with it. The
+        // rebuild the caller falls back to reads all of them at once, and
+        // marks their events as already applied.
+        guard lineCount > 0,
+              location >= 0,
+              event.editedRange.length >= 0,
+              replacedEnd <= oldLength,
+              event.editedRange.length + event.changeInLength >= 0,
+              oldLength + event.changeInLength == text.length
+        else {
+            return nil
+        }
+
+        let firstLine = geometryStore.lineIndex(forUtf16Offset: location)
+        let lastLine = geometryStore.lineIndex(forUtf16Offset: replacedEnd)
+        let reachesDocumentEnd = lastLine == lineCount - 1
+        let regionStart = geometryStore.utf16Offset(forLineIndex: firstLine)
+        let oldRegionEnd = reachesDocumentEnd
+            ? oldLength
+            : geometryStore.utf16Offset(forLineIndex: lastLine + 1)
+        let regionEnd = oldRegionEnd + event.changeInLength
+
+        var replacement: [LineGeometry] = []
+        var position = regionStart
+        while position < regionEnd {
+            var lineStart = 0
+            var lineEnd = 0
+            var contentsEnd = 0
+            text.getLineStart(
+                &lineStart,
+                end: &lineEnd,
+                contentsEnd: &contentsEnd,
+                for: NSRange(location: position, length: 0)
+            )
+            // The region must start and end on line boundaries of the new
+            // text. It does not when the edit joins a CR to an LF across the
+            // region's edge, making one terminator out of two lines' worth.
+            guard lineStart == position, lineEnd <= regionEnd else {
+                return nil
             }
-        }
-
-        // Build new geometries for the affected region from the text storage.
-        // swiftlint:disable:next legacy_objc_type
-        let nsString = textStorage.string as NSString
-        let length = nsString.length
-
-        // Enumerate lines in the affected region.
-        var newGeometries: [LineGeometry] = []
-        var lineIndex = oldLineStart
-        var searchPos = geometryStore.utf16Offset(forLineIndex: lineIndex)
-        searchPos = max(0, searchPos - 1) // Start from previous line start
-
-        // Find the actual start of the line at oldLineStart
-        if searchPos > 0 {
-            var lineStart = 0
-            var lineEnd = 0
-            var contentsEnd = 0
-            nsString.getLineStart(
-                &lineStart,
-                end: &lineEnd,
-                contentsEnd: &contentsEnd,
-                for: NSRange(location: searchPos, length: 0)
-            )
-            searchPos = lineStart
-        }
-
-        let oldAffectedCount = removalEnd - oldLineStart + 1
-        let scanEnd: Int
-        if removalEnd + 1 < preEditLineCount {
-            let oldBoundary = geometryStore.utf16Offset(forLineIndex: removalEnd + 1)
-            scanEnd = min(length, max(searchPos, oldBoundary + event.changeInLength))
-        } else {
-            scanEnd = length
-        }
-
-        // Enumerate replacement lines in the post-edit text. The scan end is
-        // the shifted start offset of the first unaffected old line, so lines
-        // outside the affected region stay in the tree.
-        var pos = searchPos
-        while pos < length, pos < scanEnd {
-            var lineStart = 0
-            var lineEnd = 0
-            var contentsEnd = 0
-            nsString.getLineStart(
-                &lineStart,
-                end: &lineEnd,
-                contentsEnd: &contentsEnd,
-                for: NSRange(location: pos, length: 0)
-            )
-            let utf16Length = lineEnd - lineStart
-            let lineEndingLength = lineEnd - contentsEnd
-
-            newGeometries.append(LineGeometry(
-                utf16Length: utf16Length,
-                lineEndingLength: lineEndingLength,
-                estimatedHeight: geometryStore.lineGeometry(at: lineIndex)?.estimatedHeight ?? geometryStore.defaultEstimatedHeight
+            replacement.append(LineGeometry(
+                utf16Length: lineEnd - lineStart,
+                lineEndingLength: lineEnd - contentsEnd,
+                estimatedHeight: estimatedHeight(forLineAt: firstLine + replacement.count)
             ))
-
-            lineIndex += 1
-            pos = lineEnd
-            if pos >= length { break }
+            position = lineEnd
         }
-        if length == 0 {
-            newGeometries.append(LineGeometry(
+
+        // A document always ends with a line, empty when the text is empty
+        // or ends with a line terminator.
+        if reachesDocumentEnd, replacement.last.map({ $0.lineEndingLength > 0 }) ?? true {
+            replacement.append(LineGeometry(
                 utf16Length: 0,
                 lineEndingLength: 0,
-                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? geometryStore.defaultEstimatedHeight
-            ))
-        } else if scanEnd == length, newGeometries.last?.lineEndingLength ?? 0 > 0 {
-            newGeometries.append(LineGeometry(
-                utf16Length: 0,
-                lineEndingLength: 0,
-                estimatedHeight: geometryStore.lineGeometry(at: oldLineStart)?.estimatedHeight ?? geometryStore.defaultEstimatedHeight
+                estimatedHeight: estimatedHeight(forLineAt: firstLine + replacement.count)
             ))
         }
 
-        // Apply the incremental edit.
-        if oldAffectedCount > 0 {
-            // First remove the old lines, then insert the new ones
-            geometryStore.removeLines(in: oldLineStart...removalEnd)
-        }
+        return IncrementalUpdate(lines: firstLine...lastLine, replacement: replacement)
+    }
 
-        if !newGeometries.isEmpty {
-            geometryStore.insertLines(newGeometries, at: oldLineStart)
-        }
+    /// The estimated height a replacement line inherits from the pre-edit
+    /// line at the same index.
+    private func estimatedHeight(forLineAt lineIndex: Int) -> CGFloat {
+        geometryStore.lineGeometry(at: lineIndex)?.estimatedHeight ?? geometryStore.defaultEstimatedHeight
     }
 
     // MARK: - Lifecycle

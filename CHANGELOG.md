@@ -25,6 +25,20 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
   inflating `lineCount`, the total height and the minimap's line total. The
   store now records the edit generation its last full rebuild covers and the
   edit handler skips events at or before it.
+- Editing past the first line no longer duplicates a line in the line
+  geometry store. `LineGeometryEditHandler` rescanned from the start of the
+  line before the edited one while replacing only the edited lines, so every
+  such edit (each keystroke included) left a copy of the previous line
+  behind: five characters typed on line 2 of a five-line document left ten
+  lines in the store. `lineCount`, the total height and the minimap grew with
+  every edit, and line lookups below the edit could land on the wrong line.
+  The handler now replaces exactly the lines from the one holding the edit to
+  the one holding the first character after it, and rebuilds the store
+  instead when an event cannot be applied to it as it stands (several edits
+  made before their events were delivered, or a CR joined to an LF across the
+  edited region's edge). The handler's existing tests compared a freshly
+  built store with the text and could not fail; they now check the store the
+  handler maintains.
 
 ## [0.1.0-beta.12] - 2026-11-09
 
