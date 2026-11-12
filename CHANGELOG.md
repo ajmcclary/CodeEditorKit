@@ -7,6 +7,8 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+## [0.1.0-beta.13] - 2026-11-12
+
 ### Fixed
 
 - Ten `EditorConfiguration` values that were stored, encoded and offered by
