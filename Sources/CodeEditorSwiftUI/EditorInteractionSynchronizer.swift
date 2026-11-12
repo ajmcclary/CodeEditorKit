@@ -13,6 +13,13 @@ final class EditorInteractionSynchronizer {
 
     private var dirtyTracker = DirtyTracker()
 
+    /// The bound cursor as it read the last time the editor looked at the
+    /// binding (after writing to it, or after applying it). The bound cursor
+    /// is pushed into the view only when the host changed it since then, so
+    /// the editor's own echo never moves the caret or collapses a selection.
+    private var lastObservedCursor: EditorCursorPosition?
+    private var hasObservedCursor = false
+
     init(
         hostState: EditorState? = nil,
         interactionState: Binding<EditorInteractionState>? = nil
@@ -52,14 +59,19 @@ final class EditorInteractionSynchronizer {
             hostState.selection = selection
         }
 
-        guard var state = interactionState?.wrappedValue else { return }
+        guard let interactionState else { return }
+        var state = interactionState.wrappedValue
         let cursor = EditorCursorPosition(
             line: selection.line,
             column: selection.column
         )
-        guard state.cursorPositions != [cursor] else { return }
-        state.cursorPositions = [cursor]
-        interactionState?.wrappedValue = state
+        if state.cursorPositions != [cursor] {
+            state.cursorPositions = [cursor]
+            interactionState.wrappedValue = state
+        }
+        // Re-read: a binding that ignores writes (`.constant`) keeps its own
+        // value, and that value is then what "unchanged by the host" means.
+        observeBoundCursor(interactionState.wrappedValue.cursorPositions?.first)
     }
 
     func markClean(currentText: String) {
@@ -75,10 +87,14 @@ final class EditorInteractionSynchronizer {
         hostState.hardwareAccelerationActive = isActive
     }
 
+    /// Pushes the bound cursor into the view, but only when the host changed
+    /// it since the editor last wrote or applied it.
     func applyInteractionState(to textView: CodeEditorView) {
-        guard let cursor = interactionState?.wrappedValue.cursorPositions?.first else {
-            return
-        }
+        guard let interactionState else { return }
+        let boundCursor = interactionState.wrappedValue.cursorPositions?.first
+        if hasObservedCursor, boundCursor == lastObservedCursor { return }
+        observeBoundCursor(boundCursor)
+        guard let cursor = boundCursor else { return }
 
         #if canImport(AppKit)
         let text = textView.string
@@ -93,34 +109,60 @@ final class EditorInteractionSynchronizer {
         textView.setSelectedRangeWithoutScrolling(targetRange)
     }
 
-    private static func utf16Offset(
+    private func observeBoundCursor(_ cursor: EditorCursorPosition?) {
+        lastObservedCursor = cursor
+        hasObservedCursor = true
+    }
+
+    /// Resolves a 1-based line/column to a UTF-16 offset with the same line
+    /// semantics `EditorStateBridge.deriveSelection` uses to produce it: a
+    /// line ends at each `\n` UTF-16 unit (so CRLF documents count lines
+    /// too), and the column counts `Character`s from the line start. A column
+    /// past the line's end resolves to the line's end, before any `\r\n`.
+    static func utf16Offset(
         for cursor: EditorCursorPosition,
         in text: String
     ) -> Int {
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = text as NSString
+        let length = nsText.length
         let targetLine = max(1, cursor.line)
         let targetColumn = max(1, cursor.column)
+
+        var lineStart = 0
         var line = 1
-        var column = 1
-        var offset = 0
-
-        for character in text {
-            if line == targetLine, column == targetColumn {
-                return offset
-            }
-
-            if character == "\n" {
-                if line == targetLine {
-                    return offset
-                }
-                line += 1
-                column = 1
-            } else {
-                column += 1
-            }
-
-            offset += String(character).utf16.count
+        while line < targetLine {
+            let newline = nsText.range(
+                of: "\n",
+                options: .literal,
+                range: NSRange(location: lineStart, length: length - lineStart)
+            )
+            guard newline.location != NSNotFound else { return length }
+            lineStart = newline.location + 1
+            line += 1
         }
 
-        return TextRangeUtilities.utf16Length(of: text)
+        let newline = nsText.range(
+            of: "\n",
+            options: .literal,
+            range: NSRange(location: lineStart, length: length - lineStart)
+        )
+        var lineEnd = newline.location == NSNotFound ? length : newline.location
+        if newline.location != NSNotFound, lineEnd > lineStart,
+           nsText.character(at: lineEnd - 1) == 0x0D {
+            lineEnd -= 1
+        }
+
+        let lineText = nsText.substring(
+            with: NSRange(location: lineStart, length: lineEnd - lineStart)
+        )
+        var offset = lineStart
+        var column = 1
+        for character in lineText {
+            if column == targetColumn { return offset }
+            offset += character.utf16.count
+            column += 1
+        }
+        return offset
     }
 }

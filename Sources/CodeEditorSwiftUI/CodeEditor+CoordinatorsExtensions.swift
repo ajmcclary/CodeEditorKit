@@ -140,12 +140,17 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         bindingSynchronizer.receiveEditorText(newText)
     }
 
-    /// Handle selection changes from the editor
-    func handleSelectionChange(_ range: NSRange) {
+    /// Handle selection changes from the editor.
+    ///
+    /// Pass the view's own current `text`: AppKit posts the selection
+    /// notification for a typed character before the text notification, so
+    /// `currentText` is still the pre-edit text at that point and a cursor
+    /// derived from it is wrong by one edit.
+    func handleSelectionChange(_ range: NSRange, text: String? = nil) {
         onSelectionChange?(range)
         onSelectionChangeCallback?(range)
 
-        interactionSynchronizer.receiveSelection(range, text: currentText)
+        interactionSynchronizer.receiveSelection(range, text: text ?? currentText)
     }
 
     func updateInteractionStateBinding(_ binding: Binding<EditorInteractionState>) {
@@ -323,7 +328,7 @@ extension CodeEditorCoordinator: TextViewDelegateParticipant {
     }
 
     func textViewDidChangeSelection(_ textView: CodeEditorView) {
-        handleSelectionChange(textView.selectedRange)
+        handleSelectionChange(textView.selectedRange, text: textView.text ?? "")
     }
 }
 

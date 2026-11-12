@@ -92,7 +92,10 @@ struct AppKitCodeEditorPlatformAdapter: CodeEditorPlatformAdapter {
         ) { [weak coordinator, weak textView] _ in
             MainActor.assumeIsolated {
                 guard let coordinator, let textView else { return }
-                coordinator.handleSelectionChange(textView.selectedRange())
+                coordinator.handleSelectionChange(
+                    textView.selectedRange(),
+                    text: textView.string
+                )
             }
         }
 
@@ -158,7 +161,10 @@ struct UIKitCodeEditorPlatformAdapter: CodeEditorPlatformAdapter {
         ) { [weak coordinator, weak textView] _ in
             MainActor.assumeIsolated {
                 guard let coordinator, let textView else { return }
-                coordinator.handleSelectionChange(textView.selectedRange)
+                coordinator.handleSelectionChange(
+                    textView.selectedRange,
+                    text: textView.text ?? ""
+                )
             }
         }
 
