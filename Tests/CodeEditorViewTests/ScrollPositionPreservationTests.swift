@@ -11,6 +11,33 @@ import UIKit
 @MainActor
 final class ScrollPositionPreservationTests: XCTestCase {
     #if canImport(AppKit)
+    /// With `autoScrollToCursor` on, scrolling (trackpad, scroll bar) must not
+    /// be pulled back to the caret: the setting reacts to selection changes,
+    /// not to scrolling.
+    func testScrollingAwayFromTheCaretStaysPutWithAutoScrollToCursor() async throws {
+        let containerView = CodeEditorContainerView()
+        containerView.frame = NSRect(x: 0, y: 0, width: 600, height: 400)
+        var config = EditorConfiguration()
+        config.behavior.autoScrollToCursor = true
+        containerView.configuration = config
+        let textView = containerView.textView
+        textView.string = String(repeating: "    let value = editor.selectedRange.location + offset\n", count: 3_000)
+        containerView.layoutSubtreeIfNeeded()
+        textView.setSelectedRange(NSRange(location: 10, length: 0))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let scrollView = try XCTUnwrap(textView.enclosingScrollView)
+        let clipView = scrollView.contentView
+        clipView.scroll(to: NSPoint(x: 0, y: 20_000))
+        scrollView.reflectScrolledClipView(clipView)
+        let scrolledTo = clipView.bounds.origin.y
+        XCTAssertGreaterThan(scrolledTo, 1_000)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertEqual(clipView.bounds.origin.y, scrolledTo, accuracy: 1)
+    }
+
     func testScrollPositionPreservedWhenTogglingWordWrap() async {
         // Create a container view which provides the scroll view
         let containerView = CodeEditorContainerView()

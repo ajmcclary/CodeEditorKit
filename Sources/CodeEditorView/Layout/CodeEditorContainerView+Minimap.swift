@@ -59,7 +59,9 @@ extension CodeEditorContainerView {
         minimapObservers.append(textChangeToken)
         #endif
 
-        // Set up scroll observer to update minimap and handle cursor tracking
+        // Set up scroll observer to update the minimap. Auto-scroll to the
+        // cursor reacts to selection changes only, never to scrolling: a
+        // scroll that moves the caret off screen is the user's choice.
         #if canImport(AppKit)
         let scrollToken = NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
@@ -68,7 +70,6 @@ extension CodeEditorContainerView {
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.updateMinimap()
-                self?.handleScrollCursorTracking()
             }
         }
         minimapObservers.append(scrollToken)
@@ -163,42 +164,4 @@ extension CodeEditorContainerView {
         }
         #endif
     }
-
-    // MARK: - Cursor Tracking During Scroll
-
-    #if canImport(AppKit)
-    internal func handleScrollCursorTracking() {
-        // Only auto-scroll to cursor if autoScrollToCursor is enabled
-        guard configuration.behavior.autoScrollToCursor else { return }
-
-        // Get current cursor position
-        let currentSelection = textView.selectedRange
-        guard currentSelection.length == 0 else { return } // Only work with cursor, not selections
-
-        let cursorPosition = currentSelection.location
-        let textLength = textView.string.count
-        guard cursorPosition < textLength else { return }
-
-        let lineIndex = textView.lineGeometryStore.lineIndex(forUtf16Offset: cursorPosition)
-        guard lineIndex >= 0, lineIndex < textView.lineGeometryStore.lineCount else { return }
-
-        var adjustedCursorRect = textView.lineGeometryStore.estimatedRect(
-            forLineAt: lineIndex,
-            containerWidth: textView.bounds.width
-        )
-        adjustedCursorRect.origin.x += textView.textContainerOrigin.x
-        adjustedCursorRect.origin.y += textView.textContainerOrigin.y
-        adjustedCursorRect.size.width = max(adjustedCursorRect.width, 1)
-        adjustedCursorRect.size.height = max(adjustedCursorRect.height, 20)
-
-        // Check if cursor is visible in current view
-        let visibleRect = textView.visibleRect
-        let isVisible = visibleRect.intersects(adjustedCursorRect)
-
-        // If cursor is not visible, scroll to make it visible
-        if !isVisible {
-            textView.scrollToVisible(adjustedCursorRect)
-        }
-    }
-    #endif
 }
