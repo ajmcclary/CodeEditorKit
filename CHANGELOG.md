@@ -7,6 +7,8 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+## [0.1.0-beta.14] - 2026-11-12
+
 ### Changed
 
 - `layout.textContainerInset` now takes effect on macOS, on all four edges.
