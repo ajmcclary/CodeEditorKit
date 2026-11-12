@@ -314,4 +314,4 @@ custom_rules:
 
 reporter: "xcode"
 strict: true
-swiftlint_version: 0.65.0
+swiftlint_version: 0.65.1
