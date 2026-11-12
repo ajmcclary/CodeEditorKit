@@ -148,10 +148,18 @@ extension CodeEditorView {
         isCompletionActive = true
     }
 
-    /// Get cursor rectangle for positioning completion popup
+    /// Get cursor rectangle for positioning completion popup, in the view's
+    /// coordinates.
     private func cursorRectForPosition(_ position: Int) -> CGRect {
         let textKitBridge = self.textKitBridge
-        return textKitBridge.cursorRect(at: position) ?? CGRect(x: 0, y: 0, width: 1, height: 16)
+        let rect = textKitBridge.cursorRect(at: position) ?? CGRect(x: 0, y: 0, width: 1, height: 16)
+        #if canImport(AppKit)
+        // The bridge answers in the text container's coordinates.
+        let containerOrigin = textContainerOrigin
+        return rect.offsetBy(dx: containerOrigin.x, dy: containerOrigin.y)
+        #else
+        return rect
+        #endif
     }
 
     /// Show completion window/popover at the specified rectangle

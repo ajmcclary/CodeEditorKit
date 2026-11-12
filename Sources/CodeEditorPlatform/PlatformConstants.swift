@@ -28,13 +28,10 @@ public enum PlatformConstants {
     /// Default gutter width
     public static let defaultGutterWidth: CGFloat = 50.0
 
-    /// Default text container inset
-    public static let defaultTextContainerInset = EdgeInsets(
-        top: 8,
-        left: 8,
-        bottom: 8,
-        right: 8
-    )
+    /// Default text container inset: none. `EditorConfiguration.Layout`
+    /// adds its `textContainerInset` to the editor's own text padding, so
+    /// zero leaves the text where that padding alone puts it.
+    public static let defaultTextContainerInset = EdgeInsets.zero
 
     /// Default line number padding
     public static let defaultLineNumberPadding: CGFloat = 8.0

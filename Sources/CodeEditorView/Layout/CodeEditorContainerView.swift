@@ -31,10 +31,10 @@ public final class CodeEditorContainerView: PlatformView {
         scrollView.verticalRulerView as? LineNumberRulerView
     }
 
-    /// The portion of `textView.textContainerInset.width` that does NOT
-    /// include the gutter contribution. Captured once during initial setup
-    /// before the gutter inset is applied; recomputed application is:
-    /// `inset.width = baseTextContainerInsetWidth + gutterWidth + horizontalPadding`.
+    /// The editor's own horizontal text padding on each side, before
+    /// `layout.textContainerInset` is added: `layout.lineNumberPadding`,
+    /// halved while the gutter is hidden. Kept in step by
+    /// `updateTextContainerInsets()`.
     internal var baseTextContainerInsetWidth: CGFloat = 0
     #endif
 

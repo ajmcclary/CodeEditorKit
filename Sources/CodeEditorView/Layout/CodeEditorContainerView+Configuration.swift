@@ -131,21 +131,28 @@ extension CodeEditorContainerView {
 
     // MARK: - Text Container Insets
 
+    /// Applies the text padding the configuration asks for.
+    ///
+    /// `layout.lineNumberPadding` is the editor's own horizontal padding and
+    /// `layout.textContainerInset` is added to it edge by edge; see
+    /// `ContainerLayoutHelper.textContainerInsets(configuration:gutterVisible:)`.
     internal func updateTextContainerInsets() {
-        let padding = configuration.layout.lineNumberPadding
-
         #if canImport(AppKit)
         // On macOS, the scroll view's ruler reserves the line-number
         // gutter width. Text insets only provide the editor's internal
-        // horizontal padding and must not include `gutterWidth`.
-        let currentInsets = textView.textContainerInset
-        let horizontalInset = showsLineNumbers ? padding : padding / 2
-        textView.textContainerInset = NSSize(
-            width: horizontalInset,
-            height: currentInsets.height
+        // padding and must not include `gutterWidth`.
+        baseTextContainerInsetWidth = ContainerLayoutHelper.horizontalTextPadding(
+            configuration: configuration,
+            gutterVisible: showsLineNumbers
         )
-        baseTextContainerInsetWidth = horizontalInset
+        textView.setUnifiedTextContainerInsets(
+            ContainerLayoutHelper.textContainerInsets(
+                configuration: configuration,
+                gutterVisible: showsLineNumbers
+            )
+        )
         #elseif canImport(UIKit)
+        let padding = configuration.layout.lineNumberPadding
         let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
         let minimapWidth = configuration.display.isMinimapVisible ? configuration.layout.minimapWidth : 0
         let currentInsets = textView.textContainerEdgeInsets

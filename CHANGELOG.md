@@ -7,6 +7,51 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+### Changed
+
+- `layout.textContainerInset` now takes effect on macOS, on all four edges.
+  Each edge is **added to the editor's own text padding**: `lineNumberPadding`
+  on the left and right (in full while line numbers are shown, halved while
+  they are hidden, as before) and nothing above or below. So `top` and
+  `bottom` are the whole vertical padding, and `left` and `right` are extra
+  room beyond what `lineNumberPadding` already gives. `lineNumberPadding`
+  keeps exactly the effect it had. `top` and `bottom` scroll with the
+  document; `right` narrows the wrapping width when `wrapLines` is on and is
+  the room after the longest line when it is off. Negative edges count as
+  zero. iOS still does not apply the value.
+- **The default inset is now zero** (`PlatformConstants.defaultTextContainerInset`
+  and the `Codable` fallback for a missing key were 8 on every edge). The old
+  default was never drawn on macOS (no vertical padding, `lineNumberPadding`
+  horizontally), so zero is what makes a host that never sets the inset render
+  exactly as it did. A host that persists `EditorConfiguration.Layout` through
+  `Codable` has the old 8s in its saved data and will now see them as 8 points
+  of extra padding on each edge; reset the stored inset to zero on upgrade to
+  keep the previous rendering.
+- `CodeEditorContainerView` now owns all four edges of its text view's inset.
+  It used to set only the width and leave whatever height it found, so a host
+  that set a vertical `textContainerInset` on the container's `NSTextView` by
+  hand should move that value into `layout.textContainerInset`.
+- `CodeEditorView.unifiedTextContainerInsets` and
+  `setUnifiedTextContainerInsets(_:)` carry four independent edges on macOS.
+  They used to collapse to `NSTextView`'s symmetric inset (`left` and `top`
+  only). `NSTextView.textContainerInset` cannot hold four edges, so the view
+  keeps the mean of each pair there and overrides `textContainerOrigin` to
+  move the text by the difference; with equal edges the override returns
+  AppKit's own value.
+
+### Fixed
+
+- Everything the editor places over its text on macOS now starts from
+  `textContainerOrigin` instead of assuming it equals the symmetric inset (or
+  assuming no vertical inset at all): inline annotation badges, the
+  selected-line highlight, the completion popup, line positions and
+  point-to-line lookups (`LineNumberCalculationService`,
+  `TextKitLineNumberHelper`, and with them fold-control clicks in the
+  gutter), the visible range (`TextKitBridge.visibleRange`) and the rendering
+  diagnostics. With the default inset the only visible difference is the
+  completion popup, which used to sit `lineNumberPadding` to the left of the
+  text's left edge and is now aligned with it.
+
 ## [0.1.0-beta.13] - 2026-11-12
 
 ### Fixed

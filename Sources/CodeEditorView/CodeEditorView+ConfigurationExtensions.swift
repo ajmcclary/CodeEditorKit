@@ -205,11 +205,14 @@ extension CodeEditorView {
             return
         }
 
-        // Adjust frame
+        // Adjust frame. `calculateLineRect` answers in the text container's
+        // coordinates; the highlight is a subview, so it needs the view's.
         var frame = lineRect
         frame.origin.x = 0
         frame.size.width = bounds.width
-        // Don't add textContainerInset here - calculateLineRect already accounts for it
+        #if canImport(AppKit)
+        frame.origin.y += textContainerOrigin.y
+        #endif
 
         highlightView.frame = frame
         if let lineHighlight = highlightView as? LineHighlightView {

@@ -48,7 +48,8 @@ public final class TextKitLineNumberHelper {
         return calculateLineRanges(in: text, visibleRange: visibleRange)
     }
 
-    /// Get line fragment rect for a specific line range
+    /// Get line fragment rect for a specific line range, in the text
+    /// container's coordinates.
     public func getLineFragmentRect(for lineRange: NSRange) -> CGRect? {
         guard let textView else { return nil }
 
@@ -184,8 +185,10 @@ public final class TextKitLineNumberHelper {
         guard let textView else { return point }
 
         #if canImport(AppKit)
-        // macOS: Point is already in the correct coordinate system
-        return point
+        // macOS: from the view's coordinates to the text container's, which
+        // is what the line geometry store works in.
+        let containerOrigin = textView.textContainerOrigin
+        return CGPoint(x: point.x - containerOrigin.x, y: point.y - containerOrigin.y)
         #else
         // iOS: Account for text container inset and scroll offset
         let textContainerInset = textView.textContainerInset

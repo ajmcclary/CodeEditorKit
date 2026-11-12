@@ -159,7 +159,11 @@ public final class GutterInteractionHandler {
             containerWidth: textView.bounds.width
         )
 
-        #if canImport(UIKit)
+        // From the text container's coordinates to the text view's.
+        #if canImport(AppKit)
+        lineRect.origin.x += textView.textContainerOrigin.x
+        lineRect.origin.y += textView.textContainerOrigin.y
+        #elseif canImport(UIKit)
         lineRect.origin.x += textView.textContainerInset.left
         lineRect.origin.y += textView.textContainerInset.top
         #endif

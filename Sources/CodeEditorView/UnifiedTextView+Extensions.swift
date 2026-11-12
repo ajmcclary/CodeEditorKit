@@ -81,7 +81,8 @@ extension PlatformTextView {
         unifiedVisibleContainerRect
     }
 
-    /// Returns the bounding rectangle for the given text range using layout manager
+    /// Returns the bounding rectangle for the given text range, in the text
+    /// container's coordinates (add `textContainerOrigin` for the view's).
     public func boundingRect(for range: NSRange) -> CGRect? {
         unifiedBoundingRect(for: range)
     }

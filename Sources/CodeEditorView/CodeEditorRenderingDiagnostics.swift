@@ -384,9 +384,13 @@ package enum CodeEditorRenderingDiagnostics {
 
         textLayoutManager.ensureLayout(for: textRange)
         if let segmentFrame = textLayoutManager.textSegmentFrame(in: textRange, type: .standard) {
+            // The segment is in the text container's coordinates; the
+            // visibility and hit tests are in the view's.
+            let containerOrigin = textView.textContainerOrigin
+            let segmentInView = segmentFrame.offsetBy(dx: containerOrigin.x, dy: containerOrigin.y)
             parts.append("sampleSegment=\(rectDescription(segmentFrame))")
-            parts.append("sampleSegmentVisible=\(segmentFrame.intersects(visibleRect))")
-            parts.append("sampleSegmentHit=\(hitTestClassName(at: CGPoint(x: segmentFrame.midX, y: segmentFrame.midY), in: textView))")
+            parts.append("sampleSegmentVisible=\(segmentInView.intersects(visibleRect))")
+            parts.append("sampleSegmentHit=\(hitTestClassName(at: CGPoint(x: segmentInView.midX, y: segmentInView.midY), in: textView))")
         } else {
             parts.append("sampleSegment=nil")
         }

@@ -27,16 +27,26 @@ extension EditorConfiguration {
         /// Width of the line numbers gutter
         public var gutterWidth: CGFloat = PlatformConstants.defaultGutterWidth
 
-        /// Padding for line numbers within the gutter
+        /// The editor's own horizontal padding between the text and the
+        /// edges of the text area.
+        ///
+        /// On macOS it is applied in full on both sides while line numbers
+        /// are shown, where the left edge is the gutter's, and halved on
+        /// both sides while they are hidden.
         public var lineNumberPadding: CGFloat = PlatformConstants.defaultLineNumberPadding
 
-        /// Padding around the text.
+        /// Extra padding around the text, edge by edge, on top of the
+        /// editor's own.
         ///
-        /// - Note: Not applied on macOS yet: there the horizontal text
-        ///   padding follows `lineNumberPadding` and no vertical padding is
-        ///   added. Honouring four independent edges needs every geometry
-        ///   calculation that assumes a symmetric `NSTextView` inset to use
-        ///   the container origin instead.
+        /// The editor's own padding is `lineNumberPadding` on the left and
+        /// right and none above or below; each edge here is added to it.
+        /// The default is zero, which leaves the text where
+        /// `lineNumberPadding` alone puts it. `top` and `bottom` scroll with
+        /// the document; `right` is only visible once a line reaches it
+        /// (always when `wrapLines` is on, where it narrows the wrapping
+        /// width). Negative values are treated as zero.
+        ///
+        /// - Note: macOS only. On iOS the value is not applied.
         public var textContainerInset = PlatformConstants.defaultTextContainerInset
 
         /// Line height multiple
@@ -101,10 +111,10 @@ extension EditorConfiguration.Layout: Codable {
         gutterWidth = try container.decodeIfPresent(CGFloat.self, forKey: .gutterWidth) ?? 50
         lineNumberPadding = try container.decodeIfPresent(CGFloat.self, forKey: .lineNumberPadding) ?? 8.0
 
-        let top = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetTop) ?? 8
-        let leading = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetLeading) ?? 8
-        let bottom = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetBottom) ?? 8
-        let trailing = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetTrailing) ?? 8
+        let top = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetTop) ?? 0
+        let leading = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetLeading) ?? 0
+        let bottom = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetBottom) ?? 0
+        let trailing = try container.decodeIfPresent(CGFloat.self, forKey: .textContainerInsetTrailing) ?? 0
         textContainerInset = EdgeInsets(top: top, left: leading, bottom: bottom, right: trailing)
 
         lineHeightMultiple = try container.decodeIfPresent(CGFloat.self, forKey: .lineHeightMultiple) ?? 1.2

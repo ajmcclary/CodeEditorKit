@@ -125,8 +125,9 @@ extension CodeEditorView {
     private func observedVisibleTextLayoutFragmentCount() -> Int {
         guard let textLayoutManager else { return 0 }
 
+        // Fragment frames are in the text container's coordinates.
         #if canImport(AppKit)
-        let viewport = visibleRect
+        let viewport = visibleContainerRect
         #else
         let viewport = bounds
         #endif
@@ -176,8 +177,6 @@ extension CodeEditorView {
     }
     #endif
 
-    // MARK: - Text Container Origin
-
     // MARK: - Text Container Management
 
     /// Updates the text container size based on current configuration and bounds
@@ -202,7 +201,7 @@ extension CodeEditorView {
             // For word wrap mode, set container width to match view width
             let wrappingWidth = enclosingScrollView?.contentView.bounds.width ?? bounds.width
             textContainer.containerSize = NSSize(
-                width: wrappingWidth - textContainerInset.width * 2,
+                width: wrappingWidth - unifiedTextContainerInsets.totalHorizontal,
                 height: CGFloat.greatestFiniteMagnitude
             )
 
@@ -287,7 +286,7 @@ extension CodeEditorView {
         guard fraction < 1 else { return }
 
         let viewWidth = enclosingScrollView?.contentView.bounds.width ?? bounds.width
-        let fullWidth = viewWidth - textContainerInset.width * 2
+        let fullWidth = viewWidth - unifiedTextContainerInsets.totalHorizontal
         guard fullWidth > 0 else { return }
 
         textContainer.widthTracksTextView = false
@@ -306,7 +305,7 @@ extension CodeEditorView {
             targetSize.width = max(viewportSize.width, bounds.width)
         }
         if let documentHeight = textKit2DocumentHeight() {
-            targetSize.height = max(viewportSize.height, documentHeight + textContainerInset.height * 2)
+            targetSize.height = max(viewportSize.height, documentHeight + unifiedTextContainerInsets.totalVertical)
         }
 
         if targetSize != frame.size {

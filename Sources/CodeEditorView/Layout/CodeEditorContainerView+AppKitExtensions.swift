@@ -58,7 +58,7 @@ extension CodeEditorContainerView {
             rulerView.ruleThickness = configuration.layout.gutterWidth
             scrollView.hasVerticalRuler = true
             scrollView.rulersVisible = true
-            textView.textContainerInset.width = baseTextContainerInsetWidth
+            updateTextContainerInsets()
             if let theme = appliedTheme {
                 rulerView.apply(theme: theme)
             }
@@ -67,7 +67,7 @@ extension CodeEditorContainerView {
             scrollView.hasVerticalRuler = false
             scrollView.rulersVisible = false
             scrollView.verticalRulerView = nil
-            textView.textContainerInset.width = baseTextContainerInsetWidth
+            updateTextContainerInsets()
         }
     }
 
@@ -132,7 +132,7 @@ extension CodeEditorContainerView {
 
                 // Configure text container for word wrap
                 textView.textContainer?.containerSize = NSSize(
-                    width: contentWidth - textView.textContainerInset.width * 2,
+                    width: contentWidth - textView.unifiedTextContainerInsets.totalHorizontal,
                     height: CGFloat.greatestFiniteMagnitude
                 )
                 textView.textContainer?.widthTracksTextView = true

@@ -265,20 +265,22 @@ extension LineNumberCalculationService {
         let lineIndex = lineNumber - 1
         guard lineIndex >= 0, lineIndex < textView.lineGeometryStore.lineCount else { return nil }
 
-        // Apply text container insets and adjustments
-        let textContainerInset = textView.textContainerInset
+        // The store works in the text container's coordinates; the result
+        // is in the view's.
         let lineRect = textView.lineGeometryStore.estimatedRect(
             forLineAt: lineIndex,
             containerWidth: textView.bounds.width
         )
-        return lineRect.minY + textContainerInset.height / 2
+        return lineRect.minY + textView.textContainerOrigin.y
     }
 
     func findLineNumberMacOS(at point: CGPoint, textView: CodeEditorView) -> Int? {
-        let textContainerInset = textView.textContainerInset
+        // `point` is in the view's coordinates; the store works in the text
+        // container's.
+        let containerOrigin = textView.textContainerOrigin
         let adjustedPoint = CGPoint(
-            x: point.x - textContainerInset.width / 2,
-            y: point.y - textContainerInset.height / 2
+            x: point.x - containerOrigin.x,
+            y: point.y - containerOrigin.y
         )
 
         guard textView.lineGeometryStore.lineCount > 0 else { return nil }

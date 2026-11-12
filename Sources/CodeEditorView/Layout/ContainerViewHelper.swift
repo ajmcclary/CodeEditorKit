@@ -184,33 +184,6 @@ enum ContainerViewHelper {
     static func calculateSideViewHeight(bounds: CGRect, textView: CodeEditorView) -> CGFloat {
         platformCalculateSideViewHeight(bounds: bounds, textView: textView)
     }
-
-    // MARK: - Text Container Insets
-
-    /// Update text container insets for gutter width
-    static func updateTextContainerInsets(textView: CodeEditorView, gutterWidth: CGFloat, padding: CGFloat) {
-        let leftInset = gutterWidth + padding
-        updatePlatformInsets(textView, leftInset: leftInset)
-    }
-
-    private static func updatePlatformInsets(_ textView: CodeEditorView, leftInset: CGFloat) {
-        #if canImport(AppKit)
-        let currentInsets = textView.textContainerInset
-        textView.textContainerInset = NSSize(
-            width: leftInset,
-            height: currentInsets.height
-        )
-        #else
-        let currentInsets = textView.textContainerEdgeInsets
-        let newInsets = EdgeInsets(
-            top: currentInsets.top,
-            left: leftInset,
-            bottom: currentInsets.bottom,
-            right: currentInsets.right
-        )
-        textView.setTextContainerEdgeInsets(newInsets)
-        #endif
-    }
 }
 
 // MARK: - Platform-Specific Extensions

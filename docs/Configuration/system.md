@@ -52,8 +52,16 @@ config.layout.insertSpacesForTabs = true
 config.layout.lineHeightMultiple = 1.2
 config.layout.wrapLines = false
 config.layout.gutterWidth = 50
-config.layout.textContainerInset = EdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+config.layout.lineNumberPadding = 8
+config.layout.textContainerInset = EdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
 ```
+
+`lineNumberPadding` is the editor's own horizontal text padding: applied in
+full on both sides while line numbers are shown, halved while they are hidden.
+`textContainerInset` is added to it edge by edge, and is the whole of the
+padding above and below the text; its default is zero. The example above keeps
+the default horizontal padding and adds 10 points above the first line and
+below the last. The inset is applied on macOS only.
 
 ### Behavior Settings
 

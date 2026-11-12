@@ -71,27 +71,38 @@ internal enum ContainerLayoutHelper {
     }
     #endif
 
-    /// Calculate text container insets
+    #if canImport(AppKit)
+    /// The editor's own horizontal text padding, on each side:
+    /// `layout.lineNumberPadding`, halved while the gutter is hidden.
+    static func horizontalTextPadding(
+        configuration: EditorConfiguration,
+        gutterVisible: Bool
+    ) -> CGFloat {
+        let padding = max(0, configuration.layout.lineNumberPadding)
+        return gutterVisible ? padding : padding / 2
+    }
+
+    /// The padding between each edge of the text view and its text:
+    /// `layout.textContainerInset` added, edge by edge, to the editor's own
+    /// padding (`horizontalTextPadding` on the left and right, none above or
+    /// below).
+    ///
+    /// The gutter is the scroll view's ruler and the minimap is a sibling of
+    /// the scroll view, so neither width belongs in these insets.
     static func textContainerInsets(
         configuration: EditorConfiguration,
         gutterVisible: Bool
     ) -> EdgeInsets {
-        var insets = configuration.layout.textContainerInset
-
-        #if canImport(AppKit)
-        // On AppKit, gutter is inside scroll view so we add to insets
-        if gutterVisible {
-            insets = EdgeInsets(
-                top: insets.top,
-                left: insets.left + configuration.layout.gutterWidth,
-                bottom: insets.bottom,
-                right: insets.right
-            )
-        }
-        #endif
-
-        return insets
+        let extra = configuration.layout.textContainerInset
+        let padding = horizontalTextPadding(configuration: configuration, gutterVisible: gutterVisible)
+        return EdgeInsets(
+            top: max(0, extra.top),
+            left: padding + max(0, extra.left),
+            bottom: max(0, extra.bottom),
+            right: padding + max(0, extra.right)
+        )
     }
+    #endif
 
     /// Calculate text view width constraints
     static func textViewWidth(

@@ -345,7 +345,7 @@ enum CodeEditorRepresentableHelper {
         let proposedWidth = proposal.width ?? textView.bounds.width
         guard proposedWidth > 0 else { return 0 }
 
-        var chromeWidth = textView.textContainerInset.width * 2
+        var chromeWidth = textView.unifiedTextContainerInsets.totalHorizontal
         if configuration.display.isLineNumbersEnabled {
             chromeWidth += configuration.layout.gutterWidth
         }
@@ -372,9 +372,9 @@ enum CodeEditorRepresentableHelper {
         }
 
         // Add text container insets
-        let containerInset = textView.textContainerInset
-        adjustedSize.width += containerInset.width * 2
-        adjustedSize.height += containerInset.height * 2
+        let containerInsets = textView.unifiedTextContainerInsets
+        adjustedSize.width += containerInsets.totalHorizontal
+        adjustedSize.height += containerInsets.totalVertical
 
         return adjustedSize
     }

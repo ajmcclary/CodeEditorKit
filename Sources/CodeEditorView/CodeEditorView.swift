@@ -475,6 +475,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Weak reference to the container view to avoid fragile superview traversal
     internal weak var containerView: CodeEditorContainerView?
 
+    #if canImport(AppKit)
+    /// How far the text container sits from where AppKit's symmetric
+    /// `textContainerInset` alone would put it. Non-zero only while the left
+    /// and right insets, or the top and bottom ones, differ; set by
+    /// `setUnifiedTextContainerInsets(_:)` and read by `textContainerOrigin`.
+    internal var textContainerOriginShift: CGPoint = .zero
+    #endif
+
     /// The current annotations displayed in the editor
     public private(set) var annotations: [Annotation] = []
 

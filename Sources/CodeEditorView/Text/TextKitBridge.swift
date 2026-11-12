@@ -424,8 +424,10 @@ package final class TextKitBridge {
         guard let textLayoutManager = textView?.textLayoutManager,
               let textView else { return nil }
 
+        // Fragment frames are in the text container's coordinates, so the
+        // visible rectangle has to be too.
         #if canImport(AppKit)
-        let visibleRect = textView.visibleRect
+        let visibleRect = textView.visibleContainerRect
         #elseif canImport(UIKit)
         let contentOffset = textView.contentOffset
         let textContainerInset = textView.textContainerInset
@@ -466,7 +468,8 @@ package final class TextKitBridge {
 
     // MARK: - Cursor and Layout Calculations
 
-    /// Get the cursor rect for a given character index.
+    /// Get the cursor rect for a given character index, in the text
+    /// container's coordinates (add `textContainerOrigin` for the view's).
     func cursorRect(at characterIndex: Int) -> CGRect? {
         guard let textLayoutManager = textView?.textLayoutManager,
               let textContentManager = textLayoutManager.textContentManager else { return nil }
@@ -495,7 +498,8 @@ package final class TextKitBridge {
         return cursorRect
     }
 
-    /// Get the bounding rect for a character range.
+    /// Get the bounding rect for a character range, in the text container's
+    /// coordinates (add `textContainerOrigin` for the view's).
     func boundingRect(for range: NSRange) -> CGRect? {
         guard let textRange = textRangeFromNSRange(range),
               let textLayoutManager = textView?.textLayoutManager else { return nil }

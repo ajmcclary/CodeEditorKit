@@ -182,10 +182,6 @@ enum ContainerViewInitializer {
     ) {
         let config = container.configuration
 
-        // Capture the non-gutter inset baseline before applying any gutter
-        // contribution so it can be restored when line numbers are disabled.
-        container.baseTextContainerInsetWidth = textView.textContainerInset.width
-
         guard config.display.isLineNumbersEnabled else { return }
 
         let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
@@ -196,7 +192,7 @@ enum ContainerViewInitializer {
         scrollView.hasVerticalRuler = true
         scrollView.rulersVisible = true
 
-        textView.textContainerInset.width = container.baseTextContainerInsetWidth
+        container.updateTextContainerInsets()
 
         if let theme = container.appliedTheme {
             rulerView.apply(theme: theme)

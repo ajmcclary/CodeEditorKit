@@ -50,7 +50,7 @@ What works on the package's Apple platforms. Reflects the current `Package.swift
 | Theme picker (zed-trek family, 22 variants) | ✅ | ✅ | `ThemeCatalog.all` / `ThemeCatalog.theme(named:)` in the sample, backed by `ThemeFamily.bundled("zed-trek")` |
 | Language picker (all 25 concrete languages + plain text) | ✅ | ✅ | `LanguageCatalog` |
 | Per-section knob panels (Display / Layout / Behavior / Performance / Workspace / Annotations) | ✅ | ✅ | iOS shows the same controls in a NavigationSplitView sidebar |
-| `Layout.textContainerInset` sliders | ✅ | ✅ | top / left / bottom / right edge controls |
+| `Layout.textContainerInset` sliders | ✅ | ✅ | top / left / bottom / right edge controls; the editor applies the value on macOS only |
 | Range-store highlighting toggles | ✅ | ✅ | exposes both `Display.useRangeStoreHighlighting` and `Performance.usesRangeBasedHighlighting` |
 | Multi-tab in-memory document store | ✅ | ✅ | Framework-level `EditorDocuments` + `EditorDocument`; sample extends with file I/O via `Sources/CodeEditorSample/Documents/EditorDocuments+SampleExtras.swift` |
 | Command palette (⌘⇧P) | ✅ | — | macOS-only `EditorCommandPalette` |

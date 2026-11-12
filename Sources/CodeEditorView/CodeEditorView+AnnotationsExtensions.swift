@@ -196,8 +196,10 @@ extension CodeEditorView {
         let badgeSize = configuration.layout.annotationBadgeSize
         let badgePadding = configuration.layout.annotationBadgePadding
         #if canImport(AppKit)
-        let inlineX = textContainerInset.width + segmentFrame.maxX + badgePadding
-        let inlineY = textContainerInset.height + segmentFrame.midY - (badgeSize / 2)
+        // The segment frame is in the text container's coordinates.
+        let containerOrigin = textContainerOrigin
+        let inlineX = containerOrigin.x + segmentFrame.maxX + badgePadding
+        let inlineY = containerOrigin.y + segmentFrame.midY - (badgeSize / 2)
         #else
         let inlineX = textContainerInset.left + segmentFrame.maxX + badgePadding
         let inlineY = textContainerInset.top + segmentFrame.midY - (badgeSize / 2)
