@@ -23,7 +23,8 @@ extension EditorConfiguration {
         /// Whether line numbers are enabled in the gutter.
         public var isLineNumbersEnabled: Bool = true
 
-        /// Whether annotations support is enabled.
+        /// Whether annotations are shown. Turning this off hides the
+        /// annotations the editor holds without discarding them.
         public var areAnnotationsEnabled: Bool = true
 
         /// Whether the currently selected line is highlighted.
@@ -32,10 +33,15 @@ extension EditorConfiguration {
         /// Color used to highlight the selected line.
         public var selectedLineHighlightColor: PlatformColor = PlatformColors.selectedLineHighlight
 
-        /// Number of lines visible in the editor.
+        /// A sizing hint for hosts: how many lines of text the editor is
+        /// meant to show.
+        ///
+        /// The editor view fills the frame its host gives it and does not
+        /// read this value. A host that sizes the editor to its content can
+        /// use it to choose a height.
         public var visibleLines: Int = PlatformConstants.defaultVisibleLines
 
-        /// Whether invisible characters (spaces, tabs) are visible.
+        /// Whether invisible characters (spaces, tabs, line endings) are drawn.
         /// - Note: Only supported on macOS. Not available on iOS due to TextKit limitations.
         public var areInvisibleCharactersVisible: Bool = false
 

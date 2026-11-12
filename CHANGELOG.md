@@ -9,6 +9,43 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ### Fixed
 
+- Ten `EditorConfiguration` values that were stored, encoded and offered by
+  host settings but never read by the editor now do what they say:
+  - `behavior.autoCloseBrackets` and `behavior.autoCloseQuotes`: typing an
+    opening bracket or a quote inserts its pair, typing a closer that is
+    already there steps over it, and typing either over a selection wraps the
+    selection. A bracket typed in front of a word, and an apostrophe inside
+    one, are left alone. Both default to on, so **every host gets this
+    behaviour unless it turns the values off**.
+  - `behavior.isAutoIndentEnabled`: Return keeps the line's indentation, goes
+    one level deeper after an opening bracket or a trailing colon, and between
+    a bracket pair puts the closer on its own line. Defaults to on, with the
+    same consequence for hosts.
+  - `behavior.isAutomaticLinkDetectionEnabled`: applied to the text view
+    (set-up used to force it off). Turning it off removes the links already
+    detected.
+  - `behavior.showInlineCompletionSuggestions`: off stops the system's inline
+    predictions appearing in the editor; on (the default) follows the user's
+    system-wide setting, as before.
+  - `behavior.completionTriggerCharacters`: a configured set now replaces the
+    language's own trigger characters. The default value
+    (`Behavior.defaultCompletionTriggerCharacters`, new) stands for "use the
+    language's own", so hosts that never set it see no change.
+  - `layout.characterSpacing`: applied as kerning to the document and to
+    typed text.
+  - `layout.textContainerWidthFraction`: narrows the wrapping width when
+    `wrapLines` is on, and follows the view as it is resized. It has no
+    effect without wrapping.
+  - `display.areInvisibleCharactersVisible`: spaces, tabs and line endings
+    are drawn as marks (macOS). The marks come from the editor's own layout
+    fragment, which is only installed while the setting is on; toggling it
+    moves no text.
+  - `display.areAnnotationsEnabled`: off hides annotation views without
+    discarding the annotations.
+- `display.visibleLines` and `layout.textContainerInset` are still not read
+  by the macOS editor view; their documentation now says so instead of
+  implying an effect. `visibleLines` is a sizing hint for hosts.
+
 - A memory-cleanup pass no longer empties the editor's line geometry store.
   `MemoryManagementCoordinator` reset it as if it were a cache, but it is the
   editor's line index and nothing rebuilds it before the next character edit:

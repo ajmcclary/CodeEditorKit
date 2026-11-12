@@ -30,16 +30,23 @@ extension EditorConfiguration {
         /// Padding for line numbers within the gutter
         public var lineNumberPadding: CGFloat = PlatformConstants.defaultLineNumberPadding
 
-        /// Text container inset
+        /// Padding around the text.
+        ///
+        /// - Note: Not applied on macOS yet: there the horizontal text
+        ///   padding follows `lineNumberPadding` and no vertical padding is
+        ///   added. Honouring four independent edges needs every geometry
+        ///   calculation that assumes a symmetric `NSTextView` inset to use
+        ///   the container origin instead.
         public var textContainerInset = PlatformConstants.defaultTextContainerInset
 
         /// Line height multiple
         public var lineHeightMultiple: CGFloat = PlatformConstants.defaultLineHeightMultiple
 
-        /// Inter-character spacing
+        /// Extra space between characters, in points (kerning).
         public var characterSpacing: CGFloat = 0
 
-        /// Text container fraction (1.0 = full width)
+        /// The fraction of the editor's width that wrapped lines may fill
+        /// (1.0 = full width). Has no effect unless `wrapLines` is on.
         public var textContainerWidthFraction: CGFloat = 1.0
 
         /// Size of annotation badges

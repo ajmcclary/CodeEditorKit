@@ -143,6 +143,12 @@ extension CodeEditorView {
             existingView.removeFromSuperview()
         }
 
+        // Hidden, not discarded: turning annotations back on redraws them.
+        guard configuration.display.areAnnotationsEnabled else {
+            annotationViews[annotation.id] = nil
+            return
+        }
+
         // Create new annotation view using data source
         guard let dataSource = annotationsDataSource else {
             return

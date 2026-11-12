@@ -12,7 +12,8 @@ import AppKit
 extension CodeEditorView {
     // MARK: - Paragraph Style
 
-    /// Apply paragraph style settings for tab width and line spacing
+    /// Apply paragraph style settings for tab width and line spacing, and
+    /// the character spacing.
     internal func applyParagraphStyle() {
         // Get font to use for calculations
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
@@ -30,15 +31,26 @@ extension CodeEditorView {
             let range = NSRange(location: 0, length: textStorage.length)
             textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
 
+            // Character spacing is kerning on the text itself; layout reads
+            // it from the storage, so rendering attributes cannot carry it.
+            let characterSpacing = configuration.layout.characterSpacing
+            var typingAttrs = typingAttributes
+            if characterSpacing != 0 {
+                textStorage.addAttribute(.kern, value: characterSpacing, range: range)
+                typingAttrs[.kern] = characterSpacing
+            } else {
+                textStorage.removeAttribute(.kern, range: range)
+                typingAttrs[.kern] = nil
+            }
+
             #if canImport(AppKit)
             // Set as default paragraph style for new text
             defaultParagraphStyle = paragraphStyle
             #else
             // Set as typing attributes for new text
-            var typingAttrs = typingAttributes
             typingAttrs[.paragraphStyle] = paragraphStyle
-            typingAttributes = typingAttrs
             #endif
+            typingAttributes = typingAttrs
         }
 
         // Force text view to relayout and redraw
@@ -150,6 +162,7 @@ extension CodeEditorView {
 
         super.setFrameSize(newSize)
         updateGutterFrame()
+        applyWrapWidthFraction()
 
         // Restore scroll position if needed
         if let scrollView = enclosingScrollView,
@@ -196,6 +209,7 @@ extension CodeEditorView {
             // Ensure proper tracking settings
             textContainer.widthTracksTextView = true
             isHorizontallyResizable = false
+            applyWrapWidthFraction()
 
             // Invalidate through TextKit2. Reading `textContainer.layoutManager`
             // coerces the AppKit view to TextKit1 and clears `textLayoutManager`.
@@ -226,11 +240,13 @@ extension CodeEditorView {
         if configuration.layout.wrapLines {
             // Enable word wrapping
             textContainer.lineBreakMode = .byWordWrapping
+            let fraction = wrapWidthFraction
             textContainer.size = CGSize(
-                width: bounds.width - textContainerInset.left - textContainerInset.right,
+                width: (bounds.width - textContainerInset.left - textContainerInset.right) * fraction,
                 height: CGFloat.greatestFiniteMagnitude
             )
-            textContainer.widthTracksTextView = true
+            // A tracking container always takes the view's full width.
+            textContainer.widthTracksTextView = fraction >= 1
 
             // Update scrolling behavior
             self.alwaysBounceHorizontal = false
@@ -251,7 +267,36 @@ extension CodeEditorView {
         #endif
     }
 
+    /// `layout.textContainerWidthFraction`, limited to a width text can be
+    /// laid out in.
+    internal var wrapWidthFraction: CGFloat {
+        min(max(configuration.layout.textContainerWidthFraction, 0.1), 1)
+    }
+
     #if canImport(AppKit)
+    /// Narrows the wrapping width to `layout.textContainerWidthFraction` of
+    /// the editor's width.
+    ///
+    /// Every site that sizes the container for wrapping sets it to the full
+    /// width, tracking the view; this runs after them. A tracking container
+    /// always takes the view's full width, so a narrower one stops tracking
+    /// and is resized here whenever the view's width changes.
+    internal func applyWrapWidthFraction() {
+        guard configuration.layout.wrapLines, let textContainer else { return }
+        let fraction = wrapWidthFraction
+        guard fraction < 1 else { return }
+
+        let viewWidth = enclosingScrollView?.contentView.bounds.width ?? bounds.width
+        let fullWidth = viewWidth - textContainerInset.width * 2
+        guard fullWidth > 0 else { return }
+
+        textContainer.widthTracksTextView = false
+        let width = (fullWidth * fraction).rounded(.down)
+        if abs(textContainer.containerSize.width - width) > 0.5 {
+            textContainer.containerSize = NSSize(width: width, height: CGFloat.greatestFiniteMagnitude)
+        }
+    }
+
     private func updateDocumentFrameForCurrentLayout() {
         guard let scrollView = enclosingScrollView else { return }
 

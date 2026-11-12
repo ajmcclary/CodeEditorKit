@@ -1,3 +1,4 @@
+import CodeEditorConfiguration
 import CodeEditorInstrumentation
 import CodeEditorPlatform
 import Foundation
@@ -113,9 +114,17 @@ extension CodeEditorView {
         lineGeometrySyncedGeneration = textChangeEventGeneration
     }
 
+    /// The characters that open the completion list when typed: the
+    /// configured set, or the language's own while the configuration still
+    /// holds `Behavior.defaultCompletionTriggerCharacters`.
     internal func updateCompletionTriggerCharacters() {
-        let syntaxService = featureDependencies.syntaxHighlightingService
-        completionTriggerCharacters = syntaxService.completionTriggerCharacters(for: language)
+        let configured = configuration.behavior.completionTriggerCharacters
+        if configured == EditorConfiguration.Behavior.defaultCompletionTriggerCharacters {
+            let syntaxService = featureDependencies.syntaxHighlightingService
+            completionTriggerCharacters = syntaxService.completionTriggerCharacters(for: language)
+        } else {
+            completionTriggerCharacters = configured
+        }
     }
 
     /// Bridge between `EditorController.markClean()` and the coordinator

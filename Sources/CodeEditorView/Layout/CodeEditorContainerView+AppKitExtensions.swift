@@ -136,6 +136,7 @@ extension CodeEditorContainerView {
                     height: CGFloat.greatestFiniteMagnitude
                 )
                 textView.textContainer?.widthTracksTextView = true
+                textView.applyWrapWidthFraction()
 
                 // Layout has already been updated by setting the frame and container size
             } else {

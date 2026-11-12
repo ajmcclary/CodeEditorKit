@@ -7,6 +7,10 @@ import CodeEditorPlatform
 package final class TextLayoutFragment: NSTextLayoutFragment {
     private let defaultParagraphStyle: NSParagraphStyle
     package var isInvisibleCharactersEnabled: Bool = false
+    /// Whether each line is moved up to sit in the middle of a line taller
+    /// than its font (`lineHeightMultiple` > 1). Off draws the lines where
+    /// the system's own fragment does.
+    package var centersLinesVertically: Bool = true
 
     package init(textElement: NSTextElement, range rangeInElement: NSTextRange?, paragraphStyle: NSParagraphStyle) {
         defaultParagraphStyle = paragraphStyle
@@ -25,6 +29,16 @@ package final class TextLayoutFragment: NSTextLayoutFragment {
     //    super.layoutFragmentFrame
     // }
 
+    /// A line-ending mark is drawn past the end of the line's own glyphs,
+    /// outside the surface the system would otherwise give the fragment.
+    override package var renderingSurfaceBounds: CGRect {
+        let bounds = super.renderingSurfaceBounds
+        guard isInvisibleCharactersEnabled else { return bounds }
+        return bounds.insetBy(dx: -Self.lineEndingMarkAllowance, dy: 0)
+    }
+
+    private static let lineEndingMarkAllowance: CGFloat = 32
+
     override package func draw(at point: CGPoint, in context: CGContext) {
         // Layout fragment draw text at the bottom (after apply baselineOffset) but ignore the paragraph line height
         // This is a workaround/patch to position text nicely in the line
@@ -34,6 +48,17 @@ package final class TextLayoutFragment: NSTextLayoutFragment {
 
         if state.rawValue < NSTextLayoutFragment.State.layoutAvailable.rawValue {
             super.draw(at: point, in: context)
+            return
+        }
+
+        guard centersLinesVertically else {
+            super.draw(at: point, in: context)
+            if isInvisibleCharactersEnabled {
+                context.saveGState()
+                context.translateBy(x: point.x, y: point.y)
+                drawInvisibles(in: context)
+                context.restoreGState()
+            }
             return
         }
 
@@ -83,89 +108,59 @@ package final class TextLayoutFragment: NSTextLayoutFragment {
         // #endif
 
         if isInvisibleCharactersEnabled {
-            drawInvisibles(at: point, in: context)
+            context.translateBy(x: point.x, y: point.y)
+            drawInvisibles(in: context)
         }
 
         context.restoreGState()
     }
 
-    private func drawInvisibles(at _: CGPoint, in context: CGContext) {
-        guard let textLayoutManager else {
-            return
-        }
-
+    /// Draws a mark over each whitespace character, in the character's own
+    /// font so the mark sits on the line's baseline.
+    private func drawInvisibles(in context: CGContext) {
         context.saveGState()
+        defer { context.restoreGState() }
 
         for lineFragment in textLineFragments where !lineFragment.isExtraLineFragment {
-            let sourceString = lineFragment.attributedString.string
+            let attributedString = lineFragment.attributedString
+            // swiftlint:disable:next legacy_objc_type
+            let text = attributedString.string as NSString
+            let range = lineFragment.characterRange
+            guard range.location != NSNotFound, NSMaxRange(range) <= text.length else { continue }
+            let lineOrigin = lineFragment.typographicBounds.origin
 
-            guard let lineFragmentTextRange = lineFragment.textRange(in: self),
-                  let lineFragmentRange = Range(lineFragment.characterRange, in: sourceString)
-            else {
-                continue
-            }
-
-            let substring = sourceString[lineFragmentRange]
-
-            for (offset, character) in substring.utf16.enumerated()
-                where Unicode.Scalar(character)?.properties.isWhitespace == true {
-                guard let segmentLocation = textLayoutManager.location(
-                    lineFragmentTextRange.location,
-                    offsetBy: offset
-                ),
-                    let segmentRange = NSTextRange(location: segmentLocation, end: segmentLocation),
-                    let segmentFrame = textLayoutManager.textSegmentFrame(in: segmentRange, type: .standard),
-                    let font = lineFragment.attributedString.attribute(
-                        .font,
-                        at: offset,
-                        effectiveRange: nil
-                    ) as? PlatformFont
+            for index in range.location..<NSMaxRange(range) {
+                let character = text.character(at: index)
+                guard Unicode.Scalar(character)?.properties.isWhitespace == true,
+                      let font = attributedString.attribute(.font, at: index, effectiveRange: nil) as? PlatformFont
                 else {
                     continue
                 }
 
                 let symbol: Character = switch character {
-                case 0x0020: "\u{00B7}" // • Space
+                case 0x0020: "\u{00B7}" // · Space
                 case 0x0009: "\u{00BB}" // » Tab
                 case 0x000A: "\u{00AC}" // ¬ Line Feed
                 case 0x000D: "\u{21A9}" // ↩ Carriage Return
-                case 0x00A0: "\u{235F}" // ⎵ Non-Breaking Space
-                case 0x200B: "\u{205F}" // ⸱ Zero Width Space
-                case 0x200C: "\u{200C}" // ‌ Zero Width Non-Joiner
-                case 0x200D: "\u{200D}" // ‍ Zero Width Joiner
-                case 0x2060: "\u{205F}" //   Word Joiner
+                case 0x00A0: "\u{235F}" // ⍟ Non-Breaking Space
                 case 0x2028: "\u{23CE}" // ⏎ Line Separator
                 case 0x2029: "\u{00B6}" // ¶ Paragraph Separator
-                default: "\u{00B7}" // • Default symbol for unspecified whitespace
+                default: "\u{00B7}" // · Any other whitespace
                 }
 
-                let symbolString = String(symbol)
-                let attributes: [NSAttributedString.Key: Any] = [
-                    .font: font,
-                    .foregroundColor: PlatformColors.placeholderTextColor
-                ]
-
-                let charSize = symbolString.size(withAttributes: attributes)
-                let writingDirection = textLayoutManager.baseWritingDirection(at: lineFragmentTextRange.location)
-
-                let frameRect = CGRect(
-                    origin: CGPoint(
-                        x: segmentFrame.origin.x - layoutFragmentFrame.origin.x,
-                        y: segmentFrame.origin.y - layoutFragmentFrame.origin.y
+                let location = lineFragment.locationForCharacter(at: index)
+                String(symbol).draw(
+                    at: CGPoint(
+                        x: lineOrigin.x + location.x,
+                        y: lineOrigin.y + lineFragment.glyphOrigin.y - font.ascender
                     ),
-                    size: segmentFrame.size
+                    withAttributes: [
+                        .font: font,
+                        .foregroundColor: PlatformColors.placeholderTextColor
+                    ]
                 )
-
-                let point = CGPoint(
-                    x: frameRect.origin.x - (writingDirection == .leftToRight ? 0 : charSize.width),
-                    y: frameRect.origin.y
-                )
-
-                symbolString.draw(at: point, withAttributes: attributes)
             }
         }
-
-        context.restoreGState()
     }
 
     deinit {

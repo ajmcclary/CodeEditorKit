@@ -66,6 +66,10 @@ extension CodeEditorView {
 
         // Apply word wrap settings (especially important on iOS when font size changes)
         ContainerViewHelper.configureTextViewScrolling(self, wrapLines: configuration.layout.wrapLines)
+        #if canImport(AppKit)
+        // The line above makes a wrapping container track the full width again.
+        applyWrapWidthFraction()
+        #endif
 
         // Update text container size for word wrap changes
         #if canImport(UIKit)
@@ -88,6 +92,11 @@ extension CodeEditorView {
         isGrammarCheckingEnabled = configuration.behavior.isGrammarCheckingEnabled
         isContinuousSpellCheckingEnabled = configuration.behavior.isContinuousSpellCheckingEnabled
         #endif
+        applyLinkDetection()
+        applyInlinePredictions()
+
+        // The configured trigger characters, or the language's own.
+        updateCompletionTriggerCharacters()
 
         // Update code folding configuration
         updateCodeFoldingConfiguration()
@@ -208,16 +217,57 @@ extension CodeEditorView {
         }
     }
 
+    // MARK: - Text Input Behavior
+
+    /// Applies `behavior.isAutomaticLinkDetectionEnabled`. Turning it on
+    /// also checks the text already in the document; turning it off removes
+    /// the links detection added, which the text system would otherwise
+    /// keep drawing.
+    private func applyLinkDetection() {
+        let isEnabled = configuration.behavior.isAutomaticLinkDetectionEnabled
+        #if canImport(AppKit)
+        guard isAutomaticLinkDetectionEnabled != isEnabled else { return }
+        isAutomaticLinkDetectionEnabled = isEnabled
+        if isEnabled {
+            checkTextInDocument(nil)
+        } else if let storage = textContentStorage?.textStorage, storage.length > 0 {
+            storage.removeAttribute(.link, range: NSRange(location: 0, length: storage.length))
+        }
+        #else
+        // UIKit only detects links in text that is not editable.
+        dataDetectorTypes = isEnabled ? .link : []
+        #endif
+    }
+
+    /// Applies `behavior.showInlineCompletionSuggestions` to the system's
+    /// inline predictions: off never shows them in the editor, on follows
+    /// the user's system-wide setting.
+    private func applyInlinePredictions() {
+        inlinePredictionType = configuration.behavior.showInlineCompletionSuggestions ? .default : .no
+    }
+
     // MARK: - Layout Manager Settings
 
+    /// Applies `display.areInvisibleCharactersVisible`.
+    ///
+    /// `NSLayoutManager.showsInvisibleCharacters` is TK1-only, and reading
+    /// the legacy `layoutManager` on a TK2-initialized NSTextView triggers
+    /// Apple's TK1 compatibility shim and clears `textLayoutManager`. Under
+    /// TK2 the marks are drawn by `TextLayoutFragment`, which the layout
+    /// manager only vends while this view is its delegate — so the delegate
+    /// is installed for exactly as long as the setting is on, and editors
+    /// that leave it off keep the system's own fragments.
     private func updateLayoutManagerSettings() {
-        // `NSLayoutManager.showsInvisibleCharacters` is TK1-only; reading the
-        // legacy `layoutManager` property on a TK2-initialized NSTextView
-        // triggers Apple's TK1 compatibility shim and clears
-        // `textLayoutManager`. Showing invisible characters under TK2 requires
-        // a separate rendering-attribute-based implementation and is currently
-        // not wired up. Tracked as a known gap; the property setter is a
-        // deliberate no-op so we don't re-arm the coercion.
+        #if canImport(AppKit)
+        guard let textLayoutManager else { return }
+        let isEnabled = configuration.display.areInvisibleCharactersVisible
+        let isInstalled = textLayoutManager.delegate === self
+        guard isEnabled != isInstalled else { return }
+        textLayoutManager.delegate = isEnabled ? self : nil
+        // Existing fragments were made by the previous vendor.
+        textLayoutManager.invalidateLayout(for: textLayoutManager.documentRange)
+        needsDisplay = true
+        #endif
     }
 
     // MARK: - Syntax Highlighting Toggle

@@ -15,7 +15,29 @@ extension CodeEditorView {
 
     #if canImport(AppKit)
     override public func insertText(_ string: Any, replacementRange: NSRange) {
-        super.insertText(string, replacementRange: replacementRange)
+        if let typed = string as? String, isEditable, !hasMarkedText() {
+            let target = replacementRange.location != NSNotFound ? replacementRange : selectedRange()
+            switch typedInputAction(for: typed, selection: target) {
+            case .passThrough:
+                super.insertText(string, replacementRange: replacementRange)
+
+            case let .insert(text, caretBacktrack):
+                let lengthBefore = textKitBridge.documentLength
+                super.insertText(text, replacementRange: replacementRange)
+                // A delegate may have refused the edit; only then is there
+                // no inserted text to step back into.
+                let inserted = textKitBridge.documentLength - lengthBefore + target.length
+                if caretBacktrack > 0, inserted == text.utf16.count {
+                    setSelectedRange(NSRange(location: max(0, selectedRange().location - caretBacktrack), length: 0))
+                }
+
+            case .stepOver:
+                setSelectedRange(NSRange(location: target.location + 1, length: 0))
+                return
+            }
+        } else {
+            super.insertText(string, replacementRange: replacementRange)
+        }
 
         // Update syntax highlighting for the affected area
         if isSyntaxHighlightingEnabled {
@@ -23,9 +45,52 @@ extension CodeEditorView {
             applySyntaxHighlighting(in: range)
         }
     }
+
+    /// Return keeps the line's indentation when `behavior.isAutoIndentEnabled`
+    /// is on. Routed through `insertText` so the edit is one undo step.
+    override public func insertNewline(_ sender: Any?) {
+        guard configuration.behavior.isAutoIndentEnabled, isEditable, !hasMarkedText() else {
+            super.insertNewline(sender)
+            return
+        }
+        insertText("\n", replacementRange: selectedRange())
+    }
     #else
-    // UITextView handles text insertion differently - use text did change notifications instead
+    override public func insertText(_ text: String) {
+        guard isEditable, markedTextRange == nil else {
+            super.insertText(text)
+            return
+        }
+        let target = selectedRange
+        switch typedInputAction(for: text, selection: target) {
+        case .passThrough:
+            super.insertText(text)
+
+        case let .insert(replacement, caretBacktrack):
+            let lengthBefore = textKitBridge.documentLength
+            super.insertText(replacement)
+            let inserted = textKitBridge.documentLength - lengthBefore + target.length
+            if caretBacktrack > 0, inserted == replacement.utf16.count {
+                selectedRange = NSRange(location: max(0, selectedRange.location - caretBacktrack), length: 0)
+            }
+
+        case .stepOver:
+            selectedRange = NSRange(location: target.location + 1, length: 0)
+        }
+    }
     #endif
+
+    /// How the auto-close and auto-indent settings change `typed`.
+    internal func typedInputAction(for typed: String, selection: NSRange) -> TypedInputAction {
+        TypedInputPolicy.action(
+            for: typed,
+            selection: selection,
+            // swiftlint:disable:next legacy_objc_type
+            in: textKitBridge.documentString as NSString,
+            configuration: configuration,
+            textEditingService: featureDependencies.textEditingService
+        )
+    }
 
     // MARK: - Text Properties
 
@@ -496,13 +561,18 @@ extension CodeEditorView {
         textLayoutFragmentFor _: NSTextLocation,
         in textElement: NSTextElement
     ) -> NSTextLayoutFragment {
-        // Create the fragment with default paragraph style
-        // The style will be updated later if needed
-        TextLayoutFragment(
+        // This view is only the layout manager's delegate while
+        // `display.areInvisibleCharactersVisible` is on, so every fragment
+        // it vends draws the marks. Lines stay where the system's own
+        // fragment draws them, so toggling the setting moves no text.
+        let fragment = TextLayoutFragment(
             textElement: textElement,
             range: textElement.elementRange,
             paragraphStyle: NSParagraphStyle.default
         )
+        fragment.isInvisibleCharactersEnabled = true
+        fragment.centersLinesVertically = false
+        return fragment
     }
     #endif
 }

@@ -15,13 +15,14 @@ extension EditorConfiguration {
         /// Whether the editor is selectable
         public var isSelectable: Bool = true
 
-        /// Whether auto-indentation is enabled.
+        /// Whether Return keeps the current line's indentation, one level
+        /// deeper after an opening bracket or a trailing colon.
         public var isAutoIndentEnabled: Bool = true
 
         /// Whether code completion is enabled.
         public var isCodeCompletionEnabled: Bool = true
 
-        /// Whether to detect links in text
+        /// Whether URLs in the text are detected and drawn as links.
         public var isAutomaticLinkDetectionEnabled: Bool = false
 
         /// Whether to enable automatic quote substitution
@@ -30,10 +31,11 @@ extension EditorConfiguration {
         /// Whether to enable automatic dash substitution
         public var isAutomaticDashSubstitutionEnabled: Bool = false
 
-        /// Whether to automatically close brackets
+        /// Whether typing `(`, `[` or `{` also inserts its closer, and typing
+        /// a closer that is already there steps over it.
         public var autoCloseBrackets: Bool = true
 
-        /// Whether to automatically close quotes
+        /// Whether typing `"`, `'` or a backtick also inserts its pair.
         public var autoCloseQuotes: Bool = true
 
         /// Whether to enable continuous spell checking
@@ -51,11 +53,22 @@ extension EditorConfiguration {
         /// Whether to enable automatic text completion
         public var isAutomaticTextCompletionEnabled: Bool = false
 
-        /// Whether to show completion suggestions inline
+        /// Whether the system's inline predictions may appear in the editor.
+        ///
+        /// `true` follows the user's system-wide setting; `false` never shows
+        /// them here.
         public var showInlineCompletionSuggestions: Bool = true
 
-        /// Completion trigger characters
-        public var completionTriggerCharacters: Set<Character> = [".", ":", "\"", "'", "/", "<", " "]
+        /// The characters that open the completion list when typed.
+        ///
+        /// While this holds `defaultCompletionTriggerCharacters` the editor
+        /// uses the current language's own trigger characters instead; any
+        /// other value is used as given, for every language.
+        public var completionTriggerCharacters: Set<Character> = Self.defaultCompletionTriggerCharacters
+
+        /// The initial `completionTriggerCharacters`, which stands for "use
+        /// the language's own".
+        public static let defaultCompletionTriggerCharacters: Set<Character> = [".", ":", "\"", "'", "/", "<", " "]
 
         /// Whether to automatically scroll to cursor position.
         ///
@@ -112,7 +125,7 @@ extension EditorConfiguration.Behavior: Codable {
         if let characters = try container.decodeIfPresent(String.self, forKey: .completionTriggerCharacters) {
             completionTriggerCharacters = Set(characters)
         } else {
-            completionTriggerCharacters = [".", ":", "\"", "'", "/", "<", " "]
+            completionTriggerCharacters = Self.defaultCompletionTriggerCharacters
         }
 
         // Additional properties with defaults
