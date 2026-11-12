@@ -11,7 +11,8 @@ import UIKit
 /// Search and replace engine for the code editor
 @MainActor
 public final class SearchReplaceEngine: ObservableObject {
-    private let logger = CodeEditorLog.logger(category: "SearchReplaceEngine")
+    nonisolated private static let logger = CodeEditorLog.logger(category: "SearchReplaceEngine")
+    private var logger: CrossPlatformLogger.Logger { Self.logger }
 
     // MARK: - Published Properties
 
@@ -23,7 +24,7 @@ public final class SearchReplaceEngine: ObservableObject {
     // MARK: - Search Configuration
 
     public var searchOptions = SearchOptions()
-    private var currentSearchTask: Task<Void, Never>?
+    private var currentSearchTask: Task<[SearchResult], Never>?
     private weak var textView: CodeEditorView?
 
     // MARK: - Initialization
@@ -75,13 +76,23 @@ public final class SearchReplaceEngine: ObservableObject {
         #else
         let text = textView.text ?? ""
         #endif
-        let results = await performSearch(
-            pattern: pattern,
-            in: text,
-            options: searchOptions
-        )
+        // Scan a snapshot off the main actor; a newer search, or cancelling
+        // the calling task, cancels this one.
+        let query = SearchQuery(pattern: pattern, options: searchOptions)
+        let searchTask = Task.detached(priority: .userInitiated) {
+            Self.performSearch(query, in: text)
+        }
+        currentSearchTask = searchTask
+        let scanned = await withTaskCancellationHandler {
+            await searchTask.value
+        } onCancel: {
+            searchTask.cancel()
+        }
+        if currentSearchTask == searchTask { currentSearchTask = nil }
 
-        guard !Task.isCancelled, self.textView === textView else { return [] }
+        let results = scanned
+        guard !Task.isCancelled, !searchTask.isCancelled,
+              self.textView === textView else { return [] }
         // Update results and statistics
         currentSearchResults = results
         currentSearchIndex = results.isEmpty ? -1 : (selectFirstResult ? 0 :
@@ -271,132 +282,139 @@ public final class SearchReplaceEngine: ObservableObject {
         #endif
     }
 
-    private func performSearch(
-        pattern: String,
-        in text: String,
-        options: SearchOptions
-    ) async -> [SearchResult] {
+    /// The Sendable part of `SearchOptions` the scan needs.
+    private struct SearchQuery: Sendable {
+        let pattern: String
+        let caseSensitive: Bool
+        let wholeWord: Bool
+        let useRegularExpression: Bool
+        let searchBackward: Bool
+
+        init(pattern: String, options: SearchOptions) {
+            self.pattern = pattern
+            caseSensitive = options.caseSensitive
+            wholeWord = options.wholeWord
+            useRegularExpression = options.useRegularExpression
+            searchBackward = options.searchBackward
+        }
+    }
+
+    /// Scans `text` once. Matches arrive in ascending order, so line numbers
+    /// come from one forward walk over the line starts. Returns early (with a
+    /// partial result the caller discards) when cancelled.
+    nonisolated private static func performSearch(_ query: SearchQuery, in text: String) -> [SearchResult] {
+        guard !query.pattern.isEmpty else { return [] }
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = text as NSString
+        var lines = LineNumberWalker(text: nsText)
         var results: [SearchResult] = []
-        guard !pattern.isEmpty else { return results }
 
-        do {
-            if options.useRegularExpression {
-                // Regex search
-                let regex = try NSRegularExpression(
-                    pattern: pattern,
-                    options: options.caseSensitive ? [] : .caseInsensitive
-                )
-
-                let matches = regex.matches(
-                    in: text,
-                    options: [],
-                    range: TextRangeUtilities.fullRange(in: text)
-                )
-
-                for match in matches {
-                    guard !options.wholeWord || isWholeWordMatch(match.range, in: text),
-                          let result = makeSearchResult(index: results.count, range: match.range, in: text)
-                    else {
-                        continue
-                    }
-                    results.append(result)
-                }
-            } else {
-                // Plain text search
-                var compareOptions: String.CompareOptions = []
-                if !options.caseSensitive {
-                    compareOptions.insert(.caseInsensitive)
-                }
-
-                var searchStart = text.startIndex
-
-                while searchStart < text.endIndex {
-                    let foundSwiftRange = text.range(
-                        of: pattern,
-                        options: compareOptions,
-                        range: searchStart..<text.endIndex
-                    )
-
-                    guard let foundSwiftRange else {
-                        break
-                    }
-
-                    let foundRange = NSRange(foundSwiftRange, in: text)
-                    if !options.wholeWord || isWholeWordMatch(foundRange, in: text),
-                       let result = makeSearchResult(index: results.count, range: foundRange, in: text) {
-                        results.append(result)
-                    }
-
-                    searchStart = foundSwiftRange.upperBound
-                }
-
-                if options.searchBackward {
-                    results = results.reversed().enumerated().map { index, result in
-                        SearchResult(
-                            index: index,
-                            range: result.range,
-                            matchedText: result.matchedText,
-                            lineNumber: result.lineNumber,
-                            context: result.context
-                        )
-                    }
-                }
-            }
-        } catch {
-            logger.error("Search failed: \(error.localizedDescription)")
+        func append(_ range: NSRange) {
+            guard !query.wholeWord || isWholeWordMatch(range, in: nsText) else { return }
+            results.append(SearchResult(
+                index: results.count,
+                range: range,
+                matchedText: nsText.substring(with: range),
+                lineNumber: lines.lineNumber(at: range.location),
+                context: context(for: range, in: nsText)
+            ))
         }
 
+        if query.useRegularExpression {
+            let regex: NSRegularExpression
+            do {
+                regex = try NSRegularExpression(
+                    pattern: query.pattern,
+                    options: query.caseSensitive ? [] : .caseInsensitive
+                )
+            } catch {
+                logger.error("Search failed: \(error.localizedDescription)")
+                return []
+            }
+            var cancelled = false
+            regex.enumerateMatches(
+                in: text,
+                options: [],
+                range: NSRange(location: 0, length: nsText.length)
+            ) { match, _, stop in
+                if Task.isCancelled {
+                    cancelled = true
+                    stop.pointee = true
+                    return
+                }
+                guard let range = match?.range, range.location != NSNotFound, range.length > 0,
+                      NSMaxRange(range) <= nsText.length else { return }
+                append(range)
+            }
+            if cancelled { return [] }
+        } else {
+            var compareOptions: String.CompareOptions = []
+            if !query.caseSensitive {
+                compareOptions.insert(.caseInsensitive)
+            }
+            var searchStart = 0
+            while searchStart < nsText.length {
+                if results.count.isMultiple(of: 256), Task.isCancelled { return [] }
+                let found = nsText.range(
+                    of: query.pattern,
+                    options: compareOptions,
+                    range: NSRange(location: searchStart, length: nsText.length - searchStart)
+                )
+                guard found.location != NSNotFound, found.length > 0 else { break }
+                append(found)
+                searchStart = NSMaxRange(found)
+            }
+
+            if query.searchBackward {
+                results = results.reversed().enumerated().map { index, result in
+                    SearchResult(
+                        index: index,
+                        range: result.range,
+                        matchedText: result.matchedText,
+                        lineNumber: result.lineNumber,
+                        context: result.context
+                    )
+                }
+            }
+        }
         return results
     }
 
-    private func makeSearchResult(index: Int, range: NSRange, in text: String) -> SearchResult? {
-        guard let matchedText = TextRangeUtilities.substring(inUTF16Range: range, from: text) else {
-            return nil
-        }
-
-        return SearchResult(
-            index: index,
-            range: range,
-            matchedText: matchedText,
-            lineNumber: lineNumber(for: range.location, in: text),
-            context: getContext(for: range, in: text)
-        )
-    }
-
-    private func isWholeWordMatch(_ range: NSRange, in text: String) -> Bool {
-        guard let swiftRange = Range(range, in: text) else { return false }
-
-        if swiftRange.lowerBound > text.startIndex {
-            let before = text[text.index(before: swiftRange.lowerBound)]
-            if TextRangeUtilities.isIdentifierCharacter(before) {
+    // swiftlint:disable:next legacy_objc_type
+    nonisolated private static func isWholeWordMatch(_ range: NSRange, in text: NSString) -> Bool {
+        if range.location > 0 {
+            let before = text.rangeOfComposedCharacterSequence(at: range.location - 1)
+            if let character = text.substring(with: before).first,
+               TextRangeUtilities.isIdentifierCharacter(character) {
                 return false
             }
         }
-
-        if swiftRange.upperBound < text.endIndex {
-            let after = text[swiftRange.upperBound]
-            if TextRangeUtilities.isIdentifierCharacter(after) {
+        let end = NSMaxRange(range)
+        if end < text.length {
+            let after = text.rangeOfComposedCharacterSequence(at: end)
+            if let character = text.substring(with: after).first,
+               TextRangeUtilities.isIdentifierCharacter(character) {
                 return false
             }
         }
-
         return true
     }
 
-    private func lineNumber(for location: Int, in text: String) -> Int {
-        let substring = TextRangeUtilities.substring(upToUTF16Offset: location, in: text)
-        return substring.components(separatedBy: .newlines).count
-    }
-
-    private func getContext(for range: NSRange, in text: String) -> String {
+    // swiftlint:disable:next legacy_objc_type
+    nonisolated private static func context(for range: NSRange, in text: NSString) -> String {
         let contextRadius = 40
-        let textLength = TextRangeUtilities.utf16Length(of: text)
+        let textLength = text.length
 
-        let contextStart = max(0, range.location - contextRadius)
-        let contextEnd = min(textLength, NSMaxRange(range) + contextRadius)
-        let contextRange = NSRange(location: contextStart, length: contextEnd - contextStart)
-
-        var context = TextRangeUtilities.substring(inUTF16Range: contextRange, from: text) ?? ""
+        var contextStart = max(0, range.location - contextRadius)
+        var contextEnd = min(textLength, NSMaxRange(range) + contextRadius)
+        // Do not split a surrogate pair or composed character at either edge.
+        if contextStart > 0 {
+            contextStart = text.rangeOfComposedCharacterSequence(at: contextStart).location
+        }
+        if contextEnd < textLength {
+            contextEnd = text.rangeOfComposedCharacterSequence(at: contextEnd).location
+        }
+        var context = text.substring(with: NSRange(location: contextStart, length: contextEnd - contextStart))
 
         // Add ellipsis if truncated
         if contextStart > 0 {
@@ -411,25 +429,14 @@ public final class SearchReplaceEngine: ObservableObject {
 
     private func highlightSearchResults(_ results: [SearchResult]) {
         guard let textView else { return }
-        let bridge = textView.textKitBridge
-        let fullRange = TextRangeUtilities.fullRange(in: bridge.documentString)
-
-        bridge.removePersistentAttribute(.backgroundColor, range: fullRange)
-
-        for result in results {
-            bridge.addPersistentAttributes(
-                [.backgroundColor: searchOptions.highlightColor],
-                range: result.range
-            )
-        }
-
+        var runs = results.map { ($0.range, searchOptions.highlightColor as Any) }
         if let currentColor = searchOptions.currentMatchColor,
            results.indices.contains(currentSearchIndex) {
-            bridge.addPersistentAttributes(
-                [.backgroundColor: currentColor],
-                range: results[currentSearchIndex].range
-            )
+            runs[currentSearchIndex].1 = currentColor
         }
+        // One editing transaction for all matches, not one (plus a layout
+        // pass) per match.
+        textView.textKitBridge.replacePersistentAttribute(.backgroundColor, with: runs)
     }
 
     private func repaintCurrentMatch(previousIndex: Int) {
@@ -538,7 +545,7 @@ public final class SearchReplaceEngine: ObservableObject {
 // MARK: - Supporting Types
 
 /// Search result information
-public struct SearchResult {
+public struct SearchResult: Sendable {
     /// The zero-based index of this search result in the results array
     public let index: Int
     /// The range in the document where this match was found
@@ -610,4 +617,33 @@ public struct SearchStatistics {
     public var lastMatchLine = 0
     /// The timestamp when the search was performed
     public var searchTime = Date()
+}
+
+// MARK: - Line numbers
+
+/// Answers 1-based line numbers for ascending UTF-16 offsets in one forward
+/// walk, with `NSString`'s line-terminator semantics (CRLF is one break).
+private struct LineNumberWalker {
+    // swiftlint:disable:next legacy_objc_type
+    private let text: NSString
+    private var lineStart = 0
+    private var lineEnd: Int
+    private var line = 1
+
+    // swiftlint:disable:next legacy_objc_type
+    init(text: NSString) {
+        self.text = text
+        lineEnd = text.length > 0 ? NSMaxRange(text.lineRange(for: NSRange(location: 0, length: 0))) : 0
+    }
+
+    mutating func lineNumber(at location: Int) -> Int {
+        while lineEnd <= location, lineEnd > lineStart {
+            lineStart = lineEnd
+            line += 1
+            lineEnd = lineStart < text.length
+                ? NSMaxRange(text.lineRange(for: NSRange(location: lineStart, length: 0)))
+                : lineStart
+        }
+        return line
+    }
 }

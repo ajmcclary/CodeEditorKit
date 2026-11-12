@@ -238,6 +238,24 @@ package final class TextKitBridge {
         ensureLayout(for: range)
     }
 
+    /// Clears `key` across the whole document and sets it on each run, all in
+    /// one editing transaction. For attributes that do not change layout
+    /// geometry (search highlights), so no layout pass is forced.
+    func replacePersistentAttribute(_ key: NSAttributedString.Key, with runs: [(NSRange, Any)]) {
+        guard let storage = safeTextStorage else { return }
+        let length = storage.length
+        withEditingTransaction {
+            storage.beginEditing()
+            storage.removeAttribute(key, range: NSRange(location: 0, length: length))
+            for (range, value) in runs {
+                let clamped = clampedRange(range, length: length)
+                guard clamped.length > 0 else { continue }
+                storage.addAttribute(key, value: value, range: clamped)
+            }
+            storage.endEditing()
+        }
+    }
+
     /// Remove multiple persistent text-storage attribute keys from a range.
     func removePersistentAttributes(_ keys: [NSAttributedString.Key], range: NSRange) {
         guard let storage = safeTextStorage else { return }
