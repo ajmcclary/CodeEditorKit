@@ -83,6 +83,19 @@ final class TextContainerInsetTests: XCTestCase {
         return container.configuration.display.isLineNumbersEnabled ? padding : padding / 2
     }
 
+    /// How far short of its symmetric inset AppKit itself puts the text
+    /// container.
+    ///
+    /// AppKit works the origin out from the inset and the laid-out text, and
+    /// the answer is not the same everywhere: for a text view that does not
+    /// wrap, macOS 27.0 (the CI image) stops 4 points short of the inset
+    /// where macOS 27.3 does not. The editor adds its shift to whatever
+    /// AppKit answers, so the tests measure from there too.
+    private func appKitShortfall(_ view: CodeEditorView) -> CGFloat {
+        let appKitOriginX = view.textContainerOrigin.x - view.textContainerOriginShift.x
+        return view.textContainerInset.width - appKitOriginX
+    }
+
     /// The extent of the laid-out text, in the text container's coordinates.
     private func documentExtent(_ view: CodeEditorView) throws -> CGRect {
         let layoutManager = try XCTUnwrap(view.textLayoutManager)
@@ -145,12 +158,14 @@ final class TextContainerInsetTests: XCTestCase {
                 // Exactly what the editor set before the inset was read:
                 // `lineNumberPadding` on both sides, nothing above or below.
                 XCTAssertEqual(view.textContainerInset, NSSize(width: padding, height: 0), label)
+                // With no shift the origin is AppKit's own, untouched.
                 XCTAssertEqual(view.textContainerOriginShift, .zero, label)
-                XCTAssertEqual(view.textContainerOrigin, NSPoint(x: padding, y: 0), label)
+                XCTAssertEqual(view.textContainerOrigin.y, 0, label)
 
                 configure(container) { $0.display.isLineNumbersEnabled = false }
                 XCTAssertEqual(view.textContainerInset, NSSize(width: padding / 2, height: 0), label)
-                XCTAssertEqual(view.textContainerOrigin, NSPoint(x: padding / 2, y: 0), label)
+                XCTAssertEqual(view.textContainerOriginShift, .zero, label)
+                XCTAssertEqual(view.textContainerOrigin.y, 0, label)
             }
         }
     }
@@ -161,7 +176,7 @@ final class TextContainerInsetTests: XCTestCase {
         forEachArrangement { container, label in
             let view = container.textView
             let origin = view.textContainerOrigin
-            XCTAssertEqual(origin.x, ownPadding(container) + inset.left, accuracy: 0.01, label)
+            XCTAssertEqual(origin.x, ownPadding(container) + inset.left - appKitShortfall(view), accuracy: 0.01, label)
             XCTAssertEqual(origin.y, inset.top, accuracy: 0.01, label)
 
             // AppKit itself places the text there: a point just inside the
@@ -218,7 +233,7 @@ final class TextContainerInsetTests: XCTestCase {
 
             let addedByAppKit = view.textContainerInset.width * 2
             let roomAfterText = addedByAppKit - view.textContainerOrigin.x
-            XCTAssertEqual(roomAfterText, ownPadding(container) + inset.right, accuracy: 0.01, label)
+            XCTAssertEqual(roomAfterText, ownPadding(container) + inset.right + appKitShortfall(view), accuracy: 0.01, label)
         }
     }
 
@@ -256,7 +271,8 @@ final class TextContainerInsetTests: XCTestCase {
         }
         let padding = ownPadding(container)
         XCTAssertEqual(container.textView.textContainerInset, NSSize(width: padding, height: 0))
-        XCTAssertEqual(container.textView.textContainerOrigin, NSPoint(x: padding, y: 0))
+        XCTAssertEqual(container.textView.textContainerOriginShift, .zero)
+        XCTAssertEqual(container.textView.textContainerOrigin.y, 0)
     }
 
     // MARK: - Line number padding
@@ -286,13 +302,13 @@ final class TextContainerInsetTests: XCTestCase {
 
         container.showsLineNumbers = false
         settle(container)
-        XCTAssertEqual(view.textContainerOrigin.x, padding / 2 + inset.left, accuracy: 0.01)
+        XCTAssertEqual(view.textContainerOrigin.x, padding / 2 + inset.left - appKitShortfall(view), accuracy: 0.01)
         XCTAssertEqual(view.textContainerOrigin.y, inset.top, accuracy: 0.01)
         XCTAssertEqual(container.baseTextContainerInsetWidth, padding / 2, accuracy: 0.01)
 
         container.showsLineNumbers = true
         settle(container)
-        XCTAssertEqual(view.textContainerOrigin.x, padding + inset.left, accuracy: 0.01)
+        XCTAssertEqual(view.textContainerOrigin.x, padding + inset.left - appKitShortfall(view), accuracy: 0.01)
         XCTAssertEqual(view.unifiedTextContainerInsets.right, padding + inset.right, accuracy: 0.01)
         XCTAssertEqual(container.baseTextContainerInsetWidth, padding, accuracy: 0.01)
     }
@@ -303,7 +319,7 @@ final class TextContainerInsetTests: XCTestCase {
         let view = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         view.setUnifiedTextContainerInsets(inset)
         XCTAssertEqual(view.unifiedTextContainerInsets, inset)
-        XCTAssertEqual(view.textContainerOrigin, NSPoint(x: inset.left, y: inset.top))
+        XCTAssertEqual(view.textContainerOrigin, NSPoint(x: inset.left - appKitShortfall(view), y: inset.top))
         // AppKit sizes the view and a tracking container from the symmetric
         // inset, so it has to hold the mean of each pair.
         XCTAssertEqual(view.textContainerInset.width * 2, inset.left + inset.right, accuracy: 0.01)
