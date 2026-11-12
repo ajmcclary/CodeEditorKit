@@ -165,15 +165,14 @@ public final class SearchReplaceEngine: ObservableObject {
 
         let result = currentSearchResults[index]
 
-        // Perform replacement
-        #if canImport(AppKit)
-        textView.replaceCharacters(in: result.range, with: replacement)
-        #else
-        if let text = textView.text,
-           let textRange = Range(result.range, in: text) {
-            textView.text = text.replacingCharacters(in: textRange, with: replacement)
-        }
-        #endif
+        // Through the text view's own editing path, so undo, the delegate's
+        // gating and the change notification the host listens to all see it.
+        guard applyUserEdit(
+            replacing: [result.range],
+            with: replacement,
+            in: textView,
+            actionName: "Replace"
+        ) else { return false }
 
         // Update search results
         let lengthDiff = TextRangeUtilities.utf16Length(of: replacement) - result.range.length
@@ -196,18 +195,15 @@ public final class SearchReplaceEngine: ObservableObject {
         let results = await findAll(pattern: pattern, options: searchOptions, selectFirstResult: false)
         guard !results.isEmpty else { return 0 }
 
-        // Sort results in reverse order to maintain correct ranges
-        let sortedResults = results.sorted { $0.range.location > $1.range.location }
-
-        var replacementCount = 0
-
-        // Group replacements under a single edit transaction via the bridge.
-        // The bridge routes through textContentStorage?.textStorage (TK2-safe).
-        let bridge = textView.textKitBridge
-        for result in sortedResults {
-            bridge.replaceCharacters(in: result.range, with: replacement)
-            replacementCount += 1
-        }
+        // One user edit: one undo group, one change notification.
+        let ranges = results.map(\.range).sorted { $0.location < $1.location }
+        guard applyUserEdit(
+            replacing: ranges,
+            with: replacement,
+            in: textView,
+            actionName: "Replace All"
+        ) else { return 0 }
+        let replacementCount = ranges.count
 
         // Clear search results after replace all
         currentSearchResults = []
@@ -232,6 +228,48 @@ public final class SearchReplaceEngine: ObservableObject {
     }
 
     // MARK: - Private Methods
+
+    /// Replaces `ranges` (ascending, non-overlapping) with `replacement` as a
+    /// single user edit: the text view's gating and undo registration run
+    /// first, the change notification is posted once afterwards, and the
+    /// whole edit is one undo step. Returns false when the view refused it.
+    private func applyUserEdit(
+        replacing ranges: [NSRange],
+        with replacement: String,
+        in textView: CodeEditorView,
+        actionName: String
+    ) -> Bool {
+        guard !ranges.isEmpty else { return false }
+        #if canImport(AppKit)
+        guard textView.shouldChangeText(
+            inRanges: ranges.map { NSValue(range: $0) },
+            replacementStrings: ranges.map { _ in replacement }
+        ) else { return false }
+        let bridge = textView.textKitBridge
+        for range in ranges.reversed() {
+            bridge.replaceCharacters(in: range, with: replacement)
+        }
+        textView.didChangeText()
+        textView.undoManager?.setActionName(actionName)
+        return true
+        #else
+        let undoManager = textView.undoManager
+        undoManager?.beginUndoGrouping()
+        defer {
+            undoManager?.setActionName(actionName)
+            undoManager?.endUndoGrouping()
+        }
+        var applied = false
+        for range in ranges.reversed() {
+            guard let start = textView.position(from: textView.beginningOfDocument, offset: range.location),
+                  let end = textView.position(from: start, offset: range.length),
+                  let textRange = textView.textRange(from: start, to: end) else { continue }
+            textView.replace(textRange, withText: replacement)
+            applied = true
+        }
+        return applied
+        #endif
+    }
 
     private func performSearch(
         pattern: String,

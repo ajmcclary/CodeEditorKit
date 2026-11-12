@@ -99,7 +99,74 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertEqual(textView.selectedRange(), NSRange(location: 10, length: 0))
     }
 
+    // MARK: - Replace through the normal change path
+
+    func testReplaceAllReachesTheHostAndIsOneUndoStep() throws {
+        let store = HostedEditorStore("foo one\nfoo two\nfoo three\n")
+        let textView = try host(store, mode: .controller)
+
+        let count = run { await store.controller.replaceAll("foo", with: "barbaz") }
+        spin(for: 0.3)
+
+        XCTAssertEqual(count, 3)
+        XCTAssertEqual(textView.string, "barbaz one\nbarbaz two\nbarbaz three\n")
+        XCTAssertEqual(store.text, textView.string)
+        let undoManager = try XCTUnwrap(textView.undoManager)
+        XCTAssertTrue(undoManager.canUndo)
+
+        // An unrelated state change must not put the old text back.
+        store.lineNumbers.toggle()
+        spin(for: 0.3)
+        XCTAssertEqual(textView.string, "barbaz one\nbarbaz two\nbarbaz three\n")
+
+        undoManager.undo()
+        spin(for: 0.3)
+        XCTAssertEqual(textView.string, "foo one\nfoo two\nfoo three\n")
+        XCTAssertEqual(store.text, textView.string)
+    }
+
+    func testReplaceCurrentReachesTheHostAndCanBeUndone() throws {
+        let store = HostedEditorStore("foo one\nfoo two\n")
+        let textView = try host(store, mode: .controller)
+
+        _ = run { await store.controller.find("foo").count }
+        XCTAssertTrue(store.controller.replaceCurrent(with: "Q"))
+        spin(for: 0.3)
+
+        XCTAssertEqual(textView.string, "Q one\nfoo two\n")
+        XCTAssertEqual(store.text, textView.string)
+        let undoManager = try XCTUnwrap(textView.undoManager)
+        XCTAssertTrue(undoManager.canUndo)
+        undoManager.undo()
+        spin(for: 0.3)
+        XCTAssertEqual(textView.string, "foo one\nfoo two\n")
+    }
+
+    func testUndoingTypingReachesTheHost() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .controller)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        type("XYZ", into: textView)
+        XCTAssertEqual(store.text, "abcXYZ")
+
+        try XCTUnwrap(textView.undoManager).undo()
+        spin(for: 0.3)
+
+        XCTAssertEqual(textView.string, "abc")
+        XCTAssertEqual(store.text, "abc")
+    }
+
     // MARK: - Hosting
+
+    func run<T>(_ operation: @escaping @MainActor () async -> T) -> T? {
+        var result: T?
+        Task { @MainActor in result = await operation() }
+        let deadline = Date().addingTimeInterval(10)
+        while result == nil, Date() < deadline {
+            spin(for: 0.02)
+        }
+        return result
+    }
 
     @discardableResult
     func host(_ store: HostedEditorStore, mode: HostedEditorMode) throws -> CodeEditorView {

@@ -55,6 +55,9 @@ extension CodeEditorView {
 
         // Set up accessibility support
         setupAccessibility()
+
+        // Tell observers about text an undo or redo changed
+        installUndoChangeObservers()
     }
 
     internal func setupDefaultTheme() {

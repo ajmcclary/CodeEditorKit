@@ -196,6 +196,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal var hasCompletedTextViewSetup = false
     internal var textChangeEventGeneration: UInt64 = 0
 
+    /// The `textChangeEventGeneration` at the last `didChangeText()`, so a
+    /// character edit that reached the storage without that call (a TextKit 2
+    /// undo or redo) can be told apart.
+    internal var textChangeGenerationAtLastDidChangeText: UInt64 = 0
+
     /// The `textChangeEventGeneration` the line geometry store was last
     /// rebuilt at. A full rebuild reads the text storage as it is, so the
     /// store already contains every character edit up to this generation,
