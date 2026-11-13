@@ -10,6 +10,12 @@ final class LSPDocumentManager {
     /// Open documents by URI
     private var openDocuments: [String: OpenDocument] = [:]
 
+    /// Opens in flight by URI. A second open (or an update) of a document
+    /// that is still opening waits for that open instead of sending its own
+    /// `didOpen`: the document is recorded only after the server accepted it
+    /// (finding services-28), so without this two callers both saw it closed.
+    private var openingDocuments: [String: Task<Void, any Error>] = [:]
+
     /// Logger for debugging
     private let logger = CodeEditorLog.lsp(category: "LSPDocumentManager")
 
@@ -39,6 +45,36 @@ final class LSPDocumentManager {
         }
 
         let uri = LSPDocumentURI.uri(forFilePath: filePath)
+
+        // Already open, or opening: never a second didOpen without a close.
+        if let opening = openingDocuments[uri] {
+            try await opening.value
+        }
+        if let open = openDocuments[uri] {
+            if open.content != content {
+                try await updateDocument(filePath: filePath, content: content)
+            }
+            return
+        }
+
+        let task = Task<Void, any Error> { @MainActor [weak self] in
+            guard let self else { return }
+            try await self.performOpen(filePath: filePath, uri: uri, content: content, languageId: languageId)
+        }
+        openingDocuments[uri] = task
+        defer { openingDocuments[uri] = nil }
+        try await task.value
+    }
+
+    private func performOpen(
+        filePath: String,
+        uri: String,
+        content: String,
+        languageId: String?
+    ) async throws {
+        guard let clientRegistry else {
+            throw LSPError.invalidResponse("Client registry not available")
+        }
         let inferredLanguageId = languageId ?? languageIdFromFilePath(filePath)
 
         guard let finalLanguageId = inferredLanguageId else {
@@ -94,6 +130,11 @@ final class LSPDocumentManager {
         }
 
         let uri = LSPDocumentURI.uri(forFilePath: filePath)
+
+        // An update racing the document's open goes after it.
+        if let opening = openingDocuments[uri] {
+            try await opening.value
+        }
 
         guard var document = openDocuments[uri] else {
             logger.debug("Document not open: \(filePath)")
@@ -173,6 +214,12 @@ final class LSPDocumentManager {
     func getDocument(for filePath: String) -> OpenDocument? {
         let uri = LSPDocumentURI.uri(forFilePath: filePath)
         return openDocuments[uri]
+    }
+
+    /// Whether the document is open or its open is in flight.
+    func isOpenOrOpening(filePath: String) -> Bool {
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
+        return openDocuments[uri] != nil || openingDocuments[uri] != nil
     }
 
     /// Get all open documents

@@ -290,7 +290,7 @@ public final class LSPManager: ObservableObject {
     /// Whether a document is open in its language server.
     /// - Parameter filePath: Path to the file
     public func isDocumentOpen(filePath: String) -> Bool {
-        documentManager.getDocument(for: filePath) != nil
+        documentManager.isOpenOrOpening(filePath: filePath)
     }
 
     /// Close a document

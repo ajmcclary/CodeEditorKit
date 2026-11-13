@@ -16,4 +16,39 @@ struct LSPDocumentManagerTests {
 
         #expect(manager.getDocument(for: "/tmp/a.zz") == nil)
     }
+
+    /// The app opens a document and, at once, updates the completion
+    /// context, which opens it too if it is not open yet. Two opens in
+    /// flight for one document must send one `didOpen` (the spec forbids a
+    /// second open without a close).
+    @Test @MainActor func concurrentOpensOfOneDocumentSendOneDidOpen() async throws {
+        let server = ScriptedLSPServerTransport()
+        let registry = LSPClientRegistry {
+            let client = LSPClient(transport: server)
+            await client.setupMessageHandler()
+            client.recordingHandler = { _, languageId in
+                try? await client.connect(configuration: LSPClient.ServerConfiguration(
+                    languageId: languageId,
+                    serverPath: "scripted",
+                    workspaceRoot: URL(fileURLWithPath: "/tmp/proj")
+                ))
+            }
+            return client
+        }
+        registry.workspaceRoot = URL(fileURLWithPath: "/tmp/proj")
+        registry.registerLanguageServer(.remote(
+            languageId: "swift",
+            url: try #require(URL(string: "wss://example.invalid/swift")),
+            fileExtensions: ["swift"]
+        ))
+        let manager = LSPDocumentManager(clientRegistry: registry)
+
+        async let first: Void = manager.openDocument(filePath: "/tmp/proj/c.swift", content: "let a = 1", languageId: "swift")
+        async let second: Void = manager.openDocument(filePath: "/tmp/proj/c.swift", content: "let a = 1", languageId: "swift")
+        _ = try await (first, second)
+
+        let opens = await server.clientNotifications.filter { $0 == "textDocument/didOpen" }.count
+        #expect(opens == 1)
+        #expect(manager.getDocument(for: "/tmp/proj/c.swift") != nil)
+    }
 }
