@@ -49,8 +49,18 @@ public final class LSPCompletionProvider: CompletionProvider {
         guard let lspManager else { return false }
 
         // Check if we have a language server for this language
-        let languageId = languageIdForLanguage(language)
-        return lspManager.client(for: languageId) != nil
+        return lspManager.client(for: serverLanguageId(for: language)) != nil
+    }
+
+    /// The registry's language id for the current file (it may register
+    /// JavaScript under the TypeScript server), else the catalog's LSP id.
+    /// The former hand-copied table disagreed with both (`.shell`).
+    private func serverLanguageId(for language: Language) -> String {
+        if let currentFilePath,
+           let registered = lspManager?.languageId(for: URL(fileURLWithPath: currentFilePath).pathExtension) {
+            return registered
+        }
+        return language.lspIdentifier
     }
 
     public func requestCompletions(for context: CompletionContextModel) async -> CompletionResult {
@@ -70,7 +80,7 @@ public final class LSPCompletionProvider: CompletionProvider {
             )
         }
 
-        let languageId = languageIdForLanguage(context.language)
+        let languageId = serverLanguageId(for: context.language)
 
         // Check if LSP client is available
         guard lspManager.client(for: languageId) != nil else {
@@ -140,115 +150,20 @@ public final class LSPCompletionProvider: CompletionProvider {
         pendingDocumentSync = Task { [weak self] in
             _ = await previous?.value
             do {
-                try await lspManager.updateDocument(filePath: filePath, content: text)
-            } catch {
-                do {
+                // `updateDocument` silently ignores a document that is not
+                // open, so open it first instead of relying on a throw.
+                if lspManager.isDocumentOpen(filePath: filePath) {
+                    try await lspManager.updateDocument(filePath: filePath, content: text)
+                } else {
                     try await lspManager.openDocument(filePath: filePath, content: text)
-                } catch {
-                    self?.logger.error("Failed to open/update document in LSP: \(error.localizedDescription)")
                 }
+            } catch {
+                self?.logger.error("Failed to open/update document in LSP: \(error.localizedDescription)")
             }
         }
     }
 
     // MARK: - Private Methods
-
-    private func languageIdForLanguage(_ language: Language) -> String {
-        switch language {
-        case .swift:
-            return "swift"
-
-        case .javascript:
-            return "javascript"
-
-        case .typescript:
-            return "typescript"
-
-        case .python:
-            return "python"
-
-        case .go:
-            return "go"
-
-        case .rust:
-            return "rust"
-
-        case .c:
-            return "c"
-
-        case .cpp:
-            return "cpp"
-
-        case .java:
-            return "java"
-
-        case .html:
-            return "html"
-
-        case .css:
-            return "css"
-
-        case .json:
-            return "json"
-
-        case .markdown:
-            return "markdown"
-
-        case .yaml:
-            return "yaml"
-
-        case .xml:
-            return "xml"
-
-        case .sql:
-            return "sql"
-
-        case .ruby:
-            return "ruby"
-
-        case .php:
-            return "php"
-
-        case .shell:
-            return "shell"
-
-        case .dockerfile:
-            return "dockerfile"
-
-        case .toml:
-            return "toml"
-
-        case .lua:
-            return "lua"
-
-        case .csharp:
-            return "csharp"
-
-        case .kotlin:
-            return "kotlin"
-
-        case .dart:
-            return "dart"
-
-        case .mermaid:
-            return "mermaid"
-
-        case .d2:
-            return "d2"
-
-        case .dot:
-            return "dot"
-
-        case .structurizr:
-            return "structurizr"
-
-        case .plantuml:
-            return "plantuml"
-
-        case .plainText:
-            return "plaintext"
-        }
-    }
 
     private func convertPositionToLineCharacter(position: Int, in text: String) -> (line: Int, character: Int) {
         let converted = LSPTextPosition.position(forUTF16Offset: position, in: text)

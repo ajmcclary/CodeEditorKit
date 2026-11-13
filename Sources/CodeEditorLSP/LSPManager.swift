@@ -275,6 +275,12 @@ public final class LSPManager: ObservableObject {
         )
     }
 
+    /// Whether a document is open in its language server.
+    /// - Parameter filePath: Path to the file
+    public func isDocumentOpen(filePath: String) -> Bool {
+        documentManager.getDocument(for: filePath) != nil
+    }
+
     /// Close a document
     /// - Parameter filePath: Path to the file
     public func closeDocument(filePath: String) async throws {

@@ -46,14 +46,13 @@ final class LSPDocumentManager {
             return
         }
 
-        // Store document info
         let document = OpenDocument(
             uri: uri,
             languageId: finalLanguageId,
             version: 1,
-            filePath: filePath
+            filePath: filePath,
+            content: content
         )
-        openDocuments[uri] = document
 
         // Start language server if not running
         if clientRegistry.client(for: finalLanguageId) == nil {
@@ -65,7 +64,8 @@ final class LSPDocumentManager {
             }
         }
 
-        // Open document in LSP server
+        // Record the document only once the server has opened it: recording
+        // it first sent later didChanges for a document the server never saw.
         if let client = clientRegistry.client(for: finalLanguageId) {
             try await client.openDocument(
                 uri: uri,
@@ -73,6 +73,7 @@ final class LSPDocumentManager {
                 version: document.version,
                 text: content
             )
+            openDocuments[uri] = document
 
             logger.debug("Opened document in LSP: \(filePath)")
         }
@@ -100,6 +101,7 @@ final class LSPDocumentManager {
         }
 
         document.incrementVersion()
+        document.content = content
         openDocuments[uri] = document
 
         guard let client = clientRegistry.client(for: document.languageId) else {
@@ -147,16 +149,17 @@ final class LSPDocumentManager {
         guard let clientRegistry else { return }
         guard let client = clientRegistry.client(for: languageId) else { return }
 
-        for document in openDocuments.values where document.languageId == languageId {
+        for var document in openDocuments.values where document.languageId == languageId {
             do {
-                // Read current file content
-                let content = try String(contentsOfFile: document.filePath, encoding: .utf8)
-
+                // The editor's buffer, not the file on disk (which lacks
+                // unsaved edits), under a new version.
+                document.incrementVersion()
+                openDocuments[document.uri] = document
                 try await client.openDocument(
                     uri: document.uri,
                     languageId: document.languageId,
                     version: document.version,
-                    text: content
+                    text: document.content
                 )
             } catch {
                 logger.error("Failed to reopen document \(document.filePath): \(error.localizedDescription)")

@@ -188,6 +188,8 @@ struct OpenDocument {
     let languageId: String
     var version: Int
     let filePath: String
+    /// The editor's latest text, sent again by `reopenDocuments(for:)`.
+    var content: String = ""
 
     mutating func incrementVersion() {
         version += 1
