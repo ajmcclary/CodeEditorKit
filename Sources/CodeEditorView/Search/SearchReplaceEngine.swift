@@ -488,17 +488,27 @@ public final class SearchReplaceEngine: ObservableObject {
         let flashColor = searchOptions.flashColor
 
         bridge.addPersistentAttributes([.backgroundColor: flashColor], range: range)
+        let textGeneration = textView.textChangeEventGeneration
 
         Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
             guard let self, let textView = self.textView else { return }
             let bridge = textView.textKitBridge
-            bridge.removePersistentAttribute(.backgroundColor, range: range)
+            // The text may have shrunk past the range meanwhile.
+            let length = bridge.documentLength
+            let start = min(range.location, length)
+            let flashed = NSRange(location: start, length: min(range.length, length - start))
+            guard flashed.length > 0 else { return }
+            bridge.removePersistentAttribute(.backgroundColor, range: flashed)
 
-            guard self.searchOptions.highlightResults else { return }
-
-            let isCurrent = self.currentSearchResults.indices.contains(self.currentSearchIndex)
-                && self.currentSearchResults[self.currentSearchIndex].range == range
+            // Restore the match highlight only if this range is still a match
+            // of the live search over unchanged text (a Clear or an edit
+            // inside the flash must not leave a highlight behind).
+            guard self.searchOptions.highlightResults,
+                  textView.textChangeEventGeneration == textGeneration,
+                  let index = self.currentSearchResults.firstIndex(where: { $0.range == range })
+            else { return }
+            let isCurrent = index == self.currentSearchIndex
             let color = isCurrent
                 ? (self.searchOptions.currentMatchColor ?? self.searchOptions.highlightColor)
                 : self.searchOptions.highlightColor

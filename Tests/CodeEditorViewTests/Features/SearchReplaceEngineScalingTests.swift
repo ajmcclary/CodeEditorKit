@@ -66,5 +66,42 @@ final class SearchReplaceEngineScalingTests: XCTestCase {
         XCTAssertEqual(engine.currentSearchResults.count, 20_000)
         XCTAssertTrue(olderResults.isEmpty || olderResults.count == 40_000)
     }
+
+    private func backgroundRuns(in view: CodeEditorView) -> Int {
+        guard let storage = view.textContentStorage?.textStorage else { return 0 }
+        var runs = 0
+        storage.enumerateAttribute(.backgroundColor, in: NSRange(location: 0, length: storage.length)) { value, _, _ in
+            if value != nil { runs += 1 }
+        }
+        return runs
+    }
+
+    func testClearingInsideTheFlashLeavesNoHighlightBehind() async throws {
+        let view = makeView("alpha beta alpha")
+        let engine = SearchReplaceEngine()
+        engine.attach(to: view)
+        var options = SearchOptions()
+        options.flashResult = true
+
+        _ = await engine.findAll(pattern: "alpha", options: options, selectFirstResult: true)
+        engine.clearAll()
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertEqual(backgroundRuns(in: view), 0)
+    }
+
+    func testShorteningTheTextInsideTheFlashIsSafe() async throws {
+        let view = makeView("one two three four five alpha")
+        let engine = SearchReplaceEngine()
+        engine.attach(to: view)
+        var options = SearchOptions()
+        options.flashResult = true
+
+        _ = await engine.findAll(pattern: "alpha", options: options, selectFirstResult: true)
+        view.string = "one"
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertEqual(view.string, "one")
+    }
 }
 #endif
