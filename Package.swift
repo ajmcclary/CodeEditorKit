@@ -216,7 +216,7 @@ let package = Package(
         // package's CodeEditorWorkspace target (workspace decomposition
         // step 5) — that target is now an @_exported re-export shim.
         // Prerelease lower bound named explicitly (same rule as ProcessKit).
-        .package(url: "https://github.com/ajmcclary/WorkspaceKit.git", .upToNextMinor(from: "0.1.0-beta.11")),
+        .package(url: "https://github.com/ajmcclary/WorkspaceKit.git", .upToNextMinor(from: "0.1.0-beta.12")),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         // Test-only dependency. Upstream 1.19.3 builds cleanly under the

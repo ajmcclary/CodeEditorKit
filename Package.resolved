@@ -1,5 +1,5 @@
 {
-  "originHash" : "da405d56fc0159228a54b77a5cb4f8d75e33a462366891c6e42585272ff6a443",
+  "originHash" : "7ec78fa32e22fb33d86a5f188f0789b344135ca8ec1f53b43c35ea130062d11f",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ajmcclary/WorkspaceKit.git",
       "state" : {
-        "revision" : "a49b8420a06d52fb16214ffe1b633e0232ab2e39",
-        "version" : "0.1.0-beta.11"
+        "revision" : "ccf164c7a115741bb11c26c8524090b1cac2ae77",
+        "version" : "0.1.0-beta.12"
       }
     },
     {
