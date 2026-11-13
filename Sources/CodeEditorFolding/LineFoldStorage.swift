@@ -136,25 +136,83 @@ package struct LineFoldStorage: Sendable {
         rebuildStoreFromIndex()
     }
 
+    /// Set several folds' collapse state with one store rebuild (calling
+    /// `setCollapsed(foldID:collapsed:)` per fold rebuilds once per call).
+    package mutating func setCollapsed(_ states: [(foldID: String, collapsed: Bool)]) {
+        var changed = false
+        for (foldID, collapsed) in states {
+            guard var stored = foldsByID[foldID], stored.element.isCollapsed != collapsed else { continue }
+            stored.element.isCollapsed = collapsed
+            foldsByID[foldID] = stored
+            changed = true
+        }
+        if changed { rebuildStoreFromIndex() }
+    }
+
     // MARK: - Helpers
 
+    /// Rebuilds the run store from `foldsByID` in one sweep. Later folds in
+    /// (location ascending, length descending) order win where folds overlap,
+    /// which for nested folds is the innermost — the same result as setting
+    /// each fold in that order, without the O(folds × runs) cost of doing so.
     private mutating func rebuildStoreFromIndex() {
-        store = RangeStore<FoldStoreElement>(documentLength: store.documentLength)
-        let sorted = foldsByID.values.sorted {
-            if $0.range.location == $1.range.location {
-                return $0.range.length > $1.range.length
+        let length = store.documentLength
+        store = RangeStore<FoldStoreElement>(documentLength: length)
+        guard length > 0 else { return }
+
+        var sorted: [SweptFold] = []
+        for stored in foldsByID.values {
+            let start = max(0, min(stored.range.location, length))
+            let end = max(start, min(NSMaxRange(stored.range), length))
+            if start < end {
+                sorted.append(SweptFold(start: start, end: end, element: stored.element))
             }
-            return $0.range.location < $1.range.location
         }
-        for stored in sorted {
-            let start = max(0, min(stored.range.location, store.documentLength))
-            let end = max(start, min(NSMaxRange(stored.range), store.documentLength))
-            guard start < end else { continue }
-            store.set(
-                value: stored.element,
-                for: start..<end
-            )
+        sorted.sort { lhs, rhs in
+            if lhs.start != rhs.start { return lhs.start < rhs.start }
+            return (lhs.end - lhs.start) > (rhs.end - rhs.start)
         }
+        guard !sorted.isEmpty else { return }
+
+        var boundaries = Set<Int>([0, length])
+        for fold in sorted {
+            boundaries.insert(fold.start)
+            boundaries.insert(fold.end)
+        }
+        let points = boundaries.sorted()
+
+        var runs: [RangeStoreRun<FoldStoreElement>] = []
+        // Active folds by sort index; the winner is the highest live index.
+        var active: [Int] = []
+        var next = 0
+        for (point, nextPoint) in zip(points, points.dropFirst()) {
+            while next < sorted.count, sorted[next].start <= point {
+                active.append(next)
+                next += 1
+            }
+            while let top = active.last, sorted[top].end <= point {
+                active.removeLast()
+            }
+            let value = active.last.map { sorted[$0].element }
+            let runLength = nextPoint - point
+            if let last = runs.last, last.value == value {
+                runs[runs.count - 1].length += runLength
+            } else {
+                runs.append(RangeStoreRun(length: runLength, value: value))
+            }
+        }
+        store.set(runs: runs, for: 0..<length)
+    }
+
+    private struct SweptFold {
+        let start: Int
+        let end: Int
+        let element: FoldStoreElement
+    }
+
+    /// The run store's runs over the whole document (test seam).
+    package var storeRunsForTesting: [RangeStoreRun<FoldStoreElement>] {
+        store.runs(in: 0..<store.documentLength)
     }
 
     private func transform(_ range: NSRange, editRange: Range<Int>, newLength: Int) -> NSRange? {

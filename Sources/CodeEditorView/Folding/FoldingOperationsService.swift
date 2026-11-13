@@ -33,17 +33,26 @@ internal final class FoldingOperationsService {
         textView = nil
     }
 
-    /// Toggle fold at line
-    /// - Returns: `true` if fold state was changed, `false` if no foldable region exists
-    internal func toggleFold(at line: Int, regions: [FoldableRegion], foldedRegions: inout Set<UUID>) -> Bool {
-        guard let region = foldableRegion(at: line, from: regions) else { return false }
-
+    /// Toggle a region's fold state.
+    /// - Returns: `true` if fold state was changed
+    internal func toggleFold(
+        _ region: FoldableRegion,
+        foldedRegions: inout Set<UUID>,
+        configuration: CodeFoldingConfiguration = CodeFoldingConfiguration()
+    ) -> Bool {
         if foldedRegions.contains(region.id) {
-            unfold(region, foldedRegions: &foldedRegions)
-        } else {
-            fold(region, foldedRegions: &foldedRegions)
+            return unfold(region, foldedRegions: &foldedRegions, configuration: configuration)
         }
-        return true
+        return fold(region, foldedRegions: &foldedRegions, configuration: configuration)
+    }
+
+    /// Show a folded region's text again without touching fold bookkeeping —
+    /// for a fold whose region disappeared on re-detection.
+    internal func revealContent(of region: FoldableRegion, configuration: CodeFoldingConfiguration) {
+        applyFoldingVisuals(for: region, isFolded: false, configuration: configuration)
+        if configuration.hidesFoldedContent {
+            showUnfoldedContent(region)
+        }
     }
 
     /// Fold a specific region
@@ -127,29 +136,6 @@ internal final class FoldingOperationsService {
         }
     }
 
-    /// Get foldable region at line
-    internal func foldableRegion(at line: Int, from regions: [FoldableRegion]) -> FoldableRegion? {
-        regions.first { region in
-            let startLine = lineNumber(for: region.range.location)
-            let endLine = lineNumber(for: NSMaxRange(region.range))
-            return line >= startLine && line <= endLine
-        }
-    }
-
-    /// Check if line is in a folded region
-    internal func isLineFolded(_ line: Int, regions: [FoldableRegion], foldedRegions: Set<UUID>) -> Bool {
-        guard let region = foldableRegion(at: line, from: regions) else { return false }
-        return foldedRegions.contains(region.id)
-    }
-
-    /// Check if line is the start of a foldable region
-    internal func isStartOfFoldableRegion(_ line: Int, regions: [FoldableRegion]) -> Bool {
-        regions.contains { region in
-            let startLine = lineNumber(for: region.range.location)
-            return line == startLine
-        }
-    }
-
     // MARK: - Private Methods
 
     private func applyFoldingVisuals(for region: FoldableRegion, isFolded: Bool, configuration: CodeFoldingConfiguration) {
@@ -169,7 +155,12 @@ internal final class FoldingOperationsService {
         } else {
             // Remove fold indicator
             let firstLineEnd = firstLineEndLocation(for: region.range)
-            let indicatorRange = NSRange(location: firstLineEnd, length: region.foldedText?.count ?? 0)
+            let documentLength = textView.textKitBridge.documentLength
+            let indicatorStart = min(firstLineEnd, documentLength)
+            let indicatorRange = NSRange(
+                location: indicatorStart,
+                length: min(region.foldedText?.utf16.count ?? 0, documentLength - indicatorStart)
+            )
 
             bridge.removePersistentAttribute(.foldingIndicator, range: indicatorRange)
         }
@@ -178,15 +169,7 @@ internal final class FoldingOperationsService {
     private func hideFoldedContent(_ region: FoldableRegion) {
         guard let textView else { return }
         let bridge = textView.textKitBridge
-
-        // Calculate content range (excluding first line)
-        let firstLineEnd = firstLineEndLocation(for: region.range)
-        let contentStart = min(firstLineEnd + 1, NSMaxRange(region.range))
-        let contentLength = NSMaxRange(region.range) - contentStart
-
-        guard contentLength > 0 else { return }
-
-        let contentRange = NSRange(location: contentStart, length: contentLength)
+        guard let contentRange = contentRange(of: region) else { return }
 
         // Apply attributes to hide content (persistent — layout attributes).
         bridge.addPersistentAttributes([
@@ -200,15 +183,7 @@ internal final class FoldingOperationsService {
     private func showUnfoldedContent(_ region: FoldableRegion) {
         guard let textView else { return }
         let bridge = textView.textKitBridge
-
-        // Calculate content range (excluding first line)
-        let firstLineEnd = firstLineEndLocation(for: region.range)
-        let contentStart = min(firstLineEnd + 1, NSMaxRange(region.range))
-        let contentLength = NSMaxRange(region.range) - contentStart
-
-        guard contentLength > 0 else { return }
-
-        let contentRange = NSRange(location: contentStart, length: contentLength)
+        guard let contentRange = contentRange(of: region) else { return }
 
         // Remove folding attributes (persistent).
         bridge.removePersistentAttributes(
@@ -216,10 +191,10 @@ internal final class FoldingOperationsService {
             range: contentRange
         )
 
-        // Restore the configured font (persistent — affects layout).
-        let fontSize = textView.configuration.display.fontSize
-        let font = PlatformFonts.monospacedSystemFont(ofSize: fontSize, weight: .regular)
-        bridge.addPersistentAttributes([.font: font], range: contentRange)
+        // Put back every attribute hiding overwrote, as the editor stamps
+        // them on the rest of the document: paragraph style (tab stops, line
+        // height), font and the theme foreground.
+        bridge.addPersistentAttributes(textView.baseTextAttributes(), range: contentRange)
 
         // Force layout update to properly display unfolded content
         #if canImport(AppKit)
@@ -235,9 +210,19 @@ internal final class FoldingOperationsService {
 
     // MARK: - Utilities
 
-    private func lineNumber(for location: Int) -> Int {
-        guard let text = textView?.textKitBridge.documentString, !text.isEmpty else { return 0 }
-        return TextRangeUtilities.lineNumber(for: location, in: text)
+    /// The region's text after its first line, clamped to the storage: the
+    /// region's range can be stale between an edit and re-detection.
+    private func contentRange(of region: FoldableRegion) -> NSRange? {
+        guard let textView else { return nil }
+        let length = textView.textKitBridge.documentLength
+        let regionStart = max(0, min(region.range.location, length))
+        let regionEnd = max(regionStart, min(NSMaxRange(region.range), length))
+        let clampedRegion = NSRange(location: regionStart, length: regionEnd - regionStart)
+        let firstLineEnd = firstLineEndLocation(for: clampedRegion)
+        let contentStart = min(firstLineEnd + 1, regionEnd)
+        let contentLength = regionEnd - contentStart
+        guard contentLength > 0 else { return nil }
+        return NSRange(location: contentStart, length: contentLength)
     }
 
     private func firstLineEndLocation(for range: NSRange) -> Int {

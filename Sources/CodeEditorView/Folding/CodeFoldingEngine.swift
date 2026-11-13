@@ -17,7 +17,9 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
 
     // MARK: - Published Properties
 
-    @Published internal private(set) var foldableRegions: [FoldableRegion] = []
+    @Published internal private(set) var foldableRegions: [FoldableRegion] = [] {
+        didSet { lineIndex = nil }
+    }
     @Published internal private(set) var foldedRegions: Set<UUID> = []
     @Published internal private(set) var isProcessing = false
 
@@ -27,6 +29,10 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     private let providerRegistry = FoldingProviderRegistry()
     private let operationsService = FoldingOperationsService()
     private var updateTask: Task<Void, Never>?
+
+    /// 1-based start/end lines of `foldableRegions`, built in one pass and
+    /// reused until the regions or the text change.
+    private var lineIndex: FoldLineIndex?
 
     // MARK: - New architecture (Phase 5)
 
@@ -124,6 +130,7 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
 
     internal func textStorageDidApplyEdit(_ event: TextEditEvent) {
         guard event.editedCharacters else { return }
+        lineIndex = nil
         syncFoldStorage(editedRange: event.editedRange, changeInLength: event.changeInLength)
         updateFoldableRegions(in: event.editedRange, changeInLength: event.changeInLength)
     }
@@ -141,7 +148,7 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     /// - Returns: `true` if fold state was changed, `false` if no foldable region exists
     internal func toggleFold(at line: Int) -> Bool {
         guard let region = foldableRegion(at: line) else { return false }
-        let changed = operationsService.toggleFold(at: line, regions: foldableRegions, foldedRegions: &foldedRegions)
+        let changed = operationsService.toggleFold(region, foldedRegions: &foldedRegions, configuration: configuration)
         if changed {
             foldStorage.setCollapsed(
                 foldID: region.id.uuidString,
@@ -191,19 +198,37 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         syncFoldStorageCollapseStates()
     }
 
-    /// Get foldable region at line
+    /// The region for a 1-based line: the innermost region that starts on
+    /// the line, else the innermost region that contains it.
     internal func foldableRegion(at line: Int) -> FoldableRegion? {
-        operationsService.foldableRegion(at: line, from: foldableRegions)
+        let index = currentLineIndex()
+        if let starting = index.regionsStarting(onLine: line).first {
+            return foldableRegions[starting]
+        }
+        return index.innermostRegion(containingLine: line).map { foldableRegions[$0] }
     }
 
-    /// Check if line is in a folded region
+    /// Whether a 1-based line lies in a folded region.
     internal func isLineFolded(_ line: Int) -> Bool {
-        operationsService.isLineFolded(line, regions: foldableRegions, foldedRegions: foldedRegions)
+        guard !foldedRegions.isEmpty else { return false }
+        let index = currentLineIndex()
+        return foldableRegions.indices.contains { regionIndex in
+            foldedRegions.contains(foldableRegions[regionIndex].id)
+                && index.region(regionIndex, containsLine: line)
+        }
     }
 
-    /// Check if line is the start of a foldable region
+    /// Whether a region starts on a 1-based line (where the gutter draws a chevron).
     internal func isStartOfFoldableRegion(_ line: Int) -> Bool {
-        operationsService.isStartOfFoldableRegion(line, regions: foldableRegions)
+        !currentLineIndex().regionsStarting(onLine: line).isEmpty
+    }
+
+    private func currentLineIndex() -> FoldLineIndex {
+        if let lineIndex { return lineIndex }
+        let text = textView?.textKitBridge.documentString ?? ""
+        let index = FoldLineIndex(regions: foldableRegions, text: text)
+        lineIndex = index
+        return index
     }
 
     // MARK: - Line-Span Helper
@@ -223,10 +248,8 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         guard let substring = TextRangeUtilities.substring(inUTF16Range: scanRange, from: text) else {
             return 1
         }
-        var newlineCount = 0
-        for character in substring where character == "\n" {
-            newlineCount += 1
-        }
+        // Count `\n` code units, so CRLF ("\r\n" is one Character) counts too.
+        let newlineCount = substring.utf16.reduce(0) { $1 == 0x0A ? $0 + 1 : $0 }
         return newlineCount + 1
     }
 
@@ -319,22 +342,14 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
             return
         }
 
-        // For small edits, try to update incrementally
-        if changeInLength < 100 && editedRange.length < 100 {
-            updateTask?.cancel()
-
-            updateTask = Task { [weak self] in
-                guard let self else { return }
-
-                await self.incrementalUpdate(editedRange: editedRange, changeInLength: changeInLength)
-            }
-        } else {
-            // For large edits, do full update
-            updateFoldableRegions()
-        }
+        // Shift the existing regions now so they (and their fold state) keep
+        // following the text, then re-detect after the debounce: the shift
+        // is only a stopgap, it cannot find new regions or drop dead ones.
+        incrementalUpdate(editedRange: editedRange, changeInLength: changeInLength)
+        updateFoldableRegions()
     }
 
-    private func incrementalUpdate(editedRange: NSRange, changeInLength: Int) async {
+    private func incrementalUpdate(editedRange: NSRange, changeInLength: Int) {
         // Adjust existing regions based on the edit
         let adjustedRegions = foldableRegions.map { region in
             var adjustedRegion = region
@@ -468,16 +483,34 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     }
 
     private func updateRegions(_ newRegions: [FoldableRegion]) {
-        // Preserve fold state for regions that still exist
+        // Preserve fold state for regions that still exist. The existing
+        // regions were shifted with every edit, so a region that only moved
+        // still has the same range as its re-detected self. The range alone
+        // identifies it: providers may classify the same braces differently
+        // after an unrelated edit (BraceFoldingProvider looks at the whole
+        // prefix for "//").
         var newFoldedRegions = Set<UUID>()
+        var matchedFoldedIDs = Set<UUID>()
+        // Two folded regions with one range: keep the first (same region).
+        let foldedPairs = foldableRegions
+            .filter { foldedRegions.contains($0.id) }
+            .map { (FoldRegionKey(range: $0.range), $0) }
+        let foldedByRange = Dictionary(foldedPairs) { first, _ in first }
 
         for newRegion in newRegions {
-            // Check if this region was previously folded
-            if let existingRegion = foldableRegions.first(where: {
-                $0.range == newRegion.range && $0.type == newRegion.type
-            }), foldedRegions.contains(existingRegion.id) {
+            if let existing = foldedByRange[FoldRegionKey(range: newRegion.range)] {
                 newFoldedRegions.insert(newRegion.id)
+                matchedFoldedIDs.insert(existing.id)
             }
+        }
+
+        // A folded region that no longer exists must not leave its text hidden
+        // under a chevron that now reads "expanded".
+        let droppedFolds = foldableRegions.filter {
+            foldedRegions.contains($0.id) && !matchedFoldedIDs.contains($0.id)
+        }
+        for region in droppedFolds {
+            operationsService.revealContent(of: region, configuration: configuration)
         }
 
         foldableRegions = newRegions
@@ -489,15 +522,103 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     }
 
     private func syncFoldStorageCollapseStates() {
-        for region in foldableRegions {
-            foldStorage.setCollapsed(
-                foldID: region.id.uuidString,
-                collapsed: foldedRegions.contains(region.id)
-            )
-        }
+        foldStorage.setCollapsed(
+            foldableRegions.map { ($0.id.uuidString, foldedRegions.contains($0.id)) }
+        )
     }
 
     deinit {
         updateTask?.cancel()
+    }
+}
+
+// MARK: - Fold line index
+
+private struct FoldRegionKey: Hashable {
+    let location: Int
+    let length: Int
+
+    init(range: NSRange) {
+        location = range.location
+        length = range.length
+    }
+}
+
+/// 1-based start and end lines of a set of regions, computed with one forward
+/// walk over the text (lines end at each `\n` code unit, so CRLF counts once).
+private struct FoldLineIndex {
+    private var startLines: [Int] = []
+    private var endLines: [Int] = []
+    /// Region indices by start line, innermost (latest start, then shortest) first.
+    private var byStartLine: [Int: [Int]] = [:]
+    private var lengths: [Int] = []
+
+    init(regions: [FoldableRegion], text: String) {
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = text as NSString
+        let length = nsText.length
+        var offsets: [(offset: Int, region: Int, isEnd: Bool)] = []
+        offsets.reserveCapacity(regions.count * 2)
+        for (index, region) in regions.enumerated() {
+            let start = max(0, min(region.range.location, length))
+            let end = max(start, min(NSMaxRange(region.range) - (region.range.length > 0 ? 1 : 0), length))
+            offsets.append((start, index, false))
+            offsets.append((end, index, true))
+        }
+        offsets.sort { $0.offset < $1.offset }
+
+        startLines = Array(repeating: 1, count: regions.count)
+        endLines = Array(repeating: 1, count: regions.count)
+        lengths = regions.map(\.range.length)
+        var line = 1
+        var position = 0
+        for entry in offsets {
+            while position < entry.offset {
+                let newline = nsText.range(
+                    of: "\n",
+                    options: .literal,
+                    range: NSRange(location: position, length: entry.offset - position)
+                )
+                guard newline.location != NSNotFound else {
+                    position = entry.offset
+                    break
+                }
+                line += 1
+                position = newline.location + 1
+            }
+            if entry.isEnd {
+                endLines[entry.region] = line
+            } else {
+                startLines[entry.region] = line
+            }
+        }
+        for index in regions.indices {
+            byStartLine[startLines[index], default: []].append(index)
+        }
+        for (line, indices) in byStartLine {
+            byStartLine[line] = indices.sorted { lhs, rhs in
+                let lhsStart = regions[lhs].range.location
+                let rhsStart = regions[rhs].range.location
+                return lhsStart != rhsStart ? lhsStart > rhsStart : lengths[lhs] < lengths[rhs]
+            }
+        }
+    }
+
+    func regionsStarting(onLine line: Int) -> [Int] {
+        byStartLine[line] ?? []
+    }
+
+    func region(_ index: Int, containsLine line: Int) -> Bool {
+        startLines.indices.contains(index) && line >= startLines[index] && line <= endLines[index]
+    }
+
+    func innermostRegion(containingLine line: Int) -> Int? {
+        startLines.indices
+            .filter { region($0, containsLine: line) }
+            .min { lhs, rhs in
+                let lhsSpan = endLines[lhs] - startLines[lhs]
+                let rhsSpan = endLines[rhs] - startLines[rhs]
+                return lhsSpan != rhsSpan ? lhsSpan < rhsSpan : lengths[lhs] < lengths[rhs]
+            }
     }
 }

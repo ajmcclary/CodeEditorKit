@@ -14,6 +14,28 @@ extension CodeEditorView {
 
     /// Apply paragraph style settings for tab width and line spacing, and
     /// the character spacing.
+    /// The persistent attributes the editor stamps on ordinary text: its
+    /// paragraph style, font and (once a theme is applied) the theme
+    /// foreground. Used to restore text whose attributes were overwritten,
+    /// such as the body of an unfolded region.
+    internal func baseTextAttributes() -> [NSAttributedString.Key: Any] {
+        let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        var attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .paragraphStyle: runtime.dependencies.paragraphStyleCache.paragraphStyle(
+                tabWidth: configuration.layout.tabWidth,
+                lineHeightMultiple: configuration.layout.lineHeightMultiple,
+                font: font
+            )
+        ]
+        if let theme = appliedTheme {
+            attributes[.foregroundColor] = PlatformColor(tokens: theme.style.editor.foreground)
+        } else if let textColor {
+            attributes[.foregroundColor] = textColor
+        }
+        return attributes
+    }
+
     internal func applyParagraphStyle() {
         // Get font to use for calculations
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)

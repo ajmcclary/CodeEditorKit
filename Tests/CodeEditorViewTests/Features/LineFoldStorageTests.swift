@@ -1,5 +1,6 @@
 import CodeEditorFolding
 import CodeEditorLanguages
+import CodeEditorTextModel
 @testable import CodeEditorView
 import Foundation
 import Testing
@@ -190,6 +191,55 @@ struct LineFoldStorageTests {
         #expect(!folds[0].isCollapsed)
         #expect(folds[0].depth == 1)
         #expect(folds[0].kind == .block)
+    }
+
+    @Test("the swept store matches setting each fold in order")
+    func sweptStoreMatchesSequentialSets() {
+        let ranges = [
+            NSRange(location: 0, length: 60), NSRange(location: 5, length: 20),
+            NSRange(location: 10, length: 5), NSRange(location: 30, length: 40),
+            NSRange(location: 30, length: 10), NSRange(location: 80, length: 15)
+        ]
+        let regions = ranges.map { FoldableRegion(range: $0, title: "r", type: .block) }
+        var storage = LineFoldStorage(documentLength: 100)
+        storage.updateFolds(from: regions, collapsedIDs: [])
+
+        var expected = RangeStore<FoldStoreElement>(documentLength: 100)
+        let ordered = regions.sorted {
+            $0.range.location != $1.range.location
+                ? $0.range.location < $1.range.location
+                : $0.range.length > $1.range.length
+        }
+        for region in ordered {
+            expected.set(
+                value: FoldStoreElement(id: region.id.uuidString, depth: region.level, isCollapsed: false, kind: region.type),
+                for: region.range.location..<min(100, NSMaxRange(region.range))
+            )
+        }
+
+        #expect(storage.storeRunsForTesting == expected.runs(in: 0..<100))
+    }
+
+    @Test("collapsing many folds at once is one rebuild, not one per fold")
+    func batchCollapseScales() {
+        let count = 4_000
+        var storage = LineFoldStorage(documentLength: count * 10)
+        let regions = (0..<count).map {
+            FoldableRegion(range: NSRange(location: $0 * 10, length: 8), title: "f", type: .block)
+        }
+        storage.updateFolds(from: regions, collapsedIDs: [])
+
+        let start = Date()
+        storage.setCollapsed(regions.map { ($0.id.uuidString, true) })
+        let elapsed = Date().timeIntervalSince(start)
+
+        let folds = storage.folds(in: NSRange(location: 0, length: count * 10))
+        #expect(folds.count == count)
+        let collapsedCount = folds.filter(\.isCollapsed).count
+        #expect(collapsedCount == count)
+        // Per-fold setCollapsed rebuilds the store each time: O(folds²).
+        let withinCeiling = elapsed < 2
+        #expect(withinCeiling)
     }
 
     @Test("updateFolds preserves indexed collapse state by fold ID")

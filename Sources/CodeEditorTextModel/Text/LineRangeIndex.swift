@@ -52,12 +52,9 @@ internal enum LineRangeIndex {
         let clampedOffset = max(0, min(offset, UTF16RangeConverter.utf16Length(of: string)))
         guard clampedOffset > 0 else { return 0 }
 
-        let prefix = UTF16RangeConverter.substring(upToUTF16Offset: clampedOffset, in: string)
-        return prefix.reduce(into: 0) { count, character in
-            if character == "\n" {
-                count += 1
-            }
-        }
+        // Count `\n` code units: "\r\n" is a single `Character` that never
+        // equals "\n", so a Character walk finds no lines in CRLF text.
+        return string.utf16.prefix(clampedOffset).reduce(0) { $1 == 0x0A ? $0 + 1 : $0 }
     }
 
     /// UTF-16 offset of the start of a zero-based line, or `nil` if out of bounds.

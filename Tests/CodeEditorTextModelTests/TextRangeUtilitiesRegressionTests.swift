@@ -23,6 +23,15 @@ final class TextRangeUtilitiesRegressionTests: XCTestCase {
         XCTAssertTrue(TextRangeUtilities.isValid(composedRange, in: text))
     }
 
+    func testLineNumberCountsCRLFLineBreaks() {
+        let text = "one\r\ntwo\r\nthree"
+
+        XCTAssertEqual(TextRangeUtilities.lineNumber(for: 0, in: text), 0)
+        XCTAssertEqual(TextRangeUtilities.lineNumber(for: 5, in: text), 1)
+        XCTAssertEqual(TextRangeUtilities.lineNumber(for: 10, in: text), 2)
+        XCTAssertEqual(TextRangeUtilities.lineNumber(for: text.utf16.count, in: text), 2)
+    }
+
     func testLineLookupAndFullDocumentRangesUseUTF16Offsets() {
         let firstLine = "a👨‍👩‍👧‍👦 cafe\u{301}"
         let secondLine = "next 😀 word"
