@@ -11,7 +11,8 @@ package actor BackgroundProcessor<Value: Sendable> {
 
     private let value: Value
     private var pendingCount = 0
-    private var currentTask: Task<Void, Never>?
+    /// Cancels the operation started by `processValue` that is in flight.
+    private var cancelCurrentOperation: (@Sendable () -> Void)?
 
     package init(value: Value) {
         self.value = value
@@ -59,35 +60,29 @@ package actor BackgroundProcessor<Value: Sendable> {
     ) async throws -> T {
         beginBackgroundWork()
 
-        // Store the current task so it can be cancelled
+        // Keep a way to cancel the operation itself (not a wrapper).
         let task = Task<T, Error> {
             try await operation(value)
         }
-
-        // Track the task for potential cancellation
-        currentTask = Task {
-            _ = await task.result
-        }
+        cancelCurrentOperation = { task.cancel() }
 
         do {
             let result = try await task.value
             endBackgroundWork()
-            currentTask = nil
+            cancelCurrentOperation = nil
             return result
         } catch {
             endBackgroundWork()
-            currentTask = nil
+            cancelCurrentOperation = nil
             throw error
         }
     }
 
-    /// Cancel any pending operations
+    /// Cancel any pending operations. The pending count is left to the
+    /// operations themselves: each one still ends (with a cancellation
+    /// error) and decrements it, so zeroing it here would drive it negative.
     package func cancelPendingOperations() {
-        // Cancel the current task if any
-        currentTask?.cancel()
-        currentTask = nil
-
-        // Reset pending count since we're cancelling all operations
-        pendingCount = 0
+        cancelCurrentOperation?()
+        cancelCurrentOperation = nil
     }
 }
