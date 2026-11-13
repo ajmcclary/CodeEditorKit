@@ -97,6 +97,7 @@ extension CodeEditorView {
         guard shouldChangeText(in: range, replacementString: replacement) else { return }
         textKitBridge.replaceCharacters(in: range, with: replacement)
         didChangeText()
+        undoManager?.setActionUserInfoValue(true, forKey: Self.hostRewriteUndoKey)
         #else
         guard let start = position(from: beginningOfDocument, offset: range.location),
               let end = position(from: start, offset: range.length),
@@ -141,17 +142,39 @@ extension CodeEditorView {
         )
     }
 
+    /// Marks an undo group as a host's rewrite of the editor's own change.
+    package static let hostRewriteUndoKey = UndoManager.UserInfoKey(rawValue: "CodeEditorView.hostRewrite")
+
     /// Notifications arrive on the posting thread. The editor's own undo
     /// manager is driven from the main thread; anything else is ignored
     /// rather than entering main-actor state from another thread.
     @objc
-    nonisolated private func undoManagerDidApplyChange(_: Notification) {
+    nonisolated private func undoManagerDidApplyChange(_ notification: Notification) {
         guard Thread.isMainThread else { return }
+        let isUndo = notification.name == .NSUndoManagerDidUndoChange
         MainActor.assumeIsolated {
-            guard undoManager === editorUndoManager,
-                  textChangeEventGeneration != textChangeGenerationAtLastDidChangeText
-            else { return }
-            didChangeText()
+            guard undoManager === editorUndoManager else { return }
+            if textChangeEventGeneration != textChangeGenerationAtLastDidChangeText {
+                didChangeText()
+            }
+            chainHostRewriteStep(afterUndo: isUndo)
+        }
+    }
+
+    /// A host rewrite and the edit it answered undo and redo as one step.
+    /// Undoing only the rewrite would bring back text the host normalizes to
+    /// the value it already holds, so no update would reach the editor and
+    /// the two would disagree; undoing both moves the host too. After undoing
+    /// a rewrite, undo the edit before it; after redoing an edit that a
+    /// rewrite answered, redo the rewrite.
+    private func chainHostRewriteStep(afterUndo isUndo: Bool) {
+        let manager = editorUndoManager
+        // The step just undone, or the step redo would apply next.
+        guard manager.redoActionUserInfoValue(forKey: Self.hostRewriteUndoKey) != nil else { return }
+        if isUndo {
+            if manager.canUndo { manager.undo() }
+        } else {
+            manager.redo()
         }
     }
 }

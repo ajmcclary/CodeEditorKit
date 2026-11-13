@@ -270,6 +270,40 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertFalse(textView.string.contains("x "), textView.string)
     }
 
+    /// Undo takes back a host's rewrite together with the edit it answered,
+    /// and redo replays both: undoing only the rewrite would bring back text
+    /// the host normalizes to the value it already holds, so no update would
+    /// reach the editor and the two would disagree.
+    func testUndoAndRedoOfAHostRewriteConvergeWithTheHost() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .trimmingSetter)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+
+        type("x ", into: textView)
+        spin(for: 0.4)
+        XCTAssertEqual(store.text, "abcx")
+        XCTAssertEqual(textView.string, "abcx")
+
+        let undoManager = try XCTUnwrap(textView.undoManager)
+        undoManager.undo()
+        spin(for: 0.4)
+        XCTAssertEqual(textView.string, store.text, "undo left the editor and host apart")
+        XCTAssertEqual(store.text, "abc")
+
+        undoManager.redo()
+        spin(for: 0.4)
+        XCTAssertEqual(textView.string, store.text, "redo left the editor and host apart")
+        XCTAssertEqual(store.text, "abcx")
+
+        // The pairing survives a round trip through the redo stack.
+        undoManager.undo()
+        spin(for: 0.4)
+        XCTAssertEqual(textView.string, "abc")
+        XCTAssertEqual(store.text, "abc")
+        XCTAssertFalse(undoManager.canUndo)
+    }
+
     /// A host that applies binding writes late has several in flight; each
     /// late echo is one of the editor's own writes, not a replacement.
     func testAHostThatAppliesWritesLateKeepsEveryKeystroke() throws {

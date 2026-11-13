@@ -53,8 +53,9 @@ import SwiftUI
 ///   discarded, because its offsets describe the old text.
 /// - **Different text in answer to an editor write** (a host that normalizes
 ///   what it stores, for example trimming trailing spaces): applied as an
-///   ordinary undoable edit, so undo history is kept. Undoing it brings the
-///   un-normalized text back, which such a host will normalize again.
+///   ordinary undoable edit, so undo history is kept. On macOS, undo and redo
+///   treat the rewrite and the edit it answered as one step, so the text the
+///   editor arrives at is text the host will store and the two agree.
 ///
 /// So a host should apply a written value before its next render, or mirror
 /// `.onTextChange` into its model as well. A host that normalizes the text
