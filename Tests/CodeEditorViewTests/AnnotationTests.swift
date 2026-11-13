@@ -385,6 +385,46 @@ final class AnnotationTests: XCTestCase {
     }
     #endif
 
+    #if canImport(AppKit)
+    /// A fold above an annotation moves its line without any character edit
+    /// or size change; the next layout pass must move the view too.
+    func testAFoldAboveAnAnnotationMovesItsView() async throws {
+        // In a container the text view is at least the viewport's height, so
+        // folding a few lines changes no frame size.
+        let container = CodeEditorContainerView()
+        container.frame = NSRect(x: 0, y: 0, width: 600, height: 600)
+        let textView = container.textView
+        let dataSource = TestAnnotationDataSource()
+        textView.annotationsDataSource = dataSource
+        var configuration = container.configuration
+        configuration.display.isCodeFoldingEnabled = true
+        container.configuration = configuration
+        textView.language = .swift
+        let source = "struct A {\n  func f() {\n    a\n    b\n    c\n  }\n\n  func g() {\n    a\n  }\n}\n"
+        textView.string = source
+        let deadline = Date().addingTimeInterval(5)
+        while textView.codeFoldingEngine.foldableRegions.count < 2, Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        let target = try NSRange(XCTUnwrap(source.range(of: "func g")), in: source)
+        textView.addAnnotation(Annotation(range: target, content: "note", id: "g"))
+        textView.needsLayout = true
+        textView.layoutSubtreeIfNeeded()
+        let before = try XCTUnwrap(textView.annotationViews["g"]).frame
+
+        XCTAssertTrue(textView.toggleFold(at: 2))
+        textView.needsLayout = true
+        textView.layoutSubtreeIfNeeded()
+        let afterLayout = try XCTUnwrap(textView.annotationViews["g"]).frame
+        textView.reloadAnnotations()
+        let afterReload = try XCTUnwrap(textView.annotationViews["g"]).frame
+
+        XCTAssertNotEqual(afterReload, before, "the fold did not move the line at all")
+        XCTAssertEqual(afterLayout, afterReload)
+        withExtendedLifetime(container) {}
+    }
+    #endif
+
     func testAnnotationTextKit2Integration() {
         XCTAssertNotNil(textView.textLayoutManager,
                         "CodeEditorView must initialize with a TextKit 2 layout manager")

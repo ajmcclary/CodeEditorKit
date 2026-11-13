@@ -1,5 +1,6 @@
 import CodeEditorAnnotations
 import CodeEditorCommon
+import CodeEditorConfiguration
 import CodeEditorPlatform
 import CodeEditorTextModel
 import Foundation
@@ -243,6 +244,10 @@ extension CodeEditorView {
         let containerOrigin: CGPoint
         let annotationIDs: [String]
         let isEnabled: Bool
+        /// Folding moves lines without a character edit or a size change.
+        let foldedRegionIDs: Set<UUID>
+        /// Font, line height, insets and the like move lines too.
+        let configuration: EditorConfiguration
     }
 
     @MainActor
@@ -257,7 +262,9 @@ extension CodeEditorView {
             size: frame.size,
             containerOrigin: origin,
             annotationIDs: annotations.map(\.id),
-            isEnabled: configuration.display.areAnnotationsEnabled
+            isEnabled: configuration.display.areAnnotationsEnabled,
+            foldedRegionIDs: codeFoldingEngine.foldedRegions,
+            configuration: configuration
         )
     }
 
