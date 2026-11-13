@@ -242,15 +242,15 @@ final class RegexRangeHighlightProviderTests: XCTestCase {
         let parser = RegexIncrementalRangeQueryParser()
         try await parser.setLanguage(.javascript)
 
-        measure(options: Self.standardMeasureOptions) {
-            Task { @MainActor in
-                _ = try? await parser.parse(source: source)
-            }
+        // CPU time, not the parser's own wall-clock `parseDuration`: on a
+        // loaded runner the wall time alone passed 0.5 s (0.863 s on CI)
+        // while the work was unchanged. A super-linear pass (the per-token
+        // UTF-8 offset walk once cost ~80 s at 460 KB) costs seconds of CPU.
+        // The parse is async and may run off this thread: process CPU.
+        let (result, cpuSeconds) = try await CPUTime.inProcess {
+            try await parser.parse(source: source)
         }
-
-        // Parse once outside measure to get timing data
-        let result = try await parser.parse(source: source)
-        XCTAssertLessThan(result.parseDuration, 0.5, "10K-line parse should complete in < 500 ms")
+        XCTAssertLessThan(cpuSeconds, 0.5, "10K-line parse used \(cpuSeconds) s of CPU; the bound is 0.5 s")
         XCTAssertGreaterThan(result.captures.count, 100, "10K-line JS should produce > 100 captures")
     }
 
