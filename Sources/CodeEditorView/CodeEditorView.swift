@@ -595,6 +595,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
         set {
             super.string = newValue
+            // A wholesale replacement drops per-range attributes.
+            needsThemeForegroundStamp = true
             rebuildLineGeometryStoreFromCurrentTextStorage()
         }
     }
@@ -606,6 +608,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
         set {
             super.text = newValue
+            // A wholesale replacement drops per-range attributes.
+            needsThemeForegroundStamp = true
             rebuildLineGeometryStoreFromCurrentTextStorage()
         }
     }
@@ -617,6 +621,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
         set {
             super.attributedText = newValue
+            // A wholesale replacement drops per-range attributes.
+            needsThemeForegroundStamp = true
             rebuildLineGeometryStoreFromCurrentTextStorage()
         }
     }

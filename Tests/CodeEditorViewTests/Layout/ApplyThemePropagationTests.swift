@@ -30,15 +30,20 @@ struct ApplyThemePropagationTests {
         #expect(container.appliedTheme == firstStored)
     }
 
-    @Test("Same-theme container reapply re-stamps text storage foreground")
+    /// A wholesale text replacement drops per-range attributes, so the next
+    /// same-theme apply re-stamps the foreground. (It no longer re-stamps on
+    /// every same-theme apply: that walked the whole document on every
+    /// SwiftUI update.)
+    @Test("Same-theme container reapply re-stamps text storage foreground after a text replacement")
     @MainActor
     func sameThemeReapplyRestampsTextViewForeground() throws {
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
         container.textView.string = "alpha"
         container.apply(theme: .dark)
 
+        // Plain attributed text carries no foreground.
+        container.textView.attributedText = NSAttributedString(string: "replaced text")
         let storage = try #require(container.textView.textContentStorage?.textStorage)
-        storage.removeAttribute(.foregroundColor, range: NSRange(location: 0, length: storage.length))
         #expect(storage.attribute(.foregroundColor, at: 0, effectiveRange: nil) == nil)
 
         container.apply(theme: .dark)

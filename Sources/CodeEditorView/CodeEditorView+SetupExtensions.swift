@@ -102,8 +102,6 @@ extension CodeEditorView {
     }
 
     internal func rebuildLineGeometryStoreFromCurrentTextStorage() {
-        // Every wholesale text replacement comes through here.
-        needsThemeForegroundStamp = true
         // Read text through the TK2-safe accessor; reading `self.textStorage`
         // directly triggers Apple's TK1 compatibility shim and clears
         // `textLayoutManager`. See `CodeEditorViewTextKit2InitTests` for the

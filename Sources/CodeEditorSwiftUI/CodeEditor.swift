@@ -400,8 +400,10 @@ public struct CodeEditor: View {
         CodeEditorRenderingDiagnostics.logBodyResolution(
             "body.resolveTextBinding",
             manager: activeDocumentManager,
-            storedTextLength: text.count,
-            effectiveTextLength: effectiveTextBinding.wrappedValue.count,
+            // UTF-16 lengths: `count` walks every Character of the document
+            // on every body evaluation (every keystroke), release builds too.
+            storedTextLength: text.utf16.count,
+            effectiveTextLength: effectiveTextBinding.wrappedValue.utf16.count,
             language: effectiveLanguage,
             configuration: effectiveConfiguration
         )

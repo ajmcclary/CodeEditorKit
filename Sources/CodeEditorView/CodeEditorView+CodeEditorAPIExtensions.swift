@@ -36,6 +36,8 @@ extension CodeEditorView {
             #if canImport(AppKit)
             let fullRange = NSRange(location: 0, length: textKitBridge.documentLength)
             textKitBridge.replaceCharacters(in: fullRange, with: newValue ?? NSAttributedString())
+            // A wholesale replacement drops per-range attributes.
+            needsThemeForegroundStamp = true
             rebuildLineGeometryStoreFromCurrentTextStorage()
             #else
             attributedText = newValue

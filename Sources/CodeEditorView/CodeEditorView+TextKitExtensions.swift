@@ -168,6 +168,8 @@ extension CodeEditorView {
         set {
             if let newValue, let storage = textContentStorage?.textStorage {
                 storage.setAttributedString(newValue)
+                // A wholesale replacement drops per-range attributes.
+                needsThemeForegroundStamp = true
                 rebuildLineGeometryStoreFromCurrentTextStorage()
             } else {
                 string = ""
