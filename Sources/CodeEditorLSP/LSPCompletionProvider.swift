@@ -251,12 +251,8 @@ public final class LSPCompletionProvider: CompletionProvider {
     }
 
     private func convertPositionToLineCharacter(position: Int, in text: String) -> (line: Int, character: Int) {
-        let lines = TextRangeUtilities.substring(upToUTF16Offset: position, in: text)
-            .components(separatedBy: .newlines)
-        let line = max(0, lines.count - 1)
-        let character = lines.last.map { TextRangeUtilities.utf16Length(of: $0) } ?? 0
-
-        return (line: line, character: character)
+        let converted = LSPTextPosition.position(forUTF16Offset: position, in: text)
+        return (line: converted.line, character: converted.character)
     }
 
     private func convertLSPItemToCompletionItem(
@@ -401,27 +397,7 @@ public final class LSPCompletionProvider: CompletionProvider {
     nonisolated static func convertLSPRangeToNSRange(
         _ lspRange: LSPRange, in text: String
     ) -> NSRange {
-        let utf16Count = TextRangeUtilities.utf16Length(of: text)
-        let lines = text.components(separatedBy: .newlines)
-
-        func offset(forLine line: Int, character: Int) -> Int {
-            var accum = 0
-            for index in 0..<min(line, lines.count) {
-                // LSP positions index UTF-16 code units, not grapheme clusters.
-                // +1 for the newline separator joining the lines back together.
-                accum += TextRangeUtilities.utf16Length(of: lines[index]) + 1
-            }
-            accum += character
-            return min(accum, utf16Count)
-        }
-
-        let startOffset = offset(forLine: lspRange.start.line, character: lspRange.start.character)
-        let endOffset = offset(forLine: lspRange.end.line, character: lspRange.end.character)
-
-        let location = min(startOffset, utf16Count)
-        let length = max(0, min(endOffset - startOffset, utf16Count - location))
-
-        return NSRange(location: location, length: length)
+        LSPTextPosition.utf16Range(for: lspRange, in: text)
     }
 }
 

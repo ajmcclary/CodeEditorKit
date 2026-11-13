@@ -195,23 +195,7 @@ final class LSPContentCoordinator {
         guard utf16Offset >= 0, !fullSource.isEmpty else {
             return Position(line: 0, character: 0)
         }
-        let utf16 = fullSource.utf16
-        let clampedOffset = min(utf16Offset, utf16.count)
-        var line = 0
-        var lineStart = 0
-        var pos = 0
-        var cursor = utf16.startIndex
-
-        while pos < clampedOffset, cursor < utf16.endIndex {
-            if utf16[cursor] == 0x0A { // U+000A LINE FEED
-                line &+= 1
-                lineStart = pos &+ 1
-            }
-            utf16.formIndex(after: &cursor)
-            pos &+= 1
-        }
-
-        return Position(line: line, character: clampedOffset - lineStart)
+        return LSPTextPosition.position(forUTF16Offset: utf16Offset, in: fullSource)
     }
 }
 

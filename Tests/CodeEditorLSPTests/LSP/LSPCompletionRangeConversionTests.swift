@@ -63,4 +63,34 @@ struct LSPCompletionRangeConversionTests {
         let nsRange = LSPCompletionProvider.convertLSPRangeToNSRange(range, in: text)
         #expect(nsRange == NSRange(location: 1, length: 2))
     }
+
+    @Test("CRLF counts as one line terminator in both directions")
+    func crlfIsOneTerminator() {
+        let text = (0..<10).map { "line\($0)" }.joined(separator: "\r\n")
+        let lineNine = text.utf16.count - "line9".utf16.count
+        #expect(LSPTextPosition.position(forUTF16Offset: lineNine + 2, in: text) == Position(line: 9, character: 2))
+
+        let range = LSPRange(start: Position(line: 9, character: 0), end: Position(line: 9, character: 5))
+        #expect(LSPCompletionProvider.convertLSPRangeToNSRange(range, in: text) == NSRange(location: lineNine, length: 5))
+    }
+
+    @Test("Only LF, CRLF and CR end a line")
+    func onlyLSPTerminatorsEndALine() {
+        let text = "a\u{2028}b\u{000C}c\rd\ne"
+        #expect(LSPTextPosition.position(forUTF16Offset: 5, in: text) == Position(line: 0, character: 5))
+        #expect(LSPTextPosition.position(forUTF16Offset: 6, in: text) == Position(line: 1, character: 0))
+        #expect(LSPTextPosition.position(forUTF16Offset: 8, in: text) == Position(line: 2, character: 0))
+        #expect(LSPTextPosition.utf16Offset(for: Position(line: 2, character: 0), in: text) == 8)
+        #expect(LSPTextPosition.utf16Offset(for: Position(line: 1, character: 0), in: text) == 6)
+    }
+
+    @Test("An offset inside CRLF is the end of its line; positions round-trip")
+    func roundTrip() {
+        let text = "ab\r\ncd\re\n\nf"
+        #expect(LSPTextPosition.position(forUTF16Offset: 3, in: text) == Position(line: 0, character: 2))
+        for offset in [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11] {
+            let position = LSPTextPosition.position(forUTF16Offset: offset, in: text)
+            #expect(LSPTextPosition.utf16Offset(for: position, in: text) == offset, "offset \(offset) -> \(position)")
+        }
+    }
 }
