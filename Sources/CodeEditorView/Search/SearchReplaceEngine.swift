@@ -25,6 +25,9 @@ public final class SearchReplaceEngine: ObservableObject {
 
     public var searchOptions = SearchOptions()
     private var currentSearchTask: Task<[SearchResult], Never>?
+    /// The text revision `currentSearchResults` describe.
+    private var resultsTextGeneration: UInt64?
+    private static let maximumScanAttempts = 3
     private weak var textView: CodeEditorView?
 
     // MARK: - Initialization
@@ -71,30 +74,46 @@ public final class SearchReplaceEngine: ObservableObject {
             return []
         }
 
-        #if canImport(AppKit)
-        let text = textView.string
-        #else
-        let text = textView.text ?? ""
-        #endif
         // Scan a snapshot off the main actor; a newer search, or cancelling
-        // the calling task, cancels this one.
+        // the calling task, cancels this one. The results describe the text
+        // revision they were computed from: if the text changed during the
+        // scan they are thrown away and the scan re-runs on the new text.
         let query = SearchQuery(pattern: pattern, options: searchOptions)
-        let searchTask = Task.detached(priority: .userInitiated) {
-            Self.performSearch(query, in: text)
-        }
-        currentSearchTask = searchTask
-        let scanned = await withTaskCancellationHandler {
-            await searchTask.value
-        } onCancel: {
-            searchTask.cancel()
-        }
-        if currentSearchTask == searchTask { currentSearchTask = nil }
+        var results: [SearchResult] = []
+        var isCurrent = false
+        for _ in 0..<Self.maximumScanAttempts {
+            let generation = textView.textChangeEventGeneration
+            let text = Self.snapshot(of: textView)
+            let searchTask = Task.detached(priority: .userInitiated) {
+                Self.performSearch(query, in: text)
+            }
+            currentSearchTask = searchTask
+            results = await withTaskCancellationHandler {
+                await searchTask.value
+            } onCancel: {
+                searchTask.cancel()
+            }
+            if currentSearchTask == searchTask { currentSearchTask = nil }
 
-        let results = scanned
-        guard !Task.isCancelled, !searchTask.isCancelled,
-              self.textView === textView else { return [] }
+            guard !Task.isCancelled, !searchTask.isCancelled,
+                  self.textView === textView else { return [] }
+            if textView.textChangeEventGeneration == generation {
+                isCurrent = true
+                break
+            }
+        }
+        guard isCurrent else {
+            // The text kept changing under every attempt; report nothing
+            // rather than ranges into a different text.
+            currentSearchResults = []
+            currentSearchIndex = -1
+            updateStatistics(for: [])
+            return []
+        }
+
         // Update results and statistics
         currentSearchResults = results
+        resultsTextGeneration = textView.textChangeEventGeneration
         currentSearchIndex = results.isEmpty ? -1 : (selectFirstResult ? 0 :
             (results.firstIndex { $0.range.location >= textView.selectedRange.location } ?? results.count - 1))
         updateStatistics(for: results)
@@ -175,6 +194,11 @@ public final class SearchReplaceEngine: ObservableObject {
               index >= 0 && index < currentSearchResults.count else { return false }
 
         let result = currentSearchResults[index]
+        // When the text changed since these results were computed (an undo,
+        // another edit path), edit only a range that still holds what matched.
+        if resultsTextGeneration != textView.textChangeEventGeneration {
+            guard Self.rangeStillHoldsMatch(result, in: textView) else { return false }
+        }
 
         // Through the text view's own editing path, so undo, the delegate's
         // gating and the change notification the host listens to all see it.
@@ -188,6 +212,8 @@ public final class SearchReplaceEngine: ObservableObject {
         // Update search results
         let lengthDiff = TextRangeUtilities.utf16Length(of: replacement) - result.range.length
         updateResultsAfterReplacement(at: index, lengthDifference: lengthDiff)
+        // The shifted results describe the text as this replace left it.
+        resultsTextGeneration = textView.textChangeEventGeneration
 
         return true
     }
@@ -206,8 +232,13 @@ public final class SearchReplaceEngine: ObservableObject {
         let results = await findAll(pattern: pattern, options: searchOptions, selectFirstResult: false)
         guard !results.isEmpty else { return 0 }
 
-        // One user edit: one undo group, one change notification.
-        let ranges = results.map(\.range).sorted { $0.location < $1.location }
+        // One user edit: one undo group, one change notification. Every
+        // range is re-checked against the current text first.
+        let ranges = results
+            .filter { Self.rangeStillHoldsMatch($0, in: textView) }
+            .map(\.range)
+            .sorted { $0.location < $1.location }
+        guard !ranges.isEmpty else { return 0 }
         guard applyUserEdit(
             replacing: ranges,
             with: replacement,
@@ -239,6 +270,27 @@ public final class SearchReplaceEngine: ObservableObject {
     }
 
     // MARK: - Private Methods
+
+    /// An immutable copy of the text view's text, safe to scan off the main
+    /// actor while the text view keeps editing its own storage.
+    private static func snapshot(of textView: CodeEditorView) -> String {
+        #if canImport(AppKit)
+        // swiftlint:disable:next legacy_objc_type
+        return String(NSString(string: textView.string))
+        #else
+        return textView.text ?? ""
+        #endif
+    }
+
+    /// Whether `result.range` is inside the current text and still holds the
+    /// text that matched.
+    private static func rangeStillHoldsMatch(_ result: SearchResult, in textView: CodeEditorView) -> Bool {
+        let bridge = textView.textKitBridge
+        guard result.range.location >= 0,
+              NSMaxRange(result.range) <= bridge.documentLength else { return false }
+        if result.range.length == 0 { return result.matchedText.isEmpty }
+        return bridge.substring(in: result.range) == result.matchedText
+    }
 
     /// Replaces `ranges` (ascending, non-overlapping) with `replacement` as a
     /// single user edit: the text view's gating and undo registration run
@@ -342,7 +394,8 @@ public final class SearchReplaceEngine: ObservableObject {
                     stop.pointee = true
                     return
                 }
-                guard let range = match?.range, range.location != NSNotFound, range.length > 0,
+                // Empty matches (`^`, `$`, `\b`, lookarounds) are matches too.
+                guard let range = match?.range, range.location != NSNotFound,
                       NSMaxRange(range) <= nsText.length else { return }
                 append(range)
             }
