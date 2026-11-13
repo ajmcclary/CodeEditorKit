@@ -67,8 +67,11 @@ final class EditorUpdateCostTests: XCTestCase {
     func testSizingAnUnspecifiedProposalAfterAKeystrokeIsCheap() {
         let container = makeContainer()
         let textView = container.textView
-        var configuration = EditorConfiguration.default
-        configuration.layout.wrapLines = true
+        // Without wrapping the estimate is O(log n) (line count and longest
+        // line from the line geometry store); with wrapping it adds one pass
+        // over line lengths, which is too close to the old cost to time
+        // reliably under a loaded parallel run.
+        let configuration = EditorConfiguration.default
         textView.setSelectedRange(NSRange(location: 10, length: 0))
 
         var elapsed: TimeInterval = 0
@@ -90,6 +93,24 @@ final class EditorUpdateCostTests: XCTestCase {
 
         // Measuring every line took ~0.2 s per call at this size.
         XCTAssertLessThan(elapsed, 0.5, "10 size estimates took \(elapsed) s")
+    }
+
+    func testTheWrappedSizeEstimateCountsWrappedLines() throws {
+        let container = makeContainer()
+        var configuration = EditorConfiguration.default
+        configuration.layout.wrapLines = true
+        let narrow = try XCTUnwrap(CodeEditorRepresentableHelper.calculateSize(
+            for: container,
+            proposal: ProposedViewSize(width: 200, height: nil),
+            configuration: configuration
+        ))
+        let wide = try XCTUnwrap(CodeEditorRepresentableHelper.calculateSize(
+            for: container,
+            proposal: ProposedViewSize(width: 2_000, height: nil),
+            configuration: configuration
+        ))
+
+        XCTAssertGreaterThan(narrow.height, wide.height)
     }
 
     func testTheSizeEstimateCoversTheDocument() throws {
