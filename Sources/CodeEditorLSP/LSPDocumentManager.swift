@@ -40,16 +40,8 @@ final class LSPDocumentManager {
         content: String,
         languageId: String? = nil
     ) async throws {
-        guard let clientRegistry else {
-            throw LSPError.invalidResponse("Client registry not available")
-        }
-
-        let uri = LSPDocumentURI.uri(forFilePath: filePath)
-
         // Already open, or opening: never a second didOpen without a close.
-        if let opening = openingDocuments[uri] {
-            try await opening.value
-        }
+        let uri = try await uriAfterPendingOpen(of: filePath)
         if let open = openDocuments[uri] {
             if open.content != content {
                 try await updateDocument(filePath: filePath, content: content)
@@ -64,6 +56,18 @@ final class LSPDocumentManager {
         openingDocuments[uri] = task
         defer { openingDocuments[uri] = nil }
         try await task.value
+    }
+
+    /// The document's URI, once any open of it in flight has finished.
+    private func uriAfterPendingOpen(of filePath: String) async throws -> String {
+        guard clientRegistry != nil else {
+            throw LSPError.invalidResponse("Client registry not available")
+        }
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
+        if let opening = openingDocuments[uri] {
+            try await opening.value
+        }
+        return uri
     }
 
     private func performOpen(
@@ -125,15 +129,10 @@ final class LSPDocumentManager {
         content: String,
         changes: [TextDocumentContentChangeEvent] = []
     ) async throws {
+        // An update racing the document's open goes after it.
+        let uri = try await uriAfterPendingOpen(of: filePath)
         guard let clientRegistry else {
             throw LSPError.invalidResponse("Client registry not available")
-        }
-
-        let uri = LSPDocumentURI.uri(forFilePath: filePath)
-
-        // An update racing the document's open goes after it.
-        if let opening = openingDocuments[uri] {
-            try await opening.value
         }
 
         guard var document = openDocuments[uri] else {
