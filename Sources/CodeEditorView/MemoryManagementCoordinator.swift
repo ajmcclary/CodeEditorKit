@@ -157,7 +157,7 @@ public final class MemoryManagementCoordinator {
     }
 
     /// Performs memory cleanup when under pressure
-    private func performMemoryCleanup() -> CleanupResult {
+    internal func performMemoryCleanup() -> CleanupResult {
         guard let editorView else {
             return CleanupResult(memoryFreedMB: 0, description: "Editor view deallocated")
         }
@@ -165,49 +165,23 @@ public final class MemoryManagementCoordinator {
         var memoryFreed: Double = 0
         var operations: [String] = []
 
-        // Clear undo manager history
+        // Clear this editor's own undo history. It lives in the editor's
+        // undo manager (never the window's shared one, which holds every
+        // other view's history too); a host-supplied manager is left alone.
         if let undoManager = editorView.undoManager,
            undoManager.canUndo || undoManager.canRedo {
-            undoManager.removeAllActions()
-            memoryFreed += 0.5 // Estimate
-            operations.append("undo history")
+            editorView.discardUndoHistory()
+            if !(undoManager.canUndo || undoManager.canRedo) {
+                memoryFreed += 0.5 // Estimate
+                operations.append("undo history")
+            }
         }
 
-        // Clear large text storage if read-only
-        #if canImport(AppKit)
-        let storageLength = editorView.textKitBridge.documentLength
-        if storageLength > 100_000, !editorView.isEditable {
-            let sizeReduction = Double(storageLength) / (1_024 * 1_024) * 0.1
-            memoryFreed += sizeReduction
-            operations.append("large text storage")
-        }
-        #else
-        if let text = editorView.text,
-           text.count > 100_000,
-           !editorView.isEditable {
-            let sizeReduction = Double(text.count) / (1_024 * 1_024) * 0.1
-            memoryFreed += sizeReduction
-            operations.append("large text content")
-        }
-        #endif
-
-        // Clear syntax highlighting cache
-        // Note: The syntax highlighter will automatically cancel tasks when needed
-        memoryFreed += 2.0 // Estimate
-        operations.append("syntax highlighting cache")
-
-        // The line geometry store is deliberately left alone. It is the
-        // editor's line index, not a cache: the gutter, active-line
-        // highlighting, line-at-point and the minimap all read it, and
-        // nothing rebuilds it until the next character edit. Emptying it
-        // here made every gutter line number read "1".
-
-        // Clear folding state for large documents
-        if !editorView.codeFoldingEngine.foldedRegions.isEmpty {
-            editorView.codeFoldingEngine.unfoldAll()
-            memoryFreed += 0.25 // Estimate
-            operations.append("code folding state")
-        }
+        // Nothing else here frees memory: the text storage and the syntax
+        // highlighting state are not released by this pass (so no estimate
+        // is reported for them), the line geometry store is the editor's line
+        // index rather than a cache (emptying it made every gutter line
+        // number read "1"), and the user's folds are their own state.
 
         let description = operations.isEmpty ? "No operations performed" : "Cleared: \(operations.joined(separator: ", "))"
         return CleanupResult(memoryFreedMB: memoryFreed, description: description)
