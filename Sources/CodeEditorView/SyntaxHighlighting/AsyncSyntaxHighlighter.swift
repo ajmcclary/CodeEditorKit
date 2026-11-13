@@ -21,6 +21,9 @@ public final class AsyncSyntaxHighlighter {
     private let coordinator: SyntaxHighlightingCoordinator
     private let backgroundHighlighter: BackgroundSyntaxHighlighter
     private var highlightingTask: Task<Void, Never>?
+    /// Results computed for a text revision that was edited before they
+    /// could be applied, and so were dropped (test seam).
+    internal private(set) var droppedStaleResultCount = 0
     private var debounceTask: Task<Void, Never>?
     private var periodicOptimizationTask: Task<Void, Never>?
     private let debounceInterval: Duration
@@ -181,13 +184,19 @@ public final class AsyncSyntaxHighlighter {
         // Cancel any existing highlighting task
         highlightingTask?.cancel()
 
-        // Get the text content
+        // An immutable snapshot (the storage's own string is mutable and is
+        // edited on the main actor while the parse runs off it), and the
+        // revision it was taken at: results for an older revision are
+        // dropped rather than painted over newer text.
+        let generation = textView.textChangeEventGeneration
         #if canImport(AppKit)
-            let text = textView.string
+            // swiftlint:disable:next legacy_objc_type
+            let text = String(NSString(string: textView.string))
         #else
             let text = textView.text ?? ""
         #endif
-        let textLength = text.count
+        // UTF-16 length: `count` walks every Character on the main actor.
+        let textLength = text.utf16.count
 
         // Check performance limits
         guard textLength <= textView.configuration.performance.maxSyntaxHighlightingLength else {
@@ -231,6 +240,10 @@ public final class AsyncSyntaxHighlighter {
         // Check cache first
         let cachedTokens = await tokenCache.getCachedTokens(for: cacheKey)
         if !cachedTokens.isEmpty {
+            guard textView.textChangeEventGeneration == generation else {
+                droppedStaleResultCount += 1
+                return
+            }
             applyTokens(cachedTokens, to: textView, language: language, visibleRange: visibleRange)
 
             // Track cache hit
@@ -292,8 +305,13 @@ public final class AsyncSyntaxHighlighter {
                         cacheHit: false
                     )
 
-                    // Apply tokens on main thread
+                    // Apply tokens on main thread, unless the text changed since
+                    // the snapshot (that edit has scheduled a fresh pass).
                     await MainActor.run {
+                        guard textView.textChangeEventGeneration == generation else {
+                            self.droppedStaleResultCount += 1
+                            return
+                        }
                         self.applyTokens(tokens, to: textView, language: language, visibleRange: visibleRange)
                     }
                 }
