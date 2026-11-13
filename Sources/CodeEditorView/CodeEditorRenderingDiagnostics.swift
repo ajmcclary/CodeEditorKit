@@ -263,7 +263,9 @@ package enum CodeEditorRenderingDiagnostics {
               let textRange = textView.textKitBridge.textRangeFromNSRange(range)
         else { return nil }
 
-        textLayoutManager.ensureLayout(for: textRange)
+        // Rendering attributes are not layout: reading them needs no layout
+        // pass (which, for a caret at the end of a large document, laid out
+        // the whole document on every DEBUG log call).
         var value: Any?
         textLayoutManager.enumerateRenderingAttributes(from: textRange.location, reverse: false) { _, attributes, attributeRange in
             guard attributeRange.intersects(textRange) else { return true }
@@ -421,8 +423,9 @@ package enum CodeEditorRenderingDiagnostics {
             return ["fragmentCount=0"]
         }
 
-        textLayoutManager.ensureLayout(for: textLayoutManager.documentRange)
-
+        // Describe the layout as it is. Forcing layout of the whole document
+        // here made every DEBUG log call (several per SwiftUI update) a full
+        // TextKit 2 layout pass, and made DEBUG layout differ from release.
         var count = 0
         var firstFrame: CGRect?
         var firstLineCount = 0
