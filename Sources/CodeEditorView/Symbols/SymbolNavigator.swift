@@ -98,8 +98,12 @@ public class SymbolNavigator: ObservableObject {
         // Detect symbols using provider
         let detectedSymbols = await provider.detectSymbols(in: text)
 
-        // Build symbol tree
-        let symbolTree = buildSymbolTree(from: detectedSymbols)
+        // Build symbol tree (bounded: the outline of a generated or
+        // minified document is not navigable anyway).
+        let bounded = detectedSymbols.count > Self.maximumIndexedSymbols
+            ? Array(detectedSymbols.sorted { $0.range.location < $1.range.location }.prefix(Self.maximumIndexedSymbols))
+            : detectedSymbols
+        let symbolTree = Self.buildSymbolTree(from: bounded)
 
         // Update symbols
         symbols = symbolTree
@@ -111,52 +115,60 @@ public class SymbolNavigator: ObservableObject {
         logger.debug("Detected \(symbolTree.count) top-level symbols")
     }
 
-    private func buildSymbolTree(from symbols: [DocumentSymbol]) -> [DocumentSymbol] {
-        // Sort symbols by range location
+    /// The most symbols one document's outline indexes.
+    nonisolated package static let maximumIndexedSymbols = 10_000
+    /// The deepest nesting the outline keeps; deeper symbols attach to the
+    /// deepest kept container. (Nested values are also released recursively,
+    /// so nesting must not follow the input either.)
+    nonisolated package static let maximumNestingDepth = 64
+
+    /// Nests symbols by range containment in one pass with a stack of
+    /// enclosing containers, then assembles the tree from the innermost
+    /// symbols outward. Nothing here recurses with the input.
+    package nonisolated static func buildSymbolTree(from symbols: [DocumentSymbol]) -> [DocumentSymbol] {
         let sorted = symbols.sorted { $0.range.location < $1.range.location }
+        var parent = Array(repeating: -1, count: sorted.count)
+        var enclosing: [Int] = []
 
-        var rootSymbols: [DocumentSymbol] = []
-        var symbolStack: [DocumentSymbol] = []
-
-        for symbol in sorted {
-            // Pop symbols from stack that don't contain current symbol
-            while let parent = symbolStack.last,
-                  !TextRangeUtilities.contains(parent.range, symbol.range) {
-                symbolStack.removeLast()
+        for (index, symbol) in sorted.enumerated() {
+            while let last = enclosing.last,
+                  !TextRangeUtilities.contains(sorted[last].range, symbol.range) {
+                enclosing.removeLast()
             }
-
-            if let parent = symbolStack.last {
-                // Add as child to parent
-                var updatedParent = parent
-                updatedParent.children.append(symbol)
-
-                // Update parent in stack
-                symbolStack[symbolStack.count - 1] = updatedParent
-
-                // Also update in root symbols if needed
-                updateSymbolInTree(&rootSymbols, updated: updatedParent)
-            } else {
-                // Add as root symbol
-                rootSymbols.append(symbol)
-            }
-
-            // Add to stack if it can contain other symbols
-            if symbol.kind.canContainSymbols {
-                symbolStack.append(symbol)
+            parent[index] = enclosing.last ?? -1
+            if symbol.kind.canContainSymbols, enclosing.count < maximumNestingDepth {
+                enclosing.append(index)
             }
         }
 
-        return rootSymbols
+        var childIndices = Array(repeating: [Int](), count: sorted.count)
+        var rootIndices: [Int] = []
+        for index in sorted.indices {
+            if parent[index] >= 0 {
+                childIndices[parent[index]].append(index)
+            } else {
+                rootIndices.append(index)
+            }
+        }
+
+        // A child always sorts after its parent, so building from the end
+        // finishes every child before its parent needs it.
+        var built = sorted
+        for index in sorted.indices.reversed() where !childIndices[index].isEmpty {
+            built[index].children = childIndices[index].map { built[$0] }
+        }
+        return rootIndices.map { built[$0] }
     }
 
-    private func updateSymbolInTree(_ tree: inout [DocumentSymbol], updated: DocumentSymbol) {
-        for index in 0..<tree.count {
-            if tree[index].id == updated.id {
-                tree[index] = updated
-                return
-            }
-            updateSymbolInTree(&tree[index].children, updated: updated)
+    /// Pre-order flattening with an explicit stack.
+    package nonisolated static func flatten(_ symbols: [DocumentSymbol]) -> [DocumentSymbol] {
+        var result: [DocumentSymbol] = []
+        var pending = Array(symbols.reversed())
+        while let symbol = pending.popLast() {
+            result.append(symbol)
+            pending.append(contentsOf: symbol.children.reversed())
         }
+        return result
     }
 
     // MARK: - Cache Management
@@ -170,28 +182,18 @@ public class SymbolNavigator: ObservableObject {
     private func rebuildSymbolCaches() {
         invalidateSymbolCaches()
 
-        var flattened: [DocumentSymbol] = []
-        flattenSymbolsInto(symbols, into: &flattened)
+        let flattened = Self.flatten(symbols)
         flattenedSymbolsCache = flattened
 
         for symbol in flattened {
             symbolByIdCache[symbol.id] = symbol
-            symbolRangeIndex.insert(range: symbol.range, value: symbol)
         }
-    }
-
-    private func flattenSymbolsInto(_ symbols: [DocumentSymbol], into result: inout [DocumentSymbol]) {
-        for symbol in symbols {
-            result.append(symbol)
-            flattenSymbolsInto(symbol.children, into: &result)
-        }
+        symbolRangeIndex.replaceAll(with: flattened.map { ($0.range, $0) })
     }
 
     private var flattenedSymbols: [DocumentSymbol] {
         if flattenedSymbolsCache.isEmpty, symbols.isEmpty == false {
-            var flattened: [DocumentSymbol] = []
-            flattenSymbolsInto(symbols, into: &flattened)
-            flattenedSymbolsCache = flattened
+            flattenedSymbolsCache = Self.flatten(symbols)
         }
         return flattenedSymbolsCache
     }
@@ -252,9 +254,7 @@ public class SymbolNavigator: ObservableObject {
     }
 
     private func flattenSymbols(_ symbols: [DocumentSymbol]) -> [DocumentSymbol] {
-        var flattened: [DocumentSymbol] = []
-        flattenSymbolsInto(symbols, into: &flattened)
-        return flattened
+        Self.flatten(symbols)
     }
 
     // MARK: - Breadcrumbs

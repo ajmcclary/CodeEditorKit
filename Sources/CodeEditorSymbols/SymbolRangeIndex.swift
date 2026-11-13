@@ -1,66 +1,87 @@
 import Foundation
 
+/// Point-in-range queries over symbol ranges.
+///
+/// Stored as an array sorted by location with an implicit balanced interval
+/// tree over it (each subarray's middle element carries the largest upper
+/// bound in that subarray). There are no node objects: the previous
+/// pointer-based tree was unbalanced, so symbols arriving in location order
+/// formed one spine and its recursive insert overflowed the main thread's
+/// stack on a ~200 KB JSON document (and releasing such a spine recurses
+/// too). Depth is now at most log2(count), and queries are iterative.
 package final class SymbolRangeIndex<Value> {
-    private final class Node {
-        let range: NSRange
-        let value: Value
-        var maxUpperBound: Int
-        var left: Node?
-        var right: Node?
-
-        init(range: NSRange, value: Value) {
-            self.range = range
-            self.value = value
-            self.maxUpperBound = NSMaxRange(range)
-        }
-    }
-
-    private var root: Node?
+    private var entries: [(range: NSRange, value: Value)] = []
+    /// `maxUpperBound[mid]` for the subarray whose middle index is `mid`.
+    private var maxUpperBound: [Int] = []
+    private var needsRebuild = false
 
     package init() {}
 
+    /// Adds one range. The index is rebuilt (sorted, balanced) before the
+    /// next query, so any insertion order keeps it shallow.
     package func insert(range: NSRange, value: Value) {
-        root = insert(range: range, value: value, into: root)
+        entries.append((range, value))
+        needsRebuild = true
+    }
+
+    /// Replaces the contents with `newEntries` in one sorted build.
+    package func replaceAll(with newEntries: [(NSRange, Value)]) {
+        entries = newEntries.map { (range: $0.0, value: $0.1) }
+        needsRebuild = true
     }
 
     package func findContaining(location: Int) -> [Value] {
-        var results: [Value] = []
-        findContaining(location: location, in: root, results: &results)
-        return results
+        rebuildIfNeeded()
+        var results: [(location: Int, value: Value)] = []
+        var pending: [(lower: Int, upper: Int)] = [(0, entries.count)]
+        while let (lower, upper) = pending.popLast() {
+            guard lower < upper else { continue }
+            let mid = (lower + upper) / 2
+            guard maxUpperBound[mid] >= location else { continue }
+            let range = entries[mid].range
+            if range.location <= location, location <= NSMaxRange(range) {
+                results.append((range.location, entries[mid].value))
+            }
+            pending.append((lower, mid))
+            // Everything right of `mid` starts at or after it.
+            if range.location <= location {
+                pending.append((mid + 1, upper))
+            }
+        }
+        // In location order, as the tree's in-order traversal returned them.
+        return results.sorted { $0.location < $1.location }.map(\.value)
     }
 
     package func removeAll() {
-        root = nil
+        entries.removeAll()
+        maxUpperBound.removeAll()
+        needsRebuild = false
     }
 
-    private func insert(range: NSRange, value: Value, into node: Node?) -> Node {
-        guard let node else {
-            return Node(range: range, value: value)
-        }
-
-        if range.location < node.range.location {
-            node.left = insert(range: range, value: value, into: node.left)
-        } else {
-            node.right = insert(range: range, value: value, into: node.right)
-        }
-
-        node.maxUpperBound = max(node.maxUpperBound, NSMaxRange(range))
-        return node
+    private func rebuildIfNeeded() {
+        guard needsRebuild else { return }
+        needsRebuild = false
+        entries = entries.enumerated()
+            .sorted { lhs, rhs in
+                lhs.element.range.location != rhs.element.range.location
+                    ? lhs.element.range.location < rhs.element.range.location
+                    : lhs.offset < rhs.offset
+            }
+            .map(\.element)
+        maxUpperBound = Array(repeating: 0, count: entries.count)
+        _ = fillMaxUpperBound(lower: 0, upper: entries.count)
     }
 
-    private func findContaining(location: Int, in node: Node?, results: inout [Value]) {
-        guard let node else { return }
-
-        if let left = node.left, left.maxUpperBound >= location {
-            findContaining(location: location, in: left, results: &results)
-        }
-
-        if node.range.location <= location, location <= NSMaxRange(node.range) {
-            results.append(node.value)
-        }
-
-        if location >= node.range.location {
-            findContaining(location: location, in: node.right, results: &results)
-        }
+    /// Recursion depth is log2(count): the subarrays halve.
+    private func fillMaxUpperBound(lower: Int, upper: Int) -> Int {
+        guard lower < upper else { return Int.min }
+        let mid = (lower + upper) / 2
+        let value = max(
+            NSMaxRange(entries[mid].range),
+            fillMaxUpperBound(lower: lower, upper: mid),
+            fillMaxUpperBound(lower: mid + 1, upper: upper)
+        )
+        maxUpperBound[mid] = value
+        return value
     }
 }

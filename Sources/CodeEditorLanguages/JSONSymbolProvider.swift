@@ -23,40 +23,51 @@ package struct JSONSymbolProvider: DocumentSymbolProvider {
         return symbols
     }
 
-    private func extractSymbols(from object: Any, keyLocations: [String: Int], path: [String]) -> [DocumentSymbol] {
+    /// Symbols for every key, in pre-order (a key, then the keys inside its
+    /// value). Walks the parsed value with an explicit stack: recursing per
+    /// nesting level let a deeply nested document set the stack depth.
+    private func extractSymbols(from object: Any, keyLocations: [String: Int], path _: [String]) -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
+        // Each frame is the remaining children of one container, in order.
+        var frames: [IndexingIterator<[(key: String?, value: Any)]>] = [Self.children(of: object).makeIterator()]
 
-        if let dictionary = object as? [String: Any] {
-            for (key, value) in dictionary {
-                let currentPath = path + [key]
-                let location = keyLocations[key] ?? 0
-
+        while !frames.isEmpty {
+            guard let (key, value) = frames[frames.count - 1].next() else {
+                frames.removeLast()
+                continue
+            }
+            if let key {
                 let kind = symbolKind(for: value)
                 let detail = symbolDetail(for: value)
-
-                let symbol = DocumentSymbol(
+                symbols.append(DocumentSymbol(
                     name: key,
                     kind: kind,
-                    range: NSRange(location: location, length: TextRangeUtilities.utf16Length(of: key) + TextRangeUtilities.utf16Length(of: detail) + 4), // approximate
+                    range: NSRange(
+                        location: keyLocations[key] ?? 0,
+                        length: TextRangeUtilities.utf16Length(of: key) + TextRangeUtilities.utf16Length(of: detail) + 4
+                    ), // approximate
                     detail: detail
-                )
-
-                symbols.append(symbol)
-
-                // Recursively process nested objects
-                if kind == .object || kind == .array {
-                    symbols.append(contentsOf: extractSymbols(from: value, keyLocations: keyLocations, path: currentPath))
-                }
+                ))
+                guard kind == .object || kind == .array else { continue }
+            } else if !(value is [String: Any]) {
+                // Array elements contribute only through dictionaries.
+                continue
             }
-        } else if let array = object as? [Any] {
-            for (index, item) in array.enumerated() {
-                if let dict = item as? [String: Any] {
-                    symbols.append(contentsOf: extractSymbols(from: dict, keyLocations: keyLocations, path: path + ["[\(index)]"]))
-                }
-            }
+            frames.append(Self.children(of: value).makeIterator())
         }
 
         return symbols
+    }
+
+    /// A dictionary's entries (keyed) or an array's elements (unkeyed).
+    private static func children(of object: Any) -> [(key: String?, value: Any)] {
+        if let dictionary = object as? [String: Any] {
+            return dictionary.map { (key: $0.key, value: $0.value) }
+        }
+        if let array = object as? [Any] {
+            return array.map { (key: nil, value: $0) }
+        }
+        return []
     }
 
     private func parseLineByLine(text: String) -> [DocumentSymbol] {

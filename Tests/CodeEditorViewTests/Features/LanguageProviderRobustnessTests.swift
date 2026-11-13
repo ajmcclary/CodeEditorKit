@@ -173,6 +173,23 @@ final class LanguageProviderRobustnessTests: XCTestCase {
         XCTAssertEqual(after?.range.location, utf16Range(of: "\"after\":", in: source).location)
     }
 
+    /// Nested keys come out in pre-order, each key before the keys of its
+    /// value, and nesting depth costs no stack (the walk is iterative).
+    func testJSONSymbolsOfNestedObjectsComeOutInPreOrder() async {
+        let depth = 400
+        let source = String(repeating: "{\"k\": ", count: depth) + "1" + String(repeating: "}", count: depth)
+        let symbols = await JSONSymbolProvider().detectSymbols(in: source)
+        XCTAssertEqual(symbols.count, depth)
+        XCTAssertEqual(symbols.first?.kind, .object)
+        XCTAssertEqual(symbols.last?.kind, .number)
+
+        let mixed = #"{"a": {"b": 1}, "c": [{"d": true}, [{"e": 2}]]}"#
+        let names = await JSONSymbolProvider().detectSymbols(in: mixed).map(\.name)
+        XCTAssertEqual(Set(names), ["a", "b", "c", "d"])
+        if let keyA = names.firstIndex(of: "a"), let keyB = names.firstIndex(of: "b") { XCTAssertEqual(keyB, keyA + 1) }
+        if let keyC = names.firstIndex(of: "c"), let keyD = names.firstIndex(of: "d") { XCTAssertEqual(keyD, keyC + 1) }
+    }
+
     func testMarkdownSectionsEndAtTheUTF16End() async {
         let source = "# One 😀\ntext 😀\n# Two\nmore 😀"
         let regions = await MarkdownFoldingProvider().detectFoldableRegions(in: source)
