@@ -187,6 +187,67 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertEqual(store.text, "abcX")
     }
 
+    // MARK: - Host text equal to an earlier editor value
+
+    /// Host text equal to something the editor wrote earlier is a real
+    /// replacement once the host has shown other text since: undoing a
+    /// canvas edit, or a Reload back to the same disk contents.
+    private func assertHostCanReturnToAnEarlierEditorValue(mode: HostedEditorMode) throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: mode)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+        type("X", into: textView)
+        spin(for: 0.3)
+        XCTAssertEqual(store.text, "abcX")
+
+        store.text = "Q"
+        spin(for: 0.3)
+        XCTAssertEqual(textView.string, "Q")
+
+        store.text = "abcX"
+        spin(for: 0.3)
+        XCTAssertEqual(textView.string, "abcX", "the host's text was ignored")
+
+        textView.setSelectedRange(NSRange(location: 4, length: 0))
+        type("Z", into: textView)
+        spin(for: 0.3)
+        XCTAssertEqual(store.text, "abcXZ")
+    }
+
+    func testHostCanReturnToAnEarlierEditorValueWithOnTextChange() throws {
+        try assertHostCanReturnToAnEarlierEditorValue(mode: .controller)
+    }
+
+    func testHostCanReturnToAnEarlierEditorValueWithABindingOnly() throws {
+        try assertHostCanReturnToAnEarlierEditorValue(mode: .bindingOnly)
+    }
+
+    func testHostCanReturnToAnEarlierEditorValueWithAnIgnoredSetter() throws {
+        try assertHostCanReturnToAnEarlierEditorValue(mode: .setterIgnored)
+    }
+
+    /// The binding write lands, the user types again before SwiftUI's update,
+    /// then the update carries the written (now older) value: an echo, not a
+    /// replacement.
+    func testAnEchoOfTheEditorsOwnWriteDoesNotRevertNewerTyping() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .bindingOnly)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+        textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
+        spin(for: 0.2) // the debounced write delivers "abcX"
+        XCTAssertEqual(store.text, "abcX")
+
+        // Type before SwiftUI has rendered the written value.
+        textView.insertText("Y", replacementRange: NSRange(location: NSNotFound, length: 0))
+        store.tick += 1
+        spin(for: 0.5)
+
+        XCTAssertEqual(textView.string, "abcXY")
+        XCTAssertEqual(store.text, "abcXY")
+    }
+
     // MARK: - Host text replacement
 
     func testUndoAfterTheHostReplacesTheTextIsSafe() throws {
@@ -309,6 +370,9 @@ enum HostedEditorMode {
     case bindingOnly
     /// Text binding + `.onTextChange` + an `EditorController`.
     case controller
+    /// A binding whose setter is ignored, with `.onTextChange` updating the
+    /// store (Ready Room's Diagram Source panel).
+    case setterIgnored
 }
 
 struct HostedEditor: View {
@@ -321,7 +385,7 @@ struct HostedEditor: View {
         configuration.display.isLineNumbersEnabled = store.lineNumbers
         let editor = CodeEditor(text: Binding(
             get: { store.text },
-            set: { store.text = $0 }
+            set: { if mode != .setterIgnored { store.text = $0 } }
         ))
         return Group {
             if store.showsEditor {
@@ -350,6 +414,10 @@ struct HostedEditor: View {
                 editor
                     .onTextChange { store.text = $0 }
                     .editorController(store.controller)
+
+            case .setterIgnored:
+                editor
+                    .onTextChange { store.text = $0 }
             }
         }
     }

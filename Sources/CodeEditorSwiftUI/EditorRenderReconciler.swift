@@ -188,15 +188,19 @@ final class EditorRenderReconciler {
         guard lastState != state else { return false }
 
         // The host replaced the text only if its text changed since the last
-        // render and is not a value the editor itself sent toward it. The
-        // binding write is debounced, so host text that is merely behind the
-        // editor (unchanged, or an echo of an earlier editor value) must not
-        // overwrite newer typing.
+        // render and is not the echo of the editor's latest binding write.
+        // The write is debounced, so host text that is merely behind the
+        // editor (unchanged since the last render, or that echo arriving
+        // after more typing) must not overwrite newer typing. The echo is a
+        // one-shot expectation, not "any text the editor once wrote": a host
+        // returning to an earlier editor value is a replacement.
         let storedText = operations.text(in: container)
         let hostTextChanged = lastState.map { $0.text != state.text } ?? true
+        let isEcho = hostTextChanged
+            && (bindingSynchronizer?.consumeEcho(ofHostText: state.text) ?? false)
         let isHostBindingSwap = storedText != state.text
             && hostTextChanged
-            && !(bindingSynchronizer?.isEditorEcho(state.text) ?? false)
+            && !isEcho
         let effectiveText = isHostBindingSwap ? state.text : storedText
         if isHostBindingSwap {
             operations.setText(state.text, in: container, preserveSelection: true)

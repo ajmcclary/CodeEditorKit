@@ -13,8 +13,12 @@ final class EditorBindingSynchronizer {
     private var pendingTask: Task<Void, Never>?
     /// Editor text waiting for the debounced write.
     private var pendingText: String?
-    /// The last text this synchronizer wrote into the host binding.
-    private var lastWrittenText: String?
+    /// The value of the editor's most recent binding write, expected to come
+    /// back from the host as an echo. One-shot: the next host text that
+    /// differs from what the host showed before consumes it, matching or not,
+    /// and a host replacement clears it. It is never "any text the editor
+    /// once wrote", so a host may return to an earlier editor value.
+    private var expectedEcho: String?
 
     init(
         debounce: Duration = .milliseconds(100),
@@ -35,6 +39,7 @@ final class EditorBindingSynchronizer {
         guard lastText != text else { return }
 
         cancel()
+        expectedEcho = nil
         lastText = text
     }
 
@@ -60,11 +65,15 @@ final class EditorBindingSynchronizer {
         }
     }
 
-    /// Whether `text` is a value the editor itself produced and sent toward
-    /// the host (written, or still waiting to be). Host text equal to one of
-    /// these is the host catching up, not the host replacing the text.
-    func isEditorEcho(_ text: String) -> Bool {
-        text == lastWrittenText || text == pendingText
+    /// Called with each new host text (one that differs from the host's text
+    /// at the previous render). Returns true when it is the echo of the
+    /// editor's latest binding write — the host catching up, which must not
+    /// overwrite typing done since — and consumes that expectation either
+    /// way.
+    func consumeEcho(ofHostText text: String) -> Bool {
+        guard let expectedEcho else { return false }
+        self.expectedEcho = nil
+        return text == expectedEcho
     }
 
     func cancel() {
@@ -87,7 +96,7 @@ final class EditorBindingSynchronizer {
 
     private func performWrite(_ text: String) {
         pendingText = nil
-        lastWrittenText = text
+        expectedEcho = text
         write?(text)
     }
 
