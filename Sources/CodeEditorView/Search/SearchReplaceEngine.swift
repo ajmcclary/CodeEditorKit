@@ -27,6 +27,8 @@ public final class SearchReplaceEngine: ObservableObject {
     private var currentSearchTask: Task<[SearchResult], Never>?
     /// The text revision `currentSearchResults` describe.
     private var resultsTextGeneration: UInt64?
+    /// The query that produced `currentSearchResults`.
+    private var resultsQuery: SearchQuery?
     private static let maximumScanAttempts = 3
     private weak var textView: CodeEditorView?
 
@@ -114,6 +116,7 @@ public final class SearchReplaceEngine: ObservableObject {
         // Update results and statistics
         currentSearchResults = results
         resultsTextGeneration = textView.textChangeEventGeneration
+        resultsQuery = query
         currentSearchIndex = results.isEmpty ? -1 : (selectFirstResult ? 0 :
             (results.firstIndex { $0.range.location >= textView.selectedRange.location } ?? results.count - 1))
         updateStatistics(for: results)
@@ -193,11 +196,26 @@ public final class SearchReplaceEngine: ObservableObject {
         guard let textView,
               index >= 0 && index < currentSearchResults.count else { return false }
 
-        let result = currentSearchResults[index]
+        var index = index
+        var result = currentSearchResults[index]
         // When the text changed since these results were computed (an undo,
-        // another edit path), edit only a range that still holds what matched.
+        // another edit path), the result must still be a match under the
+        // search's own conditions — whole word, case, regex context — not
+        // merely the same characters: re-run the query on the current text
+        // and replace only if it still finds this exact range.
         if resultsTextGeneration != textView.textChangeEventGeneration {
-            guard Self.rangeStillHoldsMatch(result, in: textView) else { return false }
+            guard Self.rangeStillHoldsMatch(result, in: textView), let query = resultsQuery else { return false }
+            let fresh = Self.performSearch(query, in: Self.snapshot(of: textView))
+            currentSearchResults = fresh
+            resultsTextGeneration = textView.textChangeEventGeneration
+            guard let freshIndex = fresh.firstIndex(where: { $0.range == result.range }) else {
+                currentSearchIndex = fresh.isEmpty ? -1 : min(max(0, currentSearchIndex), fresh.count - 1)
+                updateStatistics(for: fresh)
+                return false
+            }
+            index = freshIndex
+            result = fresh[freshIndex]
+            currentSearchIndex = freshIndex
         }
 
         // Through the text view's own editing path, so undo, the delegate's
@@ -302,16 +320,38 @@ public final class SearchReplaceEngine: ObservableObject {
         in textView: CodeEditorView,
         actionName: String
     ) -> Bool {
-        guard !ranges.isEmpty else { return false }
+        guard let first = ranges.first, let last = ranges.last else { return false }
         #if canImport(AppKit)
-        guard textView.shouldChangeText(
-            inRanges: ranges.map { NSValue(range: $0) },
-            replacementStrings: ranges.map { _ in replacement }
-        ) else { return false }
+        // One storage edit over the span of all matches, built in a single
+        // pass from the text between them and the replacement (each piece
+        // keeping the attributes at its own start). Replacing range by range
+        // made Replace All quadratic in the number of matches.
         let bridge = textView.textKitBridge
-        for range in ranges.reversed() {
-            bridge.replaceCharacters(in: range, with: replacement)
+        if ranges.count == 1 {
+            guard textView.shouldChangeText(in: first, replacementString: replacement) else { return false }
+            bridge.replaceCharacters(in: first, with: replacement)
+            textView.didChangeText()
+            textView.undoManager?.setActionName(actionName)
+            return true
         }
+        let span = NSRange(location: first.location, length: NSMaxRange(last) - first.location)
+        let spanText = bridge.attributedSubstring(in: span) ?? NSAttributedString()
+        let composed = NSMutableAttributedString()
+        var cursor = 0
+        for range in ranges {
+            let local = range.location - span.location
+            if local > cursor {
+                composed.append(spanText.attributedSubstring(from: NSRange(location: cursor, length: local - cursor)))
+            }
+            let attributes = local < spanText.length ? spanText.attributes(at: local, effectiveRange: nil) : [:]
+            composed.append(NSAttributedString(string: replacement, attributes: attributes))
+            cursor = local + range.length
+        }
+        if cursor < spanText.length {
+            composed.append(spanText.attributedSubstring(from: NSRange(location: cursor, length: spanText.length - cursor)))
+        }
+        guard textView.shouldChangeText(in: span, replacementString: composed.string) else { return false }
+        bridge.replaceCharacters(in: span, with: composed)
         textView.didChangeText()
         textView.undoManager?.setActionName(actionName)
         return true

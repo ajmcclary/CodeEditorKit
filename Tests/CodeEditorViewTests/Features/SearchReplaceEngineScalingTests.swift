@@ -187,5 +187,54 @@ final class SearchReplaceEngineScalingTests: XCTestCase {
 
         XCTAssertEqual(counts, [1, 2, 6])
     }
+
+    /// The text at the range is unchanged, but the match conditions no
+    /// longer hold: a whole-word `foo` became part of `foox`.
+    func testReplacingAWholeWordMatchThatGrewIntoALongerWordTouchesNothing() async throws {
+        let view = makeView("a foo b")
+        let engine = SearchReplaceEngine()
+        engine.attach(to: view)
+        var options = SearchOptions()
+        options.flashResult = false
+        options.wholeWord = true
+        _ = await engine.findAll(pattern: "foo", options: options, selectFirstResult: true)
+
+        let storage = try XCTUnwrap(view.textContentStorage?.textStorage)
+        storage.replaceCharacters(in: NSRange(location: 5, length: 0), with: "x")
+
+        XCTAssertFalse(engine.replace(at: 0, with: "Q"))
+        XCTAssertEqual(view.string, "a foox b")
+    }
+
+    /// One storage edit for every match: one per match made Replace All
+    /// quadratic (5 s at 3,000 matches; 60,000 did not finish in 200 s).
+    func testReplaceAllOf60000MatchesIsOneFastEditAndOneUndoStep() async throws {
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 400), styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer { window.close() }
+        let view = makeView(String(repeating: "abc def ghi\n", count: 60_000))
+        window.contentView = view
+        let engine = SearchReplaceEngine()
+        engine.attach(to: view)
+        var options = SearchOptions()
+        options.flashResult = false
+        options.highlightResults = false
+        var notifications = 0
+        let observer = NotificationCenter.default.addObserver(forName: NSText.didChangeNotification, object: view, queue: nil) { _ in
+            notifications += 1
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        let start = Date()
+        let count = await engine.replaceAll(pattern: "def", with: "XY", options: options)
+        let elapsed = Date().timeIntervalSince(start)
+
+        XCTAssertEqual(count, 60_000)
+        XCTAssertEqual(view.string, String(repeating: "abc XY ghi\n", count: 60_000))
+        XCTAssertEqual(notifications, 1)
+        XCTAssertLessThan(elapsed, 10, "Replace All of 60,000 matches took \(elapsed) s")
+        try XCTUnwrap(view.undoManager).undo()
+        XCTAssertEqual(view.string, String(repeating: "abc def ghi\n", count: 60_000))
+    }
 }
 #endif
