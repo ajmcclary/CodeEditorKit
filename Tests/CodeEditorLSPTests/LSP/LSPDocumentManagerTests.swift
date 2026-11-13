@@ -51,4 +51,39 @@ struct LSPDocumentManagerTests {
         #expect(opens == 1)
         #expect(manager.getDocument(for: "/tmp/proj/c.swift") != nil)
     }
+
+    /// Closing a document whose open is still in flight closes it on the
+    /// server once the open completes (it used to find nothing recorded and
+    /// return, leaving the server's document open).
+    @Test @MainActor func closingDuringAnOpenSendsTheClose() async throws {
+        let server = ScriptedLSPServerTransport()
+        let registry = LSPClientRegistry {
+            let client = LSPClient(transport: server)
+            await client.setupMessageHandler()
+            client.recordingHandler = { _, languageId in
+                try? await client.connect(configuration: LSPClient.ServerConfiguration(
+                    languageId: languageId,
+                    serverPath: "scripted",
+                    workspaceRoot: URL(fileURLWithPath: "/tmp/proj")
+                ))
+            }
+            return client
+        }
+        registry.workspaceRoot = URL(fileURLWithPath: "/tmp/proj")
+        registry.registerLanguageServer(.remote(
+            languageId: "swift",
+            url: try #require(URL(string: "wss://example.invalid/swift")),
+            fileExtensions: ["swift"]
+        ))
+        let manager = LSPDocumentManager(clientRegistry: registry)
+
+        async let open: Void = manager.openDocument(filePath: "/tmp/proj/d.swift", content: "let a = 1", languageId: "swift")
+        async let close: Void = manager.closeDocument(filePath: "/tmp/proj/d.swift")
+        _ = try await (open, close)
+
+        let notifications = await server.clientNotifications
+        #expect(notifications.filter { $0 == "textDocument/didOpen" }.count == 1)
+        #expect(notifications.filter { $0 == "textDocument/didClose" }.count == 1)
+        #expect(manager.getDocument(for: "/tmp/proj/d.swift") == nil)
+    }
 }

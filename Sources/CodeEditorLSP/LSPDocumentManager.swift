@@ -165,11 +165,12 @@ final class LSPDocumentManager {
     /// Close a document
     /// - Parameter filePath: Path to the file
     func closeDocument(filePath: String) async throws {
+        // A close racing the document's open goes after it, so the server
+        // is not left with a document nobody closes.
+        let uri = try await uriAfterPendingOpen(of: filePath)
         guard let clientRegistry else {
             throw LSPError.invalidResponse("Client registry not available")
         }
-
-        let uri = LSPDocumentURI.uri(forFilePath: filePath)
 
         guard let document = openDocuments.removeValue(forKey: uri) else {
             return
