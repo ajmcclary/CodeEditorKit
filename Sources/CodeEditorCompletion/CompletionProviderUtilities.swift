@@ -110,7 +110,9 @@ public enum CompletionProviderUtilities {
         var commaCount = 0
         var functionEnd = -1
 
-        for (index, char) in beforeCursor.enumerated().reversed() {
+        // Labeled: a bare `break` left only the `switch`, so the scan ran on
+        // to the start of the text and an earlier call overwrote the result.
+        scan: for (index, char) in beforeCursor.enumerated().reversed() {
             switch char {
             case ")":
                 parenDepth += 1
@@ -119,7 +121,7 @@ public enum CompletionProviderUtilities {
                 parenDepth -= 1
                 if parenDepth == -1 {
                     functionEnd = index
-                    break
+                    break scan
                 }
 
             case "," where parenDepth == 0:

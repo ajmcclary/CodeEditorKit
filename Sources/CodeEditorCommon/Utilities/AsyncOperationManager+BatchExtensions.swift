@@ -46,7 +46,8 @@ extension AsyncOperationManager {
         batchSize: Int? = nil,
         priority _: Priority = .medium
     ) async throws -> [T?] {
-        let effectiveBatchSize = min(batchSize ?? maxConcurrentOperations, maxConcurrentOperations)
+        // At least one: `stride(by: 0)` traps.
+        let effectiveBatchSize = max(1, min(batchSize ?? maxConcurrentOperations, maxConcurrentOperations))
         var results: [T?] = Array(repeating: nil, count: operations.count)
         var firstError: Error?
 

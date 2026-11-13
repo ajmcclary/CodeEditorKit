@@ -57,6 +57,12 @@ extension AsyncOperationManager {
         )
 
         scheduledOperations[operationId] = scheduled
+        // Removed however this call ends, including cancellation while it
+        // waits for a slot (which used to leak the entry).
+        defer {
+            activeOperations.remove(operationId)
+            scheduledOperations.removeValue(forKey: operationId)
+        }
 
         // Wait for execution slot
         while activeOperations.count >= maxConcurrentOperations {
@@ -65,14 +71,10 @@ extension AsyncOperationManager {
 
         // Execute when ready
         activeOperations.insert(operationId)
-        defer {
-            activeOperations.remove(operationId)
-            scheduledOperations.removeValue(forKey: operationId)
-        }
 
-        // Apply delay if needed
-        if delay > 0 {
-            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+        // Apply delay if needed (a negative or non-finite delay is none).
+        if delay.isFinite, delay > 0 {
+            try await Task.sleep(for: .seconds(delay))
         }
 
         // Execute operation

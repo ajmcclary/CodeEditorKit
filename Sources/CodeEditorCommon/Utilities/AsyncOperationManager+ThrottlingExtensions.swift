@@ -48,6 +48,19 @@ extension AsyncOperationManager {
 
         if let lastRun = throttleInfo[key],
            now.timeIntervalSince(lastRun) < interval {
+            // A call that arrives while the throttled run is still going
+            // shares its outcome instead of running the operation again.
+            if throttleInFlight.contains(key) {
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    throttleWaiters[key, default: []].append(continuation)
+                }
+                if let cached = throttleResults[key] as? T {
+                    return cached
+                }
+                if let error = throttleErrors[key] {
+                    throw error
+                }
+            }
             // Return cached result if available
             if let cached = throttleResults[key] as? T {
                 return cached
@@ -55,13 +68,21 @@ extension AsyncOperationManager {
         }
 
         throttleInfo[key] = now
+        throttleInFlight.insert(key)
+        defer {
+            throttleInFlight.remove(key)
+            let waiters = throttleWaiters.removeValue(forKey: key) ?? []
+            waiters.forEach { $0.resume() }
+        }
 
         do {
             let result = try await operation()
             throttleResults[key] = result
+            throttleErrors[key] = nil
             return result
         } catch {
             throttleErrors[key] = error
+            throttleResults[key] = nil
             throw error
         }
     }

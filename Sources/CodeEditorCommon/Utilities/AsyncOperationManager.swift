@@ -161,6 +161,10 @@ public actor AsyncOperationManager {
     var throttleResults: [String: Any] = [:]
     var throttleErrors: [String: Error] = [:]
     var throttleInfo: [String: Date] = [:]
+    /// Keys whose throttled operation is running, and the callers waiting
+    /// for it.
+    var throttleInFlight: Set<String> = []
+    var throttleWaiters: [String: [CheckedContinuation<Void, Never>]] = [:]
     var activeOperations: Set<UUID> = []
     let maxConcurrentOperations: Int
 
@@ -301,20 +305,28 @@ private actor DebouncedState<T: Sendable> {
     var activeTask: Task<Void, Never>?
     var result: T?
 
-    func updateResult(_ value: T) {
-        result = value
-    }
-
-    func cancelActiveTask() {
-        activeTask?.cancel()
-    }
-
-    func setActiveTask(_ task: Task<Void, Never>) {
-        activeTask = task
-    }
-
     func getResult() -> T? {
         result
+    }
+
+    /// Records `value`, cancels the pending run and starts its replacement
+    /// in one actor turn. Done as separate calls, two callers could each
+    /// cancel before either stored its task, and both runs fired.
+    func replacePendingRun(
+        with value: T,
+        delay: TimeInterval,
+        operation: @escaping @Sendable (T) -> Void
+    ) -> Task<Void, Never> {
+        result = value
+        activeTask?.cancel()
+        let task = Task { @Sendable in
+            try? await Task.sleep(for: .seconds(delay.isFinite ? max(0, delay) : 0))
+            if let capturedResult = self.result, !Task.isCancelled {
+                operation(capturedResult)
+            }
+        }
+        activeTask = task
+        return task
     }
 }
 
@@ -333,18 +345,7 @@ public func debouncedAsync<T: Sendable>(
     _ = AsyncOperationManager(maxConcurrentOperations: maxConcurrentOperations)
 
     return { @Sendable value in
-        await state.updateResult(value)
-        await state.cancelActiveTask()
-
-        let task = Task { @Sendable in
-            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-
-            if let capturedResult = await state.getResult(), !Task.isCancelled {
-                operation(capturedResult)
-            }
-        }
-
-        await state.setActiveTask(task)
+        let task = await state.replacePendingRun(with: value, delay: delay, operation: operation)
         _ = await task.value
     }
 }
