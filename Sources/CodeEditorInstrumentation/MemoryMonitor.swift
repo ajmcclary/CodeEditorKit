@@ -190,7 +190,13 @@ public final class MemoryMonitor: ObservableObject {
     private let memoryProvider: PlatformMemoryProvider
     // MARK: - Configuration
 
-    /// Memory threshold for triggering cleanup (in MB)
+    /// Memory threshold for triggering cleanup (in MB).
+    ///
+    /// Compared with the whole process's resident memory
+    /// (`mach_task_basic_info.resident_size`), not the editor's own use: in
+    /// an app that embeds the editor it measures the host, which is normally
+    /// above 100 MB all the time. That is why automatic passes are
+    /// edge-triggered and rate-limited (see `minimumAutomaticCleanupInterval`).
     public var memoryThresholdMB: Double = 100.0
 
     /// Monitoring interval in seconds
@@ -204,6 +210,17 @@ public final class MemoryMonitor: ObservableObject {
 
     /// Periodic cleanup interval in seconds
     public var periodicCleanupInterval: TimeInterval = 300.0 // 5 minutes
+
+    /// The shortest time between two automatic (threshold-driven) passes.
+    ///
+    /// An automatic pass runs when the footprint first goes above
+    /// `memoryThresholdMB`. While it stays above, another runs only once it
+    /// has grown by half the threshold since the last pass, or when the
+    /// provider reports `.critical` pressure, and never sooner than this
+    /// interval after the last one. Falling back below the threshold re-arms
+    /// the first pass. Checking every `monitoringInterval` and cleaning on
+    /// every check ran a pass every 10 s in any host above the threshold.
+    public var minimumAutomaticCleanupInterval: TimeInterval = 60.0
 
     // MARK: - State
 
@@ -234,6 +251,11 @@ public final class MemoryMonitor: ObservableObject {
 
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []
+
+    /// When the last automatic pass ran, and the footprint it ran at; `nil`
+    /// until the footprint first goes above the threshold, and again once it
+    /// falls below.
+    private var lastAutomaticCleanup: (date: Date, usageMB: Double)?
 
     /// Observer for app termination to ensure cleanup.
     ///
@@ -493,6 +515,12 @@ public final class MemoryMonitor: ObservableObject {
         memoryStats.usageHistory.removeAll(keepingCapacity: true)
     }
 
+    /// Runs one threshold check now, as the monitoring loop does every
+    /// `monitoringInterval`: the seam tests drive the automatic trigger by.
+    package func checkMemoryUsageNow() async {
+        await checkMemoryUsage()
+    }
+
     // MARK: - Private Methods
 
     private func checkMemoryUsage() async {
@@ -508,12 +536,25 @@ public final class MemoryMonitor: ObservableObject {
             logger.info("Memory pressure changed: \(wasUnderPressure ? "normal" : "pressure") -> \(isUnderPressure ? "pressure" : "normal")")
         }
 
-        if enableAutomaticCleanup && currentUsage > memoryThresholdMB {
+        guard currentUsage > memoryThresholdMB else {
+            lastAutomaticCleanup = nil
+            return
+        }
+        if enableAutomaticCleanup && shouldRunAutomaticCleanup(atUsage: currentUsage) {
             logger.warning("Memory usage (\(currentUsage)MB) exceeded threshold (\(self.memoryThresholdMB)MB)")
 
+            lastAutomaticCleanup = (Date(), currentUsage)
             let targetReduction = currentUsage - (self.memoryThresholdMB * 0.8) // Target 80% of threshold
             await performAutomaticCleanup(targetReduction: targetReduction)
         }
+    }
+
+    /// See `minimumAutomaticCleanupInterval`.
+    private func shouldRunAutomaticCleanup(atUsage usage: Double) -> Bool {
+        guard let last = lastAutomaticCleanup else { return true }
+        guard Date().timeIntervalSince(last.date) >= minimumAutomaticCleanupInterval else { return false }
+        return usage >= last.usageMB + memoryThresholdMB * 0.5
+            || memoryProvider.getMemoryPressure() == .critical
     }
 
     private func performAutomaticCleanup(targetReduction: Double) async {
