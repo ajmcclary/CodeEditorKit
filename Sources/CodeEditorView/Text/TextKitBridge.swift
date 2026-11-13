@@ -189,20 +189,33 @@ package final class TextKitBridge {
     // (rendering attributes — non-destructive, TK2-native).
 
     /// Apply persistent text-storage attributes to a range.
-    func addPersistentAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
+    /// Pass `ensuresLayout: false` for attributes that do not change layout
+    /// geometry over large ranges: forcing layout of the range is a full
+    /// TextKit 2 layout pass when the range is the document.
+    func addPersistentAttributes(
+        _ attributes: [NSAttributedString.Key: Any],
+        range: NSRange,
+        ensuresLayout: Bool = true
+    ) {
         guard let storage = safeTextStorage else { return }
         withEditingTransaction {
             storage.beginEditing()
             storage.addAttributes(attributes, range: range)
             storage.endEditing()
         }
-        ensureLayout(for: range)
+        if ensuresLayout {
+            ensureLayout(for: range)
+        }
     }
 
     /// Apply persistent text-storage attributes only where each attribute key
     /// is currently absent. This seeds fallback styling without overwriting
     /// token-specific persistent attributes.
-    func addMissingPersistentAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
+    func addMissingPersistentAttributes(
+        _ attributes: [NSAttributedString.Key: Any],
+        range: NSRange,
+        ensuresLayout: Bool = true
+    ) {
         guard !attributes.isEmpty, let storage = safeTextStorage else { return }
         let clamped = clampedRange(range, length: storage.length)
         guard clamped.length > 0 else { return }
@@ -224,7 +237,9 @@ package final class TextKitBridge {
             }
             storage.endEditing()
         }
-        ensureLayout(for: clamped)
+        if ensuresLayout {
+            ensureLayout(for: clamped)
+        }
     }
 
     /// Remove a persistent text-storage attribute key from a range.

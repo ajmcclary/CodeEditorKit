@@ -201,6 +201,16 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// undo or redo) can be told apart.
     internal var textChangeGenerationAtLastDidChangeText: UInt64 = 0
 
+    /// Set when the text was replaced wholesale (which drops per-range
+    /// attributes), cleared by `stampThemeForeground`. A same-theme
+    /// `apply(theme:)` stamps only when this is set, so ordinary SwiftUI
+    /// updates do not walk the whole document.
+    internal var needsThemeForegroundStamp = true
+
+    /// How many times the theme foreground was stamped over the document
+    /// (test seam for the per-update cost).
+    internal var themeForegroundStampCount = 0
+
     #if canImport(AppKit)
     /// This editor's own undo stack, used unless a delegate participant
     /// supplies one. NSTextView otherwise shares the window's undo manager,

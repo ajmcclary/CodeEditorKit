@@ -14,6 +14,29 @@ extension CodeEditorView {
 
     /// Apply paragraph style settings for tab width and line spacing, and
     /// the character spacing.
+    /// The text of the longest line, from the line geometry store's
+    /// augmented tree: O(log n), no copy of the document. For size estimates.
+    package func longestLineText() -> String {
+        guard let index = lineGeometryStore.indexOfLongestLine() else { return "" }
+        let start = lineGeometryStore.utf16Offset(forLineIndex: index)
+        let length = lineGeometryStore.longestLineContentLength
+        return textKitBridge.substring(in: NSRange(location: start, length: length)) ?? ""
+    }
+
+    /// Number of lines in the line geometry store. O(1).
+    package var estimatedLineCount: Int { lineGeometryStore.lineCount }
+
+    /// Each line's UTF-16 length without its terminator, in one O(n) pass
+    /// over the line geometry store (for wrapped-height estimates).
+    package func lineContentLengths() -> [Int] {
+        var lengths: [Int] = []
+        lengths.reserveCapacity(lineGeometryStore.lineCount)
+        lineGeometryStore.forEachLineGeometry { geometry in
+            lengths.append(max(0, geometry.utf16Length - geometry.lineEndingLength))
+        }
+        return lengths
+    }
+
     /// The persistent attributes the editor stamps on ordinary text: its
     /// paragraph style, font and (once a theme is applied) the theme
     /// foreground. Used to restore text whose attributes were overwritten,

@@ -67,11 +67,6 @@ extension CodeEditorView {
             components.append("Editing \(fileName)")
         }
 
-        // Add word count for context
-        let wordCount = String(text).components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }.count
-        components.append("\(wordCount) words")
-
         accessibilityLabel = components.joined(separator: ", ")
     }
 
@@ -121,11 +116,6 @@ extension CodeEditorView {
             components.append("Editing \(fileName)")
         }
 
-        // Add word count for context
-        let wordCount = String(string).components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }.count
-        components.append("\(wordCount) words")
-
         setAccessibilityLabel(components.joined(separator: ", "))
         setAccessibilityHelp("Code editor. Use VoiceOver to navigate and edit code.")
     }
@@ -149,6 +139,9 @@ extension CodeEditorView {
     // MARK: - Helper Methods
 
     /// Get line and column for a given character offset
+    /// 1-based line and column of a UTF-16 location. The line comes from the
+    /// line geometry store (O(log n)) when it matches the text, the column
+    /// from that line's start; this runs on every edit and selection change.
     private func getLineAndColumn(for location: Int) -> (line: Int, column: Int) {
         guard location >= 0 else { return (1, 1) }
 
@@ -157,12 +150,11 @@ extension CodeEditorView {
         #else
         let text = self.string
         #endif
-        let substring = String(text.prefix(location))
-        let lines = substring.components(separatedBy: CharacterSet.newlines)
-        let line = lines.count
-        let column = (lines.last?.count ?? 0) + 1
-
-        return (line, column)
+        let selection = NSRange(location: location, length: 0)
+        let state = lineGeometryStore.totalUtf16Length == text.utf16.count
+            ? EditorStateBridge.deriveSelection(from: selection, in: text, lineGeometryStore: lineGeometryStore)
+            : EditorStateBridge.deriveSelection(from: selection, in: text)
+        return (state.line, state.column)
     }
 
     /// Store current file name for accessibility announcements

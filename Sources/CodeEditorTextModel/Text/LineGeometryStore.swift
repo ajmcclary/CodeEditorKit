@@ -123,6 +123,20 @@ public final class LineGeometryStore {
         tree.utf16Offset(forLineIndex: lineIndex)
     }
 
+    /// UTF-16 length of the longest line, without its terminator. O(1).
+    package var longestLineContentLength: Int { tree.longestLineContentLength }
+
+    /// 0-based index of a longest line, or nil when every line is empty.
+    /// O(log n).
+    package func indexOfLongestLine() -> Int? {
+        tree.indexOfLongestLine()
+    }
+
+    /// Visits every line's geometry in order in one O(n) pass.
+    package func forEachLineGeometry(_ body: (LineGeometry) -> Void) {
+        tree.forEachGeometry(body)
+    }
+
     /// Returns the `LineGeometry` for the given 0-based line index, or `nil`
     /// if the index is out of bounds.
     public func lineGeometry(at lineIndex: Int) -> LineGeometry? {

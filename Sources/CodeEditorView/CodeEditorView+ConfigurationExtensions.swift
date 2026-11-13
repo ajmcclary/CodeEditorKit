@@ -190,9 +190,11 @@ extension CodeEditorView {
 
         // Get the line range for the selection
         #if canImport(AppKit)
-        guard let range = Range(selectedRange, in: string) else { return }
-        let stringLineRange = string.lineRange(for: range)
-        let lineRange = NSRange(stringLineRange, in: string)
+        // One NSString line lookup instead of copying the document twice.
+        // swiftlint:disable:next legacy_objc_type
+        let text = string as NSString
+        guard NSMaxRange(selectedRange) <= text.length else { return }
+        let lineRange = text.lineRange(for: selectedRange)
         #else
         guard let text = self.text,
               let range = Range(selectedRange, in: text) else { return }

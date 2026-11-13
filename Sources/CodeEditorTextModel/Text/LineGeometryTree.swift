@@ -17,6 +17,8 @@ internal final class LineGeometryTree {
         var subtreeUtf16Length: Int
         var subtreeLineCount: Int
         var subtreeHeight: CGFloat
+        /// Longest line (UTF-16, without its terminator) in this subtree.
+        var subtreeMaxContentLength: Int
 
         var isRed: Bool = true
         weak var parent: Node?
@@ -28,6 +30,11 @@ internal final class LineGeometryTree {
             self.subtreeUtf16Length = geometry.utf16Length
             self.subtreeLineCount = 1
             self.subtreeHeight = geometry.effectiveHeight
+            self.subtreeMaxContentLength = Self.contentLength(of: geometry)
+        }
+
+        static func contentLength(of geometry: LineGeometry) -> Int {
+            max(0, geometry.utf16Length - geometry.lineEndingLength)
         }
 
         func updateSubtreeMetadata() {
@@ -40,6 +47,11 @@ internal final class LineGeometryTree {
             subtreeHeight = geometry.effectiveHeight
                 + (left?.subtreeHeight ?? 0)
                 + (right?.subtreeHeight ?? 0)
+            subtreeMaxContentLength = max(
+                Self.contentLength(of: geometry),
+                left?.subtreeMaxContentLength ?? 0,
+                right?.subtreeMaxContentLength ?? 0
+            )
         }
 
         func propagateMetadataUpward() {
@@ -58,6 +70,44 @@ internal final class LineGeometryTree {
 
     var totalUtf16Length: Int { root?.subtreeUtf16Length ?? 0 }
     package var totalHeight: CGFloat { root?.subtreeHeight ?? 0 }
+
+    /// UTF-16 length of the longest line, without its terminator. O(1).
+    package var longestLineContentLength: Int { root?.subtreeMaxContentLength ?? 0 }
+
+    /// 0-based index of a longest line, or nil when every line is empty.
+    /// O(log n).
+    package func indexOfLongestLine() -> Int? {
+        guard let root, root.subtreeMaxContentLength > 0 else { return nil }
+        let target = root.subtreeMaxContentLength
+        var current: Node? = root
+        var index = 0
+        while let node = current {
+            if let left = node.left, left.subtreeMaxContentLength == target {
+                current = left
+            } else if Node.contentLength(of: node.geometry) == target {
+                return index + (node.left?.subtreeLineCount ?? 0)
+            } else {
+                index += (node.left?.subtreeLineCount ?? 0) + 1
+                current = node.right
+            }
+        }
+        return nil
+    }
+
+    /// Visits every line's geometry in order. O(n), no lookups.
+    package func forEachGeometry(_ body: (LineGeometry) -> Void) {
+        var stack: [Node] = []
+        var current = root
+        while current != nil || !stack.isEmpty {
+            while let node = current {
+                stack.append(node)
+                current = node.left
+            }
+            guard let node = stack.popLast() else { break }
+            body(node.geometry)
+            current = node.right
+        }
+    }
 
     private var lastLookupNode: Node?
     private var lastLookupLineIndex: Int = 0

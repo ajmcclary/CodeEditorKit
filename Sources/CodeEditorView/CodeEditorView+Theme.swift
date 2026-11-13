@@ -84,7 +84,13 @@ extension CodeEditorView {
             #endif
         }
 
-        stampThemeForeground(overwritingExistingForeground: themeChanged)
+        // Same theme: stamp only if the text was replaced since the last
+        // stamp. Typed text already carries the foreground through the
+        // typing attributes, so walking the document on every SwiftUI update
+        // (every keystroke for a host that mirrors the text) buys nothing.
+        if themeChanged || needsThemeForegroundStamp {
+            stampThemeForeground(overwritingExistingForeground: themeChanged)
+        }
         CodeEditorRenderingDiagnostics.log(
             "textView.apply.afterForegroundStamp",
             textView: self,
@@ -106,7 +112,9 @@ extension CodeEditorView {
     package func stampThemeForeground(overwritingExistingForeground: Bool = false) {
         guard let theme = appliedTheme else { return }
         let length = textKitBridge.documentLength
+        needsThemeForegroundStamp = false
         guard length > 0 else { return }
+        themeForegroundStampCount += 1
 
         let foreground = PlatformColor(tokens: theme.style.editor.foreground)
         let range = NSRange(location: 0, length: length)
@@ -117,11 +125,13 @@ extension CodeEditorView {
             theme: theme,
             note: "overwrite=\(overwritingExistingForeground) range={\(range.location),\(range.length)} foreground=\(foreground)"
         )
+        // Foreground does not change layout geometry, so no layout pass is
+        // forced over the document; TextKit lays fragments out lazily.
         if overwritingExistingForeground {
-            textKitBridge.addPersistentAttributes(attributes, range: range)
+            textKitBridge.addPersistentAttributes(attributes, range: range, ensuresLayout: false)
             textKitBridge.addAttributes(attributes, range: range)
         } else {
-            textKitBridge.addMissingPersistentAttributes(attributes, range: range)
+            textKitBridge.addMissingPersistentAttributes(attributes, range: range, ensuresLayout: false)
             textKitBridge.addMissingRenderingAttributes(attributes, range: range)
         }
         CodeEditorRenderingDiagnostics.log(

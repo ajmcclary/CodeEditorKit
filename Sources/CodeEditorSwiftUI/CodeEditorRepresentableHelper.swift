@@ -287,25 +287,38 @@ enum CodeEditorRepresentableHelper {
         return applyCommonSizeConstraints(size, proposal: proposal)
     }
 
+    /// Content size estimate from the line geometry store: the line count and
+    /// the longest line (O(log n)), with only that line measured; wrapping
+    /// adds one pass over the line lengths. SwiftUI asks this on every update
+    /// with an unspecified dimension, so measuring every line (the previous
+    /// approach) made each keystroke O(document) in CoreText work.
     private static func estimateAppKitContentSize(
         textView: CodeEditorView,
         proposal: ProposedViewSize,
         configuration: EditorConfiguration
     ) -> CGSize {
         let font = textView.font ?? PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
-        let text = textView.textContentStorage?.textStorage?.string ?? ""
-        let lines = text.components(separatedBy: .newlines)
         let lineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
             * configuration.layout.lineHeightMultiple
 
-        let lineWidths = lines.map { TextMetricsCalculator.measureTextWidth($0, font: font) }
-        let maxLineWidth = lineWidths.max() ?? 0
-        let lineCount = estimatedAppKitVisualLineCount(
-            lineWidths: lineWidths,
-            textView: textView,
-            proposal: proposal,
-            configuration: configuration
-        )
+        let longestText = textView.longestLineText()
+        let longestLength = longestText.utf16.count
+        let maxLineWidth = longestLength > 0
+            ? TextMetricsCalculator.measureTextWidth(longestText, font: font)
+            : 0
+
+        let lineCount: Int
+        if configuration.layout.wrapLines {
+            let advance = maxLineWidth / CGFloat(max(1, longestLength))
+            lineCount = estimatedAppKitVisualLineCount(
+                lineWidths: textView.lineContentLengths().map { CGFloat($0) * advance },
+                textView: textView,
+                proposal: proposal,
+                configuration: configuration
+            )
+        } else {
+            lineCount = max(1, textView.estimatedLineCount)
+        }
 
         return CGSize(
             width: maxLineWidth,

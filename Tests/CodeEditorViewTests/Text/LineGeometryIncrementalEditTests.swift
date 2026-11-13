@@ -117,6 +117,13 @@ struct LineGeometryIncrementalEditTests {
 
         #expect(lines(of: editor.lineGeometryStore) == rebuiltLines(for: storage))
         #expect(editor.lineGeometryStore.validateTree())
+
+        // The tree's longest-line augmentation follows the edit too.
+        let contentLengths = lines(of: editor.lineGeometryStore).map { $0.utf16Length - $0.lineEndingLength }
+        let longest = contentLengths.max() ?? 0
+        #expect(editor.lineGeometryStore.longestLineContentLength == longest)
+        let longestIndex = editor.lineGeometryStore.indexOfLongestLine()
+        #expect(longestIndex.map { contentLengths[$0] } == (longest > 0 ? longest : nil))
     }
 
     // MARK: - Sequences
