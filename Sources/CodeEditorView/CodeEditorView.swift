@@ -721,7 +721,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }
 
     override public func removeFromSuperview() {
-        // Perform synchronous cleanup before removing from superview
+        // Stop feature work while the view is out of a hierarchy. This is not
+        // a teardown: the features re-attach when the view gets a superview
+        // again (`viewDidMoveToSuperview`). The delegate multiplexer stays
+        // installed — `NSTextView.delegate` is weak, so there is no cycle to
+        // break, and clearing it left a re-parented editor accepting input
+        // without will-edit events or host gating.
         session.detach()
         unregisterFromMemoryMonitor()
 
@@ -733,10 +738,27 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         gutterViewStorage?.removeFromSuperview()
         #endif
 
-        // Clear delegate to break potential retain cycles
-        delegate = nil
-
         super.removeFromSuperview()
+    }
+
+    #if canImport(AppKit)
+    override public func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        reattachAfterReparenting()
+    }
+    #else
+    override public func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        reattachAfterReparenting()
+    }
+    #endif
+
+    /// Re-attaches the features `removeFromSuperview()` detached. Attaching
+    /// an attached session is a no-op.
+    private func reattachAfterReparenting() {
+        guard superview != nil, hasCompletedTextViewSetup else { return }
+        session.attach(to: self)
+        registerWithMemoryMonitor()
     }
 
     deinit {
