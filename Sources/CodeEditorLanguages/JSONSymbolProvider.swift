@@ -8,6 +8,15 @@ package struct JSONSymbolProvider: DocumentSymbolProvider {
     package func detectSymbols(in text: String) async -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
 
+        // `JSONSerialization` recurses once per nesting level and overflows a
+        // concurrency thread's stack at a few hundred levels: never hand it a
+        // document nested deeper than `maximumParsedNesting`.
+        guard Self.maximumNestingDepth(of: text, stoppingAbove: Self.maximumParsedNesting)
+            <= Self.maximumParsedNesting
+        else {
+            return parseLineByLine(text: text)
+        }
+
         // Try to parse JSON structure
         guard let data = text.data(using: .utf8) else { return [] }
 
@@ -21,6 +30,50 @@ package struct JSONSymbolProvider: DocumentSymbolProvider {
         }
 
         return symbols
+    }
+
+    /// The deepest nesting handed to `JSONSerialization`. Deeper documents
+    /// get the line-by-line outline instead.
+    package static let maximumParsedNesting = 128
+
+    /// The deepest `{`/`[` nesting in `text`, outside strings (escapes
+    /// respected), in one linear pass over the UTF-8 bytes. Stops counting
+    /// once it exceeds `limit`.
+    package static func maximumNestingDepth(of text: String, stoppingAbove limit: Int = .max) -> Int {
+        var depth = 0
+        var deepest = 0
+        var inString = false
+        var escaped = false
+        for byte in text.utf8 {
+            if inString {
+                if escaped {
+                    escaped = false
+                } else if byte == UInt8(ascii: "\\") {
+                    escaped = true
+                } else if byte == UInt8(ascii: "\"") {
+                    inString = false
+                }
+                continue
+            }
+            switch byte {
+            case UInt8(ascii: "\""):
+                inString = true
+
+            case UInt8(ascii: "{"), UInt8(ascii: "["):
+                depth += 1
+                if depth > deepest {
+                    deepest = depth
+                    if deepest > limit { return deepest }
+                }
+
+            case UInt8(ascii: "}"), UInt8(ascii: "]"):
+                depth = max(0, depth - 1)
+
+            default:
+                break
+            }
+        }
+        return deepest
     }
 
     /// Symbols for every key, in pre-order (a key, then the keys inside its

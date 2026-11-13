@@ -52,7 +52,7 @@ extension RegexSyntaxHighlighter {
         return languageMap
     }
 
-    private static func createDefinition(from descriptor: LanguageDescriptor) -> RegexLanguageDefinition {
+    package static func createDefinition(from descriptor: LanguageDescriptor) -> RegexLanguageDefinition {
         var builder = LanguageDefinitionBuilder()
 
         builder = builder.addComments(

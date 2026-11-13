@@ -1,3 +1,4 @@
+import CodeEditorLanguages
 import CodeEditorPlatform
 import Foundation
 
@@ -67,15 +68,95 @@ public final class SwiftSyntaxHighlighter: Sendable {
     // MARK: - Public Methods
 
     /// Highlight Swift source code and return tokens with their types
+    ///
+    /// SwiftParser recurses once per nesting level, and some shapes cost
+    /// time exponential in their depth (nested `[` and `(` immediately inside
+    /// `[`: 24 levels took seconds in a release build, 28 never finished).
+    /// Document text is untrusted, so a source nested beyond
+    /// `maximumBracketNesting` or `maximumSquareBracketNesting` gets the
+    /// regex highlighting the other languages use instead, and every parse
+    /// runs on a thread whose stack is sized for `maximumParserNesting`
+    /// levels (a concurrency thread's 512 KB held fewer than 100 in release
+    /// and fewer than 64 in debug).
     public func highlight(source: String) -> [HighlightedToken] {
         guard !source.isEmpty else {
             return []
         }
+        guard Self.isWithinParserLimits(source) else {
+            return Self.shallowHighlight(source)
+        }
+        return Self.onParserThread {
+            var bytes = source
+            let sourceFile = bytes.withUTF8 { buffer in
+                Parser.parse(source: buffer, maximumNestingLevel: Self.maximumParserNesting)
+            }
+            let visitor = SyntaxHighlightVisitor(source: source)
+            visitor.walk(sourceFile)
+            return visitor.tokens
+        }
+    }
 
-        let sourceFile = Parser.parse(source: source)
-        let visitor = SyntaxHighlightVisitor(source: source)
-        visitor.walk(sourceFile)
-        return visitor.tokens
+    // MARK: - Depth Guard
+
+    /// The deepest `(`/`[`/`{` nesting (string interpolations included)
+    /// handed to SwiftParser.
+    package static let maximumBracketNesting = 64
+
+    /// The most `[` open at once handed to SwiftParser; its speculative
+    /// parsing of nested collection literals and types is exponential in
+    /// this count.
+    package static let maximumSquareBracketNesting = 16
+
+    /// SwiftParser's own nesting cap, a backstop should the scan and the
+    /// parser ever disagree about where code is.
+    package static let maximumParserNesting = 128
+
+    /// Stack for the parse and the visitor walk: room for
+    /// `maximumParserNesting` levels in a debug build, with margin.
+    package static let parserStackSize = 16 << 20
+
+    package static func isWithinParserLimits(_ source: String) -> Bool {
+        let depths = nestingDepths(of: source)
+        return depths.brackets <= maximumBracketNesting
+            && depths.squareBrackets <= maximumSquareBracketNesting
+    }
+
+    /// The deepest bracket nesting and the most `[` open at once in `source`,
+    /// in one linear pass that skips comments and string literals (raw,
+    /// multi-line, and escapes respected) but counts the code inside string
+    /// interpolations. Stops once either limit is exceeded.
+    package static func nestingDepths(of source: String) -> (brackets: Int, squareBrackets: Int) {
+        var text = source
+        return text.withUTF8 { bytes in
+            var scanner = SwiftNestingScanner(bytes: bytes)
+            return scanner.scan(stoppingAbove: (maximumBracketNesting, maximumSquareBracketNesting))
+        }
+    }
+
+    private static func shallowHighlight(_ source: String) -> [HighlightedToken] {
+        guard let descriptor = LanguageDescriptor.descriptor(for: .swift) else { return [] }
+        let definition = RegexSyntaxHighlighter.createDefinition(from: descriptor)
+        return RegexSyntaxHighlighter().highlight(source: source, language: definition)
+    }
+
+    private final class ParseResult: @unchecked Sendable {
+        var tokens: [HighlightedToken] = []
+    }
+
+    /// Runs `work` on a dedicated thread with `parserStackSize` of stack and
+    /// waits for it. The thread is not a concurrency thread, so waiting
+    /// cannot starve the work.
+    private static func onParserThread(_ work: @escaping @Sendable () -> [HighlightedToken]) -> [HighlightedToken] {
+        let result = ParseResult()
+        let done = DispatchSemaphore(value: 0)
+        let thread = Thread {
+            result.tokens = work()
+            done.signal()
+        }
+        thread.stackSize = parserStackSize
+        thread.start()
+        done.wait()
+        return result.tokens
     }
 
     /// Apply highlighting to an attributed string
