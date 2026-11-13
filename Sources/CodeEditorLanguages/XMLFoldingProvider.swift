@@ -1,56 +1,60 @@
+import CodeEditorTextModel
 import Foundation
 
 // MARK: - XML Folding Provider
 
 /// XML/HTML tag folding provider
 package struct XMLFoldingProvider: CodeFoldingProvider {
+    /// Opening tags (`<name …>`) and closing tags (`</name>`) in one pass.
+    /// Group 1 is a closing tag's name, group 2 an opening tag's name.
+    private static let tagRegex = try? NSRegularExpression(pattern: "</([^>]+)>|<([^/>\\s]+)[^>]*>")
+
     package init() {}
 
     package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
-        var regions: [FoldableRegion] = []
+        guard let tagRegex = Self.tagRegex else { return [] }
 
-        // Simple XML tag matching
-        let tagPattern = "<([^/>\\s]+)[^>]*>"
-        let closeTagPattern = "</([^>]+)>"
-
-        guard let tagRegex = try? NSRegularExpression(pattern: tagPattern),
-              let closeTagRegex = try? NSRegularExpression(pattern: closeTagPattern) else {
-            return regions
+        // All offsets are UTF-16 offsets into `text`, and names are taken by
+        // UTF-16 range, so CRLF and non-BMP text stay aligned.
+        let matches = tagRegex.matches(in: text, range: TextRangeUtilities.fullRange(in: text))
+        func substring(_ range: NSRange) -> String {
+            TextRangeUtilities.substring(inUTF16Range: range, from: text) ?? ""
         }
 
-        let range = NSRange(location: 0, length: text.utf16.count)
+        var regions: [FoldableRegion] = []
+        var openStack: [(name: String, range: NSRange)] = []
 
-        let openTags = tagRegex.matches(in: text, range: range)
-        let closeTags = closeTagRegex.matches(in: text, range: range)
-
-        // Match opening and closing tags
-        for openMatch in openTags {
-            let tagNameRange = openMatch.range(at: 1)
-            guard let startIndex = text.index(text.startIndex, offsetBy: tagNameRange.location, limitedBy: text.endIndex),
-                  let endIndex = text.index(startIndex, offsetBy: tagNameRange.length, limitedBy: text.endIndex) else { continue }
-            let tagName = String(text[startIndex..<endIndex])
-
-            // Find corresponding close tag
-            if let closeMatch = closeTags.first(where: { closeMatch in
-                let closeNameRange = closeMatch.range(at: 1)
-                guard let closeStartIndex = text.index(text.startIndex, offsetBy: closeNameRange.location, limitedBy: text.endIndex),
-                      let closeEndIndex = text.index(closeStartIndex, offsetBy: closeNameRange.length, limitedBy: text.endIndex) else { return false }
-                let closeName = String(text[closeStartIndex..<closeEndIndex])
-                return closeName == tagName && closeMatch.range.location > openMatch.range.location
-            }) {
-                let foldRange = NSRange(
-                    location: openMatch.range.location,
-                    length: NSMaxRange(closeMatch.range) - openMatch.range.location
-                )
-
+        for match in matches {
+            let closeNameRange = match.range(at: 1)
+            if closeNameRange.location != NSNotFound {
+                let closeName = substring(closeNameRange).trimmingCharacters(in: .whitespaces)
+                // Unclosed elements above the match (HTML void elements,
+                // malformed markup) are discarded with it.
+                guard let openIndex = openStack.lastIndex(where: { $0.name == closeName }) else { continue }
+                let open = openStack[openIndex]
+                openStack.removeSubrange(openIndex...)
                 regions.append(FoldableRegion(
-                    range: foldRange,
-                    title: "<\(tagName)>",
+                    range: NSRange(
+                        location: open.range.location,
+                        length: NSMaxRange(match.range) - open.range.location
+                    ),
+                    title: "<\(open.name)>",
                     type: .block
                 ))
+                continue
             }
+
+            let openNameRange = match.range(at: 2)
+            guard openNameRange.location != NSNotFound else { continue }
+            let tagName = substring(openNameRange)
+            // Declarations, comments, processing instructions and
+            // self-closing tags never get a closing tag.
+            if tagName.hasPrefix("!") || tagName.hasPrefix("?") { continue }
+            if substring(match.range).hasSuffix("/>") { continue }
+            openStack.append((name: tagName, range: match.range))
         }
 
-        return regions
+        // Report regions in document order of their opening tags.
+        return regions.sorted { $0.range.location < $1.range.location }
     }
 }

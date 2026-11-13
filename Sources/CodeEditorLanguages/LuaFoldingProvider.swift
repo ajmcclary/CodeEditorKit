@@ -204,9 +204,12 @@ package struct LuaFoldingProvider: CodeFoldingProvider {
                 index += 1
 
             case .lineComment:
-                if char == "\n" {
+                // `isNewline` (not `== "\n"`): in a CRLF file the terminator
+                // is the single `Character` "\r\n", which must be kept whole
+                // so line breaks survive blanking.
+                if char.isNewline {
                     state = .code
-                    result.append("\n")
+                    result.append(char)
                 } else {
                     result.append(" ")
                 }
@@ -219,7 +222,7 @@ package struct LuaFoldingProvider: CodeFoldingProvider {
                     index = closeEnd + 1
                     continue
                 }
-                result.append(char == "\n" ? "\n" : " ")
+                result.append(char.isNewline ? char : " ")
                 index += 1
 
             case let .longString(level):
@@ -229,7 +232,7 @@ package struct LuaFoldingProvider: CodeFoldingProvider {
                     index = closeEnd + 1
                     continue
                 }
-                result.append(char == "\n" ? "\n" : " ")
+                result.append(char.isNewline ? char : " ")
                 index += 1
 
             case let .shortString(quote):
@@ -245,11 +248,11 @@ package struct LuaFoldingProvider: CodeFoldingProvider {
                     index += 1
                     continue
                 }
-                if char == "\n" {
+                if char.isNewline {
                     // Unterminated short string — bail back to code so subsequent
                     // lines aren't permanently blanked.
                     state = .code
-                    result.append("\n")
+                    result.append(char)
                     index += 1
                     continue
                 }

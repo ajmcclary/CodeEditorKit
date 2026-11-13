@@ -1,4 +1,18 @@
+import CodeEditorTextModel
 import Foundation
+
+/// UTF-16 offset of the start of each line in `lines`, where `lines` came
+/// from splitting a document on single-unit line separators.
+func utf16LineStartLocations(of lines: [String]) -> [Int] {
+    var locations: [Int] = []
+    locations.reserveCapacity(lines.count)
+    var cursor = 0
+    for line in lines {
+        locations.append(cursor)
+        cursor += TextRangeUtilities.utf16Length(of: line) + 1
+    }
+    return locations
+}
 
 // MARK: - Foldable Region
 

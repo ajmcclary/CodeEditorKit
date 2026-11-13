@@ -159,9 +159,9 @@
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/CSSSymbolProvider.swift:45 and Sources/CodeEditorLanguages/HTMLSymbolProvider.swift:56 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
-    "7e00fc2e7b9c9351": {
+    "31cb1a70d916abd3": {
       "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LuaFoldingProvider.swift:216 and Sources/CodeEditorLanguages/LuaFoldingProvider.swift:226 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LuaFoldingProvider.swift:219 and Sources/CodeEditorLanguages/LuaFoldingProvider.swift:229 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
     "7fa12140b4a5c9b3": {
       "classification": "platform-contract",

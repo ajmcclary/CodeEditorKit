@@ -13,7 +13,8 @@ package struct JSONSymbolProvider: DocumentSymbolProvider {
 
         do {
             let jsonObject = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
-            symbols = extractSymbols(from: jsonObject, text: text, path: [])
+            let keyLocations = Self.firstKeyLocations(in: text)
+            symbols = extractSymbols(from: jsonObject, keyLocations: keyLocations, path: [])
         } catch {
             // Fallback to line-by-line parsing for malformed JSON
             symbols = parseLineByLine(text: text)
@@ -22,13 +23,13 @@ package struct JSONSymbolProvider: DocumentSymbolProvider {
         return symbols
     }
 
-    private func extractSymbols(from object: Any, text: String, path: [String]) -> [DocumentSymbol] {
+    private func extractSymbols(from object: Any, keyLocations: [String: Int], path: [String]) -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
 
         if let dictionary = object as? [String: Any] {
             for (key, value) in dictionary {
                 let currentPath = path + [key]
-                let location = findKeyLocation(key: key, in: text, path: currentPath)
+                let location = keyLocations[key] ?? 0
 
                 let kind = symbolKind(for: value)
                 let detail = symbolDetail(for: value)
@@ -44,13 +45,13 @@ package struct JSONSymbolProvider: DocumentSymbolProvider {
 
                 // Recursively process nested objects
                 if kind == .object || kind == .array {
-                    symbols.append(contentsOf: extractSymbols(from: value, text: text, path: currentPath))
+                    symbols.append(contentsOf: extractSymbols(from: value, keyLocations: keyLocations, path: currentPath))
                 }
             }
         } else if let array = object as? [Any] {
             for (index, item) in array.enumerated() {
                 if let dict = item as? [String: Any] {
-                    symbols.append(contentsOf: extractSymbols(from: dict, text: text, path: path + ["[\(index)]"]))
+                    symbols.append(contentsOf: extractSymbols(from: dict, keyLocations: keyLocations, path: path + ["[\(index)]"]))
                 }
             }
         }
@@ -187,11 +188,21 @@ package struct JSONSymbolProvider: DocumentSymbolProvider {
         return trimmed
     }
 
-    private func findKeyLocation(key: String, in text: String, path _: [String]) -> Int {
-        // Simple implementation - in a real scenario, you'd want more sophisticated location finding
-        if let range = text.range(of: "\"\(key)\":") {
-            return text.distance(from: text.startIndex, to: range.lowerBound)
+    /// Matches a quoted string immediately followed by `:` (a key).
+    private static let keyRegex = try? NSRegularExpression(pattern: #""((?:[^"\\\n]|\\.)*)":"#)
+
+    /// UTF-16 location of the first `"key":` for every key text in `text`,
+    /// built in one pass. (Searching the document once per key was
+    /// quadratic, and returned a `Character` distance, not a UTF-16 offset.)
+    private static func firstKeyLocations(in text: String) -> [String: Int] {
+        guard let keyRegex else { return [:] }
+        var locations: [String: Int] = [:]
+        for match in keyRegex.matches(in: text, range: TextRangeUtilities.fullRange(in: text)) {
+            guard let key = TextRangeUtilities.substring(inUTF16Range: match.range(at: 1), from: text) else { continue }
+            if locations[key] == nil {
+                locations[key] = match.range.location
+            }
         }
-        return 0
+        return locations
     }
 }

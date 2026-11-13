@@ -10,6 +10,9 @@ package struct IndentationFoldingProvider: CodeFoldingProvider {
     package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
         let lines = text.components(separatedBy: .newlines)
+        // Looking each line start up by summing the lines before it made
+        // detection quadratic; compute them once.
+        let lineLocations = utf16LineStartLocations(of: lines)
 
         var indentStack: [(Int, Int, String)] = [] // (lineIndex, indentLevel, title)
 
@@ -24,8 +27,8 @@ package struct IndentationFoldingProvider: CodeFoldingProvider {
                 let (startLine, _, title) = indentStack.removeLast()
 
                 if index - startLine >= 2 { // Minimum lines for folding
-                    let startLocation = TextRangeUtilities.locationForLine(startLine, in: lines)
-                    let endLocation = TextRangeUtilities.locationForLine(index - 1, in: lines) + lines[index - 1].count
+                    let startLocation = lineLocations[startLine]
+                    let endLocation = lineLocations[index - 1] + TextRangeUtilities.utf16Length(of: lines[index - 1])
 
                     regions.append(FoldableRegion(
                         range: NSRange(location: startLocation, length: endLocation - startLocation),

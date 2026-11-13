@@ -36,10 +36,12 @@ package struct CSSSymbolProvider: LineBasedSymbolProvider {
         // Extract additional info (like media query conditions)
         var detail = "@\(ruleName)"
         if ruleName == "media" || ruleName == "supports" {
-            if let conditionStart = afterAt.firstIndex(where: { !$0.isLetter }),
-               let openBrace = line.firstIndex(of: "{") {
-                let condition = String(afterAt[conditionStart..<afterAt.index(openBrace, offsetBy: -afterAt.distance(from: line.startIndex, to: openBrace))])
-                    .trimmingCharacters(in: .whitespaces)
+            // Every index below belongs to `afterAt`: the condition is the
+            // text between the rule name and the opening brace (or the end).
+            let conditionStart = afterAt.index(afterAt.startIndex, offsetBy: ruleName.count)
+            let conditionEnd = afterAt[conditionStart...].firstIndex(of: "{") ?? afterAt.endIndex
+            let condition = afterAt[conditionStart..<conditionEnd].trimmingCharacters(in: .whitespaces)
+            if !condition.isEmpty {
                 detail += " \(condition)"
             }
         }

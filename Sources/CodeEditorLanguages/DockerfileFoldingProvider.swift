@@ -8,7 +8,7 @@ package struct DockerfileFoldingProvider: CodeFoldingProvider {
 
     package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         let lines = text.components(separatedBy: .newlines)
-        let lineLocations = buildLineLocations(for: lines)
+        let lineLocations = utf16LineStartLocations(of: lines)
 
         var regions: [FoldableRegion] = []
         var index = 0
@@ -117,16 +117,5 @@ package struct DockerfileFoldingProvider: CodeFoldingProvider {
             title: title,
             type: .block
         ))
-    }
-
-    private func buildLineLocations(for lines: [String]) -> [Int] {
-        var locations = [Int]()
-        locations.reserveCapacity(lines.count)
-        var cursor = 0
-        for line in lines {
-            locations.append(cursor)
-            cursor += TextRangeUtilities.utf16Length(of: line) + 1
-        }
-        return locations
     }
 }

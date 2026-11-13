@@ -23,33 +23,36 @@ package struct XMLSymbolProvider: StatefulLineBasedSymbolProvider {
             return symbols
         }
 
-        // Process all XML tags in the line
-        var searchText = line
-        var currentOffset = 0
+        // Process all XML tags in the line. The scan walks indices of `line`
+        // without copying the remainder, and offsets are UTF-16 offsets of
+        // the tag within `fullLine` (`line` is `fullLine` minus its leading
+        // whitespace).
+        let leadingWhitespaceLength = TextRangeUtilities.utf16Length(
+            of: String(fullLine.prefix { $0.unicodeScalars.allSatisfy(CharacterSet.whitespaces.contains) })
+        )
+        var searchStart = line.startIndex
 
-        while let tagRange = findNextXMLTag(in: searchText) {
-            let tag = String(searchText[tagRange])
+        while let tagRange = findNextXMLTag(in: line, from: searchStart) {
+            let tag = String(line[tagRange])
+            let tagOffset = line.utf16.distance(from: line.startIndex, to: tagRange.lowerBound)
 
-            if let symbol = processXMLTag(tag, at: location + currentOffset, fullLine: fullLine, elementStack: &state) {
+            if let symbol = processXMLTag(
+                tag,
+                at: location + leadingWhitespaceLength + tagOffset,
+                fullLine: fullLine,
+                elementStack: &state
+            ) {
                 symbols.append(symbol)
             }
 
-            // Move to next potential tag
-            let endIndex = tagRange.upperBound
-            currentOffset += searchText.distance(from: searchText.startIndex, to: endIndex)
-
-            if endIndex < searchText.endIndex {
-                searchText = String(searchText[endIndex...])
-            } else {
-                break
-            }
+            searchStart = tagRange.upperBound
         }
 
         return symbols
     }
 
-    private func findNextXMLTag(in text: String) -> Range<String.Index>? {
-        guard let startIndex = text.firstIndex(of: "<"),
+    private func findNextXMLTag(in text: String, from start: String.Index) -> Range<String.Index>? {
+        guard let startIndex = text[start...].firstIndex(of: "<"),
               let endIndex = text[text.index(after: startIndex)...].firstIndex(of: ">") else {
             return nil
         }

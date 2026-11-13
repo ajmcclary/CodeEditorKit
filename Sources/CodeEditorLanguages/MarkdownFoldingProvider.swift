@@ -10,6 +10,9 @@ package struct MarkdownFoldingProvider: CodeFoldingProvider {
     package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
         let lines = text.components(separatedBy: .newlines)
+        // Looking each line start up by summing the lines before it made
+        // detection quadratic; compute them once.
+        let lineLocations = utf16LineStartLocations(of: lines)
 
         var headerStack: [(Int, Int, String)] = [] // (lineIndex, level, title)
 
@@ -19,8 +22,8 @@ package struct MarkdownFoldingProvider: CodeFoldingProvider {
                 while let last = headerStack.last, last.1 >= headerLevel {
                     let (startLine, _, title) = headerStack.removeLast()
 
-                    let startLocation = TextRangeUtilities.locationForLine(startLine, in: lines)
-                    let endLocation = TextRangeUtilities.locationForLine(index - 1, in: lines) + lines[index - 1].count
+                    let startLocation = lineLocations[startLine]
+                    let endLocation = lineLocations[index - 1] + TextRangeUtilities.utf16Length(of: lines[index - 1])
 
                     regions.append(FoldableRegion(
                         range: NSRange(location: startLocation, length: endLocation - startLocation),
@@ -35,8 +38,8 @@ package struct MarkdownFoldingProvider: CodeFoldingProvider {
 
         // Close remaining sections
         while let (startLine, _, title) = headerStack.popLast() {
-            let startLocation = TextRangeUtilities.locationForLine(startLine, in: lines)
-            let endLocation = text.count
+            let startLocation = lineLocations[startLine]
+            let endLocation = TextRangeUtilities.utf16Length(of: text)
 
             regions.append(FoldableRegion(
                 range: NSRange(location: startLocation, length: endLocation - startLocation),

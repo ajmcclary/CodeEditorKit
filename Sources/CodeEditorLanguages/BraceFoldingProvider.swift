@@ -9,34 +9,26 @@ package struct BraceFoldingProvider: CodeFoldingProvider {
 
     package func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
-        // Simple brace matching
-        var braceStack: [(Character, Int)] = []
+        // Simple brace matching over the UTF-16 view: every offset below is a
+        // UTF-16 offset, and each region is classified from the text of its
+        // opening brace's own line, so the cost is linear in the document.
+        let units = Array(text.utf16)
+        var braceStack: [Int] = []
 
-        for index in 0..<text.utf16.count {
-            guard let charIndex = text.utf16.index(text.utf16.startIndex, offsetBy: index, limitedBy: text.utf16.endIndex) else { continue }
-            let char = text.utf16[charIndex]
-            // Handle surrogate pairs safely
-            guard let scalar = UnicodeScalar(char),
-                  !UTF16.isLeadSurrogate(char) && !UTF16.isTrailSurrogate(char) else {
-                continue
-            }
-            let unicodeChar = Character(scalar)
+        for (index, unit) in units.enumerated() {
+            switch unit {
+            case Self.openBrace:
+                braceStack.append(index)
 
-            switch unicodeChar {
-            case "{":
-                braceStack.append(("{", index))
-
-            case "}":
-                if let (openBrace, openIndex) = braceStack.popLast(), openBrace == "{" {
+            case Self.closeBrace:
+                if let openIndex = braceStack.popLast() {
                     let range = NSRange(location: openIndex, length: index - openIndex + 1)
-
-                    // Determine type based on context
-                    let type = determineFoldingType(at: openIndex, in: text)
-                    let title = extractTitle(at: openIndex, in: text, type: type)
+                    let linePrefix = Self.linePrefix(endingAt: openIndex, in: units)
+                    let type = determineFoldingType(linePrefix: linePrefix)
 
                     regions.append(FoldableRegion(
                         range: range,
-                        title: title,
+                        title: linePrefix.trimmingCharacters(in: .whitespacesAndNewlines),
                         type: type
                     ))
                 }
@@ -45,35 +37,38 @@ package struct BraceFoldingProvider: CodeFoldingProvider {
                 break
             }
         }
-
         return regions
     }
 
-    private func determineFoldingType(at location: Int, in text: String) -> FoldingType {
-        // Simple heuristic - check for keywords before the brace
-        let prefix = String(text.prefix(location))
+    private static let newline = UInt16(UInt8(ascii: "\n"))
+    private static let carriageReturn = UInt16(UInt8(ascii: "\r"))
+    private static let openBrace = UInt16(UInt8(ascii: "{"))
+    private static let closeBrace = UInt16(UInt8(ascii: "}"))
 
-        if prefix.hasSuffix("class ") || prefix.hasSuffix("struct ") {
-            return .class
-        } else if prefix.hasSuffix("func ") || prefix.hasSuffix("function ") {
-            return .function
-        } else if prefix.contains("//") || prefix.contains("/*") {
-            return .comment
-        } else {
-            return .block
+    /// The text from the start of the line containing `location` up to (not
+    /// including) `location`.
+    private static func linePrefix(endingAt location: Int, in units: [UInt16]) -> String {
+        var start = location
+        while start > 0, units[start - 1] != newline, units[start - 1] != carriageReturn {
+            start -= 1
         }
+        return String(decoding: units[start..<location], as: UTF16.self)
     }
 
-    private func extractTitle(at location: Int, in text: String, type _: FoldingType) -> String {
-        let lineRange = TextRangeUtilities.lineRange(containing: location, in: text)
-        let lineStart = lineRange.location
-
-        guard let startIndex = text.index(text.startIndex, offsetBy: lineStart, limitedBy: text.endIndex),
-              let endIndex = text.index(text.startIndex, offsetBy: location, limitedBy: text.endIndex) else {
-            return ""
+    /// Classifies a region from the code before its opening brace on the same
+    /// line (`class Foo {`, `func bar() {`, `// {`).
+    private func determineFoldingType(linePrefix: String) -> FoldingType {
+        let trimmed = linePrefix.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasPrefix("//") || trimmed.hasPrefix("/*") {
+            return .comment
         }
-
-        let linePrefix = String(text[startIndex..<endIndex])
-        return linePrefix.trimmingCharacters(in: .whitespacesAndNewlines)
+        let words = Set(trimmed.split { !$0.isLetter && !$0.isNumber && $0 != "_" }.map(String.init))
+        if !words.isDisjoint(with: ["class", "struct"]) {
+            return .class
+        }
+        if !words.isDisjoint(with: ["func", "function"]) {
+            return .function
+        }
+        return .block
     }
 }
