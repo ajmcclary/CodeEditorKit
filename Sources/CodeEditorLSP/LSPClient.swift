@@ -114,10 +114,16 @@ public final class LSPClient: ObservableObject {
     internal var recordingHandler: (@Sendable (LSPServerConfiguration, String) async -> Void)?
 
     /// JSON-RPC request allocation, encoding, and continuation routing.
-    private lazy var jsonRPCSession = JSONRPCSession { [weak self] data in
-        guard let self else { throw LSPError.notConnected }
-        try await self.sendEncodedMessage(data)
-    }
+    private lazy var jsonRPCSession: JSONRPCSession = {
+        let session = JSONRPCSession { [weak self] data in
+            guard let self else { throw LSPError.notConnected }
+            try await self.sendEncodedMessage(data)
+        }
+        session.onAbandon = { [weak self] id in
+            self?.sendCancelRequest(for: id)
+        }
+        return session
+    }()
 
     /// In-flight disconnect Task, if any. Used to serialize transport teardown
     /// so two concurrent `disconnect()` calls cannot each spawn a Task that
@@ -140,6 +146,10 @@ public final class LSPClient: ObservableObject {
 
     /// Logger for debugging
     private let logger = CodeEditorLog.lsp(category: "LSPClient")
+
+    /// The workspace folders sent in `initialize`, returned when the server
+    /// asks for `workspace/workspaceFolders`.
+    private var workspaceFolders: [WorkspaceFolder] = []
 
     // MARK: - Initialization
 
@@ -194,14 +204,21 @@ public final class LSPClient: ObservableObject {
         needsTeardownFlag.withLock { $0 = true }
 
         connectionState = .connecting
+        workspaceFolders = LSPConnectionManager.workspaceFolders(for: configuration)
         logger.info("Connecting to LSP server: \(configuration.serverPath)")
 
         do {
             // No implicit process fallback: local servers are reached via
             // ProcessTransport, installed by the modern
             // connect(configuration:languageId:) overload or init(transport:).
-            guard transport != nil else {
+            guard let transport else {
                 throw LSPError.transportNotConfigured
+            }
+            // A partial frame from an earlier connection must not be
+            // prepended to this server's output.
+            await messageHandler.reset()
+            await transport.setDisconnectHandler { [weak self] in
+                await self?.handleTransportClosed(transport)
             }
             try await LSPConnectionManager.startTransportConnection(
                 transport: transport,
@@ -514,6 +531,18 @@ public final class LSPClient: ObservableObject {
                 await self?.handleResponse(id: id, result: result)
             }
         }
+
+        await messageHandler.setServerRequestCallback { [weak self] id, method, params in
+            Task { @MainActor [weak self] in
+                await self?.handleServerRequest(id: id, method: method, params: params)
+            }
+        }
+
+        await messageHandler.setStreamFailureCallback { [weak self] error in
+            Task { @MainActor [weak self] in
+                self?.handleConnectionLost(error)
+            }
+        }
     }
 
     // MARK: - Private Methods
@@ -554,6 +583,74 @@ public final class LSPClient: ObservableObject {
 
     private func handleResponse(id: RequestId, result: Result<LSPResponse, LSPError>) async {
         jsonRPCSession.handleResponse(id: id, result: result)
+    }
+
+    // MARK: - Server Requests
+
+    /// Answers a server→client request. Every request gets a reply — an
+    /// unanswered `client/registerCapability` makes sourcekit-lsp stop
+    /// answering the client altogether.
+    private func handleServerRequest(id: RequestId, method: String, params: Data) async {
+        let reply = LSPServerRequestReply.reply(
+            to: method,
+            id: id,
+            params: params,
+            workspaceFolders: workspaceFolders
+        )
+        if case .error = reply.outcome {
+            logger.debug("Rejecting unsupported server request: \(method)")
+        }
+        do {
+            try await sendEncodedMessage(JSONEncoder().encode(reply))
+        } catch {
+            logger.warning("Failed to answer server request \(method): \(error.localizedDescription)")
+        }
+    }
+
+    /// Tells the server the client no longer waits for `id`.
+    private func sendCancelRequest(for id: RequestId) {
+        guard connectionState == .initialized || connectionState == .initializing else { return }
+        Task { @MainActor [weak self] in
+            try? await self?.sendNotification(method: "$/cancelRequest", params: LSPCancelParams(id: id))
+        }
+    }
+
+    // MARK: - Connection Loss
+
+    /// The transport reported that the server went away (stdout EOF, socket
+    /// closed). Only the transport of the current connection counts.
+    private func handleTransportClosed(_ closedTransport: any LSPTransport) {
+        guard let transport, transport === closedTransport else { return }
+        handleConnectionLost(.connectionFailed("Language server connection closed"))
+    }
+
+    /// Fails every in-flight request, reports `.error`, and tears the
+    /// transport down (which also reaps a local server process).
+    private func handleConnectionLost(_ error: LSPError) {
+        switch connectionState {
+        case .disconnected, .shuttingDown, .error:
+            return
+
+        case .connecting, .initializing, .initialized:
+            break
+        }
+        logger.error("LSP connection lost: \(error.localizedDescription)")
+
+        needsTeardownFlag.withLock { $0 = false }
+        jsonRPCSession.failAllPending(with: error)
+        serverCapabilities = nil
+        documentSession.removeAll()
+        diagnostics = documentSession.diagnostics
+        connectionState = .error
+
+        guard !connectionLifecycle.isDisconnecting, let transport else { return }
+        connectionLifecycle.beginDisconnect { [weak self] in
+            await transport.disconnect()
+            // Teardown done; a new `connect()` requires `.disconnected`.
+            if self?.connectionState == .error {
+                self?.connectionState = .disconnected
+            }
+        }
     }
 
     private func handleDiagnosticsNotification(params: Data) async {

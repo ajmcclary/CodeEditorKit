@@ -295,7 +295,7 @@ public struct CompletionClientCapabilities: Codable, Sendable {
     }
 
     public static let `default` = Self(
-        dynamicRegistration: true,
+        dynamicRegistration: false,
         completionItem: CompletionItemClientCapabilities.default
     )
 }
@@ -327,7 +327,7 @@ public struct HoverClientCapabilities: Codable, Sendable {
     }
 
     public static let `default` = Self(
-        dynamicRegistration: true,
+        dynamicRegistration: false,
         contentFormat: [.markdown, .plaintext]
     )
 }
@@ -340,7 +340,7 @@ public struct DefinitionClientCapabilities: Codable, Sendable {
         self.dynamicRegistration = dynamicRegistration
     }
 
-    public static let `default` = Self(dynamicRegistration: true)
+    public static let `default` = Self(dynamicRegistration: false)
 }
 
 /// Publish diagnostics client capabilities
@@ -380,9 +380,11 @@ public struct WorkspaceClientCapabilities: Codable, Sendable {
         self.configuration = configuration
     }
 
+    /// `configuration` is false: the client has no settings to return, so
+    /// it only answers `workspace/configuration` with `null`s.
     public static let `default` = Self(
         workspaceFolders: true,
-        configuration: true
+        configuration: false
     )
 }
 
@@ -444,6 +446,34 @@ public struct ServerCapabilities: Codable, Sendable {
         self.definitionProvider = definitionProvider
         self.documentSymbolProvider = documentSymbolProvider
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case textDocumentSync, completionProvider, hoverProvider, definitionProvider, documentSymbolProvider
+    }
+
+    /// Spec-tolerant decoding: every member is optional, `textDocumentSync`
+    /// may be a bare `TextDocumentSyncKind`, and each `…Provider` may be
+    /// `Bool` or an options object (an object means "supported").
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let kind = try? container.decodeIfPresent(Int.self, forKey: .textDocumentSync) {
+            textDocumentSync = TextDocumentSyncOptions(openClose: true, change: TextDocumentSyncKind(rawValue: kind))
+        } else {
+            textDocumentSync = try? container.decodeIfPresent(TextDocumentSyncOptions.self, forKey: .textDocumentSync)
+        }
+        completionProvider = try? container.decodeIfPresent(CompletionOptions.self, forKey: .completionProvider)
+        hoverProvider = Self.providerFlag(in: container, forKey: .hoverProvider)
+        definitionProvider = Self.providerFlag(in: container, forKey: .definitionProvider)
+        documentSymbolProvider = Self.providerFlag(in: container, forKey: .documentSymbolProvider)
+    }
+
+    private static func providerFlag(in container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) -> Bool {
+        if let flag = try? container.decodeIfPresent(Bool.self, forKey: key) {
+            return flag
+        }
+        // Any non-null, non-Bool value is an options object.
+        return (try? container.decodeNil(forKey: key)) == false
+    }
 }
 
 /// Text document sync options
@@ -454,6 +484,18 @@ public struct TextDocumentSyncOptions: Codable, Sendable {
     public init(openClose: Bool = true, change: TextDocumentSyncKind? = nil) {
         self.openClose = openClose
         self.change = change
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case openClose, change
+    }
+
+    /// Both members are optional on the wire; an omitted `openClose` means
+    /// false and an unknown `change` value is treated as absent.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        openClose = (try? container.decodeIfPresent(Bool.self, forKey: .openClose)) ?? false
+        change = (try? container.decodeIfPresent(Int.self, forKey: .change)).flatMap(TextDocumentSyncKind.init(rawValue:))
     }
 }
 
@@ -478,6 +520,18 @@ public struct CompletionOptions: Codable, Sendable {
         self.triggerCharacters = triggerCharacters
         self.allCommitCharacters = allCommitCharacters
         self.resolveProvider = resolveProvider
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case triggerCharacters, allCommitCharacters, resolveProvider
+    }
+
+    /// Every member is optional on the wire.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        triggerCharacters = (try? container.decodeIfPresent([String].self, forKey: .triggerCharacters)) ?? []
+        allCommitCharacters = (try? container.decodeIfPresent([String].self, forKey: .allCommitCharacters)) ?? []
+        resolveProvider = (try? container.decodeIfPresent(Bool.self, forKey: .resolveProvider)) ?? false
     }
 }
 
@@ -542,6 +596,24 @@ public struct Diagnostic: Codable, Sendable {
         self.message = message
         self.tags = tags
         self.relatedInformation = relatedInformation
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case range, severity, code, source, message, tags, relatedInformation
+    }
+
+    /// Only `range` and `message` are required by the spec. Unknown
+    /// severity and tag values are dropped rather than failing the whole
+    /// `publishDiagnostics` payload.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        range = try container.decode(LSPRange.self, forKey: .range)
+        message = try container.decode(String.self, forKey: .message)
+        severity = (try? container.decodeIfPresent(Int.self, forKey: .severity)).flatMap(DiagnosticSeverity.init(rawValue:))
+        code = try? container.decodeIfPresent(DiagnosticCode.self, forKey: .code)
+        source = try? container.decodeIfPresent(String.self, forKey: .source)
+        tags = (try? container.decodeIfPresent([Int].self, forKey: .tags))?.compactMap(DiagnosticTag.init(rawValue:)) ?? []
+        relatedInformation = (try? container.decodeIfPresent([DiagnosticRelatedInformation].self, forKey: .relatedInformation)) ?? []
     }
 }
 

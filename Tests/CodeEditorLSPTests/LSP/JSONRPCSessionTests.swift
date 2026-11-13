@@ -123,4 +123,62 @@ final class JSONRPCSessionTests: XCTestCase {
         let identifiers = await observed.snapshot()
         XCTAssertEqual(identifiers, [.number(.max), .number(1)])
     }
+
+    func testUnansweredRequestTimesOutAndIsReportedAbandoned() async {
+        let session = JSONRPCSession(requestTimeout: .milliseconds(50)) { _ in }
+        var abandoned: [RequestId] = []
+        session.onAbandon = { abandoned.append($0) }
+
+        do {
+            _ = try await session.request(method: "textDocument/hover", params: EmptyParams())
+            XCTFail("Expected the request to time out")
+        } catch let error as LSPError {
+            guard case .timeout = error else { return XCTFail("Expected timeout, got \(error)") }
+        } catch {
+            XCTFail("Expected LSPError.timeout, got \(error)")
+        }
+        XCTAssertEqual(session.pendingCount, 0)
+        XCTAssertEqual(abandoned, [.number(1)])
+    }
+
+    func testCancellingTheCallerFailsThePendingRequest() async {
+        let session = JSONRPCSession(requestTimeout: nil) { _ in }
+        var abandoned: [RequestId] = []
+        session.onAbandon = { abandoned.append($0) }
+        let request = Task { @MainActor in
+            try await session.request(method: "textDocument/completion", params: EmptyParams())
+        }
+        while session.pendingCount == 0 {
+            await Task.yield()
+        }
+
+        request.cancel()
+
+        do {
+            _ = try await request.value
+            XCTFail("Expected cancellation")
+        } catch {
+            XCTAssertTrue(error is CancellationError, "Expected CancellationError, got \(error)")
+        }
+        XCTAssertEqual(session.pendingCount, 0)
+        XCTAssertEqual(abandoned, [.number(1)])
+    }
+
+    func testNullResultDecodesAsAbsentWithoutRaising() throws {
+        let dictionary: [String: Any] = ["jsonrpc": "2.0", "id": 1, "result": NSNull()]
+        let response = LSPResponse(data: Data(#"{"jsonrpc":"2.0","id":1,"result":null}"#.utf8), messageDict: dictionary)
+        XCTAssertTrue(response.isNullResult)
+        XCTAssertNil(try response.decodeIfPresent(as: Hover.self))
+        XCTAssertNil(LSPLanguageFeatures.parseHoverResponse(response))
+        XCTAssertEqual(try LSPLanguageFeatures.parseDefinitionResponse(response).count, 0)
+        XCTAssertEqual(try LSPLanguageFeatures.parseCompletionResponse(response).items.count, 0)
+        XCTAssertEqual(try LSPLanguageFeatures.parseDocumentSymbolResponse(response).count, 0)
+        XCTAssertThrowsError(try response.decode(as: Hover.self))
+    }
+
+    func testScalarResultDecodesWithoutRaising() throws {
+        let response = LSPResponse(data: Data(#"{"jsonrpc":"2.0","id":1,"result":42}"#.utf8), messageDict: [:])
+        XCTAssertEqual(try response.decode(as: Int.self), 42)
+        XCTAssertThrowsError(try response.decode(as: Hover.self))
+    }
 }

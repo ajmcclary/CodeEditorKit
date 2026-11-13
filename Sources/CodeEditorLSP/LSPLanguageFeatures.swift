@@ -26,7 +26,8 @@ public enum LSPLanguageFeatures {
     /// - Parameter response: The LSP response
     /// - Returns: Completion list
     public static func parseCompletionResponse(_ response: LSPResponse) throws -> CompletionList {
-        try response.decode(as: CompletionList.self)
+        // `null` is a legal "no completions" answer.
+        try response.decodeIfPresent(as: CompletionList.self) ?? CompletionList(isIncomplete: false, items: [])
     }
 
     // MARK: - Hover
@@ -50,7 +51,9 @@ public enum LSPLanguageFeatures {
     /// - Parameter response: The LSP response
     /// - Returns: Hover information if available
     public static func parseHoverResponse(_ response: LSPResponse) -> Hover? {
-        try? response.decode(as: Hover.self)
+        // `null` (hover over blank space) and undecodable payloads both mean
+        // "nothing to show".
+        (try? response.decodeIfPresent(as: Hover.self)).flatMap { $0 }
     }
 
     // MARK: - Definition
@@ -74,7 +77,10 @@ public enum LSPLanguageFeatures {
     /// - Parameter response: The LSP response
     /// - Returns: Array of locations
     public static func parseDefinitionResponse(_ response: LSPResponse) throws -> [Location] {
-        // Handle both single Location and array of Locations
+        // `null` means no definition; otherwise a single Location or an array.
+        if response.isNullResult {
+            return []
+        }
         if let location = try? response.decode(as: Location.self) {
             return [location]
         } else {
@@ -97,7 +103,8 @@ public enum LSPLanguageFeatures {
     /// - Parameter response: The LSP response
     /// - Returns: Array of document symbols
     public static func parseDocumentSymbolResponse(_ response: LSPResponse) throws -> [LSPDocumentSymbol] {
-        try response.decode(as: [LSPDocumentSymbol].self)
+        // `null` means no symbols.
+        try response.decodeIfPresent(as: [LSPDocumentSymbol].self) ?? []
     }
 }
 

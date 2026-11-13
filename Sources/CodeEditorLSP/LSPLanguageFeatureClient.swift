@@ -46,18 +46,18 @@ final class LSPLanguageFeatureClient {
         return try LSPLanguageFeatures.parseDocumentSymbolResponse(response)
     }
 
-    func semanticTokens(uri: String) async throws -> SemanticTokens {
+    func semanticTokens(uri: String) async throws -> SemanticTokens? {
         let response = try await request(
             "textDocument/semanticTokens/full",
             SemanticTokensParams(textDocument: TextDocumentIdentifier(uri: uri))
         )
-        return try response.decode(as: SemanticTokens.self)
+        return try response.decodeIfPresent(as: SemanticTokens.self)
     }
 
     func semanticTokenDelta(
         uri: String,
         previousResultID: String
-    ) async throws -> SemanticTokensDelta {
+    ) async throws -> SemanticTokensDelta? {
         let response = try await request(
             "textDocument/semanticTokens/full/delta",
             SemanticTokensDeltaParams(
@@ -65,10 +65,10 @@ final class LSPLanguageFeatureClient {
                 previousResultId: previousResultID
             )
         )
-        return try response.decode(as: SemanticTokensDelta.self)
+        return try response.decodeIfPresent(as: SemanticTokensDelta.self)
     }
 
-    func semanticTokens(uri: String, range: LSPRange) async throws -> SemanticTokens {
+    func semanticTokens(uri: String, range: LSPRange) async throws -> SemanticTokens? {
         let response = try await request(
             "textDocument/semanticTokens/range",
             SemanticTokensRangeParams(
@@ -76,6 +76,6 @@ final class LSPLanguageFeatureClient {
                 range: range
             )
         )
-        return try response.decode(as: SemanticTokens.self)
+        return try response.decodeIfPresent(as: SemanticTokens.self)
     }
 }

@@ -29,9 +29,18 @@ enum LSPFrameCodec {
     /// useful: after `recoverFromMalformedFraming` advances the buffer past
     /// a bad header, the next iteration immediately re-attempts the parse
     /// on whatever framing now sits at the front of the buffer.
-    static func extractCompleteMessage(from buffer: inout Data) -> Data? {
+    ///
+    /// - Throws: ``LSPFrameCodecError`` when the peer announces a frame that
+    ///   can never be accepted (larger than ``maxFrameBytes``) or sends a
+    ///   header larger than ``maxHeaderBytes`` without terminating it. The
+    ///   buffer is cleared; the caller must fail the connection.
+    static func extractCompleteMessage(from buffer: inout Data) throws -> Data? {
         while true {
             guard let headerEndRange = buffer.range(of: Data("\r\n\r\n".utf8)) else {
+                if buffer.count > maxHeaderBytes {
+                    buffer.removeAll()
+                    throw LSPFrameCodecError.headerTooLarge
+                }
                 return nil // Header not complete
             }
 
@@ -48,15 +57,23 @@ enum LSPFrameCodec {
                 continue
             }
 
+            guard contentLength <= maxFrameBytes else {
+                logger.error("Rejecting LSP frame of \(contentLength) bytes (limit \(maxFrameBytes))")
+                buffer.removeAll()
+                throw LSPFrameCodecError.frameTooLarge(contentLength)
+            }
+
+            // `contentLength` is in 0...maxFrameBytes, so neither the sum nor
+            // the range below can overflow or invert.
             let messageStart = headerEndRange.upperBound
             let messageEnd = messageStart + contentLength
 
-            guard buffer.count >= messageEnd else {
+            guard buffer.endIndex >= messageEnd else {
                 return nil // Message not complete
             }
 
             let messageData = buffer.subdata(in: messageStart..<messageEnd)
-            buffer.removeSubrange(0..<messageEnd)
+            buffer.removeSubrange(buffer.startIndex..<messageEnd)
             return messageData
         }
     }
@@ -90,17 +107,41 @@ enum LSPFrameCodec {
         buffer.removeSubrange(0..<nextMarker.lowerBound)
     }
 
+    /// Parses the `Content-Length` header (header names are
+    /// case-insensitive). Returns nil for a missing, non-numeric or negative
+    /// value, which takes the malformed-framing recovery path.
     private static func parseContentLength(from header: String) -> Int? {
         let lines = header.components(separatedBy: "\r\n")
 
-        for line in lines where line.hasPrefix("Content-Length:") {
-            let parts = line.components(separatedBy: ":")
-            if parts.count >= 2 {
-                let lengthString = parts[1].trimmingCharacters(in: .whitespaces)
-                return Int(lengthString)
+        for line in lines {
+            guard let colon = line.firstIndex(of: ":"),
+                  line[..<colon].trimmingCharacters(in: .whitespaces).caseInsensitiveCompare("Content-Length") == .orderedSame else {
+                continue
             }
+            let lengthString = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
+            guard !lengthString.isEmpty, lengthString.utf8.allSatisfy({ (UInt8(ascii: "0")...UInt8(ascii: "9")).contains($0) }) else {
+                return nil
+            }
+            // A digit string too long for `Int` is still a definite size, just
+            // one above any limit: report it as such rather than as garbage.
+            return Int(lengthString) ?? Int.max
         }
 
         return nil
     }
+
+    /// Largest frame body accepted from a server (64 MiB). A larger
+    /// `Content-Length` fails the connection instead of buffering forever.
+    static let maxFrameBytes = 64 * 1_024 * 1_024
+
+    /// Largest unterminated header accepted before giving up on the stream.
+    static let maxHeaderBytes = 8 * 1_024
+}
+
+/// A framing violation the LSP stream cannot recover from.
+enum LSPFrameCodecError: Error, Equatable {
+    /// The announced body length exceeds ``LSPFrameCodec/maxFrameBytes``.
+    case frameTooLarge(Int)
+    /// No header terminator within ``LSPFrameCodec/maxHeaderBytes``.
+    case headerTooLarge
 }

@@ -44,6 +44,7 @@ public actor ProcessTransport: LSPTransport {
     private var stdoutEOF = false
 
     private var dataHandler: (@Sendable (Data) async -> Void)?
+    private var disconnectHandler: (@Sendable () async -> Void)?
     private var stdoutReading = false
     private var stdoutReader: ProcessPipeReader?
     private var stderrReader: ProcessPipeReader?
@@ -183,6 +184,10 @@ public actor ProcessTransport: LSPTransport {
         }
     }
 
+    public func setDisconnectHandler(_ handler: @escaping @Sendable () async -> Void) async {
+        disconnectHandler = handler
+    }
+
     public func setDataHandler(_ handler: @escaping @Sendable (Data) async -> Void) async {
         self.dataHandler = handler
 
@@ -231,13 +236,18 @@ public actor ProcessTransport: LSPTransport {
         }
     }
 
-    private func markStdoutEOF() {
+    private func markStdoutEOF() async {
         // The channel finished: the process closed stdout (EOF) or teardown
         // detached the reader.
         guard stdoutReading else { return }
         stdoutReading = false
         stdoutEOF = true
         logger.info("LSP process stdout reached EOF")
+        // The server is gone: let the owner fail its in-flight requests and
+        // reap the child through `disconnect()`.
+        if let handler = disconnectHandler {
+            await handler()
+        }
     }
 
     private func attachStderrLogging() {

@@ -127,6 +127,24 @@ public struct CompletionList: Codable, Sendable {
         self.isIncomplete = isIncomplete
         self.items = items
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case isIncomplete, items
+    }
+
+    /// Accepts both legal result shapes: a `CompletionList` object and a
+    /// bare `CompletionItem[]`.
+    public init(from decoder: Decoder) throws {
+        if let items = try? decoder.singleValueContainer().decode([LSPCompletionItem].self) {
+            self.init(isIncomplete: false, items: items)
+            return
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            isIncomplete: (try? container.decodeIfPresent(Bool.self, forKey: .isIncomplete)) ?? false,
+            items: try container.decodeIfPresent([LSPCompletionItem].self, forKey: .items) ?? []
+        )
+    }
 }
 
 /// LSP Completion item
@@ -170,6 +188,31 @@ public struct LSPCompletionItem: Codable, Sendable {
         self.additionalTextEdits = additionalTextEdits
         self.commitCharacters = commitCharacters
         self.data = data
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case label, kind, detail, documentation, sortText, filterText, insertText, insertTextFormat
+        case textEdit, additionalTextEdits, commitCharacters, data
+    }
+
+    /// Only `label` is required by the spec. Unknown `kind` /
+    /// `insertTextFormat` values, an `InsertReplaceEdit` (which has no
+    /// `range`), and a `data` value `AnyCodable` cannot hold are dropped
+    /// rather than failing the whole completion list.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        label = try container.decode(String.self, forKey: .label)
+        kind = (try? container.decodeIfPresent(Int.self, forKey: .kind)).flatMap(LSPCompletionItemKind.init(rawValue:))
+        detail = try? container.decodeIfPresent(String.self, forKey: .detail)
+        documentation = try? container.decodeIfPresent(CompletionItemDocumentation.self, forKey: .documentation)
+        sortText = try? container.decodeIfPresent(String.self, forKey: .sortText)
+        filterText = try? container.decodeIfPresent(String.self, forKey: .filterText)
+        insertText = try? container.decodeIfPresent(String.self, forKey: .insertText)
+        insertTextFormat = (try? container.decodeIfPresent(Int.self, forKey: .insertTextFormat)).flatMap(InsertTextFormat.init(rawValue:))
+        textEdit = try? container.decodeIfPresent(LSPTextEdit.self, forKey: .textEdit)
+        additionalTextEdits = (try? container.decodeIfPresent([LSPTextEdit].self, forKey: .additionalTextEdits)) ?? []
+        commitCharacters = (try? container.decodeIfPresent([String].self, forKey: .commitCharacters)) ?? []
+        data = try? container.decodeIfPresent(AnyCodable.self, forKey: .data)
     }
 }
 
@@ -405,6 +448,24 @@ public struct LSPDocumentSymbol: Codable, Sendable {
         self.range = range
         self.selectionRange = selectionRange
         self.children = children
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, detail, kind, tags, range, selectionRange, children
+    }
+
+    /// `detail`, `tags` and `children` are optional on the wire. A `kind`
+    /// outside the known `SymbolKind` values decodes as `.variable`;
+    /// unknown tags are dropped.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        detail = try? container.decodeIfPresent(String.self, forKey: .detail)
+        kind = SymbolKind(rawValue: try container.decode(Int.self, forKey: .kind)) ?? .variable
+        tags = (try? container.decodeIfPresent([Int].self, forKey: .tags))?.compactMap(SymbolTag.init(rawValue:)) ?? []
+        range = try container.decode(LSPRange.self, forKey: .range)
+        selectionRange = try container.decode(LSPRange.self, forKey: .selectionRange)
+        children = try container.decodeIfPresent([Self].self, forKey: .children) ?? []
     }
 }
 

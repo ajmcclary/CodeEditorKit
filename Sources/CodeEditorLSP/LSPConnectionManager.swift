@@ -51,6 +51,16 @@ enum LSPConnectionManager {
         try await transport.connect()
     }
 
+    /// The workspace folders announced in `initialize`.
+    static func workspaceFolders(for configuration: LSPClient.ServerConfiguration) -> [WorkspaceFolder] {
+        [
+            WorkspaceFolder(
+                uri: configuration.workspaceRoot.absoluteString,
+                name: configuration.workspaceRoot.lastPathComponent
+            )
+        ]
+    }
+
     /// Initializes the LSP server with the given configuration
     /// - Parameters:
     ///   - configuration: Server configuration
@@ -66,12 +76,7 @@ enum LSPConnectionManager {
             processId: ProcessInfo.processInfo.processIdentifier,
             rootUri: configuration.workspaceRoot.absoluteString,
             capabilities: configuration.capabilities,
-            workspaceFolders: [
-                WorkspaceFolder(
-                    uri: configuration.workspaceRoot.absoluteString,
-                    name: configuration.workspaceRoot.lastPathComponent
-                )
-            ]
+            workspaceFolders: workspaceFolders(for: configuration)
         )
 
         let response = try await sendRequest("initialize", initializeParams)

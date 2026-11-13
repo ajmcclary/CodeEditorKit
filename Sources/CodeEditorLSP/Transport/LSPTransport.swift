@@ -62,6 +62,17 @@ public protocol LSPTransport: Actor {
     /// - Parameter handler: Closure called when data is received
     /// - Note: Some transports may push data asynchronously
     func setDataHandler(_ handler: @escaping @Sendable (Data) async -> Void) async
+
+    /// Set a handler called once when the connection ends on the peer's side
+    /// (the server process closed stdout, the socket closed). It is not
+    /// called for a `disconnect()` the client asked for.
+    /// - Note: The default implementation never calls the handler.
+    func setDisconnectHandler(_ handler: @escaping @Sendable () async -> Void) async
+}
+
+extension LSPTransport {
+    /// Default: the transport does not report peer disconnects.
+    public func setDisconnectHandler(_: @escaping @Sendable () async -> Void) async {}
 }
 
 /// Errors that can occur during transport operations
