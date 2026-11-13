@@ -12,8 +12,9 @@ import Foundation
 /// - `data[i+3]`   = tokenType (index into `SemanticTokensLegend.tokenTypes`)
 /// - `data[i+4]`   = tokenModifiers (bitmask into `SemanticTokensLegend.tokenModifiers`)
 ///
-/// Delta edits (`SemanticTokensEdit`) are applied in **reverse order**
-/// (last edit first) to preserve earlier edit indices.
+/// Every delta edit (`SemanticTokensEdit`) refers to the original array, so
+/// edits are applied from the highest `start` down, whatever order the
+/// server sent them in.
 ///
 /// Thread safety: writes happen on `@MainActor` (LSP response handlers);
 /// reads from `RangeHighlightProviding.queryHighlights` are also on
@@ -49,14 +50,19 @@ package final class LSPSemanticTokenStorage {
         resultId = tokens.resultId
     }
 
+    /// Records the server's legend, which names each token-type index.
+    package func setLegend(_ legend: SemanticTokensLegend?) {
+        self.legend = legend
+    }
+
     // MARK: - Delta update
 
-    /// Applies a `SemanticTokensDelta`, processing edits in reverse order
-    /// so that earlier edits remain at their correct indices.
+    /// Applies a `SemanticTokensDelta`. Edits are applied by descending
+    /// `start` so each still indexes the original array.
     package func applyDelta(_ delta: SemanticTokensDelta) {
         resultId = delta.resultId
 
-        for edit in delta.edits.reversed() {
+        for edit in delta.edits.sorted(by: { $0.start > $1.start }) {
             let startIdx = Int(edit.start)
             let deleteCount = Int(edit.deleteCount)
             let insertData = edit.data
@@ -118,18 +124,12 @@ package final class LSPSemanticTokenStorage {
 
     // MARK: - Invalidation
 
-    /// Returns an `IndexSet` of character indices invalidated after
-    /// applying a delta, based on the edit boundaries.
-    package func invalidatedIndices(for delta: SemanticTokensDelta, documentLength: Int) -> IndexSet {
-        var indices = IndexSet()
-        for edit in delta.edits {
-            let start = Int(edit.start)
-            // Conservative: invalidate from edit point to end of document.
-            // A more precise calculation would convert token positions to
-            // character ranges, but this is simple and correct.
-            indices.insert(integersIn: start..<max(start, documentLength))
-        }
-        return indices
+    /// Returns the character indices invalidated by a delta. Edit `start`
+    /// values index the token array, not the document, so mapping them to
+    /// characters would need the decoded tokens; the whole document is
+    /// reported instead.
+    package func invalidatedIndices(for _: SemanticTokensDelta, documentLength: Int) -> IndexSet {
+        IndexSet(integersIn: 0..<max(0, documentLength))
     }
 
     // MARK: - Reset

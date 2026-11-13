@@ -76,4 +76,23 @@ struct LSPDocumentControllerTests {
         try await Task.sleep(for: .milliseconds(400))
         coordinator.detach()
     }
+
+    @Test("semantic token types are named by the server legend")
+    func semanticTokenTypesUseTheLegend() {
+        // sourcekit-lsp's legend: index 26 is "unknown", 27 "identifier",
+        // 23 "bracket" — past the end of the standard 23-entry table.
+        let legend = SemanticTokensLegend(
+            tokenTypes: [
+                "namespace", "type", "class", "enum", "interface", "struct", "typeParameter",
+                "parameter", "variable", "property", "enumMember", "event", "function", "method",
+                "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator",
+                "decorator", "bracket", "label", "concept", "unknown", "identifier"
+            ],
+            tokenModifiers: []
+        )
+        #expect(LSPSemanticTokenProvider.tokenType(for: 15, legend: legend) == .keyword)
+        #expect(LSPSemanticTokenProvider.tokenType(for: 27, legend: legend) == .identifier)
+        let reordered = SemanticTokensLegend(tokenTypes: ["keyword", "comment"], tokenModifiers: [])
+        #expect(LSPSemanticTokenProvider.tokenType(for: 1, legend: reordered) == .comment)
+    }
 }

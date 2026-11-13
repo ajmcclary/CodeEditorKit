@@ -24,9 +24,10 @@ import Foundation
 ///
 /// ## Token type mapping
 ///
-/// LSP token type indices (from the server's `SemanticTokensLegend`) are
-/// resolved to `TokenType` via a standard mapping table and emitted as the
-/// token type's raw string. Unrecognized types map to `.identifier`.
+/// LSP token type indices are resolved through the server's
+/// `SemanticTokensLegend` (from `initialize`) to a type name, and the name
+/// to a `TokenType`; without a legend the standard LSP order is assumed.
+/// Unrecognized types map to `.identifier`.
 @MainActor
 final class LSPSemanticTokenProvider: HighlightRangeProviding {
     // MARK: - Token type mapping
@@ -59,6 +60,18 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
         .function      // 22: decorator
     ]
 
+    /// LSP token type names → `TokenType` (the standard names above, by name).
+    private static let tokenTypesByName: [String: TokenType] = [
+        "namespace": .type, "type": .type, "class": .type, "enum": .type,
+        "interface": .type, "struct": .type, "typeParameter": .type,
+        "parameter": .identifier, "variable": .identifier, "property": .property,
+        "enumMember": .property, "event": .identifier, "function": .function,
+        "method": .function, "macro": .function, "keyword": .keyword,
+        "modifier": .keyword, "comment": .comment, "string": .string,
+        "number": .number, "regexp": .string, "operator": .operator,
+        "decorator": .function
+    ]
+
     // MARK: - State
 
     private let storage = LSPSemanticTokenStorage()
@@ -88,6 +101,7 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
         let uri = LSPDocumentURI.uri(forFilePath: filePath)
         do {
             let client = lspManager.client(for: document.languageID)
+            storage.setLegend(client?.serverCapabilities?.semanticTokensLegend)
             let tokens = try await client?.requestSemanticTokens(uri: uri)
             if let tokens {
                 storage.applyFull(tokens)
@@ -122,7 +136,11 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
         let source = document.text
         guard !source.isEmpty else { return [] }
         let queryRange = range.nsRange
-        let lineRange = lineNumbers(in: source, for: queryRange)
+        // Line starts once per query; each token used to rescan the
+        // document from the start.
+        let lineStarts = LSPTextPosition.lineStartOffsets(in: source)
+        let totalLength = source.utf16.count
+        let lineRange = lineNumbers(for: queryRange, lineStarts: lineStarts, totalLength: totalLength)
 
         let decoded = storage.tokens(in: lineRange)
         guard !decoded.isEmpty else { return [] }
@@ -131,15 +149,16 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
         tokens.reserveCapacity(decoded.count)
 
         for dt in decoded {
-            let tokenType = Self.tokenType(for: dt.tokenType)
+            let tokenType = Self.tokenType(for: dt.tokenType, legend: storage.legend)
             guard tokenType != .whitespace else { continue }
 
             // Compute the UTF-16 range from (line, startChar, length).
-            guard let utf16Range = utf16Range(
+            guard let utf16Range = Self.utf16Range(
                 line: dt.line,
                 startChar: dt.startChar,
                 length: dt.length,
-                in: source
+                lineStarts: lineStarts,
+                totalLength: totalLength
             ) else { continue }
 
             // Intersect with the query range.
@@ -215,7 +234,11 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
 
     // MARK: - Helpers
 
-    private static func tokenType(for lspIndex: Int) -> TokenType {
+    static func tokenType(for lspIndex: Int, legend: SemanticTokensLegend?) -> TokenType {
+        if let legend {
+            guard lspIndex >= 0, lspIndex < legend.tokenTypes.count else { return .identifier }
+            return tokenTypesByName[legend.tokenTypes[lspIndex]] ?? .identifier
+        }
         guard lspIndex >= 0, lspIndex < lspTokenTypes.count else {
             return .identifier
         }
@@ -229,31 +252,15 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
 
     /// Converts a (0-based line, 0-based character, length) triplet
     /// to a UTF-16 `NSRange`.
-    private func utf16Range(
+    private static func utf16Range(
         line: Int,
         startChar: Int,
         length: Int,
-        in source: String
+        lineStarts: [Int],
+        totalLength: Int
     ) -> NSRange? {
-        let utf16 = source.utf16
-        let totalLength = utf16.count
-
-        // Find the start of the requested line by counting newlines.
-        var lineStart = 0
-        var currentLine = 0
-        var pos = 0
-        var idx = utf16.startIndex
-
-        while currentLine < line, idx < utf16.endIndex {
-            if utf16[idx] == 0x0A { // U+000A LINE FEED
-                currentLine &+= 1
-                lineStart = pos &+ 1
-            }
-            utf16.formIndex(after: &idx)
-            pos &+= 1
-        }
-
-        let offset = lineStart + startChar
+        guard line >= 0, line < lineStarts.count else { return nil }
+        let offset = lineStarts[line] + startChar
         guard offset < totalLength else { return nil }
 
         let clampedLength = min(length, totalLength - offset)
@@ -264,30 +271,15 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
 
     /// Returns the 0-based line range intersecting the given character range.
     private func lineNumbers(
-        in source: String,
-        for range: NSRange
+        for range: NSRange,
+        lineStarts: [Int],
+        totalLength: Int
     ) -> ClosedRange<Int> {
-        let utf16 = source.utf16
-        let totalLength = utf16.count
-        let startLine = lineNumber(at: range.location, utf16: utf16)
+        let startLine = LSPTextPosition.line(containingUTF16Offset: range.location, lineStarts: lineStarts)
         let endPos = min(range.location + range.length, totalLength)
         let endLine = endPos > range.location
-            ? lineNumber(at: endPos, utf16: utf16)
+            ? LSPTextPosition.line(containingUTF16Offset: endPos, lineStarts: lineStarts)
             : startLine
         return startLine...endLine
-    }
-
-    private func lineNumber(at offset: Int, utf16: String.UTF16View) -> Int {
-        var line = 0
-        var pos = 0
-        var idx = utf16.startIndex
-        while pos < offset, idx < utf16.endIndex {
-            if utf16[idx] == 0x0A { // U+000A LINE FEED
-                line &+= 1
-            }
-            utf16.formIndex(after: &idx)
-            pos &+= 1
-        }
-        return line
     }
 }

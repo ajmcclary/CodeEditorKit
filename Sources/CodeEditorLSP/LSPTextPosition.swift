@@ -78,4 +78,45 @@ package enum LSPTextPosition {
         let end = max(start, utf16Offset(for: range.end, in: text))
         return NSRange(location: start, length: end - start)
     }
+
+    /// UTF-16 offset of the start of every line (the first is 0).
+    package static func lineStartOffsets(in text: String) -> [Int] {
+        var starts = [0]
+        var index = 0
+        var iterator = text.utf16.makeIterator()
+        var previousWasCarriageReturn = false
+        while let unit = iterator.next() {
+            index += 1
+            if unit == lineFeed {
+                if previousWasCarriageReturn {
+                    // `\r\n`: the line already started after the `\r`.
+                    starts[starts.count - 1] = index
+                } else {
+                    starts.append(index)
+                }
+                previousWasCarriageReturn = false
+            } else {
+                if unit == carriageReturn {
+                    starts.append(index)
+                }
+                previousWasCarriageReturn = unit == carriageReturn
+            }
+        }
+        return starts
+    }
+
+    /// The line containing UTF-16 `offset`, given `lineStartOffsets(in:)`.
+    package static func line(containingUTF16Offset offset: Int, lineStarts: [Int]) -> Int {
+        var low = 0
+        var high = lineStarts.count - 1
+        while low < high {
+            let mid = (low + high + 1) / 2
+            if lineStarts[mid] <= offset {
+                low = mid
+            } else {
+                high = mid - 1
+            }
+        }
+        return low
+    }
 }

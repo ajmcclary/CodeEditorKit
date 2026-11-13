@@ -434,23 +434,45 @@ public struct ServerCapabilities: Codable, Sendable {
     public let hoverProvider: Bool
     public let definitionProvider: Bool
     public let documentSymbolProvider: Bool
+    /// The server's semantic-token legend, when it provides semantic tokens.
+    public let semanticTokensLegend: SemanticTokensLegend?
 
     public init(
         textDocumentSync: TextDocumentSyncOptions? = nil,
         completionProvider: CompletionOptions? = nil,
         hoverProvider: Bool = false,
         definitionProvider: Bool = false,
-        documentSymbolProvider: Bool = false
+        documentSymbolProvider: Bool = false,
+        semanticTokensLegend: SemanticTokensLegend? = nil
     ) {
         self.textDocumentSync = textDocumentSync
         self.completionProvider = completionProvider
         self.hoverProvider = hoverProvider
         self.definitionProvider = definitionProvider
         self.documentSymbolProvider = documentSymbolProvider
+        self.semanticTokensLegend = semanticTokensLegend
     }
 
     private enum CodingKeys: String, CodingKey {
         case textDocumentSync, completionProvider, hoverProvider, definitionProvider, documentSymbolProvider
+        case semanticTokensProvider
+    }
+
+    private struct SemanticTokensProviderOptions: Codable {
+        let legend: SemanticTokensLegend
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(textDocumentSync, forKey: .textDocumentSync)
+        try container.encodeIfPresent(completionProvider, forKey: .completionProvider)
+        try container.encode(hoverProvider, forKey: .hoverProvider)
+        try container.encode(definitionProvider, forKey: .definitionProvider)
+        try container.encode(documentSymbolProvider, forKey: .documentSymbolProvider)
+        try container.encodeIfPresent(
+            semanticTokensLegend.map { SemanticTokensProviderOptions(legend: $0) },
+            forKey: .semanticTokensProvider
+        )
     }
 
     /// Spec-tolerant decoding: every member is optional, `textDocumentSync`
@@ -467,6 +489,10 @@ public struct ServerCapabilities: Codable, Sendable {
         hoverProvider = Self.providerFlag(in: container, forKey: .hoverProvider)
         definitionProvider = Self.providerFlag(in: container, forKey: .definitionProvider)
         documentSymbolProvider = Self.providerFlag(in: container, forKey: .documentSymbolProvider)
+        semanticTokensLegend = (try? container.decodeIfPresent(
+            SemanticTokensProviderOptions.self,
+            forKey: .semanticTokensProvider
+        ))?.legend
     }
 
     private static func providerFlag(in container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) -> Bool {

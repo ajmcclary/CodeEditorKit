@@ -83,6 +83,10 @@
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorSwiftUI/CodeEditor+RepresentableParameters.swift:24 and Sources/CodeEditorSwiftUI/CodeEditor+RepresentableParameters.swift:43 remain explicit to preserve framework-specific types and call sites."
     },
+    "31cb1a70d916abd3": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LuaFoldingProvider.swift:219 and Sources/CodeEditorLanguages/LuaFoldingProvider.swift:229 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
     "38d39248474ee5b2": {
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/CodeEditorContainerView+AppKitExtensions.swift:147 and Sources/CodeEditorView/Layout/CodeEditorContainerView+AppKitExtensions.swift:214 remain explicit to preserve framework-specific types and call sites."
@@ -90,6 +94,10 @@
     "3c2b8696c3fba1dc": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/Data/JavascriptLanguageDescriptor.swift:10 and Sources/CodeEditorLanguages/Data/TypescriptLanguageDescriptor.swift:10 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "3f2ef20ba6de683d": {
+      "classification": "platform-contract",
+      "rationale": "ProcessTransport and WebSocketTransport each implement the LSPTransport receive/setDisconnectHandler/setDataHandler requirements over their own I/O (pipes vs URLSession); the parallel shape is the protocol contract at Sources/CodeEditorLSP/Transport/ProcessTransport.swift:205 and Sources/CodeEditorLSP/Transport/WebSocketTransport.swift:242."
     },
     "4148b3949021d9f9": {
       "classification": "semantic-schema",
@@ -143,6 +151,10 @@
       "classification": "semantic-schema",
       "rationale": "Per-language LanguageDescriptor entries (Dart/Kotlin) share the descriptor tail schema (functions/literals/snippets/detection fields); each file stays a standalone per-language catalog entry by design, matching the existing descriptor-cohort layout."
     },
+    "6c2fcb7bca3e0860": {
+      "classification": "semantic-schema",
+      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLSP/LSPManager.swift:296 and Sources/CodeEditorLSP/LSPManager.swift:382 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
     "705138b3cb93cb68": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/RegexSyntaxTokenType.swift:7 and Sources/CodeEditorSyntaxHighlighting/SyntaxHighlightingCoordinator.swift:230 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
@@ -158,10 +170,6 @@
     "72d2312ca76eb776": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/CSSSymbolProvider.swift:45 and Sources/CodeEditorLanguages/HTMLSymbolProvider.swift:56 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
-    "31cb1a70d916abd3": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLanguages/LuaFoldingProvider.swift:219 and Sources/CodeEditorLanguages/LuaFoldingProvider.swift:229 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
     "7fa12140b4a5c9b3": {
       "classification": "platform-contract",
@@ -286,10 +294,6 @@
     "e0777e2fdaf69d35": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorTextModel/Text/LineGeometryStore+GeometryHelpers.swift:43 and Sources/CodeEditorTextModel/Text/LineGeometryStore+GeometryHelpers.swift:69 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
-    },
-    "e242e3085ff89b42": {
-      "classification": "semantic-schema",
-      "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLSP/LSPManager.swift:296 and Sources/CodeEditorLSP/LSPManager.swift:373 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
     },
     "e8ae251fcea959b2": {
       "classification": "platform-contract",
