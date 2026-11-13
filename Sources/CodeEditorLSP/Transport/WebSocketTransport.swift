@@ -9,8 +9,10 @@ import Foundation
 ///
 /// ## Features
 /// - Cross-platform support (macOS and iOS / iPadOS)
-/// - Automatic reconnection with exponential backoff
-/// - Message queuing during disconnection
+/// - Reports a dropped connection to its owner (`setDisconnectHandler`); a
+///   transport without an owner handler reconnects with backoff
+///   (`autoReconnect`). Messages are never queued for, or replayed to, a
+///   new connection: that server has not been `initialize`d.
 /// - Support for both ws:// and wss:// protocols
 /// - Binary and text message support
 ///
@@ -38,9 +40,9 @@ public actor WebSocketTransport: LSPTransport {
     private var urlSession: URLSession?
     private var sessionDelegate: WebSocketPinningDelegate?
     private var dataHandler: (@Sendable (Data) async -> Void)?
+    private var disconnectHandler: (@Sendable () async -> Void)?
     private var receiveTask: Task<Void, Never>?
 
-    private var messageQueue: [Data] = []
     private var reconnectAttempts = 0
     private var isReconnecting = false
 
@@ -115,6 +117,10 @@ public actor WebSocketTransport: LSPTransport {
 
         logger.info("Connecting to WebSocket LSP server: \(url)")
 
+        // A reconnect must not leak the previous session (and its delegate).
+        urlSession?.invalidateAndCancel()
+        urlSession = nil
+
         let sessionConfig = Self.makeURLSessionConfiguration(
             transport: configuration, security: securityOptions
         )
@@ -166,14 +172,13 @@ public actor WebSocketTransport: LSPTransport {
                 startReceiving()
             }
 
-            // Send any queued messages
-            await sendQueuedMessages()
-
             // Reset reconnect attempts on successful connection
             reconnectAttempts = 0
         } catch {
             webSocketTask?.cancel()
             webSocketTask = nil
+            self.urlSession?.invalidateAndCancel()
+            self.urlSession = nil
             throw LSPTransportError.connectionFailed(underlying: error)
         }
     }
@@ -193,7 +198,6 @@ public actor WebSocketTransport: LSPTransport {
         urlSession?.invalidateAndCancel()
         urlSession = nil
         sessionDelegate = nil
-        messageQueue.removeAll()
         isReconnecting = false
     }
 
@@ -201,20 +205,8 @@ public actor WebSocketTransport: LSPTransport {
         // Frame via the shared codec; sent below as a single binary frame.
         let message = LSPFrameCodec.encode(data)
 
-        guard let webSocketTask, webSocketTask.state == .running else {
-            if configuration.autoReconnect && !isReconnecting {
-                // Queue message for later delivery
-                logger.debug("Queuing message while disconnected")
-                messageQueue.append(message)
-
-                // Attempt reconnection
-                Task {
-                    await attemptReconnection()
-                }
-                return
-            } else {
-                throw LSPTransportError.notConnected
-            }
+        guard let webSocketTask, webSocketTask.state == .running, !isReconnecting else {
+            throw LSPTransportError.notConnected
         }
 
         do {
@@ -222,13 +214,6 @@ public actor WebSocketTransport: LSPTransport {
             try await webSocketTask.send(.data(message))
             logger.debug("Sent \(message.count) bytes via WebSocket")
         } catch {
-            // Handle send failure
-            if configuration.autoReconnect {
-                messageQueue.append(message)
-                Task {
-                    await attemptReconnection()
-                }
-            }
             throw LSPTransportError.sendFailed(underlying: error)
         }
     }
@@ -259,6 +244,10 @@ public actor WebSocketTransport: LSPTransport {
         }
     }
 
+    public func setDisconnectHandler(_ handler: @escaping @Sendable () async -> Void) async {
+        disconnectHandler = handler
+    }
+
     public func setDataHandler(_ handler: @escaping @Sendable (Data) async -> Void) async {
         self.dataHandler = handler
 
@@ -270,24 +259,30 @@ public actor WebSocketTransport: LSPTransport {
 
     // MARK: - Private Methods
 
+    /// Waits until the WebSocket handshake has completed. A task reports
+    /// `.running` as soon as `resume()` is called, so the connection is
+    /// proven with a ping/pong round trip instead.
     private func waitForConnection() async throws {
-        let maxAttempts = 30 // 30 * 100ms = 3 seconds
-        var attempts = 0
-
-        while attempts < maxAttempts {
-            if webSocketTask?.state == .running {
-                return
-            }
-
-            if webSocketTask?.state == .completed || webSocketTask?.state == .canceling {
-                throw LSPTransportError.connectionFailed(underlying: nil)
-            }
-
-            try await Task.sleep(nanoseconds: 100_000_000) // 100ms
-            attempts += 1
+        guard let webSocketTask else {
+            throw LSPTransportError.connectionFailed(underlying: nil)
         }
-
-        throw LSPTransportError.transportSpecific(message: "Connection timeout")
+        let timeout = configuration.connectionTimeout
+        let state = PingWaitState()
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
+            webSocketTask.sendPing { error in
+                guard state.claim() else { return }
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
+            Task {
+                try? await Task.sleep(for: .seconds(timeout.isFinite ? max(0, timeout) : 0))
+                guard state.claim() else { return }
+                continuation.resume(throwing: LSPTransportError.transportSpecific(message: "Connection timeout"))
+            }
+        }
     }
 
     private func startReceiving() {
@@ -305,7 +300,12 @@ public actor WebSocketTransport: LSPTransport {
                 } catch {
                     logger.error("Error receiving from WebSocket: \(error)")
 
-                    if configuration.autoReconnect && !isReconnecting {
+                    // An owner (LSPClient) must re-initialize on a new
+                    // connection, so it is told instead of reconnecting
+                    // silently underneath it.
+                    if let disconnectHandler {
+                        await disconnectHandler()
+                    } else if configuration.autoReconnect && !isReconnecting {
                         await attemptReconnection()
                     }
                     break
@@ -313,27 +313,6 @@ public actor WebSocketTransport: LSPTransport {
             }
 
             logger.debug("Stopped receiving from WebSocket")
-        }
-    }
-
-    private func sendQueuedMessages() async {
-        guard !messageQueue.isEmpty else { return }
-
-        logger.info("Sending \(messageQueue.count) queued messages")
-
-        let messages = messageQueue
-        messageQueue.removeAll()
-
-        for message in messages {
-            do {
-                if let webSocketTask {
-                    try await webSocketTask.send(.data(message))
-                }
-            } catch {
-                logger.error("Failed to send queued message: \(error)")
-                // Re-queue failed messages
-                messageQueue.append(message)
-            }
         }
     }
 
@@ -351,7 +330,7 @@ public actor WebSocketTransport: LSPTransport {
         logger.info("Attempting reconnection \(reconnectAttempts)/\(configuration.maxReconnectAttempts) after \(delay)s")
 
         // Wait with exponential backoff
-        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+        try? await Task.sleep(for: .seconds(delay.isFinite ? max(0, delay) : 0))
 
         // Clean up existing connection
         webSocketTask?.cancel()
@@ -374,5 +353,19 @@ public actor WebSocketTransport: LSPTransport {
     deinit {
         receiveTask?.cancel()
         webSocketTask?.cancel()
+    }
+}
+
+/// Single-resumption flag for `waitForConnection`'s ping/timeout race.
+private final class PingWaitState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var claimed = false
+
+    func claim() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        if claimed { return false }
+        claimed = true
+        return true
     }
 }
