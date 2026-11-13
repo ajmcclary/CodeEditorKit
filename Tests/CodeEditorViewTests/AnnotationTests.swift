@@ -356,6 +356,35 @@ final class AnnotationTests: XCTestCase {
         XCTAssertEqual(textView.allAnnotations.count, 1)
     }
 
+    #if canImport(AppKit)
+    /// A layout pass repositions existing annotation views; it does not ask
+    /// the data source to recreate every one of them each time.
+    func testLayoutPassesReuseAnnotationViews() {
+        let dataSource = TestAnnotationDataSource()
+        textView.annotationsDataSource = dataSource
+        textView.string = String(repeating: "let value = 1\n", count: 100)
+        textView.layoutSubtreeIfNeeded()
+        for line in 0..<20 {
+            textView.addAnnotation(Annotation(range: NSRange(location: line * 14, length: 3), content: "note", id: "a\(line)"))
+        }
+        let created = dataSource.viewCreationCount
+        XCTAssertEqual(created, 20)
+
+        for _ in 0..<10 {
+            textView.needsLayout = true
+            textView.layoutSubtreeIfNeeded()
+        }
+
+        XCTAssertEqual(dataSource.viewCreationCount, created)
+        XCTAssertEqual(textView.annotationViews.count, 20)
+        XCTAssertEqual(textView.annotationViews.values.filter { $0.superview === textView }.count, 20)
+
+        // An explicit reload still recreates them.
+        textView.reloadAnnotations()
+        XCTAssertEqual(dataSource.viewCreationCount, created + 20)
+    }
+    #endif
+
     func testAnnotationTextKit2Integration() {
         XCTAssertNotNil(textView.textLayoutManager,
                         "CodeEditorView must initialize with a TextKit 2 layout manager")

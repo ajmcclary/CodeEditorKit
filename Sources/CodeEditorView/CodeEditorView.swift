@@ -529,6 +529,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Annotation views mapping
     internal var annotationViews: [String: PlatformView] = [:]
 
+    /// What the annotation views were last laid out against.
+    internal var annotationLayoutKey: AnnotationLayoutKey?
+
     /// The data source for providing custom annotations.
     ///
     /// - Important: This is a **weak** reference. The host (typically an

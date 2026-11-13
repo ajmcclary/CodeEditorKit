@@ -131,7 +131,10 @@ extension CodeEditorView {
     /// It should be called after external changes to annotations that require UI updates.
     @MainActor
     public func reloadAnnotations() {
-        updateAnnotationViews()
+        for annotation in annotations {
+            updateAnnotationView(for: annotation)
+        }
+        annotationLayoutKey = currentAnnotationLayoutKey()
     }
 
     // MARK: - Private Methods
@@ -154,14 +157,40 @@ extension CodeEditorView {
             return
         }
 
-        // Check if we're using TextKit2
-        guard let textLayoutManager else {
-            return
-        }
+        // TextKit 2 places the badge; nothing is shown without it.
+        guard let placement = annotationPlacement(for: annotation) else { return }
 
-        guard let textContentManager = textLayoutManager.textContentManager,
+        // Create annotation view
+        if let annotationView = dataSource.textView(
+            self,
+            viewForLineAnnotation: placement.annotation,
+            textLineFragment: placement.lineFragment,
+            proposedViewFrame: placement.frame
+        ) {
+            addSubview(annotationView)
+            annotationViews[annotation.id] = annotationView
+
+            // Force view update
+            #if canImport(AppKit)
+            annotationView.needsDisplay = true
+            needsDisplay = true
+            #else
+            annotationView.setNeedsDisplay()
+            setNeedsDisplay()
+            #endif
+        }
+    }
+
+    /// Where an annotation's badge goes: the view annotation, its line
+    /// fragment and the badge frame in this view's coordinates.
+    @MainActor
+    private func annotationPlacement(
+        for annotation: Annotation
+    ) -> (annotation: CodeEditorViewAnnotation, lineFragment: NSTextLineFragment, frame: CGRect)? {
+        guard let textLayoutManager,
+              let textContentManager = textLayoutManager.textContentManager,
               let annotationTextRange = TextRangeUtilities.convert(annotation.range, in: textContentManager) else {
-            return
+            return nil
         }
 
         // Convert Annotation to CodeEditorViewAnnotation
@@ -176,20 +205,12 @@ extension CodeEditorView {
         textLayoutManager.ensureLayout(for: annotationTextRange)
 
         // Get text layout fragment for the annotation location
-        guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: annotationTextRange.location) else {
-            return
-        }
-
-        guard let textLineFragment = textLayoutFragment.textLineFragment(at: annotationTextRange.location) else {
-            return
-        }
-
-        // Get the exact text segment frame for the annotation range
-        guard let segmentFrame = textLayoutManager.textSegmentFrame(
-            in: annotationTextRange,
-            type: .standard
-        ) else {
-            return
+        guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: annotationTextRange.location),
+              let textLineFragment = textLayoutFragment.textLineFragment(at: annotationTextRange.location),
+              // Get the exact text segment frame for the annotation range
+              let segmentFrame = textLayoutManager.textSegmentFrame(in: annotationTextRange, type: .standard)
+        else {
+            return nil
         }
 
         // Calculate inline annotation position using configuration values
@@ -211,33 +232,54 @@ extension CodeEditorView {
             width: badgeSize,
             height: badgeSize
         ).integral
-
-        // Create annotation view
-        if let annotationView = dataSource.textView(
-            self,
-            viewForLineAnnotation: textViewAnnotation,
-            textLineFragment: textLineFragment,
-            proposedViewFrame: proposedFrame
-        ) {
-            addSubview(annotationView)
-            annotationViews[annotation.id] = annotationView
-
-            // Force view update
-            #if canImport(AppKit)
-            annotationView.needsDisplay = true
-            needsDisplay = true
-            #else
-            annotationView.setNeedsDisplay()
-            setNeedsDisplay()
-            #endif
-        }
+        return (textViewAnnotation, textLineFragment, proposedFrame)
     }
 
-    /// Update all annotation views (called during layout)
+    /// What annotation frames depend on. A layout pass with the same key has
+    /// nothing to move.
+    internal struct AnnotationLayoutKey: Equatable {
+        let textGeneration: UInt64
+        let size: CGSize
+        let containerOrigin: CGPoint
+        let annotationIDs: [String]
+        let isEnabled: Bool
+    }
+
+    @MainActor
+    internal func currentAnnotationLayoutKey() -> AnnotationLayoutKey {
+        #if canImport(AppKit)
+        let origin = textContainerOrigin
+        #else
+        let origin = CGPoint(x: textContainerInset.left, y: textContainerInset.top)
+        #endif
+        return AnnotationLayoutKey(
+            textGeneration: textChangeEventGeneration,
+            size: frame.size,
+            containerOrigin: origin,
+            annotationIDs: annotations.map(\.id),
+            isEnabled: configuration.display.areAnnotationsEnabled
+        )
+    }
+
+    /// Update all annotation views (called during layout). Existing views
+    /// are moved, not recreated through the data source, and nothing is done
+    /// when nothing their frames depend on changed since the last pass.
     @MainActor
     internal func updateAnnotationViews() {
+        let key = currentAnnotationLayoutKey()
+        guard key != annotationLayoutKey else { return }
+        annotationLayoutKey = key
+
         for annotation in annotations {
-            updateAnnotationView(for: annotation)
+            guard configuration.display.areAnnotationsEnabled,
+                  let existingView = annotationViews[annotation.id] else {
+                updateAnnotationView(for: annotation)
+                continue
+            }
+            if let placement = annotationPlacement(for: annotation),
+               existingView.frame != placement.frame {
+                existingView.frame = placement.frame
+            }
         }
     }
 }
