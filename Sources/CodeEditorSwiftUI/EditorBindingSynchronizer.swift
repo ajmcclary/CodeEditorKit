@@ -9,16 +9,21 @@ final class EditorBindingSynchronizer {
     var onEditorText: Write?
 
     private var write: Write?
+    /// Whether the host already holds a value (then a write changes nothing
+    /// and no echo will come back).
+    private var hostHolds: ((String) -> Bool)?
     private var lastText: String?
     private var pendingTask: Task<Void, Never>?
     /// Editor text waiting for the debounced write.
     private var pendingText: String?
-    /// The value of the editor's most recent binding write, expected to come
-    /// back from the host as an echo. One-shot: the next host text that
-    /// differs from what the host showed before consumes it, matching or not,
-    /// and a host replacement clears it. It is never "any text the editor
-    /// once wrote", so a host may return to an earlier editor value.
-    private var expectedEcho: String?
+    /// The editor's binding writes the host has not echoed yet, oldest first
+    /// (a host that applies writes late has several in flight). A new host
+    /// text equal to one of them is the echo of that write and consumes it
+    /// and every older one; any other new host text clears them all. So they
+    /// are never "any text the editor once wrote": a host may return to an
+    /// earlier editor value.
+    private var outstandingEchoes: [String] = []
+    private static let maximumOutstandingEchoes = 4
 
     init(
         debounce: Duration = .milliseconds(100),
@@ -33,13 +38,14 @@ final class EditorBindingSynchronizer {
             guard binding.wrappedValue != newText else { return }
             binding.wrappedValue = newText
         }
+        hostHolds = { binding.wrappedValue == $0 }
     }
 
     func installHostText(_ text: String) {
         guard lastText != text else { return }
 
         cancel()
-        expectedEcho = nil
+        outstandingEchoes.removeAll()
         lastText = text
     }
 
@@ -65,15 +71,27 @@ final class EditorBindingSynchronizer {
         }
     }
 
+    /// How a new host text relates to the editor's latest binding write.
+    enum EchoMatch {
+        /// No write was outstanding: the host changed the text on its own.
+        case noWriteAwaited
+        /// The host caught up with the write.
+        case echo
+        /// The host answered the write with different text (it normalizes
+        /// what it stores): a rewrite of the editor's own change.
+        case rewrite
+    }
+
     /// Called with each new host text (one that differs from the host's text
-    /// at the previous render). Returns true when it is the echo of the
-    /// editor's latest binding write — the host catching up, which must not
-    /// overwrite typing done since — and consumes that expectation either
-    /// way.
-    func consumeEcho(ofHostText text: String) -> Bool {
-        guard let expectedEcho else { return false }
-        self.expectedEcho = nil
-        return text == expectedEcho
+    /// at the previous render).
+    func consumeEcho(ofHostText text: String) -> EchoMatch {
+        guard !outstandingEchoes.isEmpty else { return .noWriteAwaited }
+        if let index = outstandingEchoes.firstIndex(of: text) {
+            outstandingEchoes.removeFirst(index + 1)
+            return .echo
+        }
+        outstandingEchoes.removeAll()
+        return .rewrite
     }
 
     func cancel() {
@@ -96,7 +114,14 @@ final class EditorBindingSynchronizer {
 
     private func performWrite(_ text: String) {
         pendingText = nil
-        expectedEcho = text
+        // A host that already holds the text (it mirrors `onTextChange`)
+        // sends no echo back; expecting one would misread its next change.
+        if !(hostHolds?(text) ?? false) {
+            outstandingEchoes.append(text)
+            if outstandingEchoes.count > Self.maximumOutstandingEchoes {
+                outstandingEchoes.removeFirst()
+            }
+        }
         write?(text)
     }
 

@@ -59,6 +59,7 @@ protocol EditorRenderOperating: AnyObject {
     )
     func stampThemeForeground(in container: CodeEditorContainerView)
     func discardUndoHistory(in container: CodeEditorContainerView)
+    func applyRewrite(_ text: String, in container: CodeEditorContainerView)
     func applyTheme(_ theme: Theme, to container: CodeEditorContainerView)
     func invalidate(_ container: CodeEditorContainerView)
 }
@@ -114,6 +115,10 @@ private final class PlatformEditorRenderOperations: EditorRenderOperating {
 
     func discardUndoHistory(in container: CodeEditorContainerView) {
         container.textView.discardUndoHistory()
+    }
+
+    func applyRewrite(_ text: String, in container: CodeEditorContainerView) {
+        container.textView.applyAsUndoableEdit(text)
     }
 
     func applyTheme(_ theme: Theme, to container: CodeEditorContainerView) {
@@ -196,13 +201,21 @@ final class EditorRenderReconciler {
         // returning to an earlier editor value is a replacement.
         let storedText = operations.text(in: container)
         let hostTextChanged = lastState.map { $0.text != state.text } ?? true
-        let isEcho = hostTextChanged
-            && (bindingSynchronizer?.consumeEcho(ofHostText: state.text) ?? false)
+        let echo: EditorBindingSynchronizer.EchoMatch = hostTextChanged
+            ? (bindingSynchronizer?.consumeEcho(ofHostText: state.text) ?? .noWriteAwaited)
+            : .noWriteAwaited
         let isHostBindingSwap = storedText != state.text
             && hostTextChanged
-            && !isEcho
+            && echo != .echo
         let effectiveText = isHostBindingSwap ? state.text : storedText
-        if isHostBindingSwap {
+        if isHostBindingSwap, echo == .rewrite {
+            // The host answered the editor's own change with different text
+            // (it normalizes what it stores). That is an edit of the user's
+            // document, not a replacement: apply the difference as an
+            // undoable edit, so the undo history survives and stays
+            // consistent with the text.
+            operations.applyRewrite(state.text, in: container)
+        } else if isHostBindingSwap {
             operations.setText(state.text, in: container, preserveSelection: true)
             interactionSynchronizer.installBaseline(state.text)
             operations.stampThemeForeground(in: container)

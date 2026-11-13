@@ -248,6 +248,46 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertEqual(store.text, "abcXY")
     }
 
+    /// A host that rewrites the editor's text in response to the editor's
+    /// own change is not replacing the document: undo history survives, and
+    /// undo stays safe.
+    func testAHostRewritingTheEditorsChangeKeepsUndo() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .trimmingSetter)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+
+        type("x ", into: textView)
+        spin(for: 0.4)
+
+        XCTAssertEqual(store.text, "abcx")
+        XCTAssertEqual(textView.string, "abcx")
+        let undoManager = try XCTUnwrap(textView.undoManager)
+        XCTAssertTrue(undoManager.canUndo, "the rewrite discarded the undo history")
+        // Undo must not raise, and must leave consistent text.
+        while undoManager.canUndo { undoManager.undo() }
+        spin(for: 0.4)
+        XCTAssertFalse(textView.string.contains("x "), textView.string)
+    }
+
+    /// A host that applies binding writes late has several in flight; each
+    /// late echo is one of the editor's own writes, not a replacement.
+    func testAHostThatAppliesWritesLateKeepsEveryKeystroke() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .lateSetter)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+
+        for character in "abcd" {
+            textView.insertText(String(character), replacementRange: NSRange(location: NSNotFound, length: 0))
+            spin(for: 0.15)
+        }
+        spin(for: 1.0)
+
+        XCTAssertEqual(textView.string, "abcabcd")
+        XCTAssertEqual(store.text, "abcabcd")
+    }
+
     // MARK: - Host text replacement
 
     func testUndoAfterTheHostReplacesTheTextIsSafe() throws {
@@ -373,6 +413,11 @@ enum HostedEditorMode {
     /// A binding whose setter is ignored, with `.onTextChange` updating the
     /// store (Ready Room's Diagram Source panel).
     case setterIgnored
+    /// A binding whose setter normalizes what it stores (trims trailing
+    /// spaces), as a formatting host does.
+    case trimmingSetter
+    /// A binding whose setter applies each value 300 ms later.
+    case lateSetter
 }
 
 struct HostedEditor: View {
@@ -385,7 +430,21 @@ struct HostedEditor: View {
         configuration.display.isLineNumbersEnabled = store.lineNumbers
         let editor = CodeEditor(text: Binding(
             get: { store.text },
-            set: { if mode != .setterIgnored { store.text = $0 } }
+            set: { newText in
+                switch mode {
+                case .setterIgnored:
+                    break
+
+                case .trimmingSetter:
+                    store.text = newText.replacingOccurrences(of: " +$", with: "", options: .regularExpression)
+
+                case .lateSetter:
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { store.text = newText }
+
+                default:
+                    store.text = newText
+                }
+            }
         ))
         return Group {
             if store.showsEditor {
@@ -418,6 +477,9 @@ struct HostedEditor: View {
             case .setterIgnored:
                 editor
                     .onTextChange { store.text = $0 }
+
+            case .trimmingSetter, .lateSetter:
+                editor
             }
         }
     }

@@ -23,6 +23,44 @@ extension CodeEditorView {
     }
 }
 
+// MARK: - Undoable whole-text edits
+
+extension CodeEditorView {
+    /// Replaces the text with `text` through the editing path that records
+    /// undo and posts the change, touching only the span that differs (the
+    /// common prefix and suffix stay). For host rewrites of the editor's own
+    /// change, which must neither drop nor invalidate the undo history.
+    package func applyAsUndoableEdit(_ text: String) {
+        #if canImport(AppKit)
+        let current = string
+        #else
+        let current = self.text ?? ""
+        #endif
+        guard current != text else { return }
+        let old = Array(current.utf16)
+        let new = Array(text.utf16)
+        var prefix = 0
+        while prefix < old.count, prefix < new.count, old[prefix] == new[prefix] { prefix += 1 }
+        var suffix = 0
+        while suffix < old.count - prefix, suffix < new.count - prefix,
+              old[old.count - 1 - suffix] == new[new.count - 1 - suffix] {
+            suffix += 1
+        }
+        let range = NSRange(location: prefix, length: old.count - prefix - suffix)
+        let replacement = String(decoding: new[prefix..<(new.count - suffix)], as: UTF16.self)
+        #if canImport(AppKit)
+        guard shouldChangeText(in: range, replacementString: replacement) else { return }
+        textKitBridge.replaceCharacters(in: range, with: replacement)
+        didChangeText()
+        #else
+        guard let start = position(from: beginningOfDocument, offset: range.location),
+              let end = position(from: start, offset: range.length),
+              let textRange = textRange(from: start, to: end) else { return }
+        replace(textRange, withText: replacement)
+        #endif
+    }
+}
+
 #if canImport(AppKit)
 
 // MARK: - Undo notifications

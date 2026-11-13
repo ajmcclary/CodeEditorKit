@@ -40,6 +40,11 @@ private final class RecordingRenderOperations: EditorRenderOperating {
         operations.append("discardUndo")
     }
 
+    func applyRewrite(_ text: String, in _: CodeEditorContainerView) {
+        operations.append("rewrite")
+        storedText = text
+    }
+
     func applyTheme(_: Theme, to _: CodeEditorContainerView) {
         operations.append("theme")
     }

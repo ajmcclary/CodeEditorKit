@@ -35,6 +35,31 @@ import SwiftUI
 /// }
 /// ```
 ///
+/// ## The text binding contract
+///
+/// The editor writes its text into `text` after a short debounce
+/// (`performance.textChangeDebounceInterval`), and `.onTextChange` fires on
+/// every change. On each SwiftUI update it compares the binding's value with
+/// its own text:
+///
+/// - **Unchanged since the last update:** the host is only behind the
+///   debounce. The editor keeps its newer text.
+/// - **Equal to one of the editor's own recent writes:** an echo, even a
+///   late one. The editor keeps its newer text. Up to four writes in flight
+///   are recognised; a host that applies writes later still than that can
+///   lose keystrokes.
+/// - **Anything else:** a replacement by the host (a reload, a document
+///   switch, an undo elsewhere). The text is replaced and its undo history is
+///   discarded, because its offsets describe the old text.
+/// - **Different text in answer to an editor write** (a host that normalizes
+///   what it stores, for example trimming trailing spaces): applied as an
+///   ordinary undoable edit, so undo history is kept. Undoing it brings the
+///   un-normalized text back, which such a host will normalize again.
+///
+/// So a host should apply a written value before its next render, or mirror
+/// `.onTextChange` into its model as well. A host that normalizes the text
+/// should do so in the binding's setter, not only in `.onTextChange`.
+///
 /// ## Setting Language and Theme
 ///
 /// Use modifiers or factory methods to configure language and theme:
