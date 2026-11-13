@@ -59,6 +59,12 @@ import SwiftUI
 ///   ordinary undoable edit, so undo history is kept. On macOS, undo and redo
 ///   treat the rewrite and the edit it answered as one step, so the text the
 ///   editor arrives at is text the host will store and the two agree.
+///   This needs the host's text to change: if what the host makes of a write
+///   is the text it already holds (it took `abcx`, then trimmed `abcx ` back
+///   to `abcx`), the setter changes nothing, SwiftUI sends no update, and the
+///   editor keeps its own text until its next edit is written. The binding
+///   cannot tell that apart from a host that applies the write later, so the
+///   editor does not revert to the host's text.
 ///
 /// So a host should apply a written value before its next render, or mirror
 /// `.onTextChange` into its model as well. A host that normalizes the text

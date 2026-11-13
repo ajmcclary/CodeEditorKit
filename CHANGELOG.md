@@ -5,6 +5,19 @@ All notable changes to CodeEditorKit are documented in this file.
 Entries dated before the 2026-07-25 rename deliberately keep the package's
 former name, `CodeEditorPlugin` — they record what shipped at the time.
 
+## [Unreleased]
+
+### Documentation
+
+- **The text binding contract states where a normalizing host's rewrite
+  cannot reach the editor.** If what the host makes of a write is the text
+  it already holds (it stored `abcx`, then trimmed `abcx ` back to `abcx`),
+  its setter changes nothing, SwiftUI sends no update, and the editor keeps
+  its own text until its next edit is written. The binding cannot tell this
+  from a host that applies writes later, so the editor does not revert. No
+  behaviour changed; the hosted tests that assumed one debounced write now
+  force the ordering they test.
+
 ## [0.1.0-beta.16] - 2026-11-13
 
 This release remediates the memory-cleanup findings that followed the
