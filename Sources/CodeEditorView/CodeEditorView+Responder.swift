@@ -30,7 +30,10 @@ extension CodeEditorView {
 
     override open func resignFirstResponder() -> Bool {
         let resigned = super.resignFirstResponder()
-        if resigned { publishEvent(.didResignFirstResponder) }
+        if resigned {
+            hideCompletionPopup()
+            publishEvent(.didResignFirstResponder)
+        }
         return resigned
     }
 }

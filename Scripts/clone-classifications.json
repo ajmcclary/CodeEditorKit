@@ -251,10 +251,6 @@
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorLayout/CompletionCellComponents.swift:299 and Sources/CodeEditorLayout/CompletionCellComponents.swift:417 remain explicit to preserve framework-specific types and call sites."
     },
-    "cba0230dad755714": {
-      "classification": "platform-contract",
-      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorView+Responder.swift:5 and Sources/CodeEditorView/CodeEditorView+Responder.swift:21 remain explicit to preserve framework-specific types and call sites."
-    },
     "cc598cd307066387": {
       "classification": "platform-contract",
       "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/Layout/MinimapView.swift:459 and Sources/CodeEditorView/Layout/MinimapView.swift:593 remain explicit to preserve framework-specific types and call sites."
@@ -294,6 +290,10 @@
     "e242e3085ff89b42": {
       "classification": "semantic-schema",
       "rationale": "Declarative schema or symmetric domain-contract code at Sources/CodeEditorLSP/LSPManager.swift:296 and Sources/CodeEditorLSP/LSPManager.swift:373 remains explicit to preserve wire, grammar, model, token, or public semantic meaning."
+    },
+    "e8ae251fcea959b2": {
+      "classification": "platform-contract",
+      "rationale": "Parallel native-platform or UI lifecycle contracts at Sources/CodeEditorView/CodeEditorView+Responder.swift:5 and Sources/CodeEditorView/CodeEditorView+Responder.swift:24 remain explicit to preserve framework-specific types and call sites."
     },
     "eb5984d30a98f911": {
       "classification": "platform-contract",
