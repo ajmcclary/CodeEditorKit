@@ -12,7 +12,7 @@ extension LanguageDescriptor {
             stringDelimiters: ["\"", "'"],
             highlightingRules: [
                 .init(#"#[a-fA-F0-9]{3,6}\b"#, .number, priority: 8),
-                .init(#"\b\d+\.?\d*(px|em|rem|%|vh|vw|pt|pc|in|cm|mm|ex|ch|vmin|vmax|deg|rad|grad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx)?\b"#, .number, priority: 8),
+                .init(#"\b\d++(?:\.\d*+)?(px|em|rem|%|vh|vw|pt|pc|in|cm|mm|ex|ch|vmin|vmax|deg|rad|grad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx)?\b"#, .number, priority: 8),
                 .init(#"[.#]?[a-zA-Z_][\w-]*(?=\s*\{)"#, .type, priority: 7),
                 .init(#"[a-zA-Z-]+(?=\s*:)"#, .property, priority: 6)
             ],

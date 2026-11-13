@@ -54,7 +54,7 @@ extension RegexSyntaxHighlighter {
         }
 
         /// Add number patterns for the language
-        func addNumbers(pattern: String = #"\b\d+\.?\d*\b"#) -> Self {
+        func addNumbers(pattern: String = #"\b\d++(?:\.\d*+)?\b"#) -> Self {
             var newRules = rules
             if let rule = Self.rule(pattern, .number, 8) {
                 newRules.append(rule)

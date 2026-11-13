@@ -365,23 +365,24 @@ public enum SharedContextAnalyzer {
 
     private static func extractTargetType(from text: String) -> String? {
         // Simple heuristic to extract the object before the dot
-        let pattern = #"(\w+)\s*\.\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(match.range(at: 1), in: text) {
-            return String(text[range])
-        }
-        return nil
+        trailingCapture(of: #"(\w+)\s*\.\s*$"#, in: text)
     }
 
     private static func extractTargetModule(from text: String) -> String? {
         // Extract the module before ::
-        let pattern = #"([\w:]+)::\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(match.range(at: 1), in: text) {
-            return String(text[range])
+        trailingCapture(of: #"([\w:]+)::\s*$"#, in: text)
+    }
+
+    /// First capture of an end-anchored `pattern`, matched against the tail
+    /// of `text` only: matching the whole document prefix was quadratic in
+    /// a long run of word characters.
+    package static func trailingCapture(of pattern: String, in text: String) -> String? {
+        let tail = String(text.suffix(1_024))
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: tail, range: NSRange(tail.startIndex..., in: tail)),
+              let range = Range(match.range(at: 1), in: tail) else {
+            return nil
         }
-        return nil
+        return String(tail[range])
     }
 }

@@ -136,13 +136,11 @@ public enum CompletionParsingHelpers {
     ///   - pattern: The regex pattern to use
     ///   - text: The text to search in
     /// - Returns: The extracted string, or nil if not found or pattern invalid
+    /// Every pattern here is anchored at the end (`\s*$`), so only the tail
+    /// of the text is matched: matching the whole document was quadratic in
+    /// a long run of word characters.
     private static func extractWithPattern(_ pattern: String, from text: String) -> String? {
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range(at: 1), in: text) else {
-            return nil
-        }
-        return String(text[range])
+        SharedContextAnalyzer.trailingCapture(of: pattern, in: text)
     }
 }
 

@@ -49,10 +49,17 @@ public final class RegexSyntaxHighlighter: Sendable {
     // MARK: - Initialization
 
     public init(defaultLanguage: RegexLanguageDefinition? = nil) {
-        supportedLanguages = Self.createLanguageDefinitions()
-        languageMap = Self.createLanguageMap(from: supportedLanguages)
+        supportedLanguages = Self.sharedLanguageDefinitions
+        languageMap = Self.sharedLanguageMap
         self.defaultLanguage = defaultLanguage
     }
+
+    /// Compiled once per process: the definitions are immutable and
+    /// `NSRegularExpression` is thread-safe, and building them (about 300
+    /// pattern compilations) per instance ran twice per editor on the main
+    /// actor.
+    private static let sharedLanguageDefinitions = createLanguageDefinitions()
+    private static let sharedLanguageMap = createLanguageMap(from: sharedLanguageDefinitions)
 
     // MARK: - Public Methods
 

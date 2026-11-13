@@ -169,7 +169,7 @@ package enum SwiftHighlightingUtilities {
         var tokens: [HighlightedToken] = []
 
         // Simple number pattern matching
-        let numberPattern = #"\b\d+\.?\d*\b"#
+        let numberPattern = #"\b\d++(?:\.\d*+)?\b"#
         guard let regex = try? NSRegularExpression(pattern: numberPattern) else { return tokens }
 
         let matches = regex.matches(in: source, range: NSRange(location: 0, length: source.utf16.count))

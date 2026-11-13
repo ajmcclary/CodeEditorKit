@@ -120,16 +120,19 @@ extension RegexSyntaxHighlighter {
         return #"(?<![A-Za-z0-9_])("# + escaped + #")(?![A-Za-z0-9_])"#
     }
 
+    // Digit runs are possessive: `\d+\.?\d*` backtracked through every
+    // split of a long digit run followed by a letter (quadratic). Matches
+    // are unchanged.
     private static func numberPattern(for descriptor: LanguageDescriptor) -> String {
         switch descriptor.language {
         case .c, .cpp:
-            #"\b\d+\.?\d*[fFlL]?\b"#
+            #"\b\d++(?:\.\d*+)?[fFlL]?\b"#
 
         case .java:
-            #"\b\d+\.?\d*[fFlLdD]?\b"#
+            #"\b\d++(?:\.\d*+)?[fFlLdD]?\b"#
 
         default:
-            #"\b\d+\.?\d*\b"#
+            #"\b\d++(?:\.\d*+)?\b"#
         }
     }
 
