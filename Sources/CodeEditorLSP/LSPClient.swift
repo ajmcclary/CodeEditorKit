@@ -95,6 +95,13 @@ public final class LSPClient: ObservableObject {
     /// Current connection state
     @Published public private(set) var connectionState: ConnectionState = .disconnected
 
+    /// True once the server went away on its own (process exit, socket
+    /// closed) rather than through `disconnect()`. Nothing restarts it: the
+    /// client then settles in `.disconnected`, and a host that sees this flag
+    /// can offer a restart (`LSPManager.stopLanguageServer(for:)` then
+    /// `startLanguageServer(...)`). Cleared by the next successful connect.
+    @Published public private(set) var serverExitedUnexpectedly = false
+
     /// Server capabilities received during initialization
     @Published public private(set) var serverCapabilities: ServerCapabilities?
 
@@ -240,6 +247,7 @@ public final class LSPClient: ObservableObject {
             )
 
             connectionState = .initialized
+            serverExitedUnexpectedly = false
             logger.info("Successfully connected and initialized LSP server")
         } catch {
             connectionState = .error
@@ -636,6 +644,7 @@ public final class LSPClient: ObservableObject {
             break
         }
         logger.error("LSP connection lost: \(error.localizedDescription)")
+        serverExitedUnexpectedly = true
 
         needsTeardownFlag.withLock { $0 = false }
         jsonRPCSession.failAllPending(with: error)

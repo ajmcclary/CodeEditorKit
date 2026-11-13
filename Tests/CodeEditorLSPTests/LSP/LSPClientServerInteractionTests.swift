@@ -262,4 +262,18 @@ final class LSPClientServerInteractionTests: XCTestCase {
         await waitUntil { await MainActor.run { client.connectionState == .disconnected } }
         XCTAssertEqual(client.connectionState, .disconnected)
     }
+
+    /// Nothing restarts a server that exits; the host must be able to see
+    /// that it did (to offer a restart) after the client settles in
+    /// `.disconnected`, which an ordinary stop also ends in.
+    func testAnUnexpectedServerExitStaysObservable() async throws {
+        let server = ScriptedLSPServerTransport()
+        let client = try await connectedClient(server)
+        XCTAssertFalse(client.serverExitedUnexpectedly)
+
+        await server.simulateServerExit()
+        await waitUntil { await MainActor.run { client.connectionState == .disconnected } }
+
+        XCTAssertTrue(client.serverExitedUnexpectedly)
+    }
 }

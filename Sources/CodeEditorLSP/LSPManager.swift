@@ -75,10 +75,16 @@ import Combine
 ///
 /// ## Error Handling
 ///
-/// The manager provides robust error handling:
-/// - Automatic server restart on crash
+/// The manager provides:
 /// - Request timeout handling
 /// - Graceful degradation when servers are unavailable
+///
+/// A server that crashes or exits is **not** restarted automatically (no
+/// crash loops). Its client fails the requests in flight and settles in
+/// `.disconnected` with `LSPClient.serverExitedUnexpectedly` set, which a
+/// host can observe (or ask for with `serverExitedUnexpectedly(for:)`) to
+/// offer a restart through `stopLanguageServer(for:)` and
+/// `startLanguageServer(...)`.
 ///
 /// - SeeAlso: `LSPClient`, `LanguageServerConfig`, `LSPProtocol`
 @available(macOS 10.15, iOS 13.0, *)
@@ -224,6 +230,12 @@ public final class LSPManager: ObservableObject {
     /// Get LSP client for a language
     /// - Parameter languageId: Language identifier
     /// - Returns: LSP client if available
+    /// Whether the language server for `languageId` went away on its own and
+    /// has not been restarted. Nothing restarts it automatically.
+    public func serverExitedUnexpectedly(for languageId: String) -> Bool {
+        client(for: languageId)?.serverExitedUnexpectedly ?? false
+    }
+
     public func client(for languageId: String) -> LSPClient? {
         clientRegistry.client(for: languageId)
     }
