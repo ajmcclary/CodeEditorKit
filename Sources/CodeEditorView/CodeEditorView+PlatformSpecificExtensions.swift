@@ -187,17 +187,45 @@ extension CodeEditorView {
             // reflects user behavior without forcing the host to wire it up
             // manually. See spec 2026-05-14-completion-ranking-unification.
             completionManager.recordSelection(adapter.model)
+        } else if let model = completionController.presentedItems.first(where: {
+            AnyHashable($0.id) == Self.completionItemIdentifier(item)
+        }) {
+            // The built-in list view reports its own adapter type (which
+            // this module cannot name); find the presented item by id.
+            textToInsert = model.insertText
+            completionManager.recordSelection(model)
         } else {
             // Fallback - use a default or empty string
             textToInsert = ""
         }
 
-        // Insert the completion text if not empty
+        // Replace the word typed since the popup's anchor (e.g. `ba` after
+        // `foo.`) rather than inserting after it.
         if !textToInsert.isEmpty {
-            insertText(textToInsert)
+            let caret = selectedRange.location
+            let anchor = min(completionController.anchorLocation, caret)
+            let typedRange = NSRange(location: anchor, length: caret - anchor)
+            #if canImport(AppKit)
+            insertText(textToInsert, replacementRange: typedRange)
+            #else
+            if let start = position(from: beginningOfDocument, offset: typedRange.location),
+               let end = position(from: start, offset: typedRange.length),
+               let range = textRange(from: start, to: end) {
+                replace(range, withText: textToInsert)
+            } else {
+                insertText(textToInsert)
+            }
+            #endif
         }
 
         // Hide the completion window
         hideCompletionPopup()
+    }
+}
+
+extension CodeEditorView {
+    /// `id` of a completion item view, through an opened existential.
+    private static func completionItemIdentifier(_ item: some CompletionItemView) -> AnyHashable {
+        AnyHashable(item.id)
     }
 }

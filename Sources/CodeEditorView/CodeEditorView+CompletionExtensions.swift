@@ -123,10 +123,28 @@ extension CodeEditorView {
 
     // MARK: - Show Completion Popup
 
-    /// Show completion popup with the given items
-    private func showCompletionPopup(with items: [CompletionItemModel], at position: Int) {
+    /// Show completion popup with the given items. `position` is where the
+    /// request was made; the result arrives after an `await`, so the caret
+    /// may have moved since — the popup is anchored to the word at the
+    /// current caret and filtered by what was typed meanwhile.
+    internal func showCompletionPopup(with items: [CompletionItemModel], at position: Int) {
         // Cancel any existing completion
         hideCompletionPopup()
+
+        let caret = selectedRange.location
+        let anchor = currentWordRange(at: position)?.location ?? position
+        guard selectedRange.length == 0, caret >= anchor else { return }
+        completionController.anchorLocation = anchor
+        completionController.presentedItems = items
+        let visibleItems = completionController.itemsMatching(
+            text: textKitBridge.documentString,
+            caret: caret,
+            selectionLength: 0
+        )
+        guard !visibleItems.isEmpty else {
+            completionController.presentedItems = []
+            return
+        }
 
         // Get completion view controller from delegate or create default
         let completionVC = textDelegate?.textViewCompletionViewController(self) ?? CompletionViewController()
@@ -134,18 +152,38 @@ extension CodeEditorView {
         // Set up completion view controller
         completionViewController = completionVC
         if let modernVC = completionVC as? CompletionViewController {
-            modernVC.completionItems = items
+            modernVC.completionItems = visibleItems
             modernVC.delegate = self
         } else {
             // Handle legacy completion view controllers
             // Modern completion items need to be set through the protocol
         }
 
-        // Position and show completion popup
-        let cursorRect = cursorRectForPosition(position)
+        // Position and show completion popup at the current caret.
+        let cursorRect = cursorRectForPosition(caret)
         showCompletionWindow(with: completionVC, at: cursorRect)
 
         isCompletionActive = true
+    }
+
+    /// Re-filters the popup after the caret moved (typing, deleting,
+    /// clicking) or dismisses it when it no longer applies, so a stale list
+    /// never captures Return or the arrow keys.
+    internal func updateCompletionAfterSelectionChange() {
+        guard isCompletionActive else { return }
+        let selection = selectedRange
+        let items = completionController.itemsMatching(
+            text: textKitBridge.documentString,
+            caret: selection.location,
+            selectionLength: selection.length
+        )
+        guard !items.isEmpty else {
+            hideCompletionPopup()
+            return
+        }
+        if let modernVC = completionViewController as? CompletionViewController {
+            modernVC.completionItems = items
+        }
     }
 
     /// Get cursor rectangle for positioning completion popup, in the view's
@@ -173,6 +211,9 @@ extension CodeEditorView {
             defer: false
         )
 
+        // `close()` would otherwise release the window a second time once
+        // Swift drops its reference: dismissing the popup crashed.
+        window.isReleasedWhenClosed = false
         window.contentViewController = viewController as PlatformViewController
         window.level = .floating
         window.isOpaque = false
@@ -193,6 +234,17 @@ extension CodeEditorView {
 
         completionWindow = window
         window.orderFront(nil)
+
+        // Scrolling moves the text away from the popup: dismiss it.
+        completionController.scrollObserver = NotificationCenter.default.addObserver(
+            forName: NSScrollView.willStartLiveScrollNotification,
+            object: enclosingScrollView,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.hideCompletionPopup()
+            }
+        }
 
         // Announce code completion availability
         announceChange("Code completion suggestions available")

@@ -141,6 +141,7 @@ extension CodeEditorView {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.updateSelectedLineHighlight()
+            self.updateCompletionAfterSelectionChange()
             self.publishEvent(.textSelectionDidChange(currentSelection))
         }
     }
