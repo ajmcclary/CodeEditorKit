@@ -141,28 +141,14 @@ public final class LSPManager: ObservableObject {
         memoryMonitor.registerCleanupHandler(
             identifier: cleanupIdentifier,
             priority: .normal
-        ) { @MainActor [weak self] in
-            guard let self else {
-                return CleanupResult(memoryFreedMB: 0, description: "LSPManager deallocated")
-            }
-
-            let beforeClientCount = self.activeClients.count
-            let beforeDocumentCount = self.documentManager.getAllDocuments().count
-
-            // Cleanup through components
-            self.clientRegistry.cleanup()
-            self.documentManager.cleanup()
-
-            // Clear published state
-            self.activeClients.removeAll()
-            self.serverConfigurations.removeAll()
-
-            // Estimate memory freed (rough estimate)
-            let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1
-
-            return CleanupResult(
-                memoryFreedMB: estimatedMemoryMB,
-                description: "Disconnected \(beforeClientCount) LSP clients and cleared \(beforeDocumentCount) documents"
+        ) { @MainActor in
+            // Nothing here is a cache. A pass is routine (the monitor runs one
+            // whenever the host process is over its threshold), and it used
+            // to disconnect every language server, forget the open documents
+            // and drop the server configurations, so nothing reconnected.
+            CleanupResult(
+                memoryFreedMB: 0,
+                description: "Language servers, configurations and open documents are live state"
             )
         }
     }

@@ -319,31 +319,11 @@ public final class IOSLargeFileOptimizer: ObservableObject {
     }
 
     private func performAggressiveCleanup() async -> CleanupResult {
-        var freedMemory: Int64 = 0
-
-        // 1. Clear syntax highlighting cache
-        if textView is CodeEditorView {
-            // The syntaxHighlighter might have internal caching mechanisms
-            // but we don't have direct access to clear them from here
-            freedMemory += 5 * 1_048_576 // Estimate 5MB
-        }
-
-        // 2. Clear undo stack
-        textView?.undoManager?.removeAllActions()
-        freedMemory += 2 * 1_048_576 // Estimate 2MB
-
-        // 3. Force layout manager cleanup
-        if let textView {
-            textView.layoutManager.ensureLayout(for: textView.textContainer)
-        }
-        freedMemory += 3 * 1_048_576 // Estimate 3MB
-
-        metrics.memoryReclaimed += freedMemory
-
-        return CleanupResult(
-            memoryFreedMB: Double(freedMemory) / 1_048_576,
-            description: "iOS large file cleanup"
-        )
+        // A pass is routine (the monitor runs one whenever the process is
+        // over its threshold), so nothing the user has may go: this used to
+        // discard the undo history, and to force a TextKit 1 layout pass and
+        // report 10 MB it never freed. Nothing here is a cache.
+        CleanupResult(memoryFreedMB: 0, description: "iOS large file cleanup: nothing to release")
     }
 }
 #endif // canImport(UIKit)

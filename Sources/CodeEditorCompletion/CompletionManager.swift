@@ -382,15 +382,12 @@ public final class CompletionManager {
                 return CleanupResult(memoryFreedMB: 0, description: "CompletionManager deallocated")
             }
 
-            // Clear completion cache
+            // Only the response cache, which the next request refills. A pass
+            // is routine (the monitor runs one whenever the host process is
+            // over its threshold): cancelling the request in flight lost the
+            // completion the user was waiting for.
             let beforeCacheSize = self.responseCache.count
             self.responseCache.clear()
-
-            // Cancel pending requests
-            self.cancelCurrentRequest()
-
-            // Reset statistics
-            self.statistics.reset()
 
             // Estimate memory freed
             let estimatedMemoryMB = Double(beforeCacheSize) * 0.005 // 5KB per cached item estimate

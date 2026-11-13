@@ -41,7 +41,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     private let highlightingActor = HighlightingActor()
 
     /// Pending highlighting requests
-    private var pendingRequests: [String: HighlightingRequest] = [:]
+    private(set) var pendingRequests: [String: HighlightingRequest] = [:]
 
     /// Active tasks for cancellation
     private var activeTasks: [String: Task<Void, Never>] = [:]
@@ -463,26 +463,18 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
                 return CleanupResult(memoryFreedMB: 0, description: "BackgroundSyntaxHighlighter deallocated")
             }
 
-            // Cancel all operations
-            self.cancelAllRequests()
-
-            // Clear cache
+            // Only the result cache, which the next request refills. A pass is
+            // routine; cancelling the requests in flight left the document
+            // unhighlighted until the next edit.
             let beforeCacheSize = self.resultCache.count
             self.resultCache.removeAll()
 
-            // Clear pending requests
-            let beforePendingCount = self.pendingRequests.count
-            self.pendingRequests.removeAll()
-
-            // Reset statistics
-            self.statistics.reset()
-
             // Estimate memory freed
-            let estimatedMemoryMB = Double(beforeCacheSize + beforePendingCount) * 0.01 // 10KB per item estimate
+            let estimatedMemoryMB = Double(beforeCacheSize) * 0.01 // 10KB per item estimate
 
             return CleanupResult(
                 memoryFreedMB: estimatedMemoryMB,
-                description: "Cleared \(beforeCacheSize) cached results and \(beforePendingCount) pending requests"
+                description: "Cleared \(beforeCacheSize) cached results"
             )
         }
     }
