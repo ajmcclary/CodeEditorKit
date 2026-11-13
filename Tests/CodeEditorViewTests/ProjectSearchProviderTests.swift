@@ -86,4 +86,66 @@ struct ProjectSearchProviderTests {
 
         #expect(results.map(\.fileURL.lastPathComponent) == ["Match.swift"])
     }
+
+    private func withFiles(
+        _ files: [String: String],
+        _ body: (PortableProjectSearchAdapter, URL) async throws -> Void
+    ) async throws {
+        let fileManager = FileManager.default
+        let rootURL = fileManager.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try fileManager.createDirectory(at: rootURL, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: rootURL) }
+        var urls: [URL] = []
+        for (name, content) in files {
+            let url = rootURL.appendingPathComponent(name)
+            try content.write(to: url, atomically: true, encoding: .utf8)
+            urls.append(url)
+        }
+        let adapter = PortableProjectSearchAdapter()
+        try await adapter.indexFiles(urls: urls)
+        try await body(adapter, rootURL)
+    }
+
+    @Test("a regex result's matched text is what the regex matched, not the pattern's length")
+    func regexMatchedText() async throws {
+        try await withFiles(["a.txt": "xx fooooo yy\n"]) { adapter, _ in
+            let results = try await adapter.search(query: "fo+", options: ProjectSearchOptions(useRegex: true))
+            #expect(results.map(\.matchedText) == ["fooooo"])
+            #expect(results.map(\.column) == [4])
+        }
+    }
+
+    @Test("plain-text columns are UTF-16 columns, so the matched text lines up after an emoji")
+    func plainTextColumnsAreUTF16() async throws {
+        try await withFiles(["a.txt": "😀 Needle\n"]) { adapter, _ in
+            let results = try await adapter.search(query: "needle", options: .default)
+            #expect(results.map(\.column) == [4])
+            #expect(results.map(\.matchedText) == ["Needle"])
+        }
+    }
+
+    @Test("files larger than the size limit are skipped")
+    func oversizedFilesAreSkipped() async throws {
+        let big = String(repeating: "needle\n", count: 20)
+        try await withFiles(["big.txt": big, "small.txt": "needle\n"]) { adapter, _ in
+            var options = ProjectSearchOptions()
+            options.maxFileSizeBytes = 32
+            let results = try await adapter.search(query: "needle", options: options)
+            #expect(results.map(\.fileURL.lastPathComponent) == ["small.txt"])
+        }
+    }
+
+    @Test("cancelling the calling task cancels the search")
+    func callerCancellationStopsTheSearch() async throws {
+        let line = String(repeating: "haystack ", count: 50) + "\n"
+        let files = Dictionary(uniqueKeysWithValues: (0..<200).map { ("f\($0).txt", String(repeating: line, count: 200)) })
+        try await withFiles(files) { adapter, _ in
+            var options = ProjectSearchOptions()
+            options.maxResults = .max
+            let search = Task { try await adapter.search(query: "haystack", options: options) }
+            search.cancel()
+            let results = try await search.value
+            #expect(results.count < 200 * 200, "the search ran to completion after its caller was cancelled")
+        }
+    }
 }

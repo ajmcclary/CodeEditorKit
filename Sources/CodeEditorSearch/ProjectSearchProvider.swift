@@ -11,17 +11,21 @@ public struct ProjectSearchOptions: Sendable {
     public var useRegex: Bool = false
     public var maxResults: Int = 200
     public var fileExtensions: [String] = []
+    /// Files larger than this are skipped instead of read whole into memory.
+    public var maxFileSizeBytes: Int = 8 * 1_024 * 1_024
 
     public init(
         caseSensitive: Bool = false,
         useRegex: Bool = false,
         maxResults: Int = 200,
-        fileExtensions: [String] = []
+        fileExtensions: [String] = [],
+        maxFileSizeBytes: Int = 8 * 1_024 * 1_024
     ) {
         self.caseSensitive = caseSensitive
         self.useRegex = useRegex
         self.maxResults = maxResults
         self.fileExtensions = fileExtensions
+        self.maxFileSizeBytes = maxFileSizeBytes
     }
 
     public static let `default` = Self()
@@ -189,7 +193,12 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
         locked {
             searchTask = task
         }
-        return await task.value
+        // The scan is detached; cancelling the caller must cancel it too.
+        return await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     nonisolated private static func performSearch(
@@ -204,6 +213,13 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
 
         for fileURL in files {
             guard !Task.isCancelled, results.count < maxResults else { break }
+            if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+               size > options.maxFileSizeBytes {
+                #if canImport(os.log)
+                Self.logger.info("Skipping \(fileURL.path, privacy: .public): \(size) bytes is over the search size limit")
+                #endif
+                continue
+            }
             let content: String
             do {
                 content = try String(contentsOf: fileURL, encoding: .utf8)
@@ -222,13 +238,14 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
                 guard !Task.isCancelled, results.count < maxResults else { break }
                 guard predicate(line) else { continue }
 
-                let column = computeColumn(query: query, options: options, line: line, regex: regex)
-                let matchedText = extractMatchedText(query: query, line: line, column: column)
+                let match = matchRange(query: query, options: options, line: line, regex: regex)
+                // swiftlint:disable:next legacy_objc_type
+                let matchedText = match.map { (line as NSString).substring(with: $0) } ?? query
 
                 results.append(ProjectSearchResult(
                     fileURL: fileURL,
                     lineNumber: idx + 1,
-                    column: column,
+                    column: (match?.location ?? 0) + 1,
                     matchedText: matchedText,
                     contextLine: line.trimmingCharacters(in: .whitespacesAndNewlines)
                 ))
@@ -253,35 +270,20 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
         }
     }
 
-    nonisolated private static func computeColumn(
+    /// The first match in `line` as a UTF-16 range: the regex's own match
+    /// (its length, not the pattern's), or the query found case-insensitively
+    /// on the original line (lowercasing first can change UTF-16 offsets).
+    nonisolated private static func matchRange(
         query: String,
         options: ProjectSearchOptions,
         line: String,
         regex: NSRegularExpression?
-    ) -> Int {
+    ) -> NSRange? {
         if options.useRegex {
-            let range = regex?.firstMatch(in: line, range: NSRange(location: 0, length: line.utf16.count))?.range
-            return (range?.location ?? 0) + 1
+            return regex?.firstMatch(in: line, range: NSRange(location: 0, length: line.utf16.count))?.range
         }
-        let searchLine = options.caseSensitive ? line : line.lowercased()
-        let searchQuery = options.caseSensitive ? query : query.lowercased()
-        if let foundRange = searchLine.range(of: searchQuery) {
-            return searchLine.distance(from: searchLine.startIndex, to: foundRange.lowerBound) + 1
-        }
-        return 1
-    }
-
-    nonisolated private static func extractMatchedText(query: String, line: String, column: Int) -> String {
-        let start = max(0, column - 1)
-        let end = min(line.utf16.count, start + query.utf16.count)
-        if end > start,
-           let startIdx = line.utf16.index(line.utf16.startIndex, offsetBy: start, limitedBy: line.utf16.endIndex),
-           let endIdx = line.utf16.index(startIdx, offsetBy: end - start, limitedBy: line.utf16.endIndex),
-           let stringStart = String.Index(startIdx, within: line),
-           let stringEnd = String.Index(endIdx, within: line) {
-            return String(line[stringStart..<stringEnd])
-        }
-        return query
+        let compareOptions: String.CompareOptions = options.caseSensitive ? [] : [.caseInsensitive]
+        return line.range(of: query, options: compareOptions).map { NSRange($0, in: line) }
     }
 
     public func cancelSearch() {
