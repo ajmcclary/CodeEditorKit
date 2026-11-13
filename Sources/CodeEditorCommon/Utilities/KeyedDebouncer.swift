@@ -31,7 +31,12 @@ public actor KeyedDebouncer<Key: Hashable & Sendable, Value: Sendable> {
                 tasks[key] = nil
             }
         }
-        return try await task.value
+        // Cancelling the caller cancels its delayed operation.
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     /// Keys whose delayed operations have not yet completed or been cancelled.

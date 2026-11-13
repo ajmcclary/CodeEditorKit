@@ -9,7 +9,11 @@ struct KeyedDebouncerTests {
         let first = Task {
             try await debouncer.run(key: "search", delay: .seconds(30)) { 1 }
         }
-        await Task.yield()
+        // `second` must reach the actor after `first` registered; one
+        // `Task.yield()` does not guarantee that under load.
+        while await !debouncer.activeKeys.contains("search") {
+            await Task.yield()
+        }
         let second = Task {
             try await debouncer.run(key: "search", delay: .zero) { 2 }
         }
@@ -18,6 +22,25 @@ struct KeyedDebouncerTests {
             try await first.value
         }
         #expect(try await second.value == 2)
+    }
+
+    @Test("cancelling the caller cancels its pending operation")
+    func callerCancellation() async throws {
+        let debouncer = KeyedDebouncer<String, Int>()
+        let caller = Task {
+            try await debouncer.run(key: "search", delay: .seconds(30)) { 1 }
+        }
+        while await !debouncer.activeKeys.contains("search") {
+            await Task.yield()
+        }
+        let start = ContinuousClock.now
+        caller.cancel()
+
+        await #expect(throws: CancellationError.self) {
+            try await caller.value
+        }
+        #expect(ContinuousClock.now - start < .seconds(5))
+        #expect(await debouncer.activeKeys.isEmpty)
     }
 
     @Test("different keys execute independently")
