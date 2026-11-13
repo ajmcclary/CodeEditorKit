@@ -24,8 +24,13 @@ final class CompletionLearningStore {
     private let entries: LRUCache<String, CompletionFrequencyEntry>
     private var lastContext: CompletionContextModel?
 
-    init(capacity: Int, memoryMonitor: any MemoryMonitoring) {
-        self.entries = LRUCache(capacity: capacity, memoryMonitor: memoryMonitor)
+    /// `memoryMonitor` is not observed. Learned values are the user's state,
+    /// not a cache: a memory cleanup pass (routine, as the monitor runs one
+    /// whenever the host process is over its threshold, and every 5 minutes)
+    /// evicted a quarter of them, and all of them when there were few, so
+    /// the learned order went back to alphabetical. `capacity` bounds them.
+    init(capacity: Int, memoryMonitor _: any MemoryMonitoring) {
+        self.entries = LRUCache(capacity: capacity, memoryMonitor: NoOpMemoryMonitor())
     }
 
     /// Records the context used to scope subsequent accepted items.
@@ -73,8 +78,7 @@ final class CompletionLearningStore {
         entries.removeAll()
     }
 
-    /// Rebinds memory-pressure observation without replacing learned values.
-    func setMemoryMonitor(_ monitor: any MemoryMonitoring) {
-        entries.setMemoryMonitor(monitor)
-    }
+    /// Learned values are never released by memory cleanup (see `init`), so
+    /// there is nothing to rebind.
+    func setMemoryMonitor(_: any MemoryMonitoring) {}
 }

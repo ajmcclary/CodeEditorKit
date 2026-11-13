@@ -74,3 +74,44 @@ struct CompletionMemoryCleanupTests {
         #expect(manager.cacheStatistics.currentSize == 0)
     }
 }
+
+private struct FixedProvider: CompletionProvider {
+    let id = "fixed.provider"
+    let supportedLanguages: [Language] = [.swift]
+
+    @MainActor
+    func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+        let labels = ["alpha", "beta", "gamma", "zeta"]
+        return CompletionResult(items: labels.map { CompletionItemModel(label: $0, kind: .variable) }, context: context)
+    }
+}
+
+/// Learned completion ranking is the user's state, not a cache: a routine
+/// pass (and the unconditional 5-minute one) evicted a quarter of it, all of
+/// it when there were few entries, and the list went back to alphabetical.
+@MainActor
+@Suite("Learned completion ranking through memory cleanup")
+struct CompletionLearningMemoryCleanupTests {
+    private func labels(_ manager: CompletionManager, _ context: CompletionContextModel) async throws -> [String] {
+        manager.clearCache()
+        let result = try await manager.requestCompletions(for: context)
+        return result.items.map(\.label).filter { ["alpha", "beta", "gamma", "zeta"].contains($0) }
+    }
+
+    @Test("the learned order survives one and several passes")
+    func learnedRankingSurvivesCleanup() async throws {
+        let monitor = MemoryMonitor.mock()
+        let manager = CompletionManager(memoryMonitor: monitor)
+        manager.registerProvider(FixedProvider())
+        let context = CompletionContextModel(text: "", cursorPosition: 0, language: .swift)
+        let zeta = try #require(try await manager.requestCompletions(for: context).items.first { $0.label == "zeta" })
+        for _ in 0..<5 { manager.recordSelection(zeta) }
+        #expect(try await labels(manager, context).first == "zeta")
+
+        await monitor.performCleanup()
+        #expect(try await labels(manager, context) == ["zeta", "alpha", "beta", "gamma"])
+
+        for _ in 0..<5 { await monitor.performCleanup() }
+        #expect(try await labels(manager, context) == ["zeta", "alpha", "beta", "gamma"])
+    }
+}
