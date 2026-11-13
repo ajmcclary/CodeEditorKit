@@ -402,7 +402,7 @@ final class AnnotationTests: XCTestCase {
         textView.language = .swift
         let source = "struct A {\n  func f() {\n    a\n    b\n    c\n  }\n\n  func g() {\n    a\n  }\n}\n"
         textView.string = source
-        let deadline = Date().addingTimeInterval(5)
+        let deadline = Date().addingTimeInterval(arrivalTimeout)
         while textView.codeFoldingEngine.foldableRegions.count < 2, Date() < deadline {
             try await Task.sleep(nanoseconds: 50_000_000)
         }

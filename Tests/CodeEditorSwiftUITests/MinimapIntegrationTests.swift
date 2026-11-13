@@ -149,8 +149,8 @@ final class MinimapIntegrationTests: XCTestCase {
         // Test text change
         viewModel.textDidChange("Line 1\nLine 2\nLine 3")
 
-        // Wait a bit for throttled update
-        try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+        // Wait for the throttled update, not a fixed 0.2 s.
+        await waitUntil { viewModel.minimapState.needsRedraw }
 
         // The render info might be populated after the throttled update
         // We can't guarantee exact timing in tests, so just verify the state is consistent

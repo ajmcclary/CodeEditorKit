@@ -6,7 +6,7 @@ import XCTest
 final class IsolatedPerformanceTest: XCTestCase {
     @MainActor
     func testLayoutOperationRecordingStandalone() async throws {
-        let start = CFAbsoluteTimeGetCurrent()
+        let start = CPUTime.process() // CPU seconds: load does not inflate it
 
         // Create a fresh monitor instance
         let performanceMonitor = TextKit2PerformanceMonitor()
@@ -26,16 +26,16 @@ final class IsolatedPerformanceTest: XCTestCase {
         XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.2)
         XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.3, accuracy: 0.001)
 
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let elapsed = CPUTime.process() - start
         // Test completed in \(elapsed)s
 
         // This test should complete in milliseconds
-        XCTAssertLessThan(elapsed, 0.1, "Test took too long: \(elapsed)s")
+        XCTAssertLessThan(elapsed, 0.1, "used \(elapsed) s of CPU; the bound is 0.1 s")
     }
 
     @MainActor
     func testLayoutOperationRecordingWithSharedState() async throws {
-        let start = CFAbsoluteTimeGetCurrent()
+        let start = CPUTime.process() // CPU seconds: load does not inflate it
 
         // Simulate shared state by creating a PerformanceMonitor instance
         let sharedMonitor = PerformanceMonitor()
@@ -48,10 +48,10 @@ final class IsolatedPerformanceTest: XCTestCase {
         performanceMonitor.recordLayoutOperation(duration: 0.1)
         performanceMonitor.recordLayoutOperation(duration: 0.2)
 
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let elapsed = CPUTime.process() - start
         // Test completed in \(elapsed)s
 
         // This test should also complete quickly
-        XCTAssertLessThan(elapsed, 0.1, "Test took too long: \(elapsed)s")
+        XCTAssertLessThan(elapsed, 0.1, "used \(elapsed) s of CPU; the bound is 0.1 s")
     }
 }

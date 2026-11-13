@@ -64,7 +64,9 @@ final class PerformanceRegressionTests: CleanupTestCase {
         // Log performance for debugging
         logger.info("[testAsyncOperationManagerRegressionCheck] Duration: \(duration)s for 50 operations")
 
-        // Allow generous time when running in full suite
+        // Wall time on purpose: the regression this guards is waiting too
+        // long (a debounce that ignores its 1 ms delay), which CPU time
+        // cannot see. 50 waits of 1 ms take ~0.1 s; the bound is 100× that.
         XCTAssertLessThan(duration, 10.0, "Debounce operations took too long: \(duration)s")
     }
 
@@ -84,8 +86,9 @@ final class PerformanceRegressionTests: CleanupTestCase {
         // Log performance for debugging
         logger.info("[testAsyncOperationManagerPerformanceBaseline] Duration: \(duration)s for 200 operations")
 
-        // Use a very forgiving baseline for suite runs to avoid flaky failures
-        let suiteAdjustedBaseline = 15.0 // 15 seconds should be enough even under heavy load
+        // Wall time on purpose, as above: 200 waits of 1 ms take ~0.3 s; the
+        // bound is 50× that.
+        let suiteAdjustedBaseline = 15.0
 
         XCTAssertLessThan(
             duration,
@@ -182,9 +185,8 @@ final class PerformanceRegressionTests: CleanupTestCase {
         textView.language = .swift
         navigator.attach(to: textView)
 
-        let startTime = CFAbsoluteTimeGetCurrent()
-        navigator.updateSymbols()
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        // CPU seconds on this thread: a loaded machine does not inflate it.
+        let duration = CPUTime.onThread { navigator.updateSymbols() }.seconds
 
         XCTAssertLessThan(
             duration,
@@ -197,7 +199,7 @@ final class PerformanceRegressionTests: CleanupTestCase {
 
     @MainActor
     func testMemoryPressureRegressionCheck() async throws {
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.thread() // CPU seconds: load does not inflate them
 
         // Create editors manually instead of using withMultipleEditors to avoid async/throws issues
         var editors: [CodeEditorView] = []
@@ -211,7 +213,7 @@ final class PerformanceRegressionTests: CleanupTestCase {
 
         // Editors will be automatically cleaned up by CleanupTestCase tearDown
 
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        let duration = CPUTime.thread() - startTime
 
         XCTAssertLessThan(
             duration,
@@ -248,7 +250,10 @@ final class PerformanceRegressionTests: CleanupTestCase {
         editor.language = Language.swift
         navigator.attach(to: editor)
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        // Process CPU seconds (the steps hop threads): a loaded machine does
+        // not inflate them. The debounce waits themselves are covered by the
+        // wall-clock checks above.
+        let startTime = CPUTime.process()
 
         // Simulate realistic operations
 
@@ -267,10 +272,9 @@ final class PerformanceRegressionTests: CleanupTestCase {
             }
         }
 
-        let totalDuration = CFAbsoluteTimeGetCurrent() - startTime
+        let totalDuration = CPUTime.process() - startTime
 
-        // Combined operations should complete within reasonable time
-        XCTAssertLessThan(totalDuration, 6.0, "Combined performance scenario took too long: \(totalDuration)s")
+        XCTAssertLessThan(totalDuration, 6.0, "Combined scenario used \(totalDuration) s of CPU; the bound is 6 s")
     }
 
     // MARK: - Optimized Test Regression Checks

@@ -44,7 +44,7 @@ final class MemoryCleanupScopeTests: XCTestCase {
         XCTAssertTrue(window.undoManager?.canUndo ?? false)
 
         editor.string = "func f() {\n  a\n  b\n}\n"
-        let deadline = Date().addingTimeInterval(5)
+        let deadline = Date().addingTimeInterval(arrivalTimeout)
         while editor.codeFoldingEngine.foldableRegions.isEmpty, Date() < deadline {
             try await Task.sleep(nanoseconds: 50_000_000)
         }

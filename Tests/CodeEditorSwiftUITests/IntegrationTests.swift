@@ -12,6 +12,26 @@ import AppKit
 
 @MainActor
 final class IntegrationTests: CleanupTestCase {
+    /// Whether any run of the editor's text carries a foreground colour.
+    private static func hasForegroundColor(_ editor: CodeEditorView) -> Bool {
+        #if canImport(AppKit)
+        guard let textStorage = editor.textStorage else { return false }
+        #else
+        let textStorage = editor.textStorage
+        #endif
+        var found = false
+        textStorage.enumerateAttribute(
+            .foregroundColor,
+            in: NSRange(location: 0, length: textStorage.length)
+        ) { value, _, stop in
+            if value != nil {
+                found = true
+                stop.pointee = true
+            }
+        }
+        return found
+    }
+
     // MARK: - Async Highlighting Integration Tests
 
     func testAsyncHighlightingWithLanguageSwitch() async throws {
@@ -37,8 +57,8 @@ final class IntegrationTests: CleanupTestCase {
         }
         """
 
-        // Wait for highlighting to complete
-        try await Task.sleep(for: .milliseconds(200))
+        // Wait for highlighting to be applied, not a fixed 200 ms.
+        await waitUntil { Self.hasForegroundColor(editor) }
 
         // Verify highlighting was applied
         var hasHighlighting = false
@@ -81,8 +101,8 @@ final class IntegrationTests: CleanupTestCase {
             try await Task.sleep(for: .milliseconds(50))
         }
 
-        // Wait for debounced highlighting to complete
-        try await Task.sleep(for: .milliseconds(500))
+        // Wait for the debounced highlighting, not a fixed 500 ms.
+        await waitUntil { Self.hasForegroundColor(editor) }
 
         // Verify final text is highlighted
         var hasHighlighting = false
@@ -263,8 +283,8 @@ final class IntegrationTests: CleanupTestCase {
         config.display.isLineNumbersEnabled = false
         editor.configuration = config
 
-        // Wait for configuration to apply
-        try await Task.sleep(for: .milliseconds(100))
+        // Wait for the configuration to apply, not a fixed 100 ms.
+        await waitUntil { editor.font?.pointSize == 16 && !editor.isLineNumbersEnabled }
 
         // Verify changes applied
         XCTAssertEqual(editor.font?.pointSize, 16)

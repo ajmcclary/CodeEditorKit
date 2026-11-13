@@ -43,10 +43,9 @@ final class EditorUpdateCostTests: XCTestCase {
         return container
     }
 
+    /// CPU seconds on this thread: a loaded machine does not inflate it.
     private func time(_ body: () -> Void) -> TimeInterval {
-        let start = Date()
-        body()
-        return Date().timeIntervalSince(start)
+        CPUTime.onThread(body).seconds
     }
 
     func testReapplyingTheSameThemeDoesNotRestampTheDocument() {

@@ -143,7 +143,7 @@ final class CodeFoldingEngineLineSpanTests: CleanupTestCase {
     // MARK: - Helpers
 
     private func waitForFoldableRegion(in engine: CodeFoldingEngine) async throws -> FoldableRegion {
-        for _ in 0..<100 {
+        for _ in 0..<600 { // 30 s: a failure to arrive, not a speed check
             if let region = engine.foldableRegions.first {
                 return region
             }

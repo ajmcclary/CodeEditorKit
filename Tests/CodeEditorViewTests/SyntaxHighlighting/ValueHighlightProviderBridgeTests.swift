@@ -98,7 +98,7 @@ struct ValueHighlightProviderBridgeTests {
         #else
         textView.text = "let value = 1"
         #endif
-        try await Task.sleep(for: .milliseconds(1))
+        await drainMainQueue() // the view's deferred post-edit publish
 
         let controller = RangeBasedHighlightingController(textView: textView, language: .swift)
         defer { controller.detach() }

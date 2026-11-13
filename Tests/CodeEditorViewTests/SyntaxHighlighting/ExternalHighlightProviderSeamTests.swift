@@ -79,7 +79,8 @@ struct ExternalHighlightProviderSeamTests {
         // and the injected provider was prepared as the primary provider — the
         // bridge calls `prepare(for:)` on `setUp`.
         #expect(textView.rangeBasedHighlightingStyleDataSourceForTesting != nil)
-        try await Task.sleep(for: .milliseconds(5))
+        // Wait for the preparation, not a fixed 5 ms.
+        await waitUntil { !provider.preparedLanguageIDs.isEmpty }
         #expect(provider.preparedLanguageIDs.isEmpty == false)
     }
 

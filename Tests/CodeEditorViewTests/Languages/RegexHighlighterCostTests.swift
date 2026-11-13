@@ -5,10 +5,9 @@ import Foundation
 import XCTest
 
 final class RegexHighlighterCostTests: XCTestCase {
+    /// CPU seconds on this thread: a loaded machine does not inflate it.
     private func seconds(_ body: () -> Void) -> TimeInterval {
-        let start = Date()
-        body()
-        return Date().timeIntervalSince(start)
+        CPUTime.onThread(body).seconds
     }
 
     func testHighlightersShareCompiledLanguageDefinitions() throws {

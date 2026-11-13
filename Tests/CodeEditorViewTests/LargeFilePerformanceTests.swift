@@ -119,8 +119,14 @@ final class LargeFilePerformanceTests: XCTestCase {
 
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
 
+        // The expectation's timeout used to be the cost bound (2 s of wall
+        // time per pass), which load alone can exceed. Arrival is waited for
+        // generously; the cost is bounded in CPU seconds per pass.
+        var passes = 0
+        let cpuStart = CPUTime.process()
         measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Highlighting complete")
+            passes += 1
 
             Task {
                 await highlighter.highlightImmediately(
@@ -130,14 +136,10 @@ final class LargeFilePerformanceTests: XCTestCase {
                 expectation.fulfill()
             }
 
-            // Platform-specific timeouts for large file highlighting
-            #if canImport(AppKit)
-            // Native macOS needs more time for syntax highlighting
-            wait(for: [expectation], timeout: 2.0)
-            #else
-            wait(for: [expectation], timeout: 1.0)
-            #endif
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
+        let cpuPerPass = (CPUTime.process() - cpuStart) / Double(max(passes, 1))
+        XCTAssertLessThan(cpuPerPass, 2.0, "a pass used \(cpuPerPass) s of CPU; the bound is 2 s")
     }
 
     @MainActor
@@ -153,8 +155,13 @@ final class LargeFilePerformanceTests: XCTestCase {
 
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
 
+        // Arrival waited for generously; cost bounded in CPU per pass (the
+        // timeout used to be the bound).
+        var passes = 0
+        let cpuStart = CPUTime.process()
         measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Highlighting check complete")
+            passes += 1
 
             Task {
                 // This should complete quickly as highlighting should be disabled
@@ -165,8 +172,10 @@ final class LargeFilePerformanceTests: XCTestCase {
                 expectation.fulfill()
             }
 
-            wait(for: [expectation], timeout: 5.0) // Increased timeout for simulator performance
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
+        let cpuPerPass = (CPUTime.process() - cpuStart) / Double(max(passes, 1))
+        XCTAssertLessThan(cpuPerPass, 5.0, "a pass used \(cpuPerPass) s of CPU; the bound is 5 s")
     }
 
     // MARK: - Text Editing Performance Tests
@@ -320,8 +329,13 @@ final class LargeFilePerformanceTests: XCTestCase {
 
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
 
+        // Arrival waited for generously; cost bounded in CPU per pass (the
+        // timeout used to be the bound).
+        var passes = 0
+        let cpuStart = CPUTime.process()
         measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "JSON highlighting complete")
+            passes += 1
 
             Task {
                 await highlighter.highlightImmediately(
@@ -331,8 +345,10 @@ final class LargeFilePerformanceTests: XCTestCase {
                 expectation.fulfill()
             }
 
-            wait(for: [expectation], timeout: 15.0)
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
+        let cpuPerPass = (CPUTime.process() - cpuStart) / Double(max(passes, 1))
+        XCTAssertLessThan(cpuPerPass, 15.0, "a pass used \(cpuPerPass) s of CPU; the bound is 15 s")
     }
 
     // MARK: - Background Highlighting Tests

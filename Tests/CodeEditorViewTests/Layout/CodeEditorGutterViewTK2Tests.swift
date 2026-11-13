@@ -130,7 +130,7 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
         XCTAssertEqual(gutter.lastActiveLineNumber, 1, "Initial selection at offset 0 is line 1")
 
         container.textView.setSelectedRange(NSRange(location: 6, length: 0))
-        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+        spinUntil { gutter.lastActiveLineNumber == 2 } // not a fixed 50 ms
         XCTAssertEqual(gutter.lastActiveLineNumber, 2, "Selection at offset 6 is line 2")
     }
 
@@ -163,13 +163,13 @@ final class LineNumberRulerViewTK2Tests: XCTestCase {
 
         let drain = expectation(description: "drain main queue")
         DispatchQueue.main.async { drain.fulfill() }
-        wait(for: [drain], timeout: 1.0)
+        wait(for: [drain], timeout: arrivalTimeout)
         gutter.needsDisplay = false
 
         container.textView.setSelectedRange(NSRange(location: 5, length: 0))
         let drain2 = expectation(description: "drain after same-line move")
         DispatchQueue.main.async { drain2.fulfill() }
-        wait(for: [drain2], timeout: 1.0)
+        wait(for: [drain2], timeout: arrivalTimeout)
         XCTAssertEqual(gutter.lastActiveLineNumber, 1)
         XCTAssertFalse(gutter.needsDisplay, "Same-line caret move must not dirty the gutter")
     }

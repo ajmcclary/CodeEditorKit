@@ -27,12 +27,12 @@ final class PerformanceStressTests: XCTestCase {
         let largeText = String(repeating: largeLine, count: 1_000) // ~50KB
 
         // Measure time to set text
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.thread() // CPU seconds: load does not inflate them
         editor.text = largeText
-        let setTextTime = CFAbsoluteTimeGetCurrent() - startTime
+        let setTextTime = CPUTime.thread() - startTime
 
         // Should complete in reasonable time
-        XCTAssertLessThan(setTextTime, 1.0, "Setting large text took too long: \(setTextTime)s")
+        XCTAssertLessThan(setTextTime, 1.0, "Setting large text used \(setTextTime) s of CPU; the bound is 1 s")
 
         // Verify text was set correctly
         XCTAssertEqual(editor.text?.count, largeText.count)
@@ -57,12 +57,12 @@ final class PerformanceStressTests: XCTestCase {
         let largeSwiftCode = String(repeating: swiftCode + "\n", count: 50) // ~5KB of Swift
 
         // Measure highlighting time
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.thread() // CPU seconds: load does not inflate them
         let tokens = coordinator.highlight(source: largeSwiftCode, language: .swift)
-        let highlightTime = CFAbsoluteTimeGetCurrent() - startTime
+        let highlightTime = CPUTime.thread() - startTime
 
         // Should complete in reasonable time
-        XCTAssertLessThan(highlightTime, 2.0, "Syntax highlighting took too long: \(highlightTime)s")
+        XCTAssertLessThan(highlightTime, 2.0, "Syntax highlighting used \(highlightTime) s of CPU; the bound is 2 s")
         XCTAssertFalse(tokens.isEmpty, "No tokens generated")
     }
 
@@ -153,17 +153,17 @@ final class PerformanceStressTests: XCTestCase {
 
         // Perform fewer rapid updates to prevent hanging
         let updateCount = 20
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.thread() // CPU seconds: load does not inflate them
 
         for index in 0..<updateCount {
             editor.text = "Update \(index): func test() { return \(index) }"
         }
 
-        let totalTime = CFAbsoluteTimeGetCurrent() - startTime
+        let totalTime = CPUTime.thread() - startTime
         let avgTime = totalTime / Double(updateCount)
 
         // Average update time should be fast
-        XCTAssertLessThan(avgTime, 0.05, "Average update time too slow: \(avgTime * 1_000)ms")
+        XCTAssertLessThan(avgTime, 0.05, "An update used \(avgTime * 1_000) ms of CPU on average; the bound is 50 ms")
     }
 
     // MARK: - Background Processing Tests

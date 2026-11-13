@@ -41,7 +41,7 @@ final class CodeFoldingLineTests: XCTestCase {
     private func waitForRegions(
         in view: CodeEditorView,
         count: Int? = nil,
-        timeout: TimeInterval = 5
+        timeout: TimeInterval = arrivalTimeout
     ) async throws {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
@@ -100,13 +100,13 @@ final class CodeFoldingLineTests: XCTestCase {
         let view = makeEditor("struct A {\n" + String(repeating: function, count: 1_000) + "}\n")
         try await waitForRegions(in: view, count: 1_001, timeout: 20)
 
-        let start = Date()
+        let start = CPUTime.thread() // CPU seconds: load does not inflate it
         var foldable = 0
         for line in 2_000..<2_050 {
             if view.isFoldable(at: line) { foldable += 1 }
             _ = view.isFolded(at: line)
         }
-        let elapsed = Date().timeIntervalSince(start)
+        let elapsed = CPUTime.thread() - start
 
         XCTAssertEqual(foldable, 10)
         // Each query used to copy and walk the document once per region (~28 s).
@@ -194,18 +194,18 @@ final class CodeFoldingLineTests: XCTestCase {
 
     // MARK: - Detection off the main thread
 
-    /// The longest the main thread goes without running its run loop while
-    /// `body` runs, sampled every few milliseconds over `duration`.
+    /// The most CPU the main thread spends in one run-loop turn after `body`,
+    /// sampled every few milliseconds over `duration`. Work done on the main
+    /// thread shows up here; time the thread spends waiting for a core on a
+    /// loaded machine does not (the wall-clock gap between turns did, and
+    /// failed for that alone).
     private func longestMainThreadStall(over duration: TimeInterval, after body: () -> Void) -> TimeInterval {
         body()
         let end = Date().addingTimeInterval(duration)
-        var last = Date()
         var longest: TimeInterval = 0
         while Date() < end {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.002))
-            let now = Date()
-            longest = max(longest, now.timeIntervalSince(last))
-            last = now
+            let turn = CPUTime.onThread { RunLoop.main.run(until: Date().addingTimeInterval(0.002)) }
+            longest = max(longest, turn.seconds)
         }
         return longest
     }
@@ -224,7 +224,7 @@ final class CodeFoldingLineTests: XCTestCase {
             view.insertText("x", replacementRange: NSRange(location: NSNotFound, length: 0))
         }
 
-        XCTAssertLessThan(stall, 0.25, "the main thread stalled \(stall) s after one keystroke")
+        XCTAssertLessThan(stall, 0.25, "one main-thread turn used \(stall) s of CPU after one keystroke")
         try await waitForRegions(in: view, count: 3_001, timeout: 10)
     }
 
@@ -266,8 +266,10 @@ final class CodeFoldingLineTests: XCTestCase {
             view.insertText("\n", replacementRange: NSRange(location: 0, length: 0))
         }
 
-        XCTAssertLessThan(stall, 0.3, "the main thread stalled \(stall) s while the provider ran")
+        XCTAssertLessThan(stall, 0.3, "one main-thread turn used \(stall) s of CPU while the provider ran")
         try await waitForRegions(in: view, count: 3)
+        // The provider sleeps rather than computes, so the thread record, not
+        // the CPU sample, is what catches it running on the main thread.
         XCTAssertFalse(threads.record.isEmpty)
         XCTAssertFalse(threads.record.contains(true), "detection ran on the main thread")
     }
@@ -284,7 +286,8 @@ final class CodeFoldingLineTests: XCTestCase {
         try await Task.sleep(nanoseconds: 260_000_000)
         view.insertText("\n", replacementRange: NSRange(location: 0, length: 0))
         try await waitForRegions(in: view, count: 4)
-        try await Task.sleep(nanoseconds: 600_000_000)
+        // Wait for the final detection to land, not a fixed 600 ms.
+        await waitUntil { (1...20).filter { view.isFoldable(at: $0) } == [2, 3, 9, 15] }
 
         XCTAssertEqual((1...20).filter { view.isFoldable(at: $0) }, [2, 3, 9, 15])
     }

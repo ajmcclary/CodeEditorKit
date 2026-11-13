@@ -229,9 +229,8 @@ struct LineFoldStorageTests {
         }
         storage.updateFolds(from: regions, collapsedIDs: [])
 
-        let start = Date()
-        storage.setCollapsed(regions.map { ($0.id.uuidString, true) })
-        let elapsed = Date().timeIntervalSince(start)
+        // CPU seconds on this thread: a loaded machine does not inflate it.
+        let elapsed = CPUTime.onThread { storage.setCollapsed(regions.map { ($0.id.uuidString, true) }) }.seconds
 
         let folds = storage.folds(in: NSRange(location: 0, length: count * 10))
         #expect(folds.count == count)

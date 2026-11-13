@@ -39,9 +39,19 @@ final class CodeEditorPointerActionTests: XCTestCase {
         window.contentView = hosting
         self.window = window
         hosting.layoutSubtreeIfNeeded()
-        try spin(until: { controller.isAttached }, timeout: 3)
-        // Let SwiftUI install the `.onReceive` subscriptions.
-        spin(for: 0.1)
+        try spin(until: { controller.isAttached }, timeout: 30)
+    }
+
+    /// Emits until a delivery arrives. The `.onReceive` subscriptions are
+    /// installed by a SwiftUI pass after the editor attaches, and an event
+    /// sent before that is dropped; a fixed 0.1 s spin only usually covered
+    /// it. Each emission replaces the last, so one value arrives.
+    private func emitUntilDelivered<Value>(into box: Box<Value>, _ emit: () -> Void) {
+        let deadline = Date().addingTimeInterval(30)
+        while box.values.isEmpty, Date() < deadline {
+            emit()
+            spin(for: 0.05)
+        }
     }
 
     private func spin(for seconds: TimeInterval) {
@@ -68,8 +78,9 @@ final class CodeEditorPointerActionTests: XCTestCase {
             controller: controller
         )
 
-        controller.editorEventBus.emitCommandClick(at: SourcePosition(line: 1, character: 0))
-        spin(for: 0.1)
+        emitUntilDelivered(into: box) {
+            controller.editorEventBus.emitCommandClick(at: SourcePosition(line: 1, character: 0))
+        }
 
         XCTAssertEqual(box.values, [SourcePosition(line: 1, character: 0)])
     }
@@ -86,13 +97,11 @@ final class CodeEditorPointerActionTests: XCTestCase {
             controller: controller
         )
 
-        controller.editorEventBus.emitHover(at: SourcePosition(line: 0, character: 1))
-        // Wait for the delivery rather than a fixed 0.2 s, which a loaded
-        // parallel run overshot; then a little longer for any duplicate.
-        let deadline = Date().addingTimeInterval(3)
-        while box.values.isEmpty, Date() < deadline {
-            spin(for: 0.02)
+        emitUntilDelivered(into: box) {
+            controller.editorEventBus.emitHover(at: SourcePosition(line: 0, character: 1))
         }
+        // A little longer for any duplicate (a negative check: load can
+        // only hide a duplicate, not invent one).
         spin(for: 0.1)
 
         XCTAssertEqual(box.values, [SourcePosition(line: 0, character: 1)])
@@ -110,10 +119,22 @@ final class CodeEditorPointerActionTests: XCTestCase {
             controller: controller
         )
 
+        // Subscribed first, so the pair below is not lost.
+        emitUntilDelivered(into: box) {
+            controller.editorEventBus.emitHover(at: SourcePosition(line: 1, character: 1))
+        }
+        box.values.removeAll()
+
+        // Both in one run-loop turn: the second is certainly inside the
+        // first's 80 ms idle delay (a 5 ms spin between them was not, once
+        // the main thread stalled).
         controller.editorEventBus.emitHover(at: SourcePosition(line: 0, character: 0))
-        spin(for: 0.005)
         controller.editorEventBus.emitHover(at: SourcePosition(line: 1, character: 0))
-        spin(for: 0.4)
+        let deadline = Date().addingTimeInterval(30)
+        while box.values.isEmpty, Date() < deadline {
+            spin(for: 0.02)
+        }
+        spin(for: 0.2) // past the idle delay, for a delivery of the first
 
         XCTAssertEqual(box.values, [SourcePosition(line: 1, character: 0)])
     }

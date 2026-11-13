@@ -21,7 +21,14 @@ final class AsyncHighlightStalenessTests: XCTestCase {
         let dropped = highlighter.droppedStaleResultCount
 
         let pass = Task { await highlighter.highlightImmediately(for: view, language: .swift) }
-        try await Task.sleep(nanoseconds: 20_000_000)
+        // Edit after the pass took its snapshot and before it applies, by
+        // ordering rather than a 20 ms sleep (too short on a loaded machine
+        // for the pass to start, too long on a fast one for it to be still
+        // running). The main actor runs jobs in order: this yield lets the
+        // pass run until its first suspension (its snapshot is taken before
+        // it); its result can only be applied on the main actor, after the
+        // edit below.
+        await Task.yield()
         let storage = try XCTUnwrap(view.textContentStorage?.textStorage)
         storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: "// inserted\n")
         await pass.value

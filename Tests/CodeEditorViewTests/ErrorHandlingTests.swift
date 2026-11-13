@@ -189,12 +189,10 @@ final class ErrorHandlingTests: XCTestCase {
         // Simulate moderately large file (100KB of code)
         let largeCode = String(repeating: "func test\(UUID().uuidString.prefix(8))() { print(\"large file test\") }\n", count: 1_000)
 
-        let startTime = Date()
-        editorView.text = largeCode
-        let loadDuration = Date().timeIntervalSince(startTime)
+        // CPU seconds on this thread: a loaded machine does not inflate it.
+        let loadDuration = CPUTime.onThread { editorView.text = largeCode }.seconds
 
-        // Should load within reasonable time
-        XCTAssertLessThan(loadDuration, 5.0, "Large file loading should be efficient")
+        XCTAssertLessThan(loadDuration, 5.0, "Loading used \(loadDuration) s of CPU; the bound is 5 s")
         XCTAssertEqual(editorView.text?.count, largeCode.count)
 
         // Test editing large file

@@ -18,7 +18,8 @@ struct AsyncSyntaxHighlighterInstrumentationTests {
         editorView.language = .swift
 
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        try? await Task.sleep(for: .milliseconds(20))
+        // Wait for the measurement to be recorded, not a fixed 20 ms.
+        await waitUntil { (ups.generateInsights().metricAnalyses[.syntaxHighlighting]?.count ?? 0) >= 1 }
 
         let insights = ups.generateInsights()
         let analysis = insights.metricAnalyses[.syntaxHighlighting]

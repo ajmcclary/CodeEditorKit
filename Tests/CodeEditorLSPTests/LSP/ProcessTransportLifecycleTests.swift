@@ -15,13 +15,14 @@ final class ProcessTransportLifecycleTests: XCTestCase {
             await collector.append(chunk)
         }
         try await transport.connect()
-        await fulfillment(of: [received], timeout: 5.0)
+        await fulfillment(of: [received], timeout: arrivalTimeout)
 
         let bytes = await collector.bytes
         XCTAssertEqual(String(data: bytes, encoding: .utf8), "eof-check\n")
 
-        // EOF propagation is asynchronous; poll briefly.
-        for _ in 0..<50 where await transport.isConnected {
+        // EOF propagation is asynchronous; poll (a failure to arrive after
+        // 30 s, not a speed check).
+        for _ in 0..<300 where await transport.isConnected {
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         let connected = await transport.isConnected
@@ -37,14 +38,19 @@ final class ProcessTransportLifecycleTests: XCTestCase {
             arguments: ["-c", "exec 0<&-; sleep 30"]
         )
         try await transport.connect()
-        try await Task.sleep(nanoseconds: 300_000_000)
 
         do {
-            // One write may succeed into the pipe buffer before the kernel
-            // reports the closed read end; the second is deterministic.
-            try await transport.send(Data(#"{"probe":1}"#.utf8))
-            try await Task.sleep(nanoseconds: 200_000_000)
-            try await transport.send(Data(#"{"probe":2}"#.utf8))
+            // Writes succeed into the pipe until the child has closed its
+            // read end, which takes as long as the machine takes to start
+            // it (a fixed 300 ms wait plus two sends was not always enough).
+            // Keep sending until the kernel reports it.
+            let deadline = Date().addingTimeInterval(30)
+            var probe = 0
+            while Date() < deadline {
+                probe += 1
+                try await transport.send(Data(#"{"probe":\#(probe)}"#.utf8))
+                try await Task.sleep(nanoseconds: 50_000_000)
+            }
             XCTFail("send into a closed-stdin child should throw")
         } catch let error as LSPTransportError {
             guard case .sendFailed = error else {
@@ -59,8 +65,15 @@ final class ProcessTransportLifecycleTests: XCTestCase {
     func testDisconnectAfterChildAlreadyExitedReturnsPromptly() async throws {
         let transport = ProcessTransport(executablePath: "/usr/bin/true")
         try await transport.connect()
-        try await Task.sleep(nanoseconds: 300_000_000)
+        // Wait for the child to have exited (its EOF), not a fixed 300 ms.
+        let deadline = Date().addingTimeInterval(30)
+        while await transport.isConnected, Date() < deadline {
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
 
+        // Wall time on purpose: the regression is waiting out the 2 s
+        // SIGTERM grace period, which CPU time cannot see; teardown of an
+        // exited child takes milliseconds.
         let start = ProcessInfo.processInfo.systemUptime
         await transport.disconnect()
         XCTAssertLessThan(ProcessInfo.processInfo.systemUptime - start, 1.5)
@@ -86,12 +99,15 @@ final class ProcessTransportLifecycleTests: XCTestCase {
         let send = Task { try await transport.send(payload) }
         try await Task.sleep(nanoseconds: 200_000_000)
 
+        // Wall time on purpose: a blocked actor would wait until the child
+        // (sleeping 30 s) dies, so these bounds tell the two apart with room
+        // for a loaded machine.
         let start = ProcessInfo.processInfo.systemUptime
         _ = await transport.isConnected
-        XCTAssertLessThan(ProcessInfo.processInfo.systemUptime - start, 1.0, "actor blocked by the write")
+        XCTAssertLessThan(ProcessInfo.processInfo.systemUptime - start, 10.0, "actor blocked by the write")
 
         await transport.disconnect()
-        XCTAssertLessThan(ProcessInfo.processInfo.systemUptime - start, 10.0)
+        XCTAssertLessThan(ProcessInfo.processInfo.systemUptime - start, 20.0)
         _ = try? await send.value
     }
 

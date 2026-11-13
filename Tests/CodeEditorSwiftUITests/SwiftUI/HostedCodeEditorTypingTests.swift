@@ -36,6 +36,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         let textView = try host(store, mode: .appLike)
 
         type("hello", into: textView)
+        spin { store.text == "hello" } // the debounced write, not type()'s fixed spin
 
         XCTAssertEqual(textView.string, "hello")
         XCTAssertEqual(store.text, "hello")
@@ -94,7 +95,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
 
         store.interaction.state.cursorPositions = [EditorCursorPosition(line: 3, column: 3)]
         store.tick += 1
-        spin(for: 0.2)
+        spin { textView.selectedRange() == NSRange(location: 10, length: 0) }
 
         XCTAssertEqual(textView.selectedRange(), NSRange(location: 10, length: 0))
     }
@@ -165,8 +166,9 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.setSelectedRange(NSRange(location: 3, length: 0))
         spin(for: 0.05)
 
+        // Same run-loop turn: certainly inside the 100 ms debounce (a 10 ms
+        // spin between them was not, once the main thread stalled).
         textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
-        spin(for: 0.01)
         store.lineNumbers.toggle()
         spin { store.text == "abcX" }
 
@@ -180,8 +182,8 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.setSelectedRange(NSRange(location: 3, length: 0))
         spin(for: 0.05)
 
+        // Same run-loop turn: certainly inside the debounce.
         textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
-        spin(for: 0.01)
         store.showsEditor = false
         spin { store.text == "abcX" }
 
@@ -418,7 +420,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
     func run<T>(_ operation: @escaping @MainActor () async -> T) -> T? {
         var result: T?
         Task { @MainActor in result = await operation() }
-        let deadline = Date().addingTimeInterval(10)
+        let deadline = Date().addingTimeInterval(arrivalTimeout)
         while result == nil, Date() < deadline {
             spin(for: 0.02)
         }
@@ -439,7 +441,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         window.contentView = hosting
         self.window = window
         hosting.layoutSubtreeIfNeeded()
-        let deadline = Date().addingTimeInterval(3)
+        let deadline = Date().addingTimeInterval(arrivalTimeout)
         while Self.findContainer(in: hosting) == nil, Date() < deadline {
             spin(for: 0.02)
         }
@@ -475,7 +477,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
     /// SwiftUI update, editor apply) takes longer on a loaded machine than a
     /// fixed spin allows. The timeout only stops a hang; the assertions that
     /// follow report what was reached.
-    func spin(until condition: () -> Bool, timeout: TimeInterval = 10) {
+    func spin(until condition: () -> Bool, timeout: TimeInterval = arrivalTimeout) {
         let deadline = Date().addingTimeInterval(timeout)
         while !condition(), Date() < deadline {
             spin(for: 0.02)

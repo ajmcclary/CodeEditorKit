@@ -82,13 +82,13 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         editorView.language = .swift
 
         // Single run instead of multiple
-        let start = CFAbsoluteTimeGetCurrent()
+        let start = CPUTime.process()
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let elapsed = CPUTime.process() - start // CPU seconds: load does not inflate it
 
         logger.info("Small file highlighting: \(String(format: "%.3f", elapsed))s")
 
-        XCTAssertLessThan(elapsed, 2.0, "Small file should highlight in less than 2 seconds")
+        XCTAssertLessThan(elapsed, 2.0, "Small file used \(elapsed) s of CPU; the bound is 2 s")
     }
 
     func testSwiftHighlightingMediumFile() async throws {
@@ -99,12 +99,12 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         editorView.text = code
         editorView.language = .swift
 
-        let start = CFAbsoluteTimeGetCurrent()
+        let start = CPUTime.process()
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let elapsed = CPUTime.process() - start // CPU seconds: load does not inflate it
 
         logger.info("Medium file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 3.0, "Medium file should highlight in less than 3 seconds")
+        XCTAssertLessThan(elapsed, 3.0, "Medium file used \(elapsed) s of CPU; the bound is 3 s")
     }
 
     func testSwiftHighlightingLargeFile() async throws {
@@ -115,12 +115,12 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         editorView.text = code
         editorView.language = .swift
 
-        let start = CFAbsoluteTimeGetCurrent()
+        let start = CPUTime.process()
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let elapsed = CPUTime.process() - start // CPU seconds: load does not inflate it
 
         logger.info("Large file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 5.0, "Large file should highlight in less than 5 seconds")
+        XCTAssertLessThan(elapsed, 5.0, "Large file used \(elapsed) s of CPU; the bound is 5 s")
     }
 
     // MARK: - JSON Highlighting Benchmarks
@@ -133,12 +133,12 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         editorView.text = json
         editorView.language = .json
 
-        let start = CFAbsoluteTimeGetCurrent()
+        let start = CPUTime.process()
         await highlighter.highlightImmediately(for: editorView, language: .json)
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let elapsed = CPUTime.process() - start // CPU seconds: load does not inflate it
 
         logger.info("JSON small file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 3.0, "JSON small file should highlight quickly")
+        XCTAssertLessThan(elapsed, 3.0, "JSON small file used \(elapsed) s of CPU; the bound is 3 s")
     }
 
     func testJSONHighlightingLargeFile() async throws {
@@ -149,12 +149,12 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         editorView.text = json
         editorView.language = .json
 
-        let start = CFAbsoluteTimeGetCurrent()
+        let start = CPUTime.process()
         await highlighter.highlightImmediately(for: editorView, language: .json)
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
+        let elapsed = CPUTime.process() - start // CPU seconds: load does not inflate it
 
         logger.info("JSON large file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 5.0, "JSON large file should highlight in reasonable time")
+        XCTAssertLessThan(elapsed, 5.0, "JSON large file used \(elapsed) s of CPU; the bound is 5 s")
     }
 
     // Memory-usage, background-highlighting, incremental, and

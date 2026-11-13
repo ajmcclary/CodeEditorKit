@@ -13,7 +13,8 @@ struct BackgroundProcessorCancellationTests {
         let processor = BackgroundProcessor(value: 1)
         let slow = Task {
             try await processor.processValue { value -> Int in
-                try await Task.sleep(nanoseconds: 2_000_000_000)
+                // Long enough that only the cancellation ends it, on any machine.
+                try await Task.sleep(for: .seconds(60))
                 return value
             }
         }
@@ -23,7 +24,11 @@ struct BackgroundProcessorCancellationTests {
                 return value
             }
         }
-        try await Task.sleep(nanoseconds: 50_000_000)
+        // Wait for the operations to be under way, not a fixed 50 ms.
+        let deadline = Date().addingTimeInterval(30)
+        while await !processor.hasPendingWork, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
         #expect(await processor.hasPendingWork)
 
         await processor.cancelPendingOperations()

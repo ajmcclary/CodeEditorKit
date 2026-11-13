@@ -235,8 +235,8 @@ final class CodeEditorContainerViewTests: XCTestCase {
             userInfo: userInfo
         )
 
-        // Wait for layout
-        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
+        // Wait for the inset to be adjusted, not a fixed time.
+        spinUntil { containerView.textView.contentInset.bottom > 0 }
 
         // Content inset should be adjusted
         let contentInset = containerView.textView.contentInset

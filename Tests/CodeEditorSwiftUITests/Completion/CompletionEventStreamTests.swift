@@ -122,7 +122,7 @@ final class CompletionEventStreamTests: XCTestCase {
     static func awaitEvents(
         _ count: Int,
         from stream: AsyncStream<CompletionEvent>,
-        timeout seconds: TimeInterval = 2
+        timeout seconds: TimeInterval = arrivalTimeout // a failure to arrive, not a speed check
     ) async throws -> [CompletionEvent] {
         try await withThrowingTaskGroup(of: [CompletionEvent].self) { group in
             group.addTask {
@@ -272,10 +272,7 @@ final class CompletionEventStreamTests: XCTestCase {
         // Allow onTermination to run. The closure is dispatched off the lock;
         // a single yield is enough on the cooperative pool, but loop a few
         // times to keep the test robust under load.
-        for _ in 0..<5 {
-            await Task.yield()
-            if manager.testOnlyBroadcaster.subscriberCount == 0 { break }
-        }
+        await waitUntil { manager.testOnlyBroadcaster.subscriberCount == 0 }
 
         XCTAssertEqual(manager.testOnlyBroadcaster.subscriberCount, 0, "Dropping the stream must remove the continuation.")
 
@@ -313,7 +310,7 @@ final class CompletionEventStreamTests: XCTestCase {
             return collected
         }
         let timeout = Task<Void, Never> {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            try? await Task.sleep(for: .seconds(arrivalTimeout)) // a hang guard
             drainTask.cancel()
         }
         let drained = await drainTask.value

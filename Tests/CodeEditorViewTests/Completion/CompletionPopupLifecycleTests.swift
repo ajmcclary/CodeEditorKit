@@ -83,7 +83,7 @@ final class CompletionPopupLifecycleTests: XCTestCase {
         view.showCompletionPopup(with: items, at: 4)
 
         view.setSelectedRange(NSRange(location: 1, length: 0))
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        spinUntil { !view.isCompletionActive } // not a fixed 50 ms
 
         XCTAssertFalse(view.isCompletionActive)
     }

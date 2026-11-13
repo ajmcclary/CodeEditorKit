@@ -27,15 +27,15 @@ final class SyntaxHighlightingPerformanceOptimizationTests: XCTestCase {
         // Plain text should return immediately without processing
         let plainText = String(repeating: "This is plain text. ", count: 1_000)
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
         let tokens = await optimizedCoordinator.highlight(
             text: plainText,
             language: .plainText
         )
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        let duration = CPUTime.process() - startTime
 
         XCTAssertTrue(tokens.isEmpty, "Plain text should not have any tokens")
-        XCTAssertLessThan(duration, 0.01, "Plain text should complete in <10ms, took \(duration * 1_000)ms")
+        XCTAssertLessThan(duration, 0.01, "Plain text should complete in <10ms, used \(duration * 1_000) ms of CPU")
     }
 
     // MARK: - Cache Performance
@@ -58,15 +58,15 @@ final class SyntaxHighlightingPerformanceOptimizationTests: XCTestCase {
         XCTAssertFalse(firstTokens.isEmpty)
 
         // Second call - should be cache hit
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
         let cachedTokens = await optimizedCoordinator.highlight(
             text: swiftCode,
             language: .swift
         )
-        let cacheHitDuration = CFAbsoluteTimeGetCurrent() - startTime
+        let cacheHitDuration = CPUTime.process() - startTime
 
         XCTAssertEqual(firstTokens.count, cachedTokens.count)
-        XCTAssertLessThan(cacheHitDuration, 0.1, "Cache hit should complete in <100ms, took \(cacheHitDuration * 1_000)ms")
+        XCTAssertLessThan(cacheHitDuration, 0.1, "Cache hit should complete in <100ms, used \(cacheHitDuration * 1_000) ms of CPU")
     }
 
     // MARK: - Viewport Optimization
@@ -80,16 +80,16 @@ final class SyntaxHighlightingPerformanceOptimizationTests: XCTestCase {
         // Define visible viewport (lines 100-150)
         let visibleRange = NSRange(location: 2_000, length: 1_000)
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
         let tokens = await optimizedCoordinator.highlight(
             text: largeCode,
             language: .swift,
             visibleRange: visibleRange
         )
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        let duration = CPUTime.process() - startTime
 
         XCTAssertFalse(tokens.isEmpty)
-        XCTAssertLessThan(duration, 0.5, "Viewport highlighting should complete in <500ms, took \(duration * 1_000)ms")
+        XCTAssertLessThan(duration, 0.5, "Viewport highlighting should complete in <500ms, used \(duration * 1_000) ms of CPU")
 
         // Verify tokens are only for viewport area
         let maxTokenLocation = tokens.map { NSMaxRange($0.range) }.max() ?? 0
@@ -108,15 +108,15 @@ final class SyntaxHighlightingPerformanceOptimizationTests: XCTestCase {
         // Generate medium-sized file that will be chunked
         let mediumCode = generateLargeSwiftFile(lines: 200)
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
         let tokens = await optimizedCoordinator.highlight(
             text: mediumCode,
             language: .swift
         )
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        let duration = CPUTime.process() - startTime
 
         XCTAssertFalse(tokens.isEmpty)
-        XCTAssertLessThan(duration, 2.0, "Chunked highlighting should complete in <2000ms, took \(duration * 1_000)ms")
+        XCTAssertLessThan(duration, 2.0, "Chunked highlighting should complete in <2000ms, used \(duration * 1_000) ms of CPU")
     }
 
     // MARK: - Circuit Breaker
@@ -179,12 +179,12 @@ final class SyntaxHighlightingPerformanceOptimizationTests: XCTestCase {
         let (_, _, coordinator) = createTestInstances()
 
         // Test that small files complete quickly
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
         _ = await coordinator.highlight(
             text: smallCode,
             language: .swift
         )
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        let duration = CPUTime.process() - startTime
 
         // Should complete in under 200ms
         XCTAssertLessThan(duration, 0.5, "Small file highlighting should complete quickly")
@@ -198,12 +198,12 @@ final class SyntaxHighlightingPerformanceOptimizationTests: XCTestCase {
         _ = await optimizedCoordinator.highlight(text: code, language: .swift)
 
         // Test cache hit performance
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
         _ = await optimizedCoordinator.highlight(
             text: code,
             language: .swift
         )
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        let duration = CPUTime.process() - startTime
 
         // Cache hits should be very fast (under 50ms)
         XCTAssertLessThan(duration, 0.1, "Cache hit should complete very quickly")

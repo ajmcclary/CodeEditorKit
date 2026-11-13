@@ -399,7 +399,7 @@ final class CompletionSystemTests: XCTestCase {
                     XCTFail("Completion request failed: \(error)")
                 }
             }
-            wait(for: [expectation], timeout: 1.0)
+            wait(for: [expectation], timeout: arrivalTimeout) // a hang guard; measure reports the cost
         }
     }
 }

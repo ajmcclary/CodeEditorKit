@@ -55,11 +55,7 @@ struct EditorControllerCompletionTests {
         // `await`s (cache check → fetchResultsFromProviders → withTaskGroup
         // → MainActor hop into provider.completions). Yield repeatedly to
         // let the chain settle rather than relying on a wall-clock guess.
-        for _ in 0..<20 {
-            await Task.yield()
-            if provider.invocationCount >= 1 { break }
-            try await Task.sleep(for: .milliseconds(10))
-        }
+        await waitUntil { provider.invocationCount >= 1 } // it was 0.2 s at most
 
         #expect(provider.invocationCount >= 1)
     }
@@ -90,11 +86,7 @@ struct EditorControllerCompletionTests {
         let before = controller.completionStatistics.totalRequests
         controller.requestCompletion(triggerKind: .manual)
 
-        for _ in 0..<20 {
-            await Task.yield()
-            if controller.completionStatistics.totalRequests > before { break }
-            try await Task.sleep(for: .milliseconds(10))
-        }
+        await waitUntil { controller.completionStatistics.totalRequests > before } // it was 0.2 s at most
 
         #expect(controller.completionStatistics.totalRequests > before)
     }

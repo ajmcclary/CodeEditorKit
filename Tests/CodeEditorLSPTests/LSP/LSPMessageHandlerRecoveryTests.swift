@@ -55,8 +55,9 @@ final class LSPMessageHandlerRecoveryTests: XCTestCase {
 
         await handler.processIncomingData(frame(body: first) + frame(body: second))
 
-        // Wait for the dispatched-Task notifications to land in the inbox.
-        try await Task.sleep(for: .milliseconds(50))
+        // Wait for the dispatched-Task notifications to land in the inbox,
+        // not a fixed 50 ms.
+        await waitUntil { await inbox.notifications.count >= 2 }
 
         let notifications = await inbox.notifications
         XCTAssertEqual(notifications.map(\.0), ["window/logMessage", "window/logMessage"])
@@ -75,7 +76,7 @@ final class LSPMessageHandlerRecoveryTests: XCTestCase {
 
         await handler.processIncomingData(stream)
 
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { await inbox.notifications.count >= 1 }
 
         let notifications = await inbox.notifications
         XCTAssertEqual(notifications.count, 1, "Subsequent well-formed message must survive bad framing on the head")
@@ -96,7 +97,7 @@ final class LSPMessageHandlerRecoveryTests: XCTestCase {
 
         await handler.processIncomingData(stream)
 
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { await inbox.notifications.count >= 1 }
 
         let notifications = await inbox.notifications
         XCTAssertEqual(notifications.count, 1, "Non-UTF-8 header bytes must not nuke pending messages")
@@ -113,7 +114,7 @@ final class LSPMessageHandlerRecoveryTests: XCTestCase {
         let response = #"{"jsonrpc":"2.0","id":"abc-123","result":{"ok":true}}"#
         await handler.processIncomingData(frame(body: response))
 
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { await inbox.responses.count >= 1 }
 
         let responses = await inbox.responses
         XCTAssertEqual(responses.count, 1, "Server response with string ID must route to the response callback")
@@ -131,7 +132,7 @@ final class LSPMessageHandlerRecoveryTests: XCTestCase {
         let response = #"{"jsonrpc":"2.0","id":"42","result":{}}"#
         await handler.processIncomingData(frame(body: response))
 
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { await inbox.responses.count >= 1 }
 
         let responses = await inbox.responses
         XCTAssertEqual(responses.first?.0, .string("42"))
@@ -156,7 +157,7 @@ final class LSPMessageHandlerRecoveryTests: XCTestCase {
         let goodBody = #"{"jsonrpc":"2.0","method":"window/logMessage","params":{"type":1,"message":"after"}}"#
         await handler.processIncomingData(frame(body: goodBody))
 
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { await inbox.notifications.count >= 1 }
 
         let notificationsAfter = await inbox.notifications
         XCTAssertEqual(notificationsAfter.count, 1)

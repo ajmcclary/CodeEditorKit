@@ -275,7 +275,7 @@ final class ConfigurationEffectTests: XCTestCase {
         let storage = try XCTUnwrap(view.textContentStorage?.textStorage)
 
         // Detection runs asynchronously.
-        let deadline = Date().addingTimeInterval(5)
+        let deadline = Date().addingTimeInterval(arrivalTimeout)
         while storage.attribute(.link, at: 6, effectiveRange: nil) == nil, Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.05))
         }

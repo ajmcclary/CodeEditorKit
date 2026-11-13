@@ -152,8 +152,10 @@ final class LSPRetryTests: XCTestCase {
             // Expected to fail
             let elapsedTime = Date().timeIntervalSince(startTime)
 
-            // The actual retry delays may not apply if the failure happens during path resolution
-            // or other early checks. Just verify it completed in a reasonable time.
+            // Wall time on purpose (the retries wait; CPU time cannot see
+            // that): two retries of 0.1 s and 0.2 s, or none if the failure
+            // is early. A retry with the default delays (1 s, 2 s, 4 s) would
+            // pass 2 s.
             XCTAssertLessThanOrEqual(elapsedTime, 2.0)
 
             // Verify the error is what we expect
@@ -188,7 +190,8 @@ final class LSPRetryTests: XCTestCase {
             // Expected to fail
             let elapsedTime = Date().timeIntervalSince(startTime)
 
-            // Should fail immediately with no retries
+            // Should fail immediately with no retries. Wall time on purpose:
+            // a retry would wait at least the default 1 s first delay.
             XCTAssertLessThanOrEqual(elapsedTime, 1.0)
         }
     }
@@ -219,8 +222,11 @@ final class LSPRetryTests: XCTestCase {
             // Expected to fail
             let elapsedTime = Date().timeIntervalSince(startTime)
 
-            // Should fail immediately due to override
-            XCTAssertLessThanOrEqual(elapsedTime, 1.0)
+            // Should fail immediately due to override. Wall time on purpose:
+            // the conservative configuration would wait 2 s before its first
+            // retry, so a bound just under that tells them apart with the
+            // most room for a loaded machine.
+            XCTAssertLessThan(elapsedTime, LSPRetryConfiguration.conservative.initialDelay)
         }
     }
 }

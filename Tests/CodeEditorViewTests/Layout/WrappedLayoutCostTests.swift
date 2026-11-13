@@ -43,12 +43,12 @@ final class WrappedLayoutCostTests: XCTestCase {
     func testALayoutPassAtAnUnchangedWidthIsCheap() {
         let container = makeWrappedContainer(lines: 20_000)
 
-        let start = Date()
+        let start = CPUTime.thread() // CPU seconds: load does not inflate it
         for _ in 0..<5 {
             container.needsLayout = true
             container.layoutSubtreeIfNeeded()
         }
-        let elapsed = Date().timeIntervalSince(start)
+        let elapsed = CPUTime.thread() - start
 
         // Each pass used to cost ~0.7 s here (full invalidate + layout).
         XCTAssertLessThan(elapsed, 1, "5 layout passes took \(elapsed) s")
@@ -57,9 +57,9 @@ final class WrappedLayoutCostTests: XCTestCase {
     func testReapplyingConfigurationIsCheap() {
         let container = makeWrappedContainer(lines: 20_000)
 
-        let start = Date()
+        let start = CPUTime.thread()
         for _ in 0..<3 { container.applyConfiguration() }
-        let elapsed = Date().timeIntervalSince(start)
+        let elapsed = CPUTime.thread() - start
 
         XCTAssertLessThan(elapsed, 1, "3 configuration applications took \(elapsed) s")
     }

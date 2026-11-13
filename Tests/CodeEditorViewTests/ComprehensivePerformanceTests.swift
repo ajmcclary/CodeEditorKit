@@ -90,8 +90,9 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
         // Generate same candidates for fair comparison
         let candidates = (0..<10_000).map { "function\($0)WithLongName" }
 
-        // Since measure expects synchronous code, we'll measure async work differently
-        let startTime = CFAbsoluteTimeGetCurrent()
+        // Process CPU seconds, summed over the matcher's concurrent chunks:
+        // a loaded machine stretches wall time but not this.
+        let startTime = CPUTime.process()
 
         // Test same patterns as original test
         let patterns = ["func", "with", "name", "f100", "fwln"]
@@ -100,11 +101,11 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
             XCTAssertFalse(results.isEmpty)
         }
 
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        let duration = CPUTime.process() - startTime
         #if canImport(os)
-        logger.info("Fuzzy matcher performance: \(duration, privacy: .public)s")
+        logger.info("Fuzzy matcher performance: \(duration, privacy: .public)s of CPU")
         #endif
-        XCTAssertLessThan(duration, 5.0, "Fuzzy matching should complete within 5 seconds")
+        XCTAssertLessThan(duration, 5.0, "Fuzzy matching used \(duration) s of CPU; the bound is 5 s")
     }
 
     @MainActor
@@ -164,7 +165,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
 
         navigator.updateSymbols()
 
-        for _ in 0..<30 {
+        for _ in 0..<120 { // 30 s: a failure to arrive, not a speed check
             if !navigator.symbols.isEmpty {
                 return
             }
@@ -336,7 +337,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
                 }
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 5.0)
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
     }
 
@@ -428,7 +429,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
                 // Results might be empty if the regex implementation has issues, but that's OK for performance test
                 regexExpectation.fulfill()
             }
-            wait(for: [searchExpectation, regexExpectation], timeout: 5.0)
+            wait(for: [searchExpectation, regexExpectation], timeout: arrivalTimeout)
         }
     }
 
@@ -474,7 +475,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
 
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 10.0)
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
     }
 
@@ -511,7 +512,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
 
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 10.0)
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
     }
 
@@ -546,7 +547,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
                 }
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 5.0)
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
     }
     #endif // canImport(AppKit)
@@ -582,7 +583,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
                 }
             }
             // Increased timeout for reliability (500 operations need time)
-            wait(for: [debounceExpectation, throttleExpectation], timeout: 10.0)
+            wait(for: [debounceExpectation, throttleExpectation], timeout: arrivalTimeout)
         }
     }
 
@@ -606,7 +607,7 @@ final class ComprehensivePerformanceTests: CleanupTestCase {
                 expectation.fulfill()
             }
 
-            wait(for: [expectation], timeout: 10.0)
+            wait(for: [expectation], timeout: arrivalTimeout)
         }
     }
 

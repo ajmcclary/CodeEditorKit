@@ -12,10 +12,10 @@ final class LanguageProviderRobustnessTests: XCTestCase {
         return NSRange(range, in: source)
     }
 
+    /// CPU seconds of the process while `body` runs (it may hop threads):
+    /// a loaded machine does not inflate it.
     private func elapsed(_ body: () async -> Void) async -> TimeInterval {
-        let start = Date()
-        await body()
-        return Date().timeIntervalSince(start)
+        await CPUTime.inProcess(body).seconds
     }
 
     // MARK: - CSS symbols

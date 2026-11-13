@@ -305,16 +305,10 @@ final class SwiftUICoordinatorTests: XCTestCase {
         coordinator.handleTextChange("ab")
         coordinator.handleTextChange("abc")
 
-        // Wait for debounce (500ms) plus buffer for platform variations
-        #if targetEnvironment(simulator)
-        // Simulator needs more time, especially on iPhone
-        try await Task.sleep(for: .milliseconds(2_000))
-        #elseif canImport(AppKit)
-        // Native macOS needs more time for debouncing
-        try await Task.sleep(for: .milliseconds(2_000))
-        #else
-        try await Task.sleep(for: .milliseconds(1_500))
-        #endif
+        // The three changes arrive in one turn, inside one debounce window
+        // on any machine; wait for its write rather than a fixed 2 s.
+        await coordinator.bindingSynchronizer.waitForPendingWrite()
+        await waitUntil { holder.updateCount >= 1 }
 
         // Should only get one update to the binding due to debouncing
         XCTAssertEqual(holder.updateCount, 1)

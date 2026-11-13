@@ -44,9 +44,7 @@ struct CleanupRegistrationTests {
             _ = (cache, manager, highlighter)
         }
         // An isolated deinit may be enqueued on the main actor.
-        for _ in 0..<50 where !monitor.registered.isEmpty {
-            try await Task.sleep(for: .milliseconds(10))
-        }
+        await waitUntil { monitor.registered.isEmpty } // it was 0.5 s at most
         #expect(monitor.registered.isEmpty, "still registered: \(monitor.registered)")
     }
 

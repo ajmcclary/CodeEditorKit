@@ -39,7 +39,9 @@ struct KeyedDebouncerTests {
         await #expect(throws: CancellationError.self) {
             try await caller.value
         }
-        #expect(ContinuousClock.now - start < .seconds(5))
+        // Wall time on purpose: the regression is waiting out the 30 s delay.
+        // Half the delay tells the two apart however loaded the machine is.
+        #expect(ContinuousClock.now - start < .seconds(15))
         #expect(await debouncer.activeKeys.isEmpty)
     }
 

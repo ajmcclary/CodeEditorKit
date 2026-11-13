@@ -53,7 +53,7 @@ final class PublishEventFanOutTests: XCTestCase {
         // from textStorageDidProcessEditing; let the runloop drain so the event lands.
         let expectation = expectation(description: "textDidChange delivered")
         DispatchQueue.main.async { expectation.fulfill() }
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: [expectation], timeout: arrivalTimeout)
 
         XCTAssertEqual(
             received.last,
@@ -89,7 +89,7 @@ final class PublishEventFanOutTests: XCTestCase {
 
         let expectation = expectation(description: "selectionDidChange delivered")
         DispatchQueue.main.async { expectation.fulfill() }
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: [expectation], timeout: arrivalTimeout)
 
         XCTAssertTrue(
             received.contains(NSRange(location: 0, length: 5)),

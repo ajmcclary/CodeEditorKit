@@ -358,8 +358,8 @@ final class LSPIntegrationTests: XCTestCase {
         // Force cleanup
         autoreleasepool { }
 
-        // Give time for cleanup
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        // Wait for the deallocation itself, not a fixed 0.1 s.
+        await waitUntil { weakManager == nil && weakMonitor == nil }
 
         XCTAssertNil(weakManager, "LSPManager should be deallocated")
         XCTAssertNil(weakMonitor, "MemoryMonitor should be deallocated")

@@ -62,18 +62,9 @@ extension XCTestCase {
             _ = object // Use object to avoid optimization
         }
 
-        // Give time for deallocation
-        let expectation = XCTestExpectation(description: "Object deallocated")
-
-        // Use Task instead of DispatchQueue for Swift 6 compatibility
-        Task {
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-            if weakWrapper.isNil {
-                expectation.fulfill()
-            }
-        }
-
-        wait(for: [expectation], timeout: 0.5)
+        // Wait for the deallocation itself (a fixed 0.1 s check, failing
+        // after 0.5 s, reported leaks on a slow machine).
+        spinUntil { weakWrapper.isNil }
 
         XCTAssertTrue(
             weakWrapper.isNil,
@@ -145,8 +136,8 @@ extension XCTestCase {
         // Allow instance to go out of scope
         await Task.yield()
 
-        // Give time for deallocation
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        // Wait for the deallocation itself, not a fixed 0.1 s.
+        await waitUntil { weakInstance == nil }
 
         XCTAssertNil(
             weakInstance,

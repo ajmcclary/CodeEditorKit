@@ -91,6 +91,10 @@ final class MemoryLeakTests: CleanupTestCase {
             editor.textDelegate = nil
         }
         drainPendingRetains()
+        // The delegate's release is waited for, not assumed after the fixed
+        // drain (the editor's own, known retention keeps the fixed drain:
+        // waiting for a release that does not come would cost the timeout).
+        spinUntil { weakDelegate == nil }
         // Delegate retention is strict — the delegate-cycle protection is the
         // primary contract of this test. The editor's own retention is the
         // known regression scoped via XCTExpectFailure.

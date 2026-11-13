@@ -23,9 +23,10 @@ final class SearchReplaceEngineScalingTests: XCTestCase {
         var options = SearchOptions()
         options.flashResult = false
 
-        let start = Date()
-        let results = await engine.findAll(pattern: "e", options: options, selectFirstResult: false)
-        let elapsed = Date().timeIntervalSince(start)
+        // Process CPU seconds (the scan runs detached), not wall time.
+        let (results, elapsed) = await CPUTime.inProcess {
+            await engine.findAll(pattern: "e", options: options, selectFirstResult: false)
+        }
 
         let perLine = line.filter { $0 == "e" }.count
         XCTAssertEqual(results.count, perLine * lineCount)
@@ -260,9 +261,10 @@ final class SearchReplaceEngineScalingTests: XCTestCase {
         }
         defer { NotificationCenter.default.removeObserver(observer) }
 
-        let start = Date()
-        let count = await engine.replaceAll(pattern: "def", with: "XY", options: options)
-        let elapsed = Date().timeIntervalSince(start)
+        // Process CPU seconds (the find runs detached), not wall time.
+        let (count, elapsed) = await CPUTime.inProcess {
+            await engine.replaceAll(pattern: "def", with: "XY", options: options)
+        }
 
         XCTAssertEqual(count, 60_000)
         XCTAssertEqual(view.string, String(repeating: "abc XY ghi\n", count: 60_000))

@@ -33,10 +33,12 @@ final class LSPConnectionManagerShutdownTests: XCTestCase {
         } catch {
             XCTFail("Expected LSPError.timeout, got \(error)")
         }
+        // Wall time on purpose: the regression is hanging on the 60 s wedged
+        // send. Half of that tells the two apart however loaded the machine.
         let elapsed = ContinuousClock.now - start
         XCTAssertLessThan(
             elapsed,
-            .seconds(2),
+            .seconds(30),
             "sendShutdownRequest must surface a bounded timeout, not hang on the wedged server"
         )
     }

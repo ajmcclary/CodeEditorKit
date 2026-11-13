@@ -22,10 +22,9 @@ final class RegexIncrementalRangeQueryParserTests: XCTestCase {
         let line = "let value = 42; // café\n"
         // The editor's text comes from `NSTextStorage.string`, a bridged string.
         let source = NSTextStorage(string: String(repeating: line, count: 20_000)).string // ~460 KB
-        let start = Date()
-        let result = try await parser.parse(source: source)
-        let seconds = Date().timeIntervalSince(start)
+        // Process CPU seconds (the parse may hop threads), not wall time.
+        let (result, seconds) = try await CPUTime.inProcess { try await parser.parse(source: source) }
         XCTAssertFalse(result.captures.isEmpty)
-        XCTAssertLessThan(seconds, 10, "parse took \(seconds)s")
+        XCTAssertLessThan(seconds, 10, "parse used \(seconds) s of CPU")
     }
 }

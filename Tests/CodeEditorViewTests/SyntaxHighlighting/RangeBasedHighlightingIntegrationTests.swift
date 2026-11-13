@@ -334,7 +334,8 @@ struct HighlightProviderStateTests {
         await withExpectedIssue("Provider errors are surfaced through IssueReporting") {
             state.updateVisibleSet(IndexSet(integersIn: 10..<21), schedulesHighlighting: false)
             await state.highlightInvalidRanges()
-            try? await Task.sleep(for: .milliseconds(20))
+            // The pass's outcome, not a 20 ms guess at how long it takes.
+            await state.waitUntilIdleForTesting()
             state.cancel()
         }
 
@@ -394,7 +395,7 @@ struct RangeBasedHighlightingWiringTests {
         // deferred publish from the initial text seed before constructing
         // the controller so its observers only see the synthetic edit
         // dispatched below.
-        try await Task.sleep(for: .milliseconds(1))
+        await drainMainQueue()
 
         let primary = MockRangeHighlightProvider()
         let supplemental = MockRangeHighlightProvider()
@@ -413,7 +414,8 @@ struct RangeBasedHighlightingWiringTests {
             editedCharacters: true
         ))
 
-        try await Task.sleep(for: .milliseconds(20))
+        // Wait for the edit to reach the providers, not a fixed 20 ms.
+        await waitUntil { primary.editCalls.count == 1 && supplemental.editCalls.count == 1 }
 
         #expect(primary.editCalls.count == 1)
         #expect(supplemental.editCalls.count == 1)
@@ -432,7 +434,7 @@ struct RangeBasedHighlightingWiringTests {
         #endif
         // Drain the deferred publish before constructing the controller —
         // see comment on `supplementalProviderReceivesEdits` above.
-        try await Task.sleep(for: .milliseconds(1))
+        await drainMainQueue()
 
         let primary = MockRangeHighlightProvider()
         let supplemental = MockRangeHighlightProvider()
@@ -452,7 +454,8 @@ struct RangeBasedHighlightingWiringTests {
             editedCharacters: true
         ))
 
-        try await Task.sleep(for: .milliseconds(20))
+        // The primary receives the edit when the supplemental would have.
+        await waitUntil { primary.editCalls.count == 1 }
 
         #expect(primary.editCalls.count == 1)
         #expect(supplemental.editCalls.isEmpty)

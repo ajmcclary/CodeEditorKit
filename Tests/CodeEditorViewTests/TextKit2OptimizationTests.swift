@@ -71,7 +71,7 @@ final class TextKit2OptimizationTests: IsolatedTestCase {
     @MainActor
     func testLayoutOperationRecording() async throws {
         // Use isolated test runner with timing measurements
-        try await runIsolatedTest(timeout: 5) {
+        try await runIsolatedTest(timeout: arrivalTimeout) { // a hang guard, not a cost bound
             try await TestIsolationHelper.measureTime(
                 operation: "testLayoutOperationRecording",
                 warningThreshold: 0.5

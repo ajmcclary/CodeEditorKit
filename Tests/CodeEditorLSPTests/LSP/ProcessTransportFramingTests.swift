@@ -21,7 +21,7 @@ final class ProcessTransportFramingTests: XCTestCase {
         try await transport.connect()
         try await transport.send(payload)
 
-        await fulfillment(of: [received], timeout: 5.0)
+        await fulfillment(of: [received], timeout: arrivalTimeout)
         let bytes = await collector.bytes
         XCTAssertEqual(bytes, expected)
         await transport.disconnect()

@@ -198,8 +198,9 @@ final class FeatureBehaviorTests: CleanupTestCase {
         _ = await engine.findAll(pattern: "alpha", options: options)
         XCTAssertEqual(engine.currentSearchIndex, 0)
 
-        // Wait past the 300 ms flash window.
-        try await Task.sleep(nanoseconds: 450_000_000)
+        // Wait for the 300 ms flash to end, not a fixed 450 ms.
+        let flashedRange = engine.currentSearchResults[0].range
+        await waitUntil { self.backgroundColor(at: flashedRange.location, in: editor) == options.currentMatchColor }
 
         let firstRange = engine.currentSearchResults[0].range
         XCTAssertEqual(
@@ -405,7 +406,10 @@ final class FeatureBehaviorTests: CleanupTestCase {
     }
 
     private func waitForFoldableRegion(in engine: CodeFoldingEngine) async throws -> FoldableRegion {
-        for _ in 0..<20 {
+        // Polled until a generous deadline (it was 1 s in all, which fold
+        // detection's debounce plus a loaded machine can pass).
+        let deadline = Date().addingTimeInterval(arrivalTimeout)
+        while Date() < deadline {
             if let region = engine.foldableRegions.first {
                 return region
             }
@@ -417,7 +421,8 @@ final class FeatureBehaviorTests: CleanupTestCase {
     }
 
     private func waitForSymbols(in navigator: SymbolNavigator) async throws -> [DocumentSymbol] {
-        for _ in 0..<30 {
+        let deadline = Date().addingTimeInterval(arrivalTimeout)
+        while Date() < deadline {
             if !navigator.symbols.isEmpty {
                 return navigator.symbols
             }

@@ -75,7 +75,7 @@ final class SourceKitLSPIntegrationTests: XCTestCase {
         XCTAssertTrue(symbols.contains { $0.name == "Foo" }, "symbols: \(symbols.map(\.name))")
 
         client.disconnect()
-        for _ in 0..<500 where client.connectionState != .disconnected {
+        for _ in 0..<3_000 where client.connectionState != .disconnected { // 30 s
             try await Task.sleep(for: .milliseconds(10))
         }
         XCTAssertEqual(client.connectionState, .disconnected)

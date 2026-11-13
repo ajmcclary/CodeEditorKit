@@ -114,7 +114,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let editorView = CodeEditorView()
         let code = generateSwiftCode(lines: 30)  // Reduced from 100
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         editorView.language = .swift
         #if canImport(AppKit)
@@ -129,18 +129,20 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             language: .swift
         )
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
-        // Keep this as a regression guard without making parallel test runs timing-fragile.
-        XCTAssertLessThan(duration, 15.0, "Small file highlighting took \(duration) seconds")
+        // CPU seconds, so the bound can be a real one again: the wall-clock
+        // bounds had been widened to 15–150 s (100–1,500× the cost) to stop
+        // loaded runs failing. Measured ~0.01–0.09 s here; bounds are ~20×.
+        XCTAssertLessThan(duration, 0.5, "Small file highlighting used \(duration) s of CPU")
     }
 
     func testSwiftHighlightingMediumFile() async {
         let editorView = CodeEditorView()
         let code = generateSwiftCode(lines: 100)  // Reduced from 1000
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         editorView.language = .swift
         #if canImport(AppKit)
@@ -154,18 +156,18 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             language: .swift
         )
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
         // Medium files should highlight reasonably fast
-        XCTAssertLessThan(duration, 40.0, "Medium file highlighting took \(duration) seconds")
+        XCTAssertLessThan(duration, 1.0, "Medium file highlighting used \(duration) s of CPU")
     }
 
     func testSwiftHighlightingLargeFile() async {
         let editorView = CodeEditorView()
         let code = generateSwiftCode(lines: 200)  // Reduced from 10000
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         editorView.language = .swift
         #if canImport(AppKit)
@@ -179,11 +181,11 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             language: .swift
         )
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
         // Large files should still complete in reasonable time (under 3 seconds)
-        XCTAssertLessThan(duration, 75.0, "Large file highlighting took \(duration) seconds")
+        XCTAssertLessThan(duration, 2.0, "Large file highlighting used \(duration) s of CPU")
     }
 
     // MARK: - JavaScript Performance Tests
@@ -192,7 +194,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let editorView = CodeEditorView()
         let code = generateJavaScriptCode(lines: 100)  // Reduced from 1000
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         editorView.language = .javascript
         #if canImport(AppKit)
@@ -206,10 +208,10 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             language: .javascript
         )
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
-        XCTAssertLessThan(duration, 40.0, "JavaScript highlighting took \(duration) seconds")
+        XCTAssertLessThan(duration, 0.5, "JavaScript highlighting used \(duration) s of CPU")
     }
 
     // MARK: - Python Performance Tests
@@ -218,7 +220,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let editorView = CodeEditorView()
         let code = generatePythonCode(lines: 100)  // Reduced from 1000
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         editorView.language = .python
         #if canImport(AppKit)
@@ -232,10 +234,10 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             language: .python
         )
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
-        XCTAssertLessThan(duration, 50.0, "Python highlighting took \(duration) seconds")
+        XCTAssertLessThan(duration, 0.5, "Python highlighting used \(duration) s of CPU")
     }
 
     // MARK: - Incremental Highlighting Tests
@@ -258,7 +260,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         )
 
         // Measure incremental update
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         // Insert a line in the middle
         let insertionPoint = initialCode.count / 2
@@ -277,7 +279,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             language: .swift
         )
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
         // Incremental updates should be fast, but stopwatch timings are enforced only in
@@ -335,7 +337,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let jsCode = generateJavaScriptCode(lines: 50)  // Reduced from 500
         let pythonCode = generatePythonCode(lines: 50)  // Reduced from 500
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         // Rapidly switch between languages
         for _ in 0..<3 {
@@ -373,11 +375,11 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             )
         }
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
         // Should handle rapid switching efficiently (9 switches total)
-        XCTAssertLessThan(duration, 150.0, "Rapid language switching took \(duration) seconds")
+        XCTAssertLessThan(duration, 2.0, "Rapid language switching used \(duration) s of CPU")
     }
 
     // MARK: - Regex Highlighter Performance
@@ -410,7 +412,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         // Simulate visible range (first 1000 characters)
         let visibleRange = NSRange(location: 0, length: min(1_000, code.count))
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = CPUTime.process() // CPU seconds: load does not inflate them
 
         await editorView.asyncHighlighter.highlightImmediately(
             for: editorView,
@@ -418,11 +420,11 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             visibleRange: visibleRange
         )
 
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = CPUTime.process()
         let duration = endTime - startTime
 
         // Visible range highlighting should be fast (but initial setup takes time)
-        XCTAssertLessThan(duration, 75.0, "Visible range highlighting took \(duration) seconds")
+        XCTAssertLessThan(duration, 2.0, "Visible range highlighting used \(duration) s of CPU")
     }
 
     // MARK: - Benchmark Comparison
@@ -451,7 +453,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
                 )
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 10.0)
+            wait(for: [expectation], timeout: arrivalTimeout) // a hang guard; the cost is reported by measure
         }
     }
 }

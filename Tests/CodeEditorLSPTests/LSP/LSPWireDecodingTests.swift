@@ -102,11 +102,11 @@ import Testing
         let notification = #"{"jsonrpc":"2.0","method":"window/logMessage","params":null}"#
         await handler.processIncomingData(LSPFrameCodec.encode(Data(request.utf8)) + LSPFrameCodec.encode(Data(notification.utf8)))
 
-        for _ in 0..<200 {
-            let requestCount = await inbox.requests.count
-            let notificationCount = await inbox.notifications.count
-            if requestCount == 1 && notificationCount == 1 { break }
-            try await Task.sleep(for: .milliseconds(5))
+        // It was 1 s at most; a failure to arrive, not a speed check.
+        await waitUntil {
+            let requests = await inbox.requests.count
+            let notifications = await inbox.notifications.count
+            return requests == 1 && notifications == 1
         }
         let requests = await inbox.requests
         #expect(requests.map(\.1) == ["client/registerCapability"])
