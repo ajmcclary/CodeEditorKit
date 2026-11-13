@@ -24,6 +24,8 @@ final class SnapshotHighlightProviderBridge: RangeHighlightProviding {
 
     private var language: Language = .plainText
     private var pendingPreviousText: String?
+    /// The built-in highlighter for ranges the provider declines.
+    private var builtInFallback: SyntaxHighlighterRangeAdapter?
 
     init(valueProvider: any HighlightRangeProviding) {
         self.valueProvider = valueProvider
@@ -33,6 +35,7 @@ final class SnapshotHighlightProviderBridge: RangeHighlightProviding {
 
     func setUp(textView: CodeEditorView, language: Language) {
         self.language = language
+        builtInFallback = nil
         let snapshot = Self.snapshot(from: textView, language: language)
         let provider = valueProvider
         Task { await provider.prepare(for: snapshot) }
@@ -60,7 +63,12 @@ final class SnapshotHighlightProviderBridge: RangeHighlightProviding {
 
     func queryHighlights(textView: CodeEditorView, range: NSRange) async throws -> [HighlightedToken] {
         let snapshot = Self.snapshot(from: textView, language: language)
-        let tokens = try await valueProvider.highlights(in: HighlightRange(range), of: snapshot)
+        let tokens: [HighlightToken]
+        do {
+            tokens = try await valueProvider.highlights(in: HighlightRange(range), of: snapshot)
+        } catch is HighlightProviderDeclined {
+            return try await fallback().queryHighlights(textView: textView, range: range)
+        }
         return tokens.map { token in
             HighlightedToken(
                 range: token.range.nsRange,
@@ -68,6 +76,15 @@ final class SnapshotHighlightProviderBridge: RangeHighlightProviding {
                 text: token.text
             )
         }
+    }
+
+    private func fallback() -> SyntaxHighlighterRangeAdapter {
+        if let builtInFallback { return builtInFallback }
+        let adapter = SyntaxHighlighterRangeAdapter(
+            highlighter: RangeBasedHighlightingController.makeHighlighter(for: language)
+        )
+        builtInFallback = adapter
+        return adapter
     }
 
     // MARK: - Conversion helpers

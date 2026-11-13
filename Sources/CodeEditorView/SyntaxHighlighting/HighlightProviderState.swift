@@ -21,6 +21,15 @@ internal final class HighlightProviderState {
     private var validSet = IndexSet()
     private var pendingSet = IndexSet()
     private var failedSet = IndexSet()
+    /// Ranges whose query was cancelled during the current pass. Skipped for
+    /// the rest of that pass (so a provider that drops requests cannot spin
+    /// the loop) and asked again on the next one.
+    private var deferredSet = IndexSet()
+    /// Automatic re-passes left for ranges deferred by cancellation; reset
+    /// by every externally triggered pass.
+    private var cancellationRetriesLeft = 0
+    private static let cancellationRetries = 3
+    private static let cancellationRetryDelay: Duration = .milliseconds(50)
     private var visibleSet = IndexSet()
     private var documentLength: Int
     private let provider: any RangeHighlightProviding
@@ -90,6 +99,7 @@ internal final class HighlightProviderState {
         validSet.subtract(indices)
         pendingSet.subtract(indices)
         failedSet.subtract(indices)
+        deferredSet.subtract(indices)
     }
 
     /// Compute the next range to highlight using:
@@ -100,6 +110,7 @@ internal final class HighlightProviderState {
         invalid.formIntersection(visibleSet)
         invalid.subtract(pendingSet)
         invalid.subtract(failedSet)
+        invalid.subtract(deferredSet)
 
         guard let range = invalid.rangeView.first else { return nil }
 
@@ -113,13 +124,28 @@ internal final class HighlightProviderState {
 
     /// Start highlighting invalid ranges.
     func highlightInvalidRanges() async {
+        cancellationRetriesLeft = Self.cancellationRetries
+        startPass()
+    }
+
+    private func startPass() {
         chunkTask?.cancel()
+        // A new pass asks again for ranges a cancelled query left unhighlighted.
+        deferredSet = IndexSet()
         chunkTask = Task { [weak self] in
             guard let self else { return }
             while let range = self.nextRange(), !Task.isCancelled {
                 self.pendingSet.insert(integersIn: range.location..<(range.location + range.length))
                 await self.queryHighlights(for: range)
             }
+            // A range whose query was cancelled stays unhighlighted only
+            // until a later pass; schedule a few so it does not wait for the
+            // next edit or scroll.
+            guard !Task.isCancelled, !self.deferredSet.isEmpty, self.cancellationRetriesLeft > 0 else { return }
+            self.cancellationRetriesLeft -= 1
+            try? await Task.sleep(for: Self.cancellationRetryDelay)
+            guard !Task.isCancelled else { return }
+            self.startPass()
         }
     }
 
@@ -139,6 +165,12 @@ internal final class HighlightProviderState {
             validSet.formUnion(indices)
             failedSet.subtract(indices)
             onRangeHighlighted?(range)
+        } catch is CancellationError {
+            // A dropped request is not a failure: leave the range
+            // unhighlighted, out of `failedSet`, and ask again next pass.
+            let indices = IndexSet(integersIn: range.location..<(range.location + range.length))
+            pendingSet.subtract(indices)
+            deferredSet.formUnion(indices)
         } catch {
             let indices = IndexSet(integersIn: range.location..<(range.location + range.length))
             pendingSet.subtract(indices)

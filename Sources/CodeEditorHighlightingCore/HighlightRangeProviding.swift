@@ -28,8 +28,24 @@ public protocol HighlightRangeProviding: AnyObject, Sendable {
 
     /// Returns the highlight tokens intersecting `range` in the given
     /// document snapshot. Token ranges are document-relative (UTF-16).
+    ///
+    /// Throw ``HighlightProviderDeclined`` to have the editor highlight the
+    /// range with its built-in highlighter instead (for example, a document
+    /// over the provider's size limit); an empty array means "no highlights".
+    /// `CancellationError` means the request was dropped: the editor leaves
+    /// the range unhighlighted and asks again, without reporting a failure.
     func highlights(
         in range: HighlightRange,
         of document: HighlightDocumentSnapshot
     ) async throws -> [HighlightToken]
+}
+
+/// Thrown from ``HighlightRangeProviding/highlights(in:of:)`` when the
+/// provider will not highlight a document or range. The editor highlights it
+/// with its built-in highlighter instead and keeps asking the provider on
+/// later queries, so a document that comes back within the provider's limits
+/// returns to it.
+public struct HighlightProviderDeclined: Error, Sendable, Equatable {
+    /// Creates the decline signal.
+    public init() {}
 }

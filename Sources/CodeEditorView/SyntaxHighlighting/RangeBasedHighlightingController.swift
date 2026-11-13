@@ -283,7 +283,7 @@ package final class RangeBasedHighlightingController: TextEditEventObserving {
         textView.textKitBridge.documentString
     }
 
-    private static func makeHighlighter(for language: Language) -> any SyntaxHighlighter {
+    static func makeHighlighter(for language: Language) -> any SyntaxHighlighter {
         // Swift uses SwiftSyntax for AST-based highlighting
         if language == .swift {
             return SwiftSyntaxHighlighter()
