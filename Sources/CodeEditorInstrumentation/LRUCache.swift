@@ -27,6 +27,12 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
         registerWithMemoryMonitor()
     }
 
+    /// Main-actor deinit so the cleanup handler can be unregistered; it was
+    /// left registered for the life of the monitor.
+    isolated deinit {
+        memoryMonitor.unregisterCleanupHandler(identifier: "lru-cache-\(cacheId)")
+    }
+
     /// Check if the cache is empty
     public var isEmpty: Bool {
         storage.isEmpty

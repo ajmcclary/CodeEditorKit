@@ -161,9 +161,10 @@ public final class LSPManager: ObservableObject {
         }
     }
 
-    deinit {
-        // Note: Cannot access @MainActor isolated properties in deinit
-        // Components will be automatically cleaned up by ARC
+    /// Main-actor deinit so the cleanup handler can be unregistered; it was
+    /// left registered for the life of the monitor.
+    isolated deinit {
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
     }
 
     // MARK: - Configuration Management

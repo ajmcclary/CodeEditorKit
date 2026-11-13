@@ -80,11 +80,14 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         registerForTermination()
     }
 
-    deinit {
-        // Cleanup is handled automatically by ARC
-        // Note: Cannot access @MainActor properties from deinit in Swift 6
-        // cleanup() must be called explicitly before deallocation
-        // The termination observer will be removed when the object is deallocated.
+    /// Main-actor deinit: block-based observers are not removed when their
+    /// owner is deallocated, and the memory-monitor handler must be
+    /// unregistered too; both used to leak one registration per instance.
+    isolated deinit {
+        if let terminationObserver {
+            NotificationCenter.default.removeObserver(terminationObserver)
+        }
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
     }
 
     /// Register for app termination notifications to ensure cleanup

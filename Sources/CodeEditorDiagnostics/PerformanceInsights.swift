@@ -77,16 +77,15 @@ public final class PerformanceInsights: ObservableObject {
         startMonitoring()
     }
 
-    deinit {
-        // Use MainActor.assumeIsolated to safely clean up @MainActor resources
-        // This is safe because PerformanceInsights instances are created and destroyed on the main actor
-        MainActor.assumeIsolated {
-            // Properly invalidate timer to prevent memory leaks
-            updateTimer?.invalidate()
-            updateTimer = nil
+    /// Runs on the main actor wherever the last release happens;
+    /// `MainActor.assumeIsolated` trapped when it happened off the main
+    /// thread.
+    isolated deinit {
+        // Properly invalidate timer to prevent memory leaks
+        updateTimer?.invalidate()
+        updateTimer = nil
 
-            logger.debug("PerformanceInsights deallocated and cleaned up")
-        }
+        logger.debug("PerformanceInsights deallocated and cleaned up")
     }
 
     // MARK: - Public Methods

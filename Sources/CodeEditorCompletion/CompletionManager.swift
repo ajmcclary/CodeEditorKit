@@ -134,6 +134,11 @@ public final class CompletionManager {
         registerWithMemoryMonitor()
     }
 
+    /// Main-actor deinit so the cleanup handler can be unregistered.
+    isolated deinit {
+        memoryMonitor.unregisterCleanupHandler(identifier: cleanupIdentifier)
+    }
+
     // MARK: - Event Stream
 
     /// Returns a fresh `AsyncStream` of completion events.
