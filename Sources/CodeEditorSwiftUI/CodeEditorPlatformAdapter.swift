@@ -40,10 +40,18 @@ struct AppKitCodeEditorPlatformAdapter: CodeEditorPlatformAdapter {
         textView.string
     }
 
-    func setText(_ text: String, in textView: CodeEditorView, preserveSelection _: Bool) {
-        if textView.string != text {
-            textView.string = text
-        }
+    func setText(_ text: String, in textView: CodeEditorView, preserveSelection: Bool) {
+        guard textView.string != text else { return }
+        let savedSelectedRange = textView.selectedRange()
+        textView.string = text
+        guard preserveSelection else { return }
+        let length = TextRangeUtilities.utf16Length(of: text)
+        let location = min(savedSelectedRange.location, length)
+        let selection = NSRange(
+            location: location,
+            length: min(savedSelectedRange.length, length - location)
+        )
+        textView.setSelectedRangeWithoutScrolling(selection)
     }
 
     func applySystemEditorColors(to textView: CodeEditorView) {

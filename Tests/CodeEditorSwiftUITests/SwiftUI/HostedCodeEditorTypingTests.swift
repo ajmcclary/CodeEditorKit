@@ -156,6 +156,69 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertEqual(store.text, "abc")
     }
 
+    // MARK: - Host text that is behind the editor
+
+    func testAConfigurationChangeInsideTheDebounceKeepsTheTypedText() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .bindingOnly)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+
+        textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
+        spin(for: 0.01)
+        store.lineNumbers.toggle()
+        spin(for: 0.5)
+
+        XCTAssertEqual(textView.string, "abcX")
+        XCTAssertEqual(store.text, "abcX")
+    }
+
+    func testRemovingTheEditorInsideTheDebounceDeliversTheLastKeystroke() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .bindingOnly)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+
+        textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
+        spin(for: 0.01)
+        store.showsEditor = false
+        spin(for: 0.3)
+
+        XCTAssertEqual(store.text, "abcX")
+    }
+
+    // MARK: - Host text replacement
+
+    func testUndoAfterTheHostReplacesTheTextIsSafe() throws {
+        let store = HostedEditorStore("line one\nline two\nline three\n")
+        let textView = try host(store, mode: .controller)
+        textView.setSelectedRange(NSRange(location: 27, length: 0))
+        type("XYZ", into: textView)
+        XCTAssertTrue(textView.undoManager?.canUndo ?? false)
+
+        store.text = "Q"
+        spin(for: 0.3)
+
+        XCTAssertEqual(textView.string, "Q")
+        XCTAssertFalse(textView.undoManager?.canUndo ?? false)
+        textView.undoManager?.undo()
+        spin(for: 0.1)
+        XCTAssertEqual(textView.string, "Q")
+        XCTAssertEqual(store.text, "Q")
+    }
+
+    func testAHostReplacementKeepsAValidCaret() throws {
+        let store = HostedEditorStore("one\ntwo\nthree")
+        let textView = try host(store, mode: .controller)
+        textView.setSelectedRange(NSRange(location: 5, length: 0))
+        spin(for: 0.05)
+
+        store.text = "one\ntwo\nthree and more"
+        spin(for: 0.3)
+
+        XCTAssertEqual(textView.selectedRange(), NSRange(location: 5, length: 0))
+    }
+
     // MARK: - Hosting
 
     func run<T>(_ operation: @escaping @MainActor () async -> T) -> T? {
@@ -229,6 +292,7 @@ final class HostedEditorStore {
     var text: String
     var tick = 0
     var lineNumbers = true
+    var showsEditor = true
     @ObservationIgnored let interaction = HostedInteractionBox()
     @ObservationIgnored let controller = EditorController()
 
@@ -260,6 +324,16 @@ struct HostedEditor: View {
             set: { store.text = $0 }
         ))
         return Group {
+            if store.showsEditor {
+                content(editor)
+            }
+        }
+        .environment(\.codeEditorConfiguration, configuration)
+    }
+
+    @ViewBuilder
+    private func content(_ editor: CodeEditor) -> some View {
+        Group {
             switch mode {
             case .appLike:
                 editor
@@ -278,7 +352,6 @@ struct HostedEditor: View {
                     .editorController(store.controller)
             }
         }
-        .environment(\.codeEditorConfiguration, configuration)
     }
 }
 #endif

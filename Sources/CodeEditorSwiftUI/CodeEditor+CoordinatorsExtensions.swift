@@ -77,7 +77,8 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// Owns ordered mount/update reconciliation for the represented editor.
     lazy var renderReconciler = EditorRenderReconciler(
         interactionSynchronizer: interactionSynchronizer,
-        completionRegistry: completionModifierRegistry
+        completionRegistry: completionModifierRegistry,
+        bindingSynchronizer: bindingSynchronizer
     )
 
     /// Request focus for the text view

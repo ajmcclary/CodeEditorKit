@@ -180,7 +180,7 @@ extension TextViewDelegateMultiplexer: NSTextViewDelegate {
                 return manager
             }
         }
-        return nil
+        return codeEditorView.editorUndoManager
     }
 }
 #endif

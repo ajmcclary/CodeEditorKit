@@ -58,6 +58,7 @@ protocol EditorRenderOperating: AnyObject {
         in container: CodeEditorContainerView
     )
     func stampThemeForeground(in container: CodeEditorContainerView)
+    func discardUndoHistory(in container: CodeEditorContainerView)
     func applyTheme(_ theme: Theme, to container: CodeEditorContainerView)
     func invalidate(_ container: CodeEditorContainerView)
 }
@@ -111,6 +112,10 @@ private final class PlatformEditorRenderOperations: EditorRenderOperating {
         container.textView.stampThemeForeground()
     }
 
+    func discardUndoHistory(in container: CodeEditorContainerView) {
+        container.textView.discardUndoHistory()
+    }
+
     func applyTheme(_ theme: Theme, to container: CodeEditorContainerView) {
         container.apply(theme: theme)
     }
@@ -129,16 +134,19 @@ final class EditorRenderReconciler {
     private let operations: any EditorRenderOperating
     private let interactionSynchronizer: EditorInteractionSynchronizer
     private let completionRegistry: CompletionModifierRegistry
+    private let bindingSynchronizer: EditorBindingSynchronizer?
     private var lastState: EditorRenderState?
 
     init(
         operations: (any EditorRenderOperating)? = nil,
         interactionSynchronizer: EditorInteractionSynchronizer = EditorInteractionSynchronizer(),
-        completionRegistry: CompletionModifierRegistry = CompletionModifierRegistry()
+        completionRegistry: CompletionModifierRegistry = CompletionModifierRegistry(),
+        bindingSynchronizer: EditorBindingSynchronizer? = nil
     ) {
         self.operations = operations ?? PlatformEditorRenderOperations()
         self.interactionSynchronizer = interactionSynchronizer
         self.completionRegistry = completionRegistry
+        self.bindingSynchronizer = bindingSynchronizer
     }
 
     func mount(
@@ -179,19 +187,31 @@ final class EditorRenderReconciler {
         )
         guard lastState != state else { return false }
 
+        // The host replaced the text only if its text changed since the last
+        // render and is not a value the editor itself sent toward it. The
+        // binding write is debounced, so host text that is merely behind the
+        // editor (unchanged, or an echo of an earlier editor value) must not
+        // overwrite newer typing.
         let storedText = operations.text(in: container)
+        let hostTextChanged = lastState.map { $0.text != state.text } ?? true
         let isHostBindingSwap = storedText != state.text
-        operations.setText(state.text, in: container, preserveSelection: true)
+            && hostTextChanged
+            && !(bindingSynchronizer?.isEditorEcho(state.text) ?? false)
+        let effectiveText = isHostBindingSwap ? state.text : storedText
         if isHostBindingSwap {
+            operations.setText(state.text, in: container, preserveSelection: true)
             interactionSynchronizer.installBaseline(state.text)
             operations.stampThemeForeground(in: container)
+            // Undo offsets recorded against the replaced text would raise or
+            // splice old text into the new document.
+            operations.discardUndoHistory(in: container)
         }
         operations.setLanguage(state.language, in: container)
         operations.applySystemColorsIfNeeded(in: container)
         operations.setConfiguration(state.configuration, in: container)
-        interactionSynchronizer.receiveText(state.text, language: state.language)
+        interactionSynchronizer.receiveText(effectiveText, language: state.language)
         operations.applyTheme(state.theme, to: container)
-        onStateUpdate?(state.text, state.language, state.configuration)
+        onStateUpdate?(effectiveText, state.language, state.configuration)
         lastState = state
         return true
     }

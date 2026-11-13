@@ -36,6 +36,10 @@ private final class RecordingRenderOperations: EditorRenderOperating {
 
     func stampThemeForeground(in _: CodeEditorContainerView) {}
 
+    func discardUndoHistory(in _: CodeEditorContainerView) {
+        operations.append("discardUndo")
+    }
+
     func applyTheme(_: Theme, to _: CodeEditorContainerView) {
         operations.append("theme")
     }

@@ -182,7 +182,10 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
         XCTAssertEqual(secondNonNil.undoManagerCalls, 0, "Subsequent participants must not be consulted after a non-nil win")
     }
 
-    func testAllNilUndoManagerReturnsNil() throws {
+    /// When no participant supplies an undo manager the view's own is used,
+    /// not the window's shared one (whose history the editor could not
+    /// discard without discarding every other view's).
+    func testAllNilUndoManagerFallsBackToTheViewsOwn() throws {
         let codeEditorView = CodeEditorView(frame: .zero)
         let multiplexer = codeEditorView.delegateMultiplexer
 
@@ -191,7 +194,7 @@ final class TextViewDelegateMultiplexerTests: XCTestCase {
         multiplexer.addParticipant(participant1, phase: .gating)
         multiplexer.addParticipant(participant2, phase: .behavior)
 
-        XCTAssertNil(invokeUndoManager(multiplexer, codeEditorView: codeEditorView))
+        XCTAssertIdentical(invokeUndoManager(multiplexer, codeEditorView: codeEditorView), codeEditorView.editorUndoManager)
     }
 
     // MARK: - First-handler-wins

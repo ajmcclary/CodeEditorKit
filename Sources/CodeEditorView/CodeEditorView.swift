@@ -201,6 +201,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// undo or redo) can be told apart.
     internal var textChangeGenerationAtLastDidChangeText: UInt64 = 0
 
+    #if canImport(AppKit)
+    /// This editor's own undo stack, used unless a delegate participant
+    /// supplies one. NSTextView otherwise shares the window's undo manager,
+    /// so its history could not be discarded (after a host text swap, or
+    /// under memory pressure) without discarding every other view's too.
+    internal let editorUndoManager = UndoManager()
+    #endif
+
     /// The `textChangeEventGeneration` the line geometry store was last
     /// rebuilt at. A full rebuild reads the text storage as it is, so the
     /// store already contains every character edit up to this generation,

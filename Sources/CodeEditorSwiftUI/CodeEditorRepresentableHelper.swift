@@ -385,7 +385,8 @@ enum CodeEditorRepresentableHelper {
     /// Clean up resources when view is being removed
     static func dismantle(coordinator: CodeEditorCoordinator) {
         coordinator.removeNotificationObservers()
-        coordinator.bindingSynchronizer.cancel()
+        // Deliver a keystroke still inside the debounce window.
+        coordinator.bindingSynchronizer.flush()
         // Detach the host's controller so it stops vending operations
         // against a view that's about to disappear.
         coordinator.editorController?.attach(to: nil)

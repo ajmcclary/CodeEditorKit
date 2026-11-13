@@ -2,8 +2,30 @@ import Foundation
 
 #if canImport(AppKit)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 
-// MARK: - Undo
+// MARK: - Undo history
+
+extension CodeEditorView {
+    /// Discards this editor's undo and redo actions — for when its text was
+    /// replaced wholesale, so recorded offsets no longer describe it. Leaves a
+    /// host-supplied (shared) undo manager alone on macOS; on iOS the text
+    /// view's undo manager is its own.
+    package func discardUndoHistory() {
+        #if canImport(AppKit)
+        guard undoManager === editorUndoManager else { return }
+        editorUndoManager.removeAllActions()
+        #else
+        undoManager?.removeAllActions()
+        #endif
+    }
+}
+
+#if canImport(AppKit)
+
+// MARK: - Undo notifications
 
 extension CodeEditorView {
     override public func didChangeText() {
