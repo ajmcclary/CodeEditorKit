@@ -39,7 +39,9 @@ final class LSPContentCoordinator {
     // MARK: - Dependencies
 
     private weak var textView: CodeEditorView?
-    private unowned var lspManager: LSPManager
+    /// Weak: the host may release the bridge (and its manager) while a
+    /// batch is pending; `unowned` trapped when that batch fired.
+    private weak var lspManager: LSPManager?
     private let filePath: String
     private let languageId: String
 
@@ -53,7 +55,7 @@ final class LSPContentCoordinator {
     // MARK: - Sync strategy
 
     private var syncKind: TextDocumentSyncKind {
-        lspManager.syncKind(for: languageId)
+        lspManager?.syncKind(for: languageId) ?? .disabled
     }
 
     // MARK: - Post-batch hook
@@ -145,20 +147,21 @@ final class LSPContentCoordinator {
 
     private func scheduleBatchFlush() {
         batchTask?.cancel()
+        let interval = batchIntervalNanos
         batchTask = Task { [weak self] in
-            guard let self else { return }
+            // Sleep without holding the coordinator.
             do {
-                try await Task.sleep(nanoseconds: self.batchIntervalNanos)
+                try await Task.sleep(nanoseconds: interval)
             } catch {
                 return // Cancelled
             }
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, let self else { return }
             await self.flushBatch()
         }
     }
 
     private func flushBatch() async {
-        guard !pendingChanges.isEmpty else { return }
+        guard !pendingChanges.isEmpty, let lspManager else { return }
 
         let fullText = textView?.textKitBridge.documentString ?? ""
 
