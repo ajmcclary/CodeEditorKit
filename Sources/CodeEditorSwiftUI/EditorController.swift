@@ -177,6 +177,10 @@ public final class EditorController {
     /// representable on `make…`/`update…`/`dismantle…`.
     func attach(to view: CodeEditorView?) {
         let previousView = codeEditorView
+        // The representable calls this on every update. Re-attaching the
+        // same view must not restart symbol detection, re-assign observable
+        // state, or reinstall the event monitors (cancelling a pending hover).
+        if let view, view === previousView { return }
         codeEditorView = view
         if let view {
             symbolNavigator.attach(to: view)

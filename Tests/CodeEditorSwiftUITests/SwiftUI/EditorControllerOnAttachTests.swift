@@ -1,6 +1,7 @@
 @testable import CodeEditorSwiftUI
 @testable import CodeEditorView
 import Combine
+import Observation
 import XCTest
 
 /// Unit tests for `EditorController.onAttach(_:)`.
@@ -14,6 +15,28 @@ import XCTest
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
 final class EditorControllerOnAttachTests: XCTestCase {
+    /// The representable calls `attach(to:)` on every SwiftUI update; with
+    /// the same view that must change nothing a host can observe (or the host
+    /// view reading `isAttached`/`symbols` is invalidated by its own update).
+    func testReattachingTheSameViewChangesNothingObservable() {
+        let controller = EditorController()
+        let view = CodeEditorView(frame: .zero)
+        controller.attach(to: view)
+
+        let changed = ChangeFlag()
+        withObservationTracking {
+            _ = controller.isAttached
+            _ = controller.symbols
+        } onChange: {
+            changed.set()
+        }
+        controller.attach(to: view)
+        controller.attach(to: view)
+
+        XCTAssertFalse(changed.value, "re-attaching the same view must not write observable state")
+        XCTAssertTrue(controller.isAttached)
+    }
+
     func testHandlerNotFiredAtRegistration() {
         let controller = EditorController()
         var fireCount = 0
@@ -122,4 +145,13 @@ final class EditorControllerOnAttachTests: XCTestCase {
             "Cancelled handler must not run on subsequent attaches."
         )
     }
+}
+
+private final class ChangeFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flag = false
+
+    var value: Bool { lock.withLock { flag } }
+
+    func set() { lock.withLock { flag = true } }
 }
