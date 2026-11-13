@@ -7,6 +7,181 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+## [0.1.0-beta.15] - 2026-11-13
+
+This release remediates the 2026-11-12 full review of the package.
+
+### Changed
+
+- **Each editor owns its undo manager.** `CodeEditorView.undoManager` is the
+  editor's own stack, not the window's, unless a delegate participant
+  supplies one, and `EditorController.clearUndoHistory()` clears only that
+  editor. When the host swaps the text (new text that is not an echo of the
+  editor's own write), the editor's undo history is cleared, so undo can no
+  longer reach into the previous document's text (it used to raise
+  `NSRangeException`).
+- **Undo and redo reach the host.** A TextKit 2 text view applies undo
+  without calling `didChangeText`, so `onTextChange` and the text binding
+  never saw an undo or a redo; the editor now announces them.
+- **A host that rewrites the editor's write keeps undo.** A host that
+  normalises what the editor sent (trimming, reformatting) has its rewrite
+  applied as an undoable edit of the span that differs, and undo and redo
+  take the rewrite and the edit it answered together (macOS). New host text
+  that matches no outstanding write and shares less than half of the newest
+  write is the host's own change: it replaces the text and discards undo.
+- **A bound cursor is applied only when the host changes it.** The editor no
+  longer pushes its own echoed cursor back into the view, which reordered
+  typed characters (`hello` typed as `elloh`) and reset the selection on
+  every re-render. A host that writes the same cursor value again to
+  "re-apply" it no longer moves the caret.
+- The text binding contract is now stated in the `CodeEditor` doc comment.
+  Host text unchanged since the last render never overwrites newer typing,
+  and up to four editor writes awaiting their echo are recognised, so a host
+  that applies writes late keeps every keystroke.
+- **Replace and Replace All go through the text view's change path**
+  (`shouldChangeText`, one storage edit, `didChangeText`). Each is one undo
+  step, reaches the host and honours the delegate's gating. Replace All
+  keeps the selection where it was, adjusted for the edit, and is linear in
+  the number of matches. Replace refuses a result that no longer matches
+  under its search options.
+- **Fold detection, Swift highlighting and Find run off the main thread**,
+  on a snapshot of the text. A result computed for text that has changed
+  since is dropped; Find re-runs, up to three times, and a newer Find cancels
+  the older one.
+- **`CodeFoldingProvider` is no longer `@MainActor` and requires
+  `Sendable`.** This is the one non-additive API change. The requirement is
+  unchanged; a conformer must be `Sendable` and must not rely on main-actor
+  state, because detection now calls it off the main thread.
+- **The LSP client holds a session with a real server.** It answers server
+  requests (`null` for capability registration, progress creation and the
+  refresh family, one `null` per item for `workspace/configuration`, the
+  folders for `workspace/workspaceFolders`, `-32601` for anything else). Each
+  of its own requests times out after 30 s (`LSPError.timeout`) and is
+  cancelled with its task, sending `$/cancelRequest`. A `null` result decodes
+  as absent (no hover, no definition, no symbols) instead of raising, and
+  spec-optional, `Bool`-or-options and unknown enum values decode instead of
+  failing the message. `decode(as:)` on a `null` result now throws
+  `LSPError.decodingError`.
+- **A language server that exits is reported, not restarted.** Pending
+  requests fail with `.connectionFailed`, `connectionState` moves to
+  `.error` and then `.disconnected`, and `serverExitedUnexpectedly` is set
+  until the next successful connect. Nothing restarts the server; the
+  `LSPManager` documentation no longer claims it does. A host can offer a
+  restart from the new flag.
+- `ClientCapabilities.default` no longer advertises `dynamicRegistration`
+  (completion, hover, definition), `workspace.configuration` or
+  `snippetSupport`.
+- Document URIs sent to servers are percent-encoded file URLs, and
+  `LSPClient.diagnostics` is keyed by that canonical form.
+- `LSPManager.isDocumentOpen(filePath:)` is true while an open is in
+  flight. Opening a document that is already open, or being opened, sends
+  one `didOpen` and then changes; a close waits for an in-flight open.
+- `WebSocketTransport` refuses a send while disconnected (`notConnected`)
+  instead of queueing it and reporting success. With an owning `LSPClient`, a
+  dropped socket ends the session instead of reconnecting silently to an
+  uninitialised server.
+- Completion: the popup filters as you type and is dismissed when the caret
+  leaves the word, a non-word character is typed, nothing matches, scrolling
+  starts or the editor loses focus. Return inserts the selected item,
+  replacing the typed prefix (from the built-in list it inserted nothing).
+  Snippet syntax is never inserted (`print()`, not `print($0)`).
+- Limits on pathological input:
+  - JSON nested deeper than 128 levels gets the line-by-line outline instead
+    of a parsed one.
+  - Swift nested deeper than 64 brackets, or with more than 16 `[` open at
+    once, falls back to the keyword (regex) highlighter. Every SwiftSyntax
+    parse runs on its own 16 MB-stack thread with a 128-level parser cap.
+  - A document outline keeps at most 10,000 symbols and 64 nesting levels.
+  - Fold detection is skipped for documents over 4M UTF-16 units. Brace and
+    Markdown fold titles are at most about 120 UTF-16 units, and brace
+    regions that open and close on one line are not reported.
+- Project search: `column` is a 1-based UTF-16 column (it was a Character
+  distance), and files over `maxFileSizeBytes` (8 MB by default) are skipped.
+- Annotations: the data source is asked for views only on add,
+  `reloadAnnotations()` or re-enabling, not on every layout pass; a host
+  that changes annotation content must call `reloadAnnotations()`.
+- `sizeThatFits` with an unspecified dimension returns an estimate instead
+  of measuring every line, and the accessibility label no longer includes a
+  word count.
+- Requires ProcessKit 0.1.0-beta.6 and WorkspaceKit 0.1.0-beta.11.
+
+### Added
+
+- `HighlightProviderDeclined` (`CodeEditorHighlightingCore`): a
+  `HighlightRangeProviding` conformer throws it from `highlights(in:of:)` to
+  have the built-in highlighter answer that query. An empty array still
+  means "no highlights". A provider's `CancellationError` is now asked again
+  on the next pass instead of being reported as a failure.
+- `FoldableRegion: Sendable` and `SearchResult: Sendable`.
+- `LSPClient.serverExitedUnexpectedly` (`@Published`, read-only) and
+  `LSPManager.serverExitedUnexpectedly(for:)`.
+- `ProjectSearchOptions.maxFileSizeBytes`, with a defaulted `init`
+  parameter.
+- `LSPManager.isDocumentOpen(filePath:)`, `LSPResponse.decodeIfPresent(as:)`
+  and `isNullResult`, `ServerCapabilities.semanticTokensLegend` (with a
+  defaulted `init` parameter), and `LSPTransport.setDisconnectHandler(_:)`
+  (default implementation does nothing; a custom transport should implement
+  it to report that its peer closed).
+
+### Fixed
+
+- Editing: the caret survives a re-render in a CRLF document; a
+  configuration change, or removing the editor, inside the binding debounce
+  keeps the last keystroke; a host replacement leaves a valid caret; a
+  re-parented editor keeps its delegate and features; re-attaching a
+  controller to the view it holds is a no-op; `autoScrollToCursor` no longer
+  pulls the view back to the caret on every scroll.
+- Folding: chevrons are drawn on the 1-based line a region starts on (a
+  region on line 1 gets one), toggling a line folds only the innermost region
+  there, `isFolded(at:)` is true inside a folded region, regions appear in
+  short documents and after typing, edits shift existing folds instead of
+  dropping them, and unfolding restores the paragraph style and foreground.
+  Gutter queries use a line index instead of rescanning the text; fold all
+  and the fold-store rebuild are one update. Brace folding takes a region's
+  type and title from its opening line and is linear on one long line (a
+  200 KB minified JSON took 135 s); XML folding is linear, UTF-16 correct
+  and the same for LF and CRLF; Lua folds CRLF files.
+- Find and replace: Find scans in one pass (32,000 matches in about 0.3 s
+  in a debug build), counts CRLF as one line break, finds regex matches of
+  the empty string again, and highlights without a layout pass per match.
+  The search flash is safe after Clear or an edit.
+- Outline: a ~200 KB JSON document crashed the editor with a stack overflow
+  in the symbol index, and deeply nested JSON or Swift crashed the parser.
+  The symbol index is now balanced and iterative, the outline tree is built
+  in one pass (it dropped grandchildren and was quadratic), and the JSON
+  provider walks with an explicit stack.
+- Highlighting: SwiftSyntax tokens and comments are placed at their own
+  text, not their trivia; the Swift async highlighter parses an immutable
+  snapshot; regex language definitions compile once per process and digit
+  runs no longer backtrack; regex capture offsets map to UTF-8 in one pass;
+  `FastJSONTokenizer` no longer serves a stale range-keyed cache.
+- Language providers: a single-line CSS `@media` rule no longer traps, and
+  carries its condition; XML symbols on a minified line are linear and
+  UTF-16; the keyword completion provider filters by the word before the
+  cursor; cached completions are keyed on the whole document.
+- LSP: `Content-Length` must be all digits, a frame over 64 MiB fails the
+  stream, and header names compare case-insensitively; semantic-token deltas
+  apply against the original array and token types are named by the server
+  legend; positions use the LSP line model (CRLF and lone CR); concurrent
+  starts of one language share one attempt; `ProcessTransport` teardown
+  reaps the child exactly once and a blocked write no longer blocks the
+  transport; `LSPContentCoordinator` holds its manager weakly; a failed
+  server start leaves the document closed and reopening re-sends the latest
+  text.
+- Per-keystroke and layout cost: re-applying the same theme no longer
+  restamps the document, sizing and the accessibility label no longer walk
+  the whole document, wrapped layout is invalidated only when the wrapping
+  width changes, and DEBUG rendering diagnostics no longer force a
+  full-document layout.
+- Lifetimes and cleanup: a memory-pressure pass no longer unfolds the user's
+  folds or clears other editors' undo; `LinkedLRU` no longer leaks every
+  entry; observers and cleanup handlers are removed when their owners go;
+  `BackgroundProcessor` cancels the real operation without corrupting its
+  count; cancelling a `KeyedDebouncer.run` caller cancels its operation;
+  `AsyncOperationManager` handles a zero batch size, cancelled schedules and
+  shared throttled runs; the completion popup window is no longer
+  over-released on dismissal.
+
 ## [0.1.0-beta.14] - 2026-11-12
 
 ### Changed
