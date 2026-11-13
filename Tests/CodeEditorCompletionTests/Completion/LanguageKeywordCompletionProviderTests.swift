@@ -52,4 +52,20 @@ final class LanguageKeywordCompletionProviderTests: XCTestCase {
         XCTAssertTrue(labels.contains("if"), "Generic fallback should include 'if'")
         XCTAssertTrue(labels.contains("return"), "Generic fallback should include 'return'")
     }
+
+    func testIndentedPartialKeywordIsMatchedByTheWordBeforeTheCursor() async throws {
+        let provider = LanguageKeywordCompletionProvider(language: .swift)
+        let text = "func f() {\n    ret"
+        let context = CompletionContextModel(
+            text: text,
+            cursorPosition: text.utf16.count,
+            language: .swift,
+            lineText: "    ret"
+        )
+
+        let labels = try await provider.completions(for: context).items.map(\.label)
+
+        XCTAssertTrue(labels.contains("return"), "\(labels)")
+        XCTAssertFalse(labels.contains("func"), "\(labels)")
+    }
 }

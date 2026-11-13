@@ -1,4 +1,5 @@
 import CodeEditorLanguages
+import CodeEditorTextModel
 import Foundation
 
 /// Built-in completion provider that emits language keywords pulled from
@@ -28,9 +29,11 @@ internal final class LanguageKeywordCompletionProvider: CompletionProvider {
     }
 
     func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+        // Filter by the word being typed, not the whole line: an indented
+        // `    ret` matched no keyword.
         let items = SharedCompletionBuilder.createKeywordCompletions(
             from: keywords,
-            filter: context.lineText,
+            filter: TextRangeUtilities.identifierPrefix(endingAtUTF16Offset: context.cursorPosition, in: context.text),
             languageName: language.name
         )
         return CompletionResult(
