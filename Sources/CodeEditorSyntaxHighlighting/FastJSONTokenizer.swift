@@ -48,7 +48,6 @@ package final class FastJSONTokenizer {
     // MARK: - Properties
 
     private let chunkSize = 4_096 // Process JSON in 4KB chunks
-    private var tokenCache = [NSRange: [Token]]()
 
     // MARK: - UTF-16 Constants
 
@@ -74,18 +73,16 @@ package final class FastJSONTokenizer {
     private let lChar: unichar = 0x006C            // l
     private let sChar: unichar = 0x0073            // s
     private let nChar: unichar = 0x006E            // n
-    private let cacheLimit = 50 // Cache up to 50 chunks
 
     // MARK: - Public Methods
 
     /// Tokenize JSON content with stable performance
     package func tokenize(_ text: String, in range: NSRange? = nil) -> [Token] {
-        let targetRange = range ?? NSRange(location: 0, length: text.count)
-
-        // Check cache first
-        if let cachedTokens = tokenCache[targetRange] {
-            return cachedTokens
-        }
+        // UTF-16 length: `count` (graphemes) dropped the tail of CRLF and
+        // emoji-bearing documents. There is no result cache: one keyed on
+        // the range alone returned another text's tokens, and it was
+        // mutated without synchronisation from concurrent highlight tasks.
+        let targetRange = range ?? NSRange(location: 0, length: text.utf16.count)
 
         // Process in chunks for consistent performance
         var tokens: [Token] = []
@@ -104,10 +101,6 @@ package final class FastJSONTokenizer {
 
             currentPosition += currentChunkSize
         }
-
-        // Cache the result
-        maintainCacheSize()
-        tokenCache[targetRange] = tokens
 
         return tokens
     }
@@ -151,10 +144,8 @@ package final class FastJSONTokenizer {
         return attributes
     }
 
-    /// Clear token cache
-    package func clearCache() {
-        tokenCache.removeAll()
-    }
+    /// Retained for callers; the tokenizer keeps no cache.
+    package func clearCache() {}
 
     // MARK: - Private Methods
 
@@ -402,17 +393,5 @@ package final class FastJSONTokenizer {
         }
 
         return nil
-    }
-
-    private func maintainCacheSize() {
-        if tokenCache.count >= cacheLimit {
-            // Remove oldest entries (simple FIFO for now)
-            let entriesToRemove = tokenCache.count - cacheLimit + 1
-            let sortedKeys = tokenCache.keys.sorted { $0.location < $1.location }
-
-            for index in 0..<entriesToRemove {
-                tokenCache.removeValue(forKey: sortedKeys[index])
-            }
-        }
     }
 }
