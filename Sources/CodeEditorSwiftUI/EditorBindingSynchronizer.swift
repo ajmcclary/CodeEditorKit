@@ -1,3 +1,4 @@
+import CodeEditorView
 import SwiftUI
 
 /// Synchronizes editor-originated text with a host binding without feedback.
@@ -84,14 +85,28 @@ final class EditorBindingSynchronizer {
 
     /// Called with each new host text (one that differs from the host's text
     /// at the previous render).
+    ///
+    /// Text that matches no outstanding write is a rewrite only when it
+    /// keeps most of the newest write (the common prefix and suffix cover at
+    /// least half of the longer text), as normalizing a write does. Anything
+    /// else is the host's own change: a host that never takes the editor's
+    /// writes leaves one outstanding forever, and its next reload must not
+    /// be mistaken for an answer to it.
     func consumeEcho(ofHostText text: String) -> EchoMatch {
-        guard !outstandingEchoes.isEmpty else { return .noWriteAwaited }
+        guard let newest = outstandingEchoes.last else { return .noWriteAwaited }
         if let index = outstandingEchoes.firstIndex(of: text) {
             outstandingEchoes.removeFirst(index + 1)
             return .echo
         }
         outstandingEchoes.removeAll()
-        return .rewrite
+        return Self.isRewrite(text, of: newest) ? .rewrite : .noWriteAwaited
+    }
+
+    static func isRewrite(_ text: String, of written: String) -> Bool {
+        let span = CodeEditorView.changedSpan(from: written, to: text)
+        let writtenLength = written.utf16.count
+        let shared = writtenLength - span.old.length
+        return shared > 0 && shared * 2 >= max(writtenLength, text.utf16.count)
     }
 
     func cancel() {

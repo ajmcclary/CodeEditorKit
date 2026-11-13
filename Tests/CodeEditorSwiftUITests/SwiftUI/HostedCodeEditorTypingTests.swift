@@ -304,6 +304,26 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertFalse(undoManager.canUndo)
     }
 
+    /// A host that never takes the editor's writes leaves the last one
+    /// outstanding; its next change of its own is still a replacement (the
+    /// undo history describes text the host never held), not a rewrite.
+    func testAHostChangeAfterAWriteTheHostNeverTookDiscardsUndo() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .neverTakesWrites)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+        type("X", into: textView)
+        spin(for: 0.4)
+        XCTAssertEqual(store.text, "abc")
+
+        store.text = "other document\n"
+        spin(for: 0.4)
+
+        XCTAssertEqual(textView.string, "other document\n")
+        let undoManager = try XCTUnwrap(textView.undoManager)
+        XCTAssertFalse(undoManager.canUndo, "a replacement kept the old text's undo history")
+    }
+
     /// A host that applies binding writes late has several in flight; each
     /// late echo is one of the editor's own writes, not a replacement.
     func testAHostThatAppliesWritesLateKeepsEveryKeystroke() throws {
@@ -452,6 +472,9 @@ enum HostedEditorMode {
     case trimmingSetter
     /// A binding whose setter applies each value 300 ms later.
     case lateSetter
+    /// A binding whose setter is ignored and no `.onTextChange`: the host
+    /// never takes the editor's writes.
+    case neverTakesWrites
 }
 
 struct HostedEditor: View {
@@ -466,7 +489,7 @@ struct HostedEditor: View {
             get: { store.text },
             set: { newText in
                 switch mode {
-                case .setterIgnored:
+                case .setterIgnored, .neverTakesWrites:
                     break
 
                 case .trimmingSetter:
@@ -512,7 +535,7 @@ struct HostedEditor: View {
                 editor
                     .onTextChange { store.text = $0 }
 
-            case .trimmingSetter, .lateSetter:
+            case .trimmingSetter, .lateSetter, .neverTakesWrites:
                 editor
             }
         }

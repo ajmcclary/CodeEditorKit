@@ -48,4 +48,16 @@ struct EditorBindingSynchronizerTests {
 
         #expect(writes.isEmpty)
     }
+
+    @Test("a rewrite keeps most of the write; a reload does not")
+    func rewriteIsANormalizationOfTheWrite() {
+        #expect(EditorBindingSynchronizer.isRewrite("abcx", of: "abcx "))
+        #expect(EditorBindingSynchronizer.isRewrite("let a = 1\n", of: "let a = 1"))
+        // Converting every line ending changes the text throughout: treated
+        // as the host's own change, so undo is discarded (safe, not kept).
+        #expect(!EditorBindingSynchronizer.isRewrite("a\nb\n", of: "a\r\nb\r\n"))
+        #expect(!EditorBindingSynchronizer.isRewrite("other document\n", of: "abcX"))
+        #expect(!EditorBindingSynchronizer.isRewrite("x", of: ""))
+        #expect(!EditorBindingSynchronizer.isRewrite("", of: "abc"))
+    }
 }

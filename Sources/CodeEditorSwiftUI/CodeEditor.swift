@@ -52,7 +52,10 @@ import SwiftUI
 ///   switch, an undo elsewhere). The text is replaced and its undo history is
 ///   discarded, because its offsets describe the old text.
 /// - **Different text in answer to an editor write** (a host that normalizes
-///   what it stores, for example trimming trailing spaces): applied as an
+///   what it stores, for example trimming trailing spaces), recognised by
+///   keeping most of the written text (a common prefix and suffix covering
+///   at least half of it; a change throughout, such as converting every line
+///   ending, counts as a replacement): applied as an
 ///   ordinary undoable edit, so undo history is kept. On macOS, undo and redo
 ///   treat the rewrite and the edit it answered as one step, so the text the
 ///   editor arrives at is text the host will store and the two agree.
