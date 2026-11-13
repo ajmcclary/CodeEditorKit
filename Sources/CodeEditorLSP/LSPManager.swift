@@ -321,13 +321,22 @@ public final class LSPManager: ObservableObject {
                 }
             }()
 
+            // The editor inserts `insertText` literally; expand snippet
+            // syntax (`${1:String}`) to the text it stands for.
+            let rawInsertText = lspItem.insertText ?? lspItem.textEdit?.newText ?? lspItem.label
+            let insertText = lspItem.insertTextFormat == .snippet
+                ? SnippetText.plainText(fromSnippet: rawInsertText)
+                : rawInsertText
+
             let convertedItem = CompletionItemAdapter(
                 CompletionItemModel(
                     label: lspItem.label,
-                    insertText: lspItem.insertText ?? lspItem.label,
-                    kind: .text, // Simplified for now
+                    insertText: insertText,
+                    kind: LSPCompletionProvider.convertLSPKindToCompletionKind(lspItem.kind),
                     detail: lspItem.detail,
-                    documentation: documentationText
+                    documentation: documentationText,
+                    sortText: lspItem.sortText,
+                    filterText: lspItem.filterText
                 )
             )
             return LSPManagerCompletionItem(item: convertedItem, languageId: document.languageId, client: client)

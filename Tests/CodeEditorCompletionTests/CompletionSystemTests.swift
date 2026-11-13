@@ -280,7 +280,9 @@ final class CompletionSystemTests: XCTestCase {
         let snippet = try XCTUnwrap(result.items.first { $0.kind == .snippet && $0.label == "def" })
 
         XCTAssertTrue(snippet.snippetSupport)
-        XCTAssertTrue(snippet.insertText.contains("${1:function_name}"))
+        // Placeholders are expanded: the editor inserts insertText literally.
+        XCTAssertTrue(snippet.insertText.contains("function_name"))
+        XCTAssertFalse(snippet.insertText.contains("${"))
     }
 
     @MainActor

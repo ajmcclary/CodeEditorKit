@@ -310,8 +310,10 @@ public struct CompletionItemClientCapabilities: Codable, Sendable {
         self.documentationFormat = documentationFormat
     }
 
+    /// `snippetSupport` is false: the editor has no snippet session, so it
+    /// asks servers for plain insert text.
     public static let `default` = Self(
-        snippetSupport: true,
+        snippetSupport: false,
         documentationFormat: [.markdown, .plaintext]
     )
 }

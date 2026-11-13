@@ -60,9 +60,11 @@ public enum SharedCompletionBuilder {
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
             }
             .map { function in
+                // Plain `()`: the editor inserts text literally, so a `$0`
+                // cursor marker would land in the document.
                 let insertText = function.hasSuffix("!") || function.hasSuffix("()")
                     ? function
-                    : "\(function)($0)"
+                    : "\(function)()"
 
                 return CompletionItemModel(
                     label: function,
@@ -111,7 +113,7 @@ public enum SharedCompletionBuilder {
             .map { snippet in
                 CompletionItemModel(
                     label: snippet.label,
-                    insertText: snippet.insertText,
+                    insertText: SnippetText.plainText(fromSnippet: snippet.insertText),
                     kind: .snippet,
                     detail: "\(languageName) snippet",
                     documentation: snippet.description,

@@ -260,7 +260,7 @@ public final class LSPCompletionProvider: CompletionProvider {
         context: CompletionContextModel
     ) -> CompletionItemModel {
         // Convert LSP completion item kind to our kind
-        let kind = convertLSPKindToCompletionKind(lspItem.kind)
+        let kind = Self.convertLSPKindToCompletionKind(lspItem.kind)
 
         // Extract documentation
         let documentation = extractDocumentation(from: lspItem.documentation)
@@ -296,7 +296,7 @@ public final class LSPCompletionProvider: CompletionProvider {
         )
     }
 
-    private func convertLSPKindToCompletionKind(_ lspKind: LSPCompletionItemKind?) -> CompletionItemKind {
+    nonisolated static func convertLSPKindToCompletionKind(_ lspKind: LSPCompletionItemKind?) -> CompletionItemKind {
         guard let lspKind else { return .text }
 
         switch lspKind {
