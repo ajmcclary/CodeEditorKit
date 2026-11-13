@@ -17,7 +17,7 @@ func utf16LineStartLocations(of lines: [String]) -> [Int] {
 // MARK: - Foldable Region
 
 /// Represents a foldable region in the text
-public struct FoldableRegion: Identifiable {
+public struct FoldableRegion: Identifiable, Sendable {
     public let id = UUID()
     public var range: NSRange
     public var title: String
@@ -49,9 +49,12 @@ public enum FoldingType: Equatable, Sendable {
 
 // MARK: - Code Folding Provider Protocol
 
-/// Protocol for language-specific folding providers
-@MainActor
-public protocol CodeFoldingProvider {
+/// Protocol for language-specific folding providers.
+///
+/// Detection is a pure function of the text and runs off the main actor: the
+/// editor calls it on a snapshot of the document and applies the result only
+/// if the text is still the snapshot.
+public protocol CodeFoldingProvider: Sendable {
     /// Detect foldable regions in the supplied source text.
     /// - Parameter text: The full source text to scan.
     /// - Returns: All foldable regions discovered.

@@ -4,7 +4,6 @@ import Foundation
 // MARK: - Heuristic Folding Provider
 
 /// Delegating code folding provider for languages without a dedicated provider.
-@MainActor
 package final class HeuristicFoldProvider: CodeFoldingProvider {
     private let language: Language
 

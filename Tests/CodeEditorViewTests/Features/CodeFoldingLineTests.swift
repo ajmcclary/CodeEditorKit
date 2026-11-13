@@ -191,5 +191,120 @@ final class CodeFoldingLineTests: XCTestCase {
         XCTAssertNotNil(storage.attribute(.foregroundColor, at: probe, effectiveRange: nil))
         XCTAssertEqual(hiddenUnits(in: view), 0)
     }
+
+    // MARK: - Detection off the main thread
+
+    /// The longest the main thread goes without running its run loop while
+    /// `body` runs, sampled every few milliseconds over `duration`.
+    private func longestMainThreadStall(over duration: TimeInterval, after body: () -> Void) -> TimeInterval {
+        body()
+        let end = Date().addingTimeInterval(duration)
+        var last = Date()
+        var longest: TimeInterval = 0
+        while Date() < end {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.002))
+            let now = Date()
+            longest = max(longest, now.timeIntervalSince(last))
+            last = now
+        }
+        return longest
+    }
+
+    func testDetectionAfterTypingDoesNotBlockTheMainThread() async throws {
+        let function = "  func f() {\n    a\n    b\n    c\n  }\n\n"
+        let source = "struct A {\n" + String(repeating: function, count: 3_000) + "}\n"
+        let view = makeEditor(source)
+        var configuration = view.configuration
+        configuration.display.isSyntaxHighlightingEnabled = false
+        view.configuration = configuration
+        try await waitForRegions(in: view, count: 3_001, timeout: 30)
+
+        let stall = longestMainThreadStall(over: 1.5) {
+            view.setSelectedRange(NSRange(location: 11, length: 0))
+            view.insertText("x", replacementRange: NSRange(location: NSNotFound, length: 0))
+        }
+
+        XCTAssertLessThan(stall, 0.25, "the main thread stalled \(stall) s after one keystroke")
+        try await waitForRegions(in: view, count: 3_001, timeout: 10)
+    }
+
+    /// A provider as slow as a large document makes a real one: if the
+    /// engine ran it on the main thread, the main thread would stall for the
+    /// whole sleep.
+    private final class ThreadRecord: @unchecked Sendable {
+        private let lock = NSLock()
+        private var ranOnMain: [Bool] = []
+
+        var record: [Bool] { lock.withLock { ranOnMain } }
+
+        func note() {
+            let onMain = Thread.isMainThread
+            lock.withLock { ranOnMain.append(onMain) }
+        }
+    }
+
+    private struct SlowFoldingProvider: CodeFoldingProvider {
+        let threads: ThreadRecord
+
+        func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
+            Self.blockThisThread(for: 0.6, noting: threads)
+            return await BraceFoldingProvider().detectFoldableRegions(in: text)
+        }
+
+        private static func blockThisThread(for seconds: TimeInterval, noting threads: ThreadRecord) {
+            threads.note()
+            Thread.sleep(forTimeInterval: seconds)
+        }
+    }
+
+    func testASlowProviderRunsOffTheMainThread() async throws {
+        let view = makeEditor(Self.nested)
+        let threads = ThreadRecord()
+        view.codeFoldingEngine.registerProvider(SlowFoldingProvider(threads: threads), for: .swift)
+
+        let stall = longestMainThreadStall(over: 1.5) {
+            view.insertText("\n", replacementRange: NSRange(location: 0, length: 0))
+        }
+
+        XCTAssertLessThan(stall, 0.3, "the main thread stalled \(stall) s while the provider ran")
+        try await waitForRegions(in: view, count: 3)
+        XCTAssertFalse(threads.record.isEmpty)
+        XCTAssertFalse(threads.record.contains(true), "detection ran on the main thread")
+    }
+
+    func testADetectionOverTextThatChangedMeanwhileIsNotApplied() async throws {
+        let view = makeEditor(Self.nested)
+        try await waitForRegions(in: view, count: 3)
+
+        // Detection runs on a snapshot; edit the text while it may be
+        // running, then let everything settle: the regions must describe
+        // the final text (one more function, at line 14).
+        view.setSelectedRange(NSRange(location: Self.nested.utf16.count, length: 0))
+        view.insertText("func h() {\n  x\n  y\n}\n", replacementRange: NSRange(location: NSNotFound, length: 0))
+        try await Task.sleep(nanoseconds: 260_000_000)
+        view.insertText("\n", replacementRange: NSRange(location: 0, length: 0))
+        try await waitForRegions(in: view, count: 4)
+        try await Task.sleep(nanoseconds: 600_000_000)
+
+        XCTAssertEqual((1...20).filter { view.isFoldable(at: $0) }, [2, 3, 9, 15])
+    }
+
+    // MARK: - Folds and edits at their start
+
+    func testTypingAtAFoldedRegionsStartKeepsItFolded() async throws {
+        let view = makeEditor(Self.nested)
+        try await waitForRegions(in: view, count: 3)
+        XCTAssertTrue(view.toggleFold(at: 8))
+        let hidden = hiddenUnits(in: view)
+        let region = try XCTUnwrap(view.codeFoldingEngine.foldableRegions.first { view.codeFoldingEngine.foldedRegions.contains($0.id) })
+
+        // `func g() {` → `func g() throws {`: typed right where the region starts.
+        view.setSelectedRange(NSRange(location: region.range.location, length: 0))
+        view.insertText("throws ", replacementRange: NSRange(location: NSNotFound, length: 0))
+        try await Task.sleep(nanoseconds: 700_000_000)
+
+        XCTAssertTrue(view.isFolded(at: 8), "the fold was dropped")
+        XCTAssertEqual(hiddenUnits(in: view), hidden)
+    }
 }
 #endif

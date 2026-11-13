@@ -246,7 +246,7 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     /// additional newline inside the slice contributes one line.
     /// Internal-static so tests in `@testable` builds can pin the
     /// matrix without going through the full engine pipeline.
-    internal static func lineSpan(of range: NSRange, in text: String) -> Int {
+    nonisolated internal static func lineSpan(of range: NSRange, in text: String) -> Int {
         guard range.length > 0 else { return 1 }
         let textLength = TextRangeUtilities.utf16Length(of: text)
         let clampedStart = max(0, min(range.location, textLength))
@@ -263,7 +263,7 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
 
     // MARK: - Cache Management
 
-    private func combineHashes(_ hash1: Int, _ hash2: Int) -> Int {
+    nonisolated private static func combineHashes(_ hash1: Int, _ hash2: Int) -> Int {
         // Simple hash combination
         var hasher = Hasher()
         hasher.combine(hash1)
@@ -362,8 +362,10 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         let adjustedRegions = foldableRegions.map { region in
             var adjustedRegion = region
 
-            // If edit is before the region, shift it
-            if editedRange.location < region.range.location {
+            // If edit is before the region — or an insertion right at its
+            // start, which re-detection finds after the inserted text — shift it
+            if editedRange.location < region.range.location
+                || (editedRange.length == 0 && editedRange.location == region.range.location) {
                 adjustedRegion.range.location += changeInLength
             }
             // If edit is within the region, adjust length
@@ -385,6 +387,18 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         lastTextHash = 0
     }
 
+    /// Documents longer than this (UTF-16 units) get no fold regions: even a
+    /// linear scan of them per typing pause is not worth it.
+    internal static let maximumDetectionLength = 4_000_000
+
+    private enum DetectionOutcome: Sendable {
+        case cached([FoldableRegion])
+        case detected(regions: [FoldableRegion], textHash: Int, cacheKey: Int)
+    }
+
+    /// Detects regions on a snapshot of the text off the main actor, and
+    /// applies them only if the text has not changed meanwhile (a newer
+    /// detection is then already scheduled by the edit that changed it).
     private func detectFoldableRegions() async {
         guard let textView else {
             foldableRegions = []
@@ -399,55 +413,79 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
 
         // Read through the TK2-safe accessor; `textView.textStorage` triggers
         // Apple's TK1 compatibility shim.
-        let text = textView.textKitBridge.documentString
-        guard !text.isEmpty else {
+        let documentLength = textView.textKitBridge.documentLength
+        guard documentLength > 0 else {
             foldableRegions = []
+            return
+        }
+        guard documentLength <= Self.maximumDetectionLength else {
+            updateRegions([])
+            foldStorage = LineFoldStorage(documentLength: documentLength)
             return
         }
 
         let startTime = CFAbsoluteTimeGetCurrent()
-
-        // Check cache first
-        let currentTextHash = text.hashValue
-        let cacheKey = combineHashes(currentTextHash, language.hashValue)
-
-        if currentTextHash == lastTextHash &&
-           language == lastLanguage,
-           let cachedRegions = foldRegionCache[cacheKey] {
-            // Use cached regions
-            foldableRegions = cachedRegions
-            return
-        }
+        let generation = textView.textChangeEventGeneration
+        // An immutable copy: the storage's own string is mutable and edited
+        // on the main actor while the detection runs.
+        // swiftlint:disable:next legacy_objc_type
+        let snapshot = String(NSString(string: textView.textKitBridge.documentString))
+        let minimumLineCount = configuration.minimumLineCount
+        let previousTextHash = lastTextHash
+        let previousLanguage = lastLanguage
+        let cache = foldRegionCache
 
         isProcessing = true
         defer { isProcessing = false }
 
-        let documentLength = TextRangeUtilities.utf16Length(of: text)
-        let regions = await provider.detectFoldableRegions(in: text)
-
-        // Filter and sort regions
-        let validRegions = regions
-            .filter { region in
-                // Validate region. `minimumLineCount` is a line-count
-                // setting, but NSRange.length is UTF-16 code units —
-                // comparing them directly let short single-line regions
-                // pass the threshold as long as they contained at least
-                // `minimumLineCount` UTF-16 characters.
-                region.range.location >= 0 &&
-                NSMaxRange(region.range) <= documentLength &&
-                Self.lineSpan(of: region.range, in: text) >= configuration.minimumLineCount
+        let detection = Task.detached(priority: .utility) { () -> DetectionOutcome in
+            var text = snapshot
+            text.makeContiguousUTF8()
+            let textHash = text.hashValue
+            let cacheKey = Self.combineHashes(textHash, language.hashValue)
+            if textHash == previousTextHash, language == previousLanguage, let cached = cache[cacheKey] {
+                return .cached(cached)
             }
-            .sorted { $0.range.location < $1.range.location }
+            let regions = await provider.detectFoldableRegions(in: text)
+            let length = text.utf16.count
+            let valid = regions
+                .filter { region in
+                    // `minimumLineCount` is a line count; NSRange.length is
+                    // UTF-16 units, so compare line spans.
+                    region.range.location >= 0
+                        && NSMaxRange(region.range) <= length
+                        && Self.lineSpan(of: region.range, in: text) >= minimumLineCount
+                }
+                .sorted { $0.range.location < $1.range.location }
+            return .detected(regions: valid, textHash: textHash, cacheKey: cacheKey)
+        }
+        let outcome = await withTaskCancellationHandler {
+            await detection.value
+        } onCancel: {
+            detection.cancel()
+        }
 
-        // Update cache
-        lastTextHash = currentTextHash
-        lastLanguage = language
-        maintainCacheSize()
-        foldRegionCache[cacheKey] = validRegions
-        recordCacheInsertion(cacheKey)
+        guard !Task.isCancelled,
+              self.textView === textView,
+              textView.textChangeEventGeneration == generation else { return }
+
+        let validRegions: [FoldableRegion]
+        switch outcome {
+        case .cached(let regions):
+            foldableRegions = regions
+            return
+
+        case let .detected(regions, textHash, cacheKey):
+            validRegions = regions
+            lastTextHash = textHash
+            lastLanguage = language
+            maintainCacheSize()
+            foldRegionCache[cacheKey] = validRegions
+            recordCacheInsertion(cacheKey)
+        }
 
         // Build hierarchy
-        let hierarchicalRegions = buildHierarchy(from: validRegions)
+        let hierarchicalRegions = Self.buildHierarchy(from: validRegions)
 
         // Update regions, preserving fold state
         updateRegions(hierarchicalRegions)
@@ -465,26 +503,27 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         )
     }
 
-    private func buildHierarchy(from regions: [FoldableRegion]) -> [FoldableRegion] {
+    /// Levels and parents for regions sorted by location, from a stack of the
+    /// enclosing regions: O(regions) for nested or disjoint regions (what the
+    /// providers produce), where the previous scan of every earlier region
+    /// was O(regions²).
+    private static func buildHierarchy(from regions: [FoldableRegion]) -> [FoldableRegion] {
         var hierarchicalRegions: [FoldableRegion] = []
+        hierarchicalRegions.reserveCapacity(regions.count)
+        var enclosing: [FoldableRegion] = []
 
         for region in regions {
-            // Find parent region
-            var parent: FoldableRegion?
-            var level = 0
-
-            for existing in hierarchicalRegions.reversed() where TextRangeUtilities.contains(existing.range, region.range) {
-                parent = existing
-                level = existing.level + 1
-                break
+            while let candidate = enclosing.last, !TextRangeUtilities.contains(candidate.range, region.range) {
+                enclosing.removeLast()
             }
+            let parent = enclosing.last
 
-            // Create hierarchical region
             var updatedRegion = region
-            updatedRegion.level = level
+            updatedRegion.level = parent.map { $0.level + 1 } ?? 0
             updatedRegion.parentId = parent?.id
 
             hierarchicalRegions.append(updatedRegion)
+            enclosing.append(updatedRegion)
         }
 
         return hierarchicalRegions
