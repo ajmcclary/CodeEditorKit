@@ -125,6 +125,45 @@ final class LanguageProviderRobustnessTests: XCTestCase {
         XCTAssertLessThan(seconds, 10, "Brace folding took \(seconds)s")
     }
 
+    /// Minified JSON / JavaScript / CSS: one 200 KB line. Detection must be
+    /// linear in the document and keep each region's title short.
+    func testBraceFoldingIsLinearOnOneLongLine() async {
+        let unit = #"{"key": [1, 2, {"inner": "v"}], "other": true},"#
+        let source = "[" + String(repeating: unit, count: 200_000 / unit.utf16.count) + "{}]"
+        XCTAssertGreaterThan(source.utf16.count, 199_000)
+        var regions: [FoldableRegion] = []
+        let seconds = await elapsed {
+            regions = await BraceFoldingProvider().detectFoldableRegions(in: source)
+        }
+        // Each region was the whole line prefix before: 105 s, 892 MB (-O).
+        XCTAssertLessThan(seconds, 2, "Brace folding took \(seconds)s on one 200 KB line")
+        XCTAssertLessThanOrEqual(regions.map(\.title.utf16.count).max() ?? 0, 200)
+    }
+
+    /// Every folding provider on one long line, shaped for its language.
+    func testFoldingProvidersAreLinearOnOneLongLine() async {
+        let line = { (unit: String) in String(repeating: unit, count: 200_000 / unit.utf16.count) }
+        let cases: [(String, any CodeFoldingProvider, String)] = [
+            ("indentation", IndentationFoldingProvider(), line("a b c d ")),
+            ("markdown", MarkdownFoldingProvider(), "# " + line("word ")),
+            ("xml", XMLFoldingProvider(), line("<a><b>t</b></a>")),
+            ("ruby", RubyFoldingProvider(), line("def f; end; ")),
+            ("shell", ShellFoldingProvider(), line("if x; then y; fi; ")),
+            ("sql", SQLFoldingProvider(), line("BEGIN SELECT 1; END; ")),
+            ("lua", LuaFoldingProvider(), line("function f() end ")),
+            ("toml", TomlFoldingProvider(), "[t]" + line("a = 1 ")),
+            ("dockerfile", DockerfileFoldingProvider(), "RUN " + line("x && "))
+        ]
+        for (name, provider, source) in cases {
+            var regions: [FoldableRegion] = []
+            let seconds = await elapsed {
+                regions = await provider.detectFoldableRegions(in: source)
+            }
+            XCTAssertLessThan(seconds, 2, "\(name) folding took \(seconds)s on one 200 KB line")
+            XCTAssertLessThanOrEqual(regions.map(\.title.utf16.count).max() ?? 0, 200, name)
+        }
+    }
+
     // MARK: - JSON / Markdown / indentation / Lua
 
     func testJSONKeyLocationsAreUTF16() async {

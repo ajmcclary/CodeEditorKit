@@ -32,7 +32,9 @@ package struct MarkdownFoldingProvider: CodeFoldingProvider {
                     ))
                 }
 
-                headerStack.append((index, headerLevel, line))
+                // A title is a label, not the line: a minified or generated
+                // file can put megabytes on one header line.
+                headerStack.append((index, headerLevel, String(line.prefix(BraceFoldingProvider.titleWindow))))
             }
         }
 
