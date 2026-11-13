@@ -126,4 +126,44 @@ final class LinkedLRUTests: XCTestCase {
         XCTAssertNil(cache.value(forKey: "config-b"))
         XCTAssertNil(cache.value(forKey: "config-c"))
     }
+
+    private final class Payload {
+        let onDeinit: () -> Void
+
+        init(onDeinit: @escaping () -> Void) {
+            self.onDeinit = onDeinit
+        }
+
+        deinit {
+            onDeinit()
+        }
+    }
+
+    private final class Counter {
+        var alive = 0
+    }
+
+    func testRemoveAllReleasesEveryValue() {
+        let counter = Counter()
+        let cache = LinkedLRU<Int, Payload>(capacity: 100)
+        for key in 0..<100 {
+            counter.alive += 1
+            cache.setValue(Payload { counter.alive -= 1 }, forKey: key)
+        }
+        cache.removeAll()
+        XCTAssertEqual(counter.alive, 0)
+    }
+
+    func testReleasingTheCacheReleasesEveryValue() {
+        let counter = Counter()
+        do {
+            let cache = LinkedLRU<Int, Payload>(capacity: 100)
+            for key in 0..<100 {
+                counter.alive += 1
+                cache.setValue(Payload { counter.alive -= 1 }, forKey: key)
+            }
+            _ = cache.value(forKey: 50)
+        }
+        XCTAssertEqual(counter.alive, 0)
+    }
 }

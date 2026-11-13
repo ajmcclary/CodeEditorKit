@@ -15,7 +15,9 @@ public final class LinkedLRU<Key: Hashable, Value> {
     private final class Node {
         let key: Key
         var value: Value
-        var prev: Node?
+        /// Weak: `next` (and `nodes`) own the nodes. Two strong links formed
+        /// a retain cycle between neighbours, so no node was ever freed.
+        weak var prev: Node?
         var next: Node?
 
         init(key: Key, value: Value) {
@@ -110,9 +112,24 @@ public final class LinkedLRU<Key: Hashable, Value> {
 
     /// Removes every entry from the cache.
     public func removeAll() {
+        unlinkAll()
         nodes.removeAll()
+    }
+
+    deinit {
+        unlinkAll()
+    }
+
+    /// Breaks the `next` chain node by node, so releasing a long list does
+    /// not recurse once per node.
+    private func unlinkAll() {
+        var current = head
         head = nil
         tail = nil
+        while let node = current {
+            current = node.next
+            node.next = nil
+        }
     }
 
     /// Removes and returns the least-recently-used entry.
