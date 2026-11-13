@@ -261,7 +261,8 @@ public final class SearchReplaceEngine: ObservableObject {
             replacing: ranges,
             with: replacement,
             in: textView,
-            actionName: "Replace All"
+            actionName: "Replace All",
+            preservingSelection: true
         ) else { return 0 }
         let replacementCount = ranges.count
 
@@ -314,7 +315,33 @@ public final class SearchReplaceEngine: ObservableObject {
     /// single user edit: the text view's gating and undo registration run
     /// first, the change notification is posted once afterwards, and the
     /// whole edit is one undo step. Returns false when the view refused it.
+    /// With `preservingSelection` (macOS), the selection stays where it was,
+    /// moved by the edit, instead of following the storage edit's span.
     private func applyUserEdit(
+        replacing ranges: [NSRange],
+        with replacement: String,
+        in textView: CodeEditorView,
+        actionName: String,
+        preservingSelection: Bool = false
+    ) -> Bool {
+        #if canImport(AppKit)
+        let selection = textView.selectedRange()
+        guard applyStorageEdit(replacing: ranges, with: replacement, in: textView, actionName: actionName) else {
+            return false
+        }
+        if preservingSelection {
+            let replacementLength = TextRangeUtilities.utf16Length(of: replacement)
+            let start = Self.position(selection.location, afterReplacing: ranges, withLength: replacementLength)
+            let end = Self.position(NSMaxRange(selection), afterReplacing: ranges, withLength: replacementLength)
+            textView.setSelectedRange(NSRange(location: start, length: max(0, end - start)))
+        }
+        return true
+        #else
+        return applyStorageEdit(replacing: ranges, with: replacement, in: textView, actionName: actionName)
+        #endif
+    }
+
+    private func applyStorageEdit(
         replacing ranges: [NSRange],
         with replacement: String,
         in textView: CodeEditorView,
@@ -372,6 +399,24 @@ public final class SearchReplaceEngine: ObservableObject {
         }
         return applied
         #endif
+    }
+
+    /// Where offset `position` lands once each of `ranges` (sorted, disjoint)
+    /// is replaced by text `replacementLength` UTF-16 units long: moved by
+    /// the length changes before it, and to the replacement's start when it
+    /// was inside a range.
+    package nonisolated static func position(
+        _ position: Int,
+        afterReplacing ranges: [NSRange],
+        withLength replacementLength: Int
+    ) -> Int {
+        var shift = 0
+        for range in ranges {
+            if position <= range.location { break }
+            if position < NSMaxRange(range) { return range.location + shift }
+            shift += replacementLength - range.length
+        }
+        return position + shift
     }
 
     /// The Sendable part of `SearchOptions` the scan needs.

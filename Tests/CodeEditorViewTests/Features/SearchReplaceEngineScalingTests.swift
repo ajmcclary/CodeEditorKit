@@ -206,6 +206,41 @@ final class SearchReplaceEngineScalingTests: XCTestCase {
         XCTAssertEqual(view.string, "a foox b")
     }
 
+    /// Replace All leaves the selection where it was, moved by the length
+    /// changes of the matches before it; an end inside a match lands at
+    /// that match's replacement start. One storage edit over the span of the
+    /// matches used to put the caret at the span's end.
+    func testReplaceAllKeepsTheSelectionWhereItWas() async throws {
+        // "foo a foo b foo c": matches at 0, 6, 12.
+        let cases: [(selection: NSRange, expected: NSRange)] = [
+            // Inside the 2nd match: its replacement's start.
+            (NSRange(location: 8, length: 0), NSRange(location: 7, length: 0)),
+            // Past one, two and three matches (each grows by one).
+            (NSRange(location: 4, length: 0), NSRange(location: 5, length: 0)),
+            (NSRange(location: 10, length: 0), NSRange(location: 12, length: 0)),
+            (NSRange(location: 17, length: 0), NSRange(location: 20, length: 0)),
+            // Spanning the 2nd match.
+            (NSRange(location: 4, length: 6), NSRange(location: 5, length: 7)),
+            // Before every match.
+            (NSRange(location: 0, length: 0), NSRange(location: 0, length: 0))
+        ]
+        for (selection, expected) in cases {
+            let view = makeView("foo a foo b foo c")
+            let engine = SearchReplaceEngine()
+            engine.attach(to: view)
+            var options = SearchOptions()
+            options.flashResult = false
+            options.highlightResults = false
+            view.setSelectedRange(selection)
+
+            let count = await engine.replaceAll(pattern: "foo", with: "quux", options: options)
+
+            XCTAssertEqual(count, 3)
+            XCTAssertEqual(view.string, "quux a quux b quux c")
+            XCTAssertEqual(view.selectedRange(), expected, "from \(selection)")
+        }
+    }
+
     /// One storage edit for every match: one per match made Replace All
     /// quadratic (5 s at 3,000 matches; 60,000 did not finish in 200 s).
     func testReplaceAllOf60000MatchesIsOneFastEditAndOneUndoStep() async throws {
