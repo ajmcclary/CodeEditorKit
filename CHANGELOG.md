@@ -5,7 +5,38 @@ All notable changes to CodeEditorKit are documented in this file.
 Entries dated before the 2026-07-25 rename deliberately keep the package's
 former name, `CodeEditorPlugin` — they record what shipped at the time.
 
-## [Unreleased]
+## [0.1.0-beta.16] - 2026-11-13
+
+This release remediates the memory-cleanup findings that followed the
+2026-11-12 full review of the package.
+
+### Changed
+
+- **A memory cleanup pass releases only caches.** It no longer discards the
+  user's undo history, disconnects language servers, drops their
+  configurations and open documents, cancels the completion or highlighting
+  requests in flight, or resets the learned completion ranking. It still
+  drops the highlighting token cache and the completion response cache,
+  which are rebuilt on demand. The default `MemoryManagementPolicy.live`
+  no longer needs to be avoided for this; neither `.live` nor `.disabled`
+  discards undo on any pass.
+- **Automatic cleanup is edge-triggered and rate-limited.** It runs once
+  when the footprint first goes above `memoryThresholdMB`; while it stays
+  above, again only after growing by half the threshold or when the
+  provider reports `.critical`, and never within the new
+  `MemoryMonitor.minimumAutomaticCleanupInterval` (default 60 s) of the
+  last automatic pass, including after a dip below the threshold re-arms
+  it. It used to run on every 10 s check, so a host above the threshold got
+  a pass every 10 s. The threshold measures the whole process's resident
+  memory, not the editor's share. `.critical` is not a system
+  memory-pressure event: `SystemMemoryProvider` reports it when this
+  process's resident memory is at least 85 % of physical RAM. The periodic
+  pass (`enablePeriodicCleanup`, every 5 minutes) is unchanged.
+- Requires WorkspaceKit 0.1.0-beta.12.
+
+### Added
+
+- `MemoryMonitor.minimumAutomaticCleanupInterval` (default 60 s).
 
 ### Fixed
 
@@ -13,8 +44,7 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
   cleanup handler discarded it on every pass (the window's whole stack
   before 0.1.0-beta.15), and passes are routine: `MemoryMonitor` compares
   the whole process's resident memory with its 100 MB threshold, which an
-  app embedding the editor is always over. The default
-  `MemoryManagementPolicy.live` no longer needs to be avoided for this.
+  app embedding the editor is always over.
 - **Other cleanup handlers release only caches.** A pass no longer
   disconnects language servers or drops their configurations and open
   documents (`LSPManager`), cancels the completion request in flight
@@ -24,19 +54,6 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
   counts lived in an `LRUCache` that every pass trimmed by a quarter (all of
   them when there were few), so the learned order reverted to alphabetical;
   they are no longer released by memory cleanup at all.
-
-### Changed
-
-- **Automatic cleanup is edge-triggered and rate-limited.** It runs when the
-  footprint first goes above `memoryThresholdMB`; while it stays above, again
-  only after growing by half the threshold or when the provider reports
-  `.critical`, and never within the new
-  `MemoryMonitor.minimumAutomaticCleanupInterval` (default 60 s) of the last
-  automatic pass, including after a dip below the threshold re-arms it. It
-  used to run on every 10 s check. `.critical` is not a system
-  memory-pressure event: `SystemMemoryProvider` reports it when this
-  process's resident memory is at least 85 % of physical RAM. The periodic
-  pass (`enablePeriodicCleanup`, every 5 minutes) is unchanged.
 
 ## [0.1.0-beta.15] - 2026-11-13
 
