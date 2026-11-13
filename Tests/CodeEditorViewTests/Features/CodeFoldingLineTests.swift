@@ -157,6 +157,22 @@ final class CodeFoldingLineTests: XCTestCase {
         XCTAssertTrue(view.isFolded(at: 9), "the fold should follow its region")
     }
 
+    func testFoldAllAndUnfoldAllCoverEveryRegion() async throws {
+        let view = makeEditor(Self.nested)
+        try await waitForRegions(in: view, count: 3)
+
+        view.foldAll()
+        XCTAssertEqual(view.codeFoldingEngine.foldedRegions.count, 3)
+        let regions = view.codeFoldingEngine.foldableRegions
+        XCTAssertTrue(view.codeFoldingEngine.folds(in: NSRange(location: 0, length: Self.nested.utf16.count))
+            .filter { fold in regions.contains { $0.id.uuidString == fold.id } }
+            .allSatisfy(\.isCollapsed))
+
+        view.unfoldAll()
+        XCTAssertTrue(view.codeFoldingEngine.foldedRegions.isEmpty)
+        XCTAssertEqual(hiddenUnits(in: view), 0)
+    }
+
     // MARK: - Unfold restores layout attributes
 
     func testUnfoldingRestoresTheParagraphStyleAndForeground() async throws {

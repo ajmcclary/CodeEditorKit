@@ -141,10 +141,7 @@ extension CodeEditorView {
     internal func foldAll(type: FoldingType) {
         guard configuration.display.isCodeFoldingEnabled else { return }
 
-        let regionsToFold = codeFoldingEngine.foldableRegions.filter { $0.type == type }
-        for region in regionsToFold {
-            codeFoldingEngine.fold(region)
-        }
+        codeFoldingEngine.fold(codeFoldingEngine.foldableRegions.filter { $0.type == type })
     }
 
     /// Fold every foldable region in the document.
@@ -155,9 +152,7 @@ extension CodeEditorView {
     public func foldAll() {
         guard configuration.display.isCodeFoldingEnabled else { return }
 
-        for region in codeFoldingEngine.foldableRegions {
-            codeFoldingEngine.fold(region)
-        }
+        codeFoldingEngine.foldAll()
     }
 
     /// Unfold all currently folded regions.

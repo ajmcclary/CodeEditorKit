@@ -180,6 +180,14 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
         return changed
     }
 
+    /// Fold several regions, updating fold storage once for all of them.
+    internal func fold(_ regions: [FoldableRegion]) {
+        for region in regions {
+            operationsService.fold(region, foldedRegions: &foldedRegions, configuration: configuration)
+        }
+        syncFoldStorageCollapseStates()
+    }
+
     /// Fold all regions
     internal func foldAll() {
         operationsService.foldAll(regions: foldableRegions, foldedRegions: &foldedRegions, configuration: configuration)
