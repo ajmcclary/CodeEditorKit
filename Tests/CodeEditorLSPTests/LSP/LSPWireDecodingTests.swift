@@ -114,3 +114,23 @@ import Testing
         #expect(await inbox.notifications == ["window/logMessage"])
     }
 }
+
+@Suite struct LSPDocumentURITests {
+    @Test func pathsWithURISyntaxArePercentEncoded() {
+        let uri = LSPDocumentURI.uri(forFilePath: "/Users/me/C# Projects/100%/a?.swift")
+        #expect(uri == "file:///Users/me/C%23%20Projects/100%25/a%3F.swift")
+        #expect(URL(string: uri)?.path == "/Users/me/C# Projects/100%/a?.swift")
+    }
+
+    @Test @MainActor func diagnosticsAreFoundHoweverTheServerEncodedTheURI() {
+        let session = LSPDocumentSession()
+        let diagnostic = Diagnostic(
+            range: LSPRange(start: Position(line: 0, character: 0), end: Position(line: 0, character: 1)),
+            message: "m"
+        )
+        // Lower-case escapes, as some servers send them.
+        session.updateDiagnostics([diagnostic], for: "file:///Users/me/My%20Project/a%2bb.swift")
+        let key = LSPDocumentURI.uri(forFilePath: "/Users/me/My Project/a+b.swift")
+        #expect(session.diagnostics[key]?.count == 1)
+    }
+}

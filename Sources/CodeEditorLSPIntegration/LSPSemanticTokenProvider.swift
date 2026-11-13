@@ -85,7 +85,7 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
         isSetup = true
 
         // Request initial full semantic tokens.
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
         do {
             let client = lspManager.client(for: document.languageID)
             let tokens = try await client?.requestSemanticTokens(uri: uri)
@@ -181,7 +181,7 @@ final class LSPSemanticTokenProvider: HighlightRangeProviding {
     func refreshAfterBatch() {
         guard isSetup else { return }
 
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
         let fileExtension = URL(fileURLWithPath: filePath).pathExtension
         let langId = lspManager.languageId(for: fileExtension) ?? ""
 

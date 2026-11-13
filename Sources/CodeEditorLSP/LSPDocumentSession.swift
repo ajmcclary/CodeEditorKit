@@ -33,14 +33,16 @@ final class LSPDocumentSession {
     }
 
     func closeParameters(uri: String) -> DidCloseTextDocumentParams {
-        diagnostics.removeValue(forKey: uri)
+        diagnostics.removeValue(forKey: LSPDocumentURI.canonical(uri))
         return DidCloseTextDocumentParams(
             textDocument: TextDocumentIdentifier(uri: uri)
         )
     }
 
+    /// Stores diagnostics under the canonical form of `uri`, so lookups by
+    /// `LSPDocumentURI.uri(forFilePath:)` match however the server encoded it.
     func updateDiagnostics(_ values: [LSPDiagnostic], for uri: String) {
-        diagnostics[uri] = values
+        diagnostics[LSPDocumentURI.canonical(uri)] = values
     }
 
     func removeAll() {

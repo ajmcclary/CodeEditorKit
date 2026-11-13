@@ -293,7 +293,7 @@ public final class LSPManager: ObservableObject {
         line: Int,
         character: Int
     ) async throws -> [LSPManagerCompletionItem] {
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
 
         guard let document = documentManager.getDocument(for: filePath) else {
             return []
@@ -354,7 +354,7 @@ public final class LSPManager: ObservableObject {
         line: Int,
         character: Int
     ) async throws -> Hover? {
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
 
         guard let document = documentManager.getDocument(for: filePath) else {
             return nil
@@ -379,7 +379,7 @@ public final class LSPManager: ObservableObject {
         line: Int,
         character: Int
     ) async throws -> [Location] {
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
 
         guard let document = documentManager.getDocument(for: filePath) else {
             return []
@@ -397,7 +397,7 @@ public final class LSPManager: ObservableObject {
     /// - Parameter filePath: Path to the file
     /// - Returns: Diagnostics for the file
     public func getDiagnostics(for filePath: String) -> [LSPDiagnostic] {
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
 
         guard let document = documentManager.getDocument(for: filePath) else {
             return []

@@ -98,7 +98,8 @@ public final class LSPClient: ObservableObject {
     /// Server capabilities received during initialization
     @Published public private(set) var serverCapabilities: ServerCapabilities?
 
-    /// Active diagnostics by document URI
+    /// Active diagnostics by document URI, keyed by the canonical
+    /// percent-encoded `file:` URI (`URL(fileURLWithPath:).absoluteString`).
     @Published public private(set) var diagnostics: [String: [LSPDiagnostic]] = [:]
 
     // MARK: - Private Properties

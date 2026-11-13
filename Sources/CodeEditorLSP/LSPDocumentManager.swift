@@ -38,7 +38,7 @@ final class LSPDocumentManager {
             throw LSPError.invalidResponse("Client registry not available")
         }
 
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
         let inferredLanguageId = languageId ?? languageIdFromFilePath(filePath)
 
         guard let finalLanguageId = inferredLanguageId else {
@@ -92,7 +92,7 @@ final class LSPDocumentManager {
             throw LSPError.invalidResponse("Client registry not available")
         }
 
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
 
         guard var document = openDocuments[uri] else {
             logger.debug("Document not open: \(filePath)")
@@ -127,7 +127,7 @@ final class LSPDocumentManager {
             throw LSPError.invalidResponse("Client registry not available")
         }
 
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
 
         guard let document = openDocuments.removeValue(forKey: uri) else {
             return
@@ -168,7 +168,7 @@ final class LSPDocumentManager {
     /// - Parameter filePath: Path to the file
     /// - Returns: Open document info if available
     func getDocument(for filePath: String) -> OpenDocument? {
-        let uri = "file://\(filePath)"
+        let uri = LSPDocumentURI.uri(forFilePath: filePath)
         return openDocuments[uri]
     }
 
