@@ -587,27 +587,38 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         for iteration in 0..<200 {
             guard let edit = randomEdit(for: text) else { continue }
             text = apply(edit: edit, to: text)
+            assertLineInvariants(of: text, iteration: iteration)
+        }
+    }
 
-            // Full rebuild from scratch (reference)
-            let referenceOffsets = referenceLineOffsets(for: text)
+    /// The fuzz run deletes the whole document in about 1.4% of runs; the
+    /// invariants must hold (and not raise) for empty text too.
+    func testLineInvariantsHoldForAnEmptyDocument() {
+        assertLineInvariants(of: "", iteration: 0)
+    }
 
-            // Basic sanity: first offset is always 0
-            XCTAssertEqual(referenceOffsets.first, 0,
-                           "Iteration \(iteration): first offset should be 0, got \(referenceOffsets.first ?? -1)")
+    private func assertLineInvariants(of text: String, iteration: Int) {
+        // Full rebuild from scratch (reference)
+        let referenceOffsets = referenceLineOffsets(for: text)
 
-            // Basic sanity: offsets are strictly increasing
-            for i in 1..<referenceOffsets.count {
-                XCTAssertLessThan(referenceOffsets[i - 1], referenceOffsets[i],
-                                  "Iteration \(iteration): offsets not increasing at index \(i): \(referenceOffsets[i - 1]) >= \(referenceOffsets[i])")
-            }
+        // Basic sanity: first offset is always 0
+        XCTAssertEqual(referenceOffsets.first, 0,
+                       "Iteration \(iteration): first offset should be 0, got \(referenceOffsets.first ?? -1)")
 
-            // Every offset in the document belongs to exactly one line
-            let nsString = text as NSString
-            for offset in 0..<max(1, nsString.length) {
-                let lineRange = nsString.lineRange(for: NSRange(location: min(offset, nsString.length - 1), length: 0))
-                XCTAssertTrue(lineRange.length > 0 || nsString.length == 0,
-                              "Iteration \(iteration): offset \(offset) has empty line range")
-            }
+        // Basic sanity: offsets are strictly increasing
+        for i in referenceOffsets.indices.dropFirst() {
+            XCTAssertLessThan(referenceOffsets[i - 1], referenceOffsets[i],
+                              "Iteration \(iteration): offsets not increasing at index \(i): \(referenceOffsets[i - 1]) >= \(referenceOffsets[i])")
+        }
+
+        // Every offset in the document belongs to exactly one, non-empty
+        // line. An empty document has no offsets to check (asking
+        // `lineRange(for:)` about location -1 raises).
+        let nsString = text as NSString
+        for offset in 0..<nsString.length {
+            let lineRange = nsString.lineRange(for: NSRange(location: offset, length: 0))
+            XCTAssertTrue(lineRange.length > 0,
+                          "Iteration \(iteration): offset \(offset) has empty line range")
         }
     }
 
