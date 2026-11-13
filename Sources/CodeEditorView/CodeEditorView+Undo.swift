@@ -28,7 +28,7 @@ extension CodeEditorView {
 // MARK: - Undo notifications
 
 extension CodeEditorView {
-    override public func didChangeText() {
+    override open func didChangeText() {
         textChangeGenerationAtLastDidChangeText = textChangeEventGeneration
         super.didChangeText()
     }
@@ -38,29 +38,38 @@ extension CodeEditorView {
     /// nor the delegate's `textDidChange` fires and a host that mirrors the
     /// text never hears about it. Watch the undo manager and post the change
     /// when an undo or redo edited characters that were not announced.
+    ///
+    /// Only the editor's own undo manager is observed (it is the notification
+    /// object), so undos on other managers anywhere in the process never
+    /// reach this view. A participant-supplied undo manager is not observed.
     internal func installUndoChangeObservers() {
         let center = NotificationCenter.default
         center.addObserver(
             self,
             selector: #selector(undoManagerDidApplyChange(_:)),
             name: .NSUndoManagerDidUndoChange,
-            object: nil
+            object: editorUndoManager
         )
         center.addObserver(
             self,
             selector: #selector(undoManagerDidApplyChange(_:)),
             name: .NSUndoManagerDidRedoChange,
-            object: nil
+            object: editorUndoManager
         )
     }
 
+    /// Notifications arrive on the posting thread. The editor's own undo
+    /// manager is driven from the main thread; anything else is ignored
+    /// rather than entering main-actor state from another thread.
     @objc
-    private func undoManagerDidApplyChange(_ notification: Notification) {
-        guard let manager = notification.object as? UndoManager,
-              manager === undoManager,
-              textChangeEventGeneration != textChangeGenerationAtLastDidChangeText
-        else { return }
-        didChangeText()
+    nonisolated private func undoManagerDidApplyChange(_: Notification) {
+        guard Thread.isMainThread else { return }
+        MainActor.assumeIsolated {
+            guard undoManager === editorUndoManager,
+                  textChangeEventGeneration != textChangeGenerationAtLastDidChangeText
+            else { return }
+            didChangeText()
+        }
     }
 }
 #endif

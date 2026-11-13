@@ -751,12 +751,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }
 
     #if canImport(AppKit)
-    override public func viewDidMoveToSuperview() {
+    override open func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
         reattachAfterReparenting()
     }
     #else
-    override public func didMoveToSuperview() {
+    override open func didMoveToSuperview() {
         super.didMoveToSuperview()
         reattachAfterReparenting()
     }
