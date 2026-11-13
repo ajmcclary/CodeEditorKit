@@ -156,13 +156,18 @@ public struct CompletionCacheKey: Hashable, Sendable {
     public let contextHash: Int
 
     public init(context: CompletionContextModel) {
-        self.text = String(context.text.suffix(min(context.text.count, 100))) // Only cache last 100 chars
+        // `suffix` alone walks only the last 100 characters; `count` walked
+        // the whole document in graphemes first.
+        self.text = String(context.text.suffix(100)) // Only cache last 100 chars
         self.cursorPosition = context.cursorPosition
         self.languageIdentifier = context.language.identifier
         self.triggerCharacter = context.triggerCharacter
 
-        // Create a hash from relevant context information
+        // Create a hash from relevant context information. The whole
+        // document takes part: with only its tail, a declaration added
+        // elsewhere left the same cursor position serving the old list.
         var hasher = Hasher()
+        hasher.combine(context.text)
         hasher.combine(text)
         hasher.combine(cursorPosition)
         hasher.combine(languageIdentifier)
