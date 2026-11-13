@@ -106,7 +106,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         let textView = try host(store, mode: .controller)
 
         let count = run { await store.controller.replaceAll("foo", with: "barbaz") }
-        spin(for: 0.3)
+        spin { store.text == "barbaz one\nbarbaz two\nbarbaz three\n" }
 
         XCTAssertEqual(count, 3)
         XCTAssertEqual(textView.string, "barbaz one\nbarbaz two\nbarbaz three\n")
@@ -120,7 +120,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertEqual(textView.string, "barbaz one\nbarbaz two\nbarbaz three\n")
 
         undoManager.undo()
-        spin(for: 0.3)
+        spin { store.text == "foo one\nfoo two\nfoo three\n" }
         XCTAssertEqual(textView.string, "foo one\nfoo two\nfoo three\n")
         XCTAssertEqual(store.text, textView.string)
     }
@@ -131,14 +131,14 @@ final class HostedCodeEditorTypingTests: XCTestCase {
 
         _ = run { await store.controller.find("foo").count }
         XCTAssertTrue(store.controller.replaceCurrent(with: "Q"))
-        spin(for: 0.3)
+        spin { store.text == "Q one\nfoo two\n" }
 
         XCTAssertEqual(textView.string, "Q one\nfoo two\n")
         XCTAssertEqual(store.text, textView.string)
         let undoManager = try XCTUnwrap(textView.undoManager)
         XCTAssertTrue(undoManager.canUndo)
         undoManager.undo()
-        spin(for: 0.3)
+        spin { textView.string == "foo one\nfoo two\n" }
         XCTAssertEqual(textView.string, "foo one\nfoo two\n")
     }
 
@@ -147,10 +147,11 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         let textView = try host(store, mode: .controller)
         textView.setSelectedRange(NSRange(location: 3, length: 0))
         type("XYZ", into: textView)
+        spin { store.text == "abcXYZ" }
         XCTAssertEqual(store.text, "abcXYZ")
 
         try XCTUnwrap(textView.undoManager).undo()
-        spin(for: 0.3)
+        spin { store.text == "abc" }
 
         XCTAssertEqual(textView.string, "abc")
         XCTAssertEqual(store.text, "abc")
@@ -167,7 +168,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
         spin(for: 0.01)
         store.lineNumbers.toggle()
-        spin(for: 0.5)
+        spin { store.text == "abcX" }
 
         XCTAssertEqual(textView.string, "abcX")
         XCTAssertEqual(store.text, "abcX")
@@ -182,7 +183,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
         spin(for: 0.01)
         store.showsEditor = false
-        spin(for: 0.3)
+        spin { store.text == "abcX" }
 
         XCTAssertEqual(store.text, "abcX")
     }
@@ -198,20 +199,20 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.setSelectedRange(NSRange(location: 3, length: 0))
         spin(for: 0.05)
         type("X", into: textView)
-        spin(for: 0.3)
+        spin { store.text == "abcX" }
         XCTAssertEqual(store.text, "abcX")
 
         store.text = "Q"
-        spin(for: 0.3)
+        spin { textView.string == "Q" }
         XCTAssertEqual(textView.string, "Q")
 
         store.text = "abcX"
-        spin(for: 0.3)
+        spin { textView.string == "abcX" }
         XCTAssertEqual(textView.string, "abcX", "the host's text was ignored")
 
         textView.setSelectedRange(NSRange(location: 4, length: 0))
         type("Z", into: textView)
-        spin(for: 0.3)
+        spin { store.text == "abcXZ" }
         XCTAssertEqual(store.text, "abcXZ")
     }
 
@@ -236,13 +237,13 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.setSelectedRange(NSRange(location: 3, length: 0))
         spin(for: 0.05)
         textView.insertText("X", replacementRange: NSRange(location: NSNotFound, length: 0))
-        spin(for: 0.2) // the debounced write delivers "abcX"
+        spin { store.text == "abcX" } // the debounced write delivers "abcX"
         XCTAssertEqual(store.text, "abcX")
 
         // Type before SwiftUI has rendered the written value.
         textView.insertText("Y", replacementRange: NSRange(location: NSNotFound, length: 0))
         store.tick += 1
-        spin(for: 0.5)
+        spin { store.text == "abcXY" }
 
         XCTAssertEqual(textView.string, "abcXY")
         XCTAssertEqual(store.text, "abcXY")
@@ -257,18 +258,54 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.setSelectedRange(NSRange(location: 3, length: 0))
         spin(for: 0.05)
 
-        type("x ", into: textView)
-        // The view holds "abcx " here; only the host's rewrite makes it "abcx".
+        // Both keystrokes inside one debounce window: one write, "abcx ",
+        // which the host answers with "abcx" (a change it renders). With a
+        // write in between, the host already holds "abcx" and nothing is
+        // rendered (see the test after this one).
+        insert("x ", into: textView)
         spin { store.text == "abcx" && textView.string == "abcx" }
 
+        XCTAssertEqual(store.writes, ["abcx "])
         XCTAssertEqual(store.text, "abcx")
         XCTAssertEqual(textView.string, "abcx")
         let undoManager = try XCTUnwrap(textView.undoManager)
         XCTAssertTrue(undoManager.canUndo, "the rewrite discarded the undo history")
         // Undo must not raise, and must leave consistent text.
         while undoManager.canUndo { undoManager.undo() }
-        spin(for: 0.4)
+        spin { store.text == "abc" && textView.string == "abc" }
         XCTAssertFalse(textView.string.contains("x "), textView.string)
+        XCTAssertEqual(store.text, textView.string)
+    }
+
+    /// When the host already holds what it makes of a write, its setter
+    /// changes nothing, so no SwiftUI update reaches the editor and the
+    /// editor keeps its own (newer) text: here "x" reached the host on its
+    /// own, then "x " was trimmed back to the "abcx" it already held. The
+    /// binding gives no way to tell this apart from a host that applies the
+    /// write later (`testAHostThatAppliesWritesLateKeepsEveryKeystroke`), so
+    /// the editor must not revert. The next edit brings the two together.
+    /// This is the ordering that failed the beta.16 tag's CI run, where a
+    /// slow runner let the debounce fire between the two keystrokes.
+    func testATrimmingHostThatAlreadyHoldsTheTrimmedTextLeavesTheEditorsText() throws {
+        let store = HostedEditorStore("abc")
+        let textView = try host(store, mode: .trimmingSetter)
+        textView.setSelectedRange(NSRange(location: 3, length: 0))
+        spin(for: 0.05)
+
+        insert("x", into: textView)
+        spin { store.writes == ["abcx"] && store.text == "abcx" }
+        insert(" ", into: textView)
+        spin { store.writes.count == 2 }
+
+        XCTAssertEqual(store.writes, ["abcx", "abcx "])
+        XCTAssertEqual(store.text, "abcx")
+        XCTAssertEqual(textView.string, "abcx ", "the editor dropped the user's newer text")
+
+        insert("y", into: textView)
+        spin { store.text == "abcx y" }
+        XCTAssertEqual(store.writes, ["abcx", "abcx ", "abcx y"])
+        XCTAssertEqual(textView.string, "abcx y")
+        XCTAssertTrue(textView.undoManager?.canUndo ?? false)
     }
 
     /// Undo takes back a host's rewrite together with the edit it answered,
@@ -281,8 +318,9 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         textView.setSelectedRange(NSRange(location: 3, length: 0))
         spin(for: 0.05)
 
-        type("x ", into: textView)
+        insert("x ", into: textView) // one write; see testAHostRewritingTheEditorsChangeKeepsUndo
         spin { store.text == "abcx" && textView.string == "abcx" }
+        XCTAssertEqual(store.writes, ["abcx "])
         XCTAssertEqual(store.text, "abcx")
         XCTAssertEqual(textView.string, "abcx")
 
@@ -318,7 +356,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertEqual(store.text, "abc")
 
         store.text = "other document\n"
-        spin(for: 0.4)
+        spin { textView.string == "other document\n" }
 
         XCTAssertEqual(textView.string, "other document\n")
         let undoManager = try XCTUnwrap(textView.undoManager)
@@ -337,7 +375,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
             textView.insertText(String(character), replacementRange: NSRange(location: NSNotFound, length: 0))
             spin(for: 0.15)
         }
-        spin(for: 1.0)
+        spin { store.text == "abcabcd" && textView.string == "abcabcd" }
 
         XCTAssertEqual(textView.string, "abcabcd")
         XCTAssertEqual(store.text, "abcabcd")
@@ -353,7 +391,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         XCTAssertTrue(textView.undoManager?.canUndo ?? false)
 
         store.text = "Q"
-        spin(for: 0.3)
+        spin { textView.string == "Q" }
 
         XCTAssertEqual(textView.string, "Q")
         XCTAssertFalse(textView.undoManager?.canUndo ?? false)
@@ -370,7 +408,7 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         spin(for: 0.05)
 
         store.text = "one\ntwo\nthree and more"
-        spin(for: 0.3)
+        spin { textView.string == "one\ntwo\nthree and more" }
 
         XCTAssertEqual(textView.selectedRange(), NSRange(location: 5, length: 0))
     }
@@ -422,6 +460,12 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         spin(for: 0.2)
     }
 
+    /// Inserts `text` in one run-loop turn, so it reaches the binding as
+    /// one debounced write however slow the machine is.
+    func insert(_ text: String, into textView: CodeEditorView) {
+        textView.insertText(text, replacementRange: NSRange(location: NSNotFound, length: 0))
+    }
+
     func spin(for seconds: TimeInterval) {
         RunLoop.main.run(until: Date().addingTimeInterval(seconds))
     }
@@ -461,6 +505,8 @@ final class HostedEditorStore {
     var tick = 0
     var lineNumbers = true
     var showsEditor = true
+    /// Every value the editor wrote through the binding, in order.
+    @ObservationIgnored var writes: [String] = []
     @ObservationIgnored let interaction = HostedInteractionBox()
     @ObservationIgnored let controller = EditorController()
 
@@ -501,6 +547,7 @@ struct HostedEditor: View {
         let editor = CodeEditor(text: Binding(
             get: { store.text },
             set: { newText in
+                store.writes.append(newText)
                 switch mode {
                 case .setterIgnored, .neverTakesWrites:
                     break
