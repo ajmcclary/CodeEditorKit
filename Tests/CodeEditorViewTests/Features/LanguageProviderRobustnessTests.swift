@@ -174,9 +174,11 @@ final class LanguageProviderRobustnessTests: XCTestCase {
     }
 
     /// Nested keys come out in pre-order, each key before the keys of its
-    /// value, and nesting depth costs no stack (the walk is iterative).
+    /// value, and nesting depth costs no stack (the walk is iterative). The
+    /// depth stays within `maximumParsedNesting`: deeper documents never
+    /// reach `JSONSerialization` (see `DeepNestingParserTests`).
     func testJSONSymbolsOfNestedObjectsComeOutInPreOrder() async {
-        let depth = 400
+        let depth = JSONSymbolProvider.maximumParsedNesting
         let source = String(repeating: "{\"k\": ", count: depth) + "1" + String(repeating: "}", count: depth)
         let symbols = await JSONSymbolProvider().detectSymbols(in: source)
         XCTAssertEqual(symbols.count, depth)
