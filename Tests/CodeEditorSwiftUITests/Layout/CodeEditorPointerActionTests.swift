@@ -87,7 +87,13 @@ final class CodeEditorPointerActionTests: XCTestCase {
         )
 
         controller.editorEventBus.emitHover(at: SourcePosition(line: 0, character: 1))
-        spin(for: 0.2)
+        // Wait for the delivery rather than a fixed 0.2 s, which a loaded
+        // parallel run overshot; then a little longer for any duplicate.
+        let deadline = Date().addingTimeInterval(3)
+        while box.values.isEmpty, Date() < deadline {
+            spin(for: 0.02)
+        }
+        spin(for: 0.1)
 
         XCTAssertEqual(box.values, [SourcePosition(line: 0, character: 1)])
     }
