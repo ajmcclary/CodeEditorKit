@@ -38,6 +38,33 @@ final class LSPClientRegistryRemoteFlowTests: XCTestCase {
         XCTAssertEqual(snapshot.languageId, "swift")
     }
 
+    func testConcurrentStartsShareOneAttempt() async throws {
+        let url = try XCTUnwrap(URL(string: "wss://lsp.example.com/swift"))
+        let counter = ClientCounter()
+        let registry = LSPClientRegistry {
+            counter.created += 1
+            let client = await LSPClient.createAndSetup()
+            client.recordingHandler = { _, _ in
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            return client
+        }
+        registry.workspaceRoot = URL(fileURLWithPath: "/tmp/ws")
+        registry.registerLanguageServer(.remote(
+            languageId: "swift",
+            url: url,
+            fileExtensions: ["swift"],
+            autoStart: false
+        ))
+
+        async let first: Void = registry.startLanguageServer(for: "swift")
+        async let second: Void = registry.startLanguageServer(for: "swift")
+        _ = try await (first, second)
+
+        XCTAssertEqual(counter.created, 1)
+        XCTAssertNotNil(registry.activeClients["swift"])
+    }
+
     #if canImport(AppKit)
     func testLocalConfigRoutesToLocalPayloadOnMac() async throws {
         let recordedConfig = LSPClientRegistryRemoteFlowRecorder()
@@ -94,4 +121,9 @@ actor LSPClientRegistryRemoteFlowRecorder {
         self.lastConfiguration = configuration
         self.lastLanguageId = languageId
     }
+}
+
+@MainActor
+final class ClientCounter {
+    var created = 0
 }

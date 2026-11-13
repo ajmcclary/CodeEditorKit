@@ -28,8 +28,14 @@ extension LSPClient {
             return
         }
 
+        // Refuse before touching `transport`: a connect that arrives while
+        // a previous connection is still tearing down must not replace the
+        // transport that teardown is using.
+        try LSPConnectionManager.validateCanConnect(currentState: connectionState)
+
         // Create appropriate transport based on configuration.
         let transport = try await configuration.createTransport()
+        try LSPConnectionManager.validateCanConnect(currentState: connectionState)
         self.transport = transport
 
         // Extract a legacy ServerConfiguration so the transport-aware

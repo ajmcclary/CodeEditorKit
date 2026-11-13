@@ -97,6 +97,36 @@ final class LSPClientRegistry {
         for languageId: String,
         retryConfig: LSPRetryConfiguration? = nil
     ) async throws {
+        if activeClients[languageId] != nil {
+            return
+        }
+        // Concurrent starts for one language share a single attempt: the
+        // `activeClients` check alone sits before several suspension
+        // points, so two callers each spawned a server and the first client
+        // was dropped with its process unreaped.
+        if let inFlight = startTasks[languageId] {
+            return try await inFlight.value
+        }
+        let task = Task { @MainActor in
+            try await self.performStart(for: languageId, retryConfig: retryConfig)
+        }
+        startTasks[languageId] = task
+        do {
+            try await task.value
+            startTasks[languageId] = nil
+        } catch {
+            startTasks[languageId] = nil
+            throw error
+        }
+    }
+
+    /// In-flight `startLanguageServer` attempts by language.
+    private var startTasks: [String: Task<Void, any Error>] = [:]
+
+    private func performStart(
+        for languageId: String,
+        retryConfig: LSPRetryConfiguration?
+    ) async throws {
         guard let config = serverConfigurations[languageId] else {
             throw LSPError.invalidResponse("No configuration found for language: \(languageId)")
         }
@@ -149,13 +179,16 @@ final class LSPClientRegistry {
         resolvedConfig = config
         #endif
 
-        let client = await clientFactory()
         let serverConfig = try resolvedConfig.makeServerConfiguration(workspaceRoot: effectiveWorkspaceRoot)
 
         // Attempt connection with retry logic
         var lastError: Error?
 
         for attempt in 0...effectiveRetryConfig.maxRetries {
+            // A fresh client per attempt: the previous one may still be
+            // tearing down its transport, and connecting it again replaced
+            // that transport before failing with `alreadyConnected`.
+            let client = await clientFactory()
             do {
                 try await client.connect(configuration: serverConfig, languageId: languageId)
                 activeClients[languageId] = client
@@ -168,11 +201,11 @@ final class LSPClientRegistry {
                     let delay = effectiveRetryConfig.delay(for: attempt)
                     logger.warning("Failed to start LSP server for \(languageId) on attempt \(attempt + 1)/\(effectiveRetryConfig.maxRetries + 1). Retrying in \(String(format: "%.1f", delay))s. Error: \(error.localizedDescription)")
 
-                    // Wait before retrying
-                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-
-                    // Reset client state for retry
+                    // The failed attempt tears its own client down.
                     client.disconnect()
+
+                    // Wait before retrying
+                    try await Task.sleep(for: .seconds(delay.isFinite ? max(0, delay) : 0))
                 } else {
                     logger.error("Failed to start LSP server for \(languageId) after \(effectiveRetryConfig.maxRetries + 1) attempts. Error: \(error.localizedDescription)")
                 }
