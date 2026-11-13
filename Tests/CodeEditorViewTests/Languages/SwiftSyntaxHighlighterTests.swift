@@ -162,4 +162,41 @@ struct SwiftSyntaxHighlighterTests {
         let tokens = highlighter.highlight(source: "")
         #expect(tokens.isEmpty)
     }
+
+    // MARK: - Trivia placement
+
+    private func utf16Range(of needle: String, in source: String, occurrence: Int = 0) -> NSRange {
+        var searchStart = source.startIndex
+        var found: Range<String.Index>?
+        for _ in 0...occurrence {
+            found = source.range(of: needle, range: searchStart..<source.endIndex)
+            guard let range = found else { break }
+            searchStart = range.upperBound
+        }
+        guard let found else { return NSRange(location: NSNotFound, length: 0) }
+        return NSRange(found, in: source)
+    }
+
+    @Test("tokens cover the token text only, not its trivia")
+    func tokenRangesExcludeTrivia() {
+        let source = "let a = 1\n// note\nlet b = 2"
+        let tokens = SwiftSyntaxHighlighter().highlight(source: source)
+
+        let secondLet = utf16Range(of: "let", in: source, occurrence: 1)
+        let keyword = tokens.first { $0.range.location == secondLet.location }
+        #expect(keyword?.range == secondLet)
+        #expect(keyword?.type == .keyword)
+        #expect(tokens.allSatisfy { $0.type == .comment || !NSEqualRanges(NSIntersectionRange($0.range, utf16Range(of: "// note", in: source)), utf16Range(of: "// note", in: source)) })
+    }
+
+    @Test("line, block and doc comments are placed at their own offsets")
+    func commentsArePlacedAtTheirOffsets() {
+        let source = "let a = 1 // trailing\n/* block */ /// doc\n/** docblock */\nlet b = 2"
+        let tokens = SwiftSyntaxHighlighter().highlight(source: source)
+        let comments = tokens.filter { $0.type == .comment }.map(\.range)
+        for comment in ["// trailing", "/* block */", "/// doc", "/** docblock */"] {
+            #expect(comments.contains(utf16Range(of: comment, in: source)), "missing \(comment) in \(comments)")
+        }
+        #expect(comments.count == 4)
+    }
 }

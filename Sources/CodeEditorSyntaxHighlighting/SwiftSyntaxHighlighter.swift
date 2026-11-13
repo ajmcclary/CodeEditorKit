@@ -152,8 +152,10 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
     }
 
     private func addToken(for syntax: some SyntaxProtocol, type: SwiftSyntaxHighlighter.TokenType) {
-        let utf8Start = syntax.position.utf8Offset
-        let utf8End = syntax.endPosition.utf8Offset
+        // `position` / `endPosition` include leading / trailing trivia; the
+        // token is only the text between them.
+        let utf8Start = syntax.positionAfterSkippingLeadingTrivia.utf8Offset
+        let utf8End = syntax.endPositionBeforeTrailingTrivia.utf8Offset
         let length = utf8End - utf8Start
 
         guard length > 0 else {
@@ -171,34 +173,40 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
         }
         processedRanges.insert(range)
 
-        let text = syntax.description
+        let text = syntax.trimmedDescription
 
         tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: type), text: text))
     }
 
-    private func addTriviaToken(piece: TriviaPiece, node: TokenSyntax, type: SwiftSyntaxHighlighter.TokenType) {
-        let utf8Offset = node.position.utf8Offset - node.leadingTriviaLength.utf8Length
-        let utf8Length = piece.sourceLength.utf8Length
+    /// Adds a comment token for every comment piece of `trivia`, which
+    /// starts at UTF-8 offset `start`. Each piece is placed at its own
+    /// offset within the trivia.
+    private func addCommentTokens(in trivia: Trivia, startingAt start: Int) {
+        var utf8Offset = start
+        for piece in trivia {
+            let utf8Length = piece.sourceLength.utf8Length
+            defer { utf8Offset += utf8Length }
 
-        let utf16Start = utf16Offset(forUTF8Offset: utf8Offset)
-        let utf16End = utf16Offset(forUTF8Offset: utf8Offset + utf8Length)
-        let utf16Length = utf16End - utf16Start
-        guard utf16Length > 0 else { return }
+            let text: String
+            switch piece {
+            case let .lineComment(comment),
+                 let .blockComment(comment),
+                 let .docLineComment(comment),
+                 let .docBlockComment(comment):
+                text = comment
 
-        let range = NSRange(location: utf16Start, length: utf16Length)
+            default:
+                continue
+            }
 
-        let text: String = switch piece {
-        case let .lineComment(comment):
-            comment
-
-        case let .blockComment(comment):
-            comment
-
-        default:
-            ""
+            let utf16Start = utf16Offset(forUTF8Offset: utf8Offset)
+            let utf16Length = utf16Offset(forUTF8Offset: utf8Offset + utf8Length) - utf16Start
+            guard utf16Length > 0 else { continue }
+            let range = NSRange(location: utf16Start, length: utf16Length)
+            guard !processedRanges.contains(range) else { continue }
+            processedRanges.insert(range)
+            tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: .comment), text: text))
         }
-
-        tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: type), text: text))
     }
 
     // MARK: - Token Classification (Performance optimized inline)
@@ -206,19 +214,10 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
     // MARK: - Visitor Methods
 
     override func visit(_ node: TokenSyntax) -> SyntaxVisitorContinueKind {
-        // Handle comments in trivia
-        for piece in node.leadingTrivia {
-            switch piece {
-            case .lineComment:
-                addTriviaToken(piece: piece, node: node, type: .comment)
-
-            case .blockComment:
-                addTriviaToken(piece: piece, node: node, type: .comment)
-
-            default:
-                break
-            }
-        }
+        // Handle comments in trivia (leading trivia starts at `position`,
+        // trailing trivia right after the token text).
+        addCommentTokens(in: node.leadingTrivia, startingAt: node.position.utf8Offset)
+        addCommentTokens(in: node.trailingTrivia, startingAt: node.endPositionBeforeTrailingTrivia.utf8Offset)
 
         // Simple token classification - inline optimization for performance
         let tokenText = node.text
