@@ -1,6 +1,5 @@
 import CodeEditorCompletion
 import CodeEditorDiagnostics
-import CodeEditorInstrumentation
 import CodeEditorLSP
 import CodeEditorPlatform
 import CodeEditorSyntaxHighlighting

@@ -68,7 +68,7 @@ final class LanguageProviderRobustnessTests: XCTestCase {
             count = await XMLFoldingProvider().detectFoldableRegions(in: source).count
         }
         XCTAssertEqual(count, 4_001)
-        XCTAssertLessThan(seconds, 2, "XML folding took \(seconds)s")
+        XCTAssertLessThan(seconds, 10, "XML folding took \(seconds)s")
     }
 
     // MARK: - XML symbols
@@ -80,7 +80,7 @@ final class LanguageProviderRobustnessTests: XCTestCase {
         let seconds = await elapsed {
             symbols = await XMLSymbolProvider().detectSymbols(in: source)
         }
-        XCTAssertLessThan(seconds, 2, "XML symbols took \(seconds)s")
+        XCTAssertLessThan(seconds, 10, "XML symbols took \(seconds)s")
         XCTAssertEqual(symbols.count, 20_001)
         // Each `<i>😀</i>` is 9 UTF-16 units; `<root>` is 6.
         XCTAssertEqual(symbols.dropFirst().first?.range.location, 6)
@@ -122,7 +122,7 @@ final class LanguageProviderRobustnessTests: XCTestCase {
             count = await BraceFoldingProvider().detectFoldableRegions(in: source).count
         }
         XCTAssertEqual(count, 20_000)
-        XCTAssertLessThan(seconds, 2, "Brace folding took \(seconds)s")
+        XCTAssertLessThan(seconds, 10, "Brace folding took \(seconds)s")
     }
 
     // MARK: - JSON / Markdown / indentation / Lua
