@@ -243,6 +243,7 @@ extension CodeEditorView {
         }
 
         if configuration.layout.wrapLines {
+            let previousWidth = textContainer.containerSize.width
             // For word wrap mode, set container width to match view width
             let wrappingWidth = enclosingScrollView?.contentView.bounds.width ?? bounds.width
             textContainer.containerSize = NSSize(
@@ -255,13 +256,16 @@ extension CodeEditorView {
             isHorizontallyResizable = false
             applyWrapWidthFraction()
 
+            // Re-wrap only when the wrapping width changed, and let TextKit 2
+            // lay the document out lazily (viewport first) instead of forcing
+            // the whole document here: this runs on every container layout.
             // Invalidate through TextKit2. Reading `textContainer.layoutManager`
             // coerces the AppKit view to TextKit1 and clears `textLayoutManager`.
             let fullRange = NSRange(location: 0, length: textKitBridge.documentLength)
-            if fullRange.length > 0,
+            if abs(textContainer.containerSize.width - previousWidth) > 0.5,
+               fullRange.length > 0,
                let textRange = textKitBridge.textRangeFromNSRange(fullRange) {
                 textLayoutManager?.invalidateLayout(for: textRange)
-                textLayoutManager?.ensureLayout(for: textRange)
             }
         } else {
             // For non-wrapping mode, allow unlimited width
@@ -358,25 +362,22 @@ extension CodeEditorView {
         }
     }
 
+    /// The document's height as TextKit 2 currently knows it: its usage
+    /// bounds, which cover laid-out fragments exactly and the rest by
+    /// estimate, and which TextKit refines as it lays out lazily. Forcing a
+    /// full layout here (as this used to) made every configuration
+    /// application and wrap-width change O(document).
     private func textKit2DocumentHeight() -> CGFloat? {
         guard let textLayoutManager else { return nil }
 
-        let documentRange = textLayoutManager.documentRange
-        textLayoutManager.ensureLayout(for: documentRange)
-
-        var maxY: CGFloat = 0
-        var didFindFragment = false
-        textLayoutManager.enumerateTextLayoutFragments(from: documentRange.location) { fragment in
-            maxY = max(maxY, fragment.layoutFragmentFrame.maxY)
-            didFindFragment = true
-            return true
+        let usage = textLayoutManager.usageBoundsForTextContainer
+        if usage.height > 0 {
+            return usage.maxY
         }
-
-        guard didFindFragment else {
-            let font = font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-            return TextMetricsCalculator.calculateLineHeight(for: font) * configuration.layout.lineHeightMultiple
-        }
-        return maxY
+        // Nothing laid out yet: estimate from the line geometry store.
+        let font = font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        let lineHeight = TextMetricsCalculator.calculateLineHeight(for: font) * configuration.layout.lineHeightMultiple
+        return max(lineHeight, lineGeometryStore.totalHeight)
     }
 
     private func restoreScrollOrigin(_ origin: NSPoint?, visibleRect: NSRect?) {
