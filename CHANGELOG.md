@@ -7,6 +7,29 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A memory cleanup pass keeps the user's undo history.** The editor's
+  cleanup handler discarded it on every pass (the window's whole stack
+  before 0.1.0-beta.15), and passes are routine: `MemoryMonitor` compares
+  the whole process's resident memory with its 100 MB threshold, which an
+  app embedding the editor is always over. The default
+  `MemoryManagementPolicy.live` no longer needs to be avoided for this.
+- **Other cleanup handlers release only caches.** A pass no longer
+  disconnects language servers or drops their configurations and open
+  documents (`LSPManager`), cancels the completion request in flight
+  (`CompletionManager`), cancels background highlighting requests
+  (`BackgroundSyntaxHighlighter`), or, on iOS, discards undo history.
+
+### Changed
+
+- **Automatic cleanup is edge-triggered and rate-limited.** It runs when the
+  footprint first goes above `memoryThresholdMB`; while it stays above, again
+  only after growing by half the threshold or under critical pressure, and
+  never within the new `MemoryMonitor.minimumAutomaticCleanupInterval`
+  (default 60 s). It used to run on every 10 s check. The periodic pass
+  (`enablePeriodicCleanup`, every 5 minutes) is unchanged.
+
 ## [0.1.0-beta.15] - 2026-11-13
 
 This release remediates the 2026-11-12 full review of the package.
