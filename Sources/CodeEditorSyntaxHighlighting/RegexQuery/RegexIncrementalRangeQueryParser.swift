@@ -99,10 +99,16 @@ package final class RegexIncrementalRangeQueryParser: RangeQueryParserProtocol, 
         var captures: [RangeQueryCapture] = []
         captures.reserveCapacity(tokens.count)
 
+        // UTF-16 offset → UTF-8 offset, built once. Measuring
+        // `source[..<index].utf8.count` per token was quadratic on the
+        // bridged strings `NSTextStorage` hands out (~80 s at 460 KB).
+        let utf8Offsets = Self.utf8Offsets(byUTF16OffsetIn: source)
         for token in tokens {
-            guard let stringRange = Range(token.range, in: source) else { continue }
-            let byteStart = source[..<stringRange.lowerBound].utf8.count
-            let byteEnd = source[..<stringRange.upperBound].utf8.count
+            let lower = token.range.location
+            let upper = lower + token.range.length
+            guard lower >= 0, lower <= upper, upper < utf8Offsets.count else { continue }
+            let byteStart = utf8Offsets[lower]
+            let byteEnd = utf8Offsets[upper]
             captures.append(
                 RangeQueryCapture(
                     byteRange: byteStart..<byteEnd,
@@ -117,6 +123,23 @@ package final class RegexIncrementalRangeQueryParser: RangeQueryParserProtocol, 
             parseDuration: parseDuration,
             queryDuration: queryDuration
         )
+    }
+
+    /// `offsets[i]` is the UTF-8 offset of UTF-16 offset `i` (`count + 1`
+    /// entries; the trailing half of a surrogate pair maps to its scalar's
+    /// start).
+    private static func utf8Offsets(byUTF16OffsetIn source: String) -> [Int] {
+        var offsets: [Int] = []
+        offsets.reserveCapacity(source.utf16.count + 1)
+        var utf8Offset = 0
+        for scalar in source.unicodeScalars {
+            for _ in 0..<UTF16.width(scalar) {
+                offsets.append(utf8Offset)
+            }
+            utf8Offset += UTF8.width(scalar)
+        }
+        offsets.append(utf8Offset)
+        return offsets
     }
 
     package func applyEdit(
