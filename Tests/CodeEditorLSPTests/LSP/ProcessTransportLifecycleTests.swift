@@ -75,6 +75,57 @@ final class ProcessTransportLifecycleTests: XCTestCase {
             }
         }
     }
+
+    /// A server that never reads stdin must not block the actor: the write
+    /// waits off-actor and `disconnect()` still completes.
+    func testBlockedWriteDoesNotBlockTheTransport() async throws {
+        let transport = ProcessTransport(executablePath: "/bin/sleep", arguments: ["30"])
+        try await transport.connect()
+
+        let payload = Data(repeating: UInt8(ascii: "x"), count: 1_024 * 1_024) // > pipe buffer
+        let send = Task { try await transport.send(payload) }
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        let start = ProcessInfo.processInfo.systemUptime
+        _ = await transport.isConnected
+        XCTAssertLessThan(ProcessInfo.processInfo.systemUptime - start, 1.0, "actor blocked by the write")
+
+        await transport.disconnect()
+        XCTAssertLessThan(ProcessInfo.processInfo.systemUptime - start, 10.0)
+        _ = try? await send.value
+    }
+
+    /// Two concurrent disconnects: the second has nothing left to reap.
+    func testConcurrentDisconnectsReapOnce() async throws {
+        let transport = ProcessTransport(executablePath: "/bin/sleep", arguments: ["30"])
+        try await transport.connect()
+        async let first: Void = transport.disconnect()
+        async let second: Void = transport.disconnect()
+        _ = await (first, second)
+        let connected = await transport.isConnected
+        XCTAssertFalse(connected)
+    }
+
+    /// Releasing a running transport reaps its child instead of leaving a
+    /// zombie until the app exits.
+    func testReleasingARunningTransportReapsTheChild() async throws {
+        var transport: ProcessTransport? = ProcessTransport(executablePath: "/bin/sleep", arguments: ["30"])
+        try await transport?.connect()
+        let runningPID = await transport?.processIdentifierForTesting
+        let pid = try XCTUnwrap(runningPID)
+        transport = nil
+
+        // A zombie still answers kill(pid, 0); a reaped child does not.
+        var reaped = false
+        for _ in 0..<100 {
+            if kill(pid, 0) == -1 && errno == ESRCH {
+                reaped = true
+                break
+            }
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        XCTAssertTrue(reaped, "child \(pid) was not reaped")
+    }
 }
 
 #endif

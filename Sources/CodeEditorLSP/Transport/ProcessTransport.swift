@@ -49,6 +49,11 @@ public actor ProcessTransport: LSPTransport {
     private var stdoutReader: ProcessPipeReader?
     private var stderrReader: ProcessPipeReader?
 
+    /// Serial queue for stdin writes. A write blocks while the server is not
+    /// reading; doing it here, not on the actor, keeps the actor (and
+    /// `disconnect()`) responsive, and the queue keeps frames in send order.
+    private let writeQueue = DispatchQueue(label: "CodeEditorLSP.ProcessTransport.stdin")
+
     private let logger = CodeEditorLog.lsp(category: "ProcessTransport")
 
     // MARK: - Initialization
@@ -122,6 +127,11 @@ public actor ProcessTransport: LSPTransport {
             dataHandler = nil
             return
         }
+        // Claim the child before the first suspension: a concurrent
+        // `disconnect()` then finds nothing to do instead of signalling and
+        // reaping the same (possibly reused) pid again, and `send` reports
+        // `notConnected`.
+        self.spawned = nil
 
         // Detach kernel-driven readers before terminating to avoid the
         // background queue racing the cleanup that follows.
@@ -143,12 +153,17 @@ public actor ProcessTransport: LSPTransport {
         )
         logger.debug("LSP process reaped with exit code \(exitCode)")
 
+        // Let queued writes finish (the child is gone, so a blocked write
+        // fails with EPIPE) before closing the descriptor they write to.
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            writeQueue.async { continuation.resume() }
+        }
+
         // The launcher's caller owns the pipe handles; release them.
         spawned.stdin?.closeFile()
         spawned.stdout.closeFile()
         spawned.stderr.closeFile()
 
-        self.spawned = nil
         dataHandler = nil
     }
 
@@ -157,11 +172,19 @@ public actor ProcessTransport: LSPTransport {
             throw LSPTransportError.notConnected
         }
 
-        do {
-            // Frame via the shared codec and write to the server's stdin.
-            try FDWriteSupport.writeAll(LSPFrameCodec.encode(data), to: stdinFD)
+        // Frame via the shared codec and write to the server's stdin off
+        // the actor, in send order.
+        let frame = LSPFrameCodec.encode(data)
+        let result: Result<Void, any Error> = await withCheckedContinuation { continuation in
+            writeQueue.async {
+                continuation.resume(returning: Result { try FDWriteSupport.writeAll(frame, to: stdinFD) })
+            }
+        }
+        switch result {
+        case .success:
             logger.debug("Sent \(data.count) bytes to LSP process")
-        } catch {
+
+        case .failure(let error):
             throw LSPTransportError.sendFailed(underlying: error)
         }
     }
@@ -285,9 +308,18 @@ public actor ProcessTransport: LSPTransport {
             logger.warning("ProcessTransport deallocated while process still running")
             spawned.stdout.readabilityHandler = nil
             spawned.stderr.readabilityHandler = nil
-            // Best effort — deinit cannot await the reap.
-            kill(spawned.pid, SIGTERM)
+            // deinit cannot await the reap, so hand it to a task; SIGTERM
+            // alone left a zombie until the app exited.
+            let pid = spawned.pid
+            Task.detached {
+                _ = await ProcessTermination.terminateAndReap(pid: pid, policy: .default)
+            }
         }
+    }
+
+    /// The child's pid while one is running (tests).
+    var processIdentifierForTesting: pid_t? {
+        spawned?.pid
     }
 }
 #endif
