@@ -77,10 +77,10 @@ struct HighlightProviderDeclineAndCancelTests {
         // No `withExpectedIssue`: a `reportIssue` here fails the test.
         state.updateVisibleSet(IndexSet(integersIn: 10..<21), schedulesHighlighting: false)
         await state.highlightInvalidRanges()
-        let deadline = Date().addingTimeInterval(2)
-        while state.nextRange() != nil || provider.queryCount < 2, Date() < deadline {
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        // Wait for the passes themselves, not for a fixed time: on a loaded
+        // main actor the automatic re-pass can start long after its 50 ms
+        // delay.
+        await state.waitUntilIdleForTesting()
 
         #expect(provider.queryCount == 2, "the cancelled range was not re-queried")
         #expect(state.nextRange() == nil)

@@ -258,7 +258,8 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         spin(for: 0.05)
 
         type("x ", into: textView)
-        spin(for: 0.4)
+        // The view holds "abcx " here; only the host's rewrite makes it "abcx".
+        spin { store.text == "abcx" && textView.string == "abcx" }
 
         XCTAssertEqual(store.text, "abcx")
         XCTAssertEqual(textView.string, "abcx")
@@ -281,24 +282,24 @@ final class HostedCodeEditorTypingTests: XCTestCase {
         spin(for: 0.05)
 
         type("x ", into: textView)
-        spin(for: 0.4)
+        spin { store.text == "abcx" && textView.string == "abcx" }
         XCTAssertEqual(store.text, "abcx")
         XCTAssertEqual(textView.string, "abcx")
 
         let undoManager = try XCTUnwrap(textView.undoManager)
         undoManager.undo()
-        spin(for: 0.4)
+        spin { store.text == "abc" && textView.string == "abc" }
         XCTAssertEqual(textView.string, store.text, "undo left the editor and host apart")
         XCTAssertEqual(store.text, "abc")
 
         undoManager.redo()
-        spin(for: 0.4)
+        spin { store.text == "abcx" && textView.string == "abcx" }
         XCTAssertEqual(textView.string, store.text, "redo left the editor and host apart")
         XCTAssertEqual(store.text, "abcx")
 
         // The pairing survives a round trip through the redo stack.
         undoManager.undo()
-        spin(for: 0.4)
+        spin { store.text == "abc" && textView.string == "abc" }
         XCTAssertEqual(textView.string, "abc")
         XCTAssertEqual(store.text, "abc")
         XCTAssertFalse(undoManager.canUndo)
@@ -423,6 +424,18 @@ final class HostedCodeEditorTypingTests: XCTestCase {
 
     func spin(for seconds: TimeInterval) {
         RunLoop.main.run(until: Date().addingTimeInterval(seconds))
+    }
+
+    /// Runs the main run loop until `condition` holds. For a wait whose end
+    /// state is known: a host round trip (debounced write, host setter,
+    /// SwiftUI update, editor apply) takes longer on a loaded machine than a
+    /// fixed spin allows. The timeout only stops a hang; the assertions that
+    /// follow report what was reached.
+    func spin(until condition: () -> Bool, timeout: TimeInterval = 10) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition(), Date() < deadline {
+            spin(for: 0.02)
+        }
     }
 
     private static func findContainer(in view: NSView) -> CodeEditorContainerView? {

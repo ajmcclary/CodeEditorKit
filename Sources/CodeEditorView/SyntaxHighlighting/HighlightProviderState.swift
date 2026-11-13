@@ -180,6 +180,17 @@ internal final class HighlightProviderState {
         }
     }
 
+    /// Waits until no highlighting pass is running or scheduled, following
+    /// the re-passes a cancelled query schedules (each pass replaces
+    /// `chunkTask` before the previous one returns). For tests, which need
+    /// the passes' outcome rather than a guess at how long they take.
+    func waitUntilIdleForTesting() async {
+        while let task = chunkTask {
+            await task.value
+            if chunkTask == task { return }
+        }
+    }
+
     /// Cancel pending work.
     func cancel() {
         chunkTask?.cancel()
