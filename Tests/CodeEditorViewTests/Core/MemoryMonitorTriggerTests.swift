@@ -78,4 +78,31 @@ final class MemoryMonitorTriggerTests: XCTestCase {
 
         XCTAssertEqual(monitor.memoryStats.totalCleanupOperations, 2)
     }
+
+    /// Dropping below the threshold re-arms the first pass but not the
+    /// interval: a footprint hovering around the threshold (101/99 MB) gave
+    /// a pass on every rise.
+    func testHoveringAroundTheThresholdRespectsTheInterval() async {
+        let provider = AdjustableMemoryProvider(usageMB: 101)
+        let monitor = MemoryMonitor(memoryProvider: provider)
+        var now = Date(timeIntervalSinceReferenceDate: 0)
+        monitor.now = { now }
+        XCTAssertEqual(monitor.minimumAutomaticCleanupInterval, 60)
+
+        for check in 0..<10 {
+            provider.usageMB = check.isMultiple(of: 2) ? 101 : 99
+            await monitor.checkMemoryUsageNow()
+            now += 1
+        }
+        XCTAssertEqual(monitor.memoryStats.totalCleanupOperations, 1)
+
+        now = Date(timeIntervalSinceReferenceDate: 59)
+        provider.usageMB = 101
+        await monitor.checkMemoryUsageNow()
+        XCTAssertEqual(monitor.memoryStats.totalCleanupOperations, 1, "a pass within 60 s of the last one")
+
+        now = Date(timeIntervalSinceReferenceDate: 60)
+        await monitor.checkMemoryUsageNow()
+        XCTAssertEqual(monitor.memoryStats.totalCleanupOperations, 2, "the dip re-armed the first pass")
+    }
 }

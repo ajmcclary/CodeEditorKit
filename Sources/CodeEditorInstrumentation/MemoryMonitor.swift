@@ -216,10 +216,16 @@ public final class MemoryMonitor: ObservableObject {
     /// An automatic pass runs when the footprint first goes above
     /// `memoryThresholdMB`. While it stays above, another runs only once it
     /// has grown by half the threshold since the last pass, or when the
-    /// provider reports `.critical` pressure, and never sooner than this
-    /// interval after the last one. Falling back below the threshold re-arms
-    /// the first pass. Checking every `monitoringInterval` and cleaning on
-    /// every check ran a pass every 10 s in any host above the threshold.
+    /// provider's `getMemoryPressure()` is `.critical`, and never sooner than
+    /// this interval after the last automatic pass, however the trigger was
+    /// re-armed. Falling back below the threshold re-arms the first pass (the
+    /// interval still applies). Checking every `monitoringInterval` and
+    /// cleaning on every check ran a pass every 10 s in any host above the
+    /// threshold.
+    ///
+    /// `.critical` is not a system memory-pressure event: the monitor has no
+    /// system pressure source. `SystemMemoryProvider` reports `.critical`
+    /// when this process's resident memory is at least 85 % of physical RAM.
     public var minimumAutomaticCleanupInterval: TimeInterval = 60.0
 
     // MARK: - State
@@ -252,10 +258,17 @@ public final class MemoryMonitor: ObservableObject {
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []
 
-    /// When the last automatic pass ran, and the footprint it ran at; `nil`
-    /// until the footprint first goes above the threshold, and again once it
-    /// falls below.
-    private var lastAutomaticCleanup: (date: Date, usageMB: Double)?
+    /// When the last automatic pass ran. Kept through a dip below the
+    /// threshold, so the interval holds whatever re-armed the trigger.
+    private var lastAutomaticCleanupDate: Date?
+
+    /// The footprint the last automatic pass ran at; `nil` until the
+    /// footprint first goes above the threshold, and again once it falls
+    /// below (which re-arms the first pass).
+    private var lastAutomaticCleanupUsageMB: Double?
+
+    /// The clock the automatic trigger reads; a seam for tests.
+    package var now: @MainActor () -> Date = { Date() }
 
     /// Observer for app termination to ensure cleanup.
     ///
@@ -434,7 +447,12 @@ public final class MemoryMonitor: ObservableObject {
         memoryProvider.getCurrentMemoryUsage()
     }
 
-    /// Get memory pressure status
+    /// Get memory pressure status.
+    ///
+    /// The provider's reading, not a system memory-pressure event. For
+    /// `SystemMemoryProvider` it is this process's resident memory as a share
+    /// of physical RAM: `.warning` from 60 %, `.urgent` from 75 %,
+    /// `.critical` from 85 %.
     public func getMemoryPressure() -> MemoryPressure {
         memoryProvider.getMemoryPressure()
     }
@@ -537,13 +555,14 @@ public final class MemoryMonitor: ObservableObject {
         }
 
         guard currentUsage > memoryThresholdMB else {
-            lastAutomaticCleanup = nil
+            lastAutomaticCleanupUsageMB = nil
             return
         }
         if enableAutomaticCleanup && shouldRunAutomaticCleanup(atUsage: currentUsage) {
             logger.warning("Memory usage (\(currentUsage)MB) exceeded threshold (\(self.memoryThresholdMB)MB)")
 
-            lastAutomaticCleanup = (Date(), currentUsage)
+            lastAutomaticCleanupDate = now()
+            lastAutomaticCleanupUsageMB = currentUsage
             let targetReduction = currentUsage - (self.memoryThresholdMB * 0.8) // Target 80% of threshold
             await performAutomaticCleanup(targetReduction: targetReduction)
         }
@@ -551,9 +570,12 @@ public final class MemoryMonitor: ObservableObject {
 
     /// See `minimumAutomaticCleanupInterval`.
     private func shouldRunAutomaticCleanup(atUsage usage: Double) -> Bool {
-        guard let last = lastAutomaticCleanup else { return true }
-        guard Date().timeIntervalSince(last.date) >= minimumAutomaticCleanupInterval else { return false }
-        return usage >= last.usageMB + memoryThresholdMB * 0.5
+        if let lastDate = lastAutomaticCleanupDate,
+           now().timeIntervalSince(lastDate) < minimumAutomaticCleanupInterval {
+            return false
+        }
+        guard let lastUsage = lastAutomaticCleanupUsageMB else { return true }
+        return usage >= lastUsage + memoryThresholdMB * 0.5
             || memoryProvider.getMemoryPressure() == .critical
     }
 

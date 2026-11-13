@@ -20,15 +20,23 @@ former name, `CodeEditorPlugin` — they record what shipped at the time.
   documents (`LSPManager`), cancels the completion request in flight
   (`CompletionManager`), cancels background highlighting requests
   (`BackgroundSyntaxHighlighter`), or, on iOS, discards undo history.
+- **A pass keeps the learned completion ranking.** The learned selection
+  counts lived in an `LRUCache` that every pass trimmed by a quarter (all of
+  them when there were few), so the learned order reverted to alphabetical;
+  they are no longer released by memory cleanup at all.
 
 ### Changed
 
 - **Automatic cleanup is edge-triggered and rate-limited.** It runs when the
   footprint first goes above `memoryThresholdMB`; while it stays above, again
-  only after growing by half the threshold or under critical pressure, and
-  never within the new `MemoryMonitor.minimumAutomaticCleanupInterval`
-  (default 60 s). It used to run on every 10 s check. The periodic pass
-  (`enablePeriodicCleanup`, every 5 minutes) is unchanged.
+  only after growing by half the threshold or when the provider reports
+  `.critical`, and never within the new
+  `MemoryMonitor.minimumAutomaticCleanupInterval` (default 60 s) of the last
+  automatic pass, including after a dip below the threshold re-arms it. It
+  used to run on every 10 s check. `.critical` is not a system
+  memory-pressure event: `SystemMemoryProvider` reports it when this
+  process's resident memory is at least 85 % of physical RAM. The periodic
+  pass (`enablePeriodicCleanup`, every 5 minutes) is unchanged.
 
 ## [0.1.0-beta.15] - 2026-11-13
 
