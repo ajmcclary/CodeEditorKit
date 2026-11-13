@@ -156,35 +156,23 @@ public final class MemoryManagementCoordinator {
         components.completionManager?.setMemoryMonitor(memoryMonitor)
     }
 
-    /// Performs memory cleanup when under pressure
+    /// The editor's part of a cleanup pass.
+    ///
+    /// A pass is routine: the monitor runs one whenever the process
+    /// footprint is over its threshold (a host app always is) and on a
+    /// timer. So it must leave everything the user can see or get back
+    /// alone. The undo history is the user's (it used to be discarded on
+    /// every pass, the window's whole stack before each editor had its own),
+    /// as are the text, the selection and the folds; the line geometry store
+    /// is the editor's line index, not a cache (emptying it made every gutter
+    /// line number read "1"). The caches a pass is for (highlighting tokens
+    /// and completion responses) are released by their owners' own handlers
+    /// on the same monitor, and are rebuilt on demand.
     internal func performMemoryCleanup() -> CleanupResult {
-        guard let editorView else {
+        guard editorView != nil else {
             return CleanupResult(memoryFreedMB: 0, description: "Editor view deallocated")
         }
-
-        var memoryFreed: Double = 0
-        var operations: [String] = []
-
-        // Clear this editor's own undo history. It lives in the editor's
-        // undo manager (never the window's shared one, which holds every
-        // other view's history too); a host-supplied manager is left alone.
-        if let undoManager = editorView.undoManager,
-           undoManager.canUndo || undoManager.canRedo {
-            editorView.discardUndoHistory()
-            if !(undoManager.canUndo || undoManager.canRedo) {
-                memoryFreed += 0.5 // Estimate
-                operations.append("undo history")
-            }
-        }
-
-        // Nothing else here frees memory: the text storage and the syntax
-        // highlighting state are not released by this pass (so no estimate
-        // is reported for them), the line geometry store is the editor's line
-        // index rather than a cache (emptying it made every gutter line
-        // number read "1"), and the user's folds are their own state.
-
-        let description = operations.isEmpty ? "No operations performed" : "Cleared: \(operations.joined(separator: ", "))"
-        return CleanupResult(memoryFreedMB: memoryFreed, description: description)
+        return CleanupResult(memoryFreedMB: 0, description: "No operations performed")
     }
 }
 
