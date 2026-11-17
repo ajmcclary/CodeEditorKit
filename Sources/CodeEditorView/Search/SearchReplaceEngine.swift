@@ -227,10 +227,20 @@ public final class SearchReplaceEngine: ObservableObject {
             actionName: "Replace"
         ) else { return false }
 
-        // Update search results
-        let lengthDiff = TextRangeUtilities.utf16Length(of: replacement) - result.range.length
-        updateResultsAfterReplacement(at: index, lengthDifference: lengthDiff)
-        // The shifted results describe the text as this replace left it.
+        if let query = resultsQuery, query.useRegularExpression || query.wholeWord {
+            // An edit can change a match at a different range through lookaround
+            // or a word boundary. Rebuild before exposing another replacement.
+            currentSearchResults = Self.performSearch(query, in: Self.snapshot(of: textView))
+            currentSearchIndex = currentSearchResults.isEmpty ? -1 : min(index, currentSearchResults.count - 1)
+            updateStatistics(for: currentSearchResults)
+            if searchOptions.highlightResults {
+                highlightSearchResults(currentSearchResults)
+            }
+        } else {
+            let lengthDiff = TextRangeUtilities.utf16Length(of: replacement) - result.range.length
+            updateResultsAfterReplacement(at: index, lengthDifference: lengthDiff)
+            updateStatistics(for: currentSearchResults)
+        }
         resultsTextGeneration = textView.textChangeEventGeneration
 
         return true

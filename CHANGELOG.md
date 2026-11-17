@@ -5,7 +5,12 @@ All notable changes to CodeEditorKit are documented in this file.
 Entries dated before the 2026-07-25 rename deliberately keep the package's
 former name, `CodeEditorPlugin` — they record what shipped at the time.
 
-## [Unreleased]
+## [0.1.0-beta.17] - 2026-11-17
+
+### Fixed
+
+- Single replacement rechecks the remaining regular-expression and whole-word
+  matches before the next replacement, including matches affected by lookaround.
 
 ### Documentation
 

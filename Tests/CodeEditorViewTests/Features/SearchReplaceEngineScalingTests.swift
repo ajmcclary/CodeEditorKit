@@ -36,6 +36,22 @@ final class SearchReplaceEngineScalingTests: XCTestCase {
         XCTAssertLessThan(elapsed, 10, "find took \(elapsed) s")
     }
 
+    func testReplacingAMatchRevalidatesLookaroundAtTheNextRange() async {
+        let view = makeView("aaa")
+        let engine = view.searchEngine
+        var options = SearchOptions()
+        options.useRegularExpression = true
+        options.highlightResults = false
+        options.flashResult = false
+        let results = await engine.findAll(pattern: "(?<=a)a", options: options, selectFirstResult: false)
+
+        XCTAssertEqual(results.count, 2)
+        XCTAssertTrue(engine.replace(at: 0, with: "b"))
+        XCTAssertTrue(engine.currentSearchResults.isEmpty)
+        XCTAssertFalse(engine.replace(at: 0, with: "b"))
+        XCTAssertEqual(view.string, "aba")
+    }
+
     func testLineNumbersCountCRLFAsOneLineBreak() async {
         let view = makeView("alpha\r\nbeta\r\n\r\nalpha")
         let engine = SearchReplaceEngine()
