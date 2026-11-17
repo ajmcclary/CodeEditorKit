@@ -30,7 +30,7 @@ struct EditorRenderState: Equatable {
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.text == rhs.text
+        lhs.text.utf8.elementsEqual(rhs.text.utf8)
             && lhs.language == rhs.language
             && lhs.configuration == rhs.configuration
             && lhs.theme == rhs.theme
@@ -200,11 +200,11 @@ final class EditorRenderReconciler {
         // one-shot expectation, not "any text the editor once wrote": a host
         // returning to an earlier editor value is a replacement.
         let storedText = operations.text(in: container)
-        let hostTextChanged = lastState.map { $0.text != state.text } ?? true
+        let hostTextChanged = lastState.map { !$0.text.utf8.elementsEqual(state.text.utf8) } ?? true
         let echo: EditorBindingSynchronizer.EchoMatch = hostTextChanged
             ? (bindingSynchronizer?.consumeEcho(ofHostText: state.text) ?? .noWriteAwaited)
             : .noWriteAwaited
-        let isHostBindingSwap = storedText != state.text
+        let isHostBindingSwap = !storedText.utf8.elementsEqual(state.text.utf8)
             && hostTextChanged
             && echo != .echo
         let effectiveText = isHostBindingSwap ? state.text : storedText

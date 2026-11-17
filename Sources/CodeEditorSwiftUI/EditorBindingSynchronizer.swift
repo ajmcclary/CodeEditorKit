@@ -36,14 +36,14 @@ final class EditorBindingSynchronizer {
 
     func bind(_ binding: Binding<String>) {
         write = { newText in
-            guard binding.wrappedValue != newText else { return }
+            guard !binding.wrappedValue.utf8.elementsEqual(newText.utf8) else { return }
             binding.wrappedValue = newText
         }
-        hostHolds = { binding.wrappedValue == $0 }
+        hostHolds = { binding.wrappedValue.utf8.elementsEqual($0.utf8) }
     }
 
     func installHostText(_ text: String) {
-        guard lastText != text else { return }
+        guard lastText?.utf8.elementsEqual(text.utf8) != true else { return }
 
         cancel()
         outstandingEchoes.removeAll()
@@ -51,7 +51,7 @@ final class EditorBindingSynchronizer {
     }
 
     func receiveEditorText(_ newText: String) {
-        guard newText != lastText else { return }
+        guard lastText?.utf8.elementsEqual(newText.utf8) != true else { return }
 
         lastText = newText
         onEditorText?(newText)
@@ -62,7 +62,7 @@ final class EditorBindingSynchronizer {
                 guard let self else { return }
                 try await Task.sleep(for: self.debounce)
                 guard Task.isCancelled == false,
-                      self.lastText == newText else { return }
+                      self.lastText?.utf8.elementsEqual(newText.utf8) == true else { return }
                 self.performWrite(newText)
             } catch is CancellationError {
                 return
@@ -94,7 +94,7 @@ final class EditorBindingSynchronizer {
     /// be mistaken for an answer to it.
     func consumeEcho(ofHostText text: String) -> EchoMatch {
         guard let newest = outstandingEchoes.last else { return .noWriteAwaited }
-        if let index = outstandingEchoes.firstIndex(of: text) {
+        if let index = outstandingEchoes.firstIndex(where: { $0.utf8.elementsEqual(text.utf8) }) {
             outstandingEchoes.removeFirst(index + 1)
             return .echo
         }
@@ -121,7 +121,7 @@ final class EditorBindingSynchronizer {
         guard let pendingText else { return }
         pendingTask?.cancel()
         pendingTask = nil
-        if lastText == pendingText {
+        if lastText?.utf8.elementsEqual(pendingText.utf8) == true {
             performWrite(pendingText)
         }
         self.pendingText = nil

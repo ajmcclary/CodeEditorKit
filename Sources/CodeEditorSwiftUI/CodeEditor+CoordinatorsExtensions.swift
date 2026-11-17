@@ -109,7 +109,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
         language: Language,
         configuration: EditorConfiguration
     ) {
-        if currentText != text {
+        if !currentText.utf8.elementsEqual(text.utf8) {
             currentText = text
         }
 
@@ -135,7 +135,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject, CodeEditorCoor
     /// Handle text changes from the editor
     func handleTextChange(_ newText: String) {
         // Prevent feedback loops
-        guard newText != currentText else { return }
+        guard !newText.utf8.elementsEqual(currentText.utf8) else { return }
 
         currentText = newText
         bindingSynchronizer.receiveEditorText(newText)

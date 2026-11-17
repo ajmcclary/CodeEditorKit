@@ -21,6 +21,24 @@ struct EditorBindingSynchronizerTests {
         #expect(writes == ["ab"])
     }
 
+    @Test("a normalization-only edit reaches the host callback and binding")
+    func unicodeNormalizationEditIsPropagated() async {
+        let original = "caf\u{e9}"
+        let updated = "cafe\u{301}"
+        let coordinator = CodeEditorBaseCoordinator()
+        var edits: [String] = []
+        var writes: [String] = []
+        coordinator.bindingSynchronizer.onEditorText = { edits.append($0) }
+        coordinator.bindingSynchronizer.bind(.init(get: { original }, set: { writes.append($0) }))
+        coordinator.bindingSynchronizer.debounce = .zero
+        coordinator.updateState(text: original, language: .plainText, configuration: .default)
+
+        coordinator.handleTextChange(updated)
+        await coordinator.bindingSynchronizer.waitForPendingWrite()
+        #expect(edits.map { Array($0.utf8) } == [Array(updated.utf8)])
+        #expect(writes.map { Array($0.utf8) } == [Array(updated.utf8)])
+    }
+
     @Test("host echo does not schedule another write")
     func hostEchoIsIgnored() async {
         var writes: [String] = []
