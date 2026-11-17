@@ -233,7 +233,9 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider, @uncheck
                 continue
             }
 
-            let lines = content.components(separatedBy: "\n")
+            let lines = content.replacingOccurrences(of: "\r\n", with: "\n")
+                .replacingOccurrences(of: "\r", with: "\n")
+                .components(separatedBy: "\n")
             for (idx, line) in lines.enumerated() {
                 guard !Task.isCancelled, results.count < maxResults else { break }
                 guard predicate(line) else { continue }

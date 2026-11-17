@@ -106,6 +106,16 @@ struct ProjectSearchProviderTests {
         try await body(adapter, rootURL)
     }
 
+    @Test("mixed CR, CRLF and LF line endings preserve the line number and UTF-16 column")
+    func mixedLineEndings() async throws {
+        try await withFiles(["a.txt": "one\rtwo\r\nthree\n😀 needle"]) { adapter, _ in
+            let results = try await adapter.search(query: "^😀 (needle)$", options: ProjectSearchOptions(useRegex: true))
+            #expect(results.map(\.lineNumber) == [4])
+            let literal = try await adapter.search(query: "needle", options: .default)
+            #expect(literal.map(\.column) == [4])
+        }
+    }
+
     @Test("a regex result's matched text is what the regex matched, not the pattern's length")
     func regexMatchedText() async throws {
         try await withFiles(["a.txt": "xx fooooo yy\n"]) { adapter, _ in
