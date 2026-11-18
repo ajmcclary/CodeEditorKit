@@ -45,12 +45,12 @@ final class CodeEditorPointerActionTests: XCTestCase {
     /// Emits until a delivery arrives. The `.onReceive` subscriptions are
     /// installed by a SwiftUI pass after the editor attaches, and an event
     /// sent before that is dropped; a fixed 0.1 s spin only usually covered
-    /// it. Each emission replaces the last, so one value arrives.
-    private func emitUntilDelivered<Value>(into box: Box<Value>, _ emit: () -> Void) {
+    /// it. Allow a debounced callback to finish before retrying the event.
+    private func emitUntilDelivered<Value>(into box: Box<Value>, retryInterval: TimeInterval = 0.05, _ emit: () -> Void) {
         let deadline = Date().addingTimeInterval(30)
         while box.values.isEmpty, Date() < deadline {
             emit()
-            spin(for: 0.05)
+            spin(for: retryInterval)
         }
     }
 
@@ -110,20 +110,28 @@ final class CodeEditorPointerActionTests: XCTestCase {
     func test_hoverCancelledByNextPosition() throws {
         let controller = EditorController()
         let box = Box<SourcePosition?>()
+        let readiness = Box<SourcePosition?>()
+        let probe = SourcePosition(line: 1, character: 1)
         try host(
             CodeEditor(text: .constant("a\nb"))
                 .editorController(controller)
                 .onTextHover(idleDelay: .milliseconds(80)) { position in
-                    await MainActor.run { box.values.append(position) }
+                    await MainActor.run {
+                        if position == probe {
+                            readiness.values.append(position)
+                        } else {
+                            box.values.append(position)
+                        }
+                    }
                 },
             controller: controller
         )
 
         // Subscribed first, so the pair below is not lost.
-        emitUntilDelivered(into: box) {
-            controller.editorEventBus.emitHover(at: SourcePosition(line: 1, character: 1))
+        emitUntilDelivered(into: readiness, retryInterval: 0.25) {
+            controller.editorEventBus.emitHover(at: probe)
         }
-        box.values.removeAll()
+        XCTAssertFalse(readiness.values.isEmpty, "hover subscription should receive the readiness probe")
 
         // Both in one run-loop turn: the second is certainly inside the
         // first's 80 ms idle delay (a 5 ms spin between them was not, once

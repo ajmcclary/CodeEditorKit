@@ -57,12 +57,15 @@ final class CompletionPopupLifecycleTests: XCTestCase {
         XCTAssertEqual(visibleLabels(view), ["bar", "baz", "qux"])
 
         type("b", into: view)
+        spinUntil { visibleLabels(view) == ["bar", "baz"] }
         XCTAssertEqual(visibleLabels(view), ["bar", "baz"])
 
         type("z", into: view)
+        spinUntil { visibleLabels(view) == ["baz"] }
         XCTAssertEqual(visibleLabels(view), ["baz"])
 
         type(" ", into: view)
+        spinUntil { !view.isCompletionActive }
         XCTAssertFalse(view.isCompletionActive)
     }
 
