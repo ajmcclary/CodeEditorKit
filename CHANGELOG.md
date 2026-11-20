@@ -5,6 +5,25 @@ All notable changes to CodeEditorKit are documented in this file.
 Entries dated before the 2026-07-25 rename deliberately keep the package's
 former name, `CodeEditorPlugin` — they record what shipped at the time.
 
+## [0.1.0-beta.19] - 2026-11-20
+
+This release remediates the 2026-11-20 code review's SQL finding and
+publishes the WorkspaceKit confinement floor that 0.1.0-beta.18 did not.
+
+### Changed
+
+- **Requires WorkspaceKit 0.1.0-beta.15 or later** (was 0.1.0-beta.12), the
+  first release with confined workspace access.
+
+### Fixed
+
+- **The SQL symbol and folding providers no longer crash on non-ASCII text.**
+  Keywords were found in an uppercased copy of the statement and its indices
+  used on the original; uppercasing can change length, so a `SELECT` with a
+  literal such as `'և'` before `FROM` trapped, and other characters returned
+  table and object names shifted by a character. The searches now run
+  case-insensitively on the original text.
+
 ## [0.1.0-beta.17] - 2026-11-17
 
 ### Fixed
