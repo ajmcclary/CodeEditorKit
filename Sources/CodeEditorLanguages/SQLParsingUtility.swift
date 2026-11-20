@@ -72,10 +72,9 @@ public enum SQLParsingUtility {
     ///   - keyword: The keyword to search for (case-insensitive)
     /// - Returns: The object name if found, nil otherwise
     public static func extractObjectName(from statement: String, afterKeyword keyword: String) -> String? {
-        let upperStatement = statement.uppercased()
-        let upperKeyword = keyword.uppercased()
-
-        guard let keywordRange = upperStatement.range(of: upperKeyword) else {
+        // Search `statement` itself: `uppercased()` can change length
+        // (`և` → `ԵՒ`, `ﬁ` → `FI`), so its indices do not address `statement`.
+        guard let keywordRange = statement.range(of: keyword, options: .caseInsensitive) else {
             return nil
         }
 

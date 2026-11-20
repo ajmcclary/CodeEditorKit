@@ -195,10 +195,10 @@ package struct SQLSymbolProvider: DocumentSymbolProvider {
     }
 
     private func extractTablesFromSelect(_ statement: String) -> [String] {
-        let upperStatement = statement.uppercased()
-
-        // Find FROM clause
-        guard let fromRange = upperStatement.range(of: " FROM ") else {
+        // Every range is found in the string it slices: `uppercased()` can
+        // change length (`և` → `ԵՒ`, `ﬁ` → `FI`), so its indices would not
+        // address the original text.
+        guard let fromRange = statement.range(of: " FROM ", options: .caseInsensitive) else {
             return []
         }
 
@@ -209,7 +209,7 @@ package struct SQLSymbolProvider: DocumentSymbolProvider {
         var tablesPart = afterFrom
 
         for keyword in stopKeywords {
-            if let range = afterFrom.uppercased().range(of: keyword) {
+            if let range = afterFrom.range(of: keyword, options: .caseInsensitive) {
                 tablesPart = String(afterFrom[..<range.lowerBound])
                 break
             }
